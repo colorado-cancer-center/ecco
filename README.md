@@ -1,5 +1,8 @@
 # COCancerScope
 
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
+
+
 Cancer Centers, including the University of Colorado Cancer Center, need to provide 
 updated and reliable information to make informed decisions about how best to 
 impact care in their catchment areas. The code herein captures the disparate information
