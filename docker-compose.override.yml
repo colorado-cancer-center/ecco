@@ -1,0 +1,23 @@
+services:
+  backend:
+    ports:
+      - 8000:8000
+    volumes:
+      - './backend/app:/app'
+    environment:
+      - IS_DEV=1
+
+  frontend:
+    ports:
+      - 8001:8001
+    environment:
+      - VITE_API_URL=http://localhost:8000
+      - VITE_ENV=dev
+    volumes:
+      - './frontend/src:/app/src:delegated'
+      - './frontend/public:/app/public:delegated'
+    command: yarn dev --host 0.0.0.0 --port 8001
+
+  db:
+    ports:
+      - 5435:5432

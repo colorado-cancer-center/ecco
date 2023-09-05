@@ -1,0 +1,39 @@
+volumes:
+  pgdata:
+
+services:
+  backend:
+    image: cocancerscope-backend:latest
+    build: ./backend
+    environment:
+      - "DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT:-5432}/${POSTGRES_DATABASE}"
+      - "DB_EXCLUDE_TABLES=county,tract"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/data
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    image: cocancerscope-frontend
+    build: ./frontend
+    command: yarn build
+
+  db:
+    build: ./services/postgres
+    # image: postgis/postgis:15-3.3
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_DB=${POSTGRES_DATABASE}
+      - PGUSER=${POSTGRES_USER}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/healthcheck.sh || exit 1"]
+      interval: 10s
+      timeout: 60s
+      retries: 5
+      start_period: 80s
