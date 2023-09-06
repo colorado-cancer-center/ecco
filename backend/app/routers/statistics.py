@@ -75,7 +75,7 @@ async def get_dataset(session: AsyncSession = Depends(get_session)):
                 "measures": [
                     {
                         "name": x,
-                        "display_name": MEASURE_DESCRIPTIONS.get(simple_model_name, {}).get(x, x),
+                        "display_name": MEASURE_DESCRIPTIONS.get(simple_model_name, {}).get(x, x) or x,
                     }
                     for x in result.scalars().all()
                 ]
