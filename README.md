@@ -10,6 +10,9 @@ available from public sources that can inform Community Outreach and Engagement 
 activities. The information can also help to generate hypotheses or produce valuable
 infographics about health disparities, particularly those with geographic relationships.
 
+**NOTE:** this project is a work in progress. See [USAGE.md](./USAGE.md) for instructions
+on how to use the development version of the app.
+
 ## Phase 1
 
 - [ ] API development (OpenAPI)
