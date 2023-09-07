@@ -1,0 +1,22 @@
+.leaflet-map-button {
+    color: #222 !important;
+    font-weight: bold;
+    font-size: 18px;
+    width: 30px; height: 30px;
+
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border: 2px solid rgba(0,0,0,0.2);
+    border-radius: 4px;
+    background-clip: padding-box;
+    cursor: pointer;
+
+    background-color: white;
+}
+
+.leaflet-map-button:hover {
+    background-color: #eee;
+}

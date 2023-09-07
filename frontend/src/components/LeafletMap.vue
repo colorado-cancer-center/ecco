@@ -5,14 +5,15 @@ https://www.reddit.com/r/vuejs/comments/z80ik8/using_leaflet_with_vue3/iya3iod/
 
 <script lang="ts">
 import {
-    defineComponent, defineEmits, inject,
-    onMounted, onUpdated, PropType, reactive, ref, toRef, toRefs
+    defineComponent, onMounted, onUpdated, PropType, ref
 } from 'vue';
 import "leaflet/dist/leaflet.css";
 import L, {Map} from 'leaflet';
-import legend from '@/utils/leafletLegend';
 
-function initMap(element: HTMLElement, props): [Map, L.GeoJSON, L.Control] {
+import Legend from '@/components/map-elements/leafletLegend';
+import CustomButton from '@/components/map-elements/leafletButton';
+
+function initMap(element: HTMLElement, props, emit): [Map, L.GeoJSON, L.Control] {
     const map = L.map(element, { /* options */})
         .setView([38.939949, -105.617083], 7);
 
@@ -39,7 +40,7 @@ function initMap(element: HTMLElement, props): [Map, L.GeoJSON, L.Control] {
             }
         },
         onEachFeature: (feature, layer) => {
-            // does this feature have a property named popupContent?
+            // if there's popup content for this element, bind it to the popup
             if (feature?.properties?.popupContent) {
                 layer.bindPopup(feature.properties.popupContent);
             }
@@ -47,19 +48,43 @@ function initMap(element: HTMLElement, props): [Map, L.GeoJSON, L.Control] {
     }).addTo(map);
 
     // add legend layer
-    const legendControl = legend({
+    const legendControl = new Legend({
         legendData: props.legend
     }).addTo(map);
+
+    // if initial bounds specified, set us to that
+    if (props.initialBounds) {
+        // const formattedBounds = L.latLngBounds(props.initialBounds);
+        map.fitBounds(props.initialBounds);
+    }
+
+    map.on('moveend', function(e) {
+        const bounds = map.getBounds();
+        const boundsArray = [
+            [bounds.getNorth(), bounds.getEast()],
+            [bounds.getSouth(), bounds.getWest()]
+        ];
+        emit('bounds-changed', map, boundsArray);
+    });
 
     // L.easyButton('fa-globe', function(btn, map){
     //     map.fitBounds(geojsonLayer.getBounds());
     // }).addTo(map);
 
+    map.addControl(new CustomButton({
+        title: 'Fit View to Geometry',
+        // text: '<i class="fa-solid fa-expand"></i>',
+        body: '&#x26F6;',
+        click: () => {
+            map.fitBounds(geojsonLayer.getBounds());
+        }
+    }));
+
     return [map, geojsonLayer, legendControl];
 };
 
 export default defineComponent({
-    emits: ['created', 'removed'],
+    emits: ['created', 'removed', 'bounds-changed'],
     props: {
         geojson: {
             type: Object as PropType<any>,
@@ -75,6 +100,11 @@ export default defineComponent({
             type: Object as PropType<any>,
             required: false,
             default: {}
+        },
+        initialBounds: {
+            type: Object as PropType<any>,
+            required: false,
+            default: null
         }
     },
 
@@ -91,14 +121,14 @@ export default defineComponent({
                 emit('removed');
             }
         }
-        
+
         // see https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
         // for details about the IntersectionObserver.
         const observer = new IntersectionObserver(function(entries) {
             if(entries[0].isIntersecting === true && mapElement.value) {
                 // Element shown - insert map
                 removeMap();
-                [map, geojsonLayer, legendControl] = initMap(mapElement.value, props);
+                [map, geojsonLayer, legendControl] = initMap(mapElement.value, props, emit);
                 emit('created', map);
                 // console.log("loaded map")
             } else {
@@ -121,13 +151,13 @@ export default defineComponent({
             if (map && geojsonLayer) {
                 geojsonLayer.clearLayers();
                 geojsonLayer.addData(props.geojson);
-                map.fitBounds(geojsonLayer.getBounds());
+                // map.fitBounds(geojsonLayer.getBounds());
             }
 
             if (map && legendControl) {
                 // remove and recreate the legend
                 map.removeControl(legendControl);
-                legendControl = legend({
+                legendControl = new Legend({
                     legendData: props.legendData
                 }).addTo(map);
             }
@@ -142,3 +172,4 @@ export default defineComponent({
     <!-- Using v-once to make sure Vue will not update -->
     <div class="full-height" ref="mapElement" v-once></div>
 </template>
+@/components/map-elements/leafletLegend

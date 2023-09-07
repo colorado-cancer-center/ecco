@@ -63,19 +63,6 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-.card {
-  padding: 2em;
-}
-
-#app {
-  /* max-width: 1280px;
-  margin: 0 auto; */
-}
-
-#content {
-  padding: 2rem;
-}
-
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
@@ -91,30 +78,43 @@ button:focus-visible {
 
 /* our styles */
 
-#app #navbar { background-color: #c3c4d6; }
+#app {
+  height: 100vh;
+}
 
-#app #navbar ul {
+#trunk {
+  margin: 0; padding: 0;
+  display: flex; 
+  flex-direction: column;
+  min-height: 100vh; 
+  justify-content: space-between;
+}
+
+#navbar { background-color: #c3c4d6; }
+
+#navbar ul {
   margin: 0;
   padding: 1rem;
   display: flex;
   list-style-type: none;
 }
 
-#app #navbar ul li {
+#navbar ul li {
   margin-right: 1rem;
   font-weight: bold;
 }
 
-#app #navbar ul li a {
+#navbar ul li a {
   color: black;
   font-weight: bold;
 }
 
-#app #navbar ul li a.outer-link-exact-active {
+#navbar ul li a.outer-link-exact-active {
   color: yellow;
   font-weight: bold;
 }
 
-.full-height {
-  height: 600px;
+#content {
+  padding: 0; flex-grow: 1;
+  display: flex;
 }

@@ -1,61 +1,79 @@
 <template>
-  <h1>Statistics</h1>
-
   <div class="two-panel">
-    <div class="panel-narrow">
-      <div class="fieldset">
-        <label for="geo-entity">Select a geographic level:</label>
-        <select id="geo-entity" v-model="selectedGeoLevel">
-          <option>County</option>
-          <option>Tract</option>
-        </select>
+    <div class="panel-narrow main-options-panel">
+      <div class="subpanel main">
+        <div class="fieldset">
+          <label for="geo-entity">Select a geographic level:</label>
+          <select id="geo-entity" v-model="selectedGeoLevel">
+            <option>County</option>
+            <option>Tract</option>
+          </select>
+        </div>
+
+        <div class="fieldset" v-if="categoriesByGeometry">
+          <label for="category">Select a category of variables:</label>
+          <select id="category" v-model="selectedCategory">
+            <option :value="null">---</option>
+            <option v-for="item, category in categoriesByGeometry" :key="category" :value="category">{{ item.display_name }}</option>
+          </select>
+        </div>
+
+        <div class="fieldset" v-if="selectedCategory">
+          <label for="category">Select a variable to map:</label>
+          <select id="category" v-model="selectedMeasure">
+            <option :value="null">---</option>
+            <option v-for="measure in measuresByCategory" :key="measure.name" :value="measure.name">{{ measure.display_name }}</option>
+          </select>
+        </div>
       </div>
 
-      <div class="fieldset" v-if="categoriesByGeometry">
-        <label for="category">Select a category of variables:</label>
-        <select id="category" v-model="selectedCategory">
-          <option :value="null">---</option>
-          <option v-for="item, category in categoriesByGeometry" :key="category" :value="category">{{ item.display_name }}</option>
-        </select>
-      </div>
-
-      <div class="fieldset" v-if="selectedCategory">
-        <label for="category">Select a variable to map:</label>
-        <select id="category" v-model="selectedMeasure">
-          <option :value="null">---</option>
-          <option v-for="measure in measuresByCategory" :key="measure.name" :value="measure.name">{{ measure.display_name }}</option>
-        </select>
-      </div>
-
+      <!--
       <div class="fieldset" v-if="measureAnnotations">
         <label for="category">Statistics:</label>
         <p>Minimum: {{ measureAnnotations.min?.toLocaleString() }}</p>
         <p>Maximum: {{ measureAnnotations.max?.toLocaleString() }}</p>
         <p># of Values: {{ Object.keys(measureAnnotations.values).length }}</p>
       </div>
+      -->
+
+      <div class="subpanel options">
+        <div class="option-fieldset">
+          <input id="show-legend" type="checkbox" v-model="showLegend" />
+          <label for="show-legend" style="display: inline-block; margin-right: 5px;">Show Legend</label>
+        </div>
+        <div class="option-fieldset">
+          <input id="persist-bounds" type="checkbox" v-model="persistBoundsInURL" />
+          <label for="persist-bounds" style="display: inline-block; margin-right: 5px;">Persist Map View in URL</label>
+        </div>
+      </div>
     </div>
 
     <div class="panel-wide">
-      <LeafletMap @created="mapCreated"
+      <LeafletMap
+        @created="mapCreated"
+        @bounds-changed="boundsChanged"
         :geojson="geometry"
         :color-scale="colorScale"
         :legend-data="legendData"
+        :initialBounds="initialBounds"
       />
     </div>
   </div>
-
-
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
-import {scaleSequential, scaleLinear} from 'd3-scale';
+import { ref, computed, watch, onMounted } from 'vue'
+import { scaleSequential, scaleLinear } from 'd3-scale';
+import { useRouter, useRoute } from 'vue-router'
 
 import LeafletMap from '@/components/LeafletMap.vue';
 
-defineProps({
-  msg: String,
-})
+const router = useRouter()
+const route = useRoute()
+
+// if true, moving the map adds the new bounds to the URL's querystring as '?bounds=[[n, e], [s, w]]'
+// (the map will pick up the 'bounds' key on load and use that as its initial bounds)
+const persistBoundsInURL = ref(false);
 
 const mapCreated = (map) => {
   // console.log("New map: ", map);
@@ -65,6 +83,7 @@ const mapCreated = (map) => {
 const selectedGeoLevel = ref('County');
 const selectedCategory = ref(null);
 const selectedMeasure = ref(null);
+const showLegend = ref(true);
 
 // ===========================================================================
 // === fixture data collection
@@ -104,6 +123,33 @@ const measures = ref([]);
 fetch('http://localhost:8000/stats/measures')
     .then(response => response.json())
     .then(data => { measures.value = data });
+
+// ===========================================================================
+// === map bounds: updating querystring, loading from querystring on mount
+// === (used for async updates to refs/other actions that don't produce values)
+// ===========================================================================
+
+function omit(key, obj) {
+  const { [key]: omitted, ...rest } = obj;
+  return rest;
+}
+
+const boundsChanged = (map, newBounds) => {
+  if (persistBoundsInURL.value) {
+    router.replace({ path: route.path, query: { ...route.query, bounds: JSON.stringify(newBounds) } })
+  }
+  else {
+    router.replace({ path: route.path, query: omit('bounds', route.query) })
+  }
+}
+
+const initialBounds = ref(null);
+onMounted(() => {
+    if (route.query.bounds) {
+        initialBounds.value = JSON.parse(route.query.bounds);
+    }
+});
+
 
 // ===========================================================================
 // === watches
@@ -233,7 +279,9 @@ const colorScale = computed(() => {
 })
 
 const legendData = computed(() => {
-  if (!measureAnnotations.value) { return null }
+  if (!showLegend.value || !measureAnnotations.value || !selectedCategoryName.value || !selectedMeasureName.value) {
+    return null
+  }
 
   const {min, max} = measureAnnotations.value;
   const measureScale = scaleLinear().domain([min, max]).nice()
@@ -261,10 +309,6 @@ const legendData = computed(() => {
 </script>
 
 <style scoped>
-.read-the-docs {
-  color: #888;
-}
-
 .fieldset {
   margin-bottom: 1em;
 }
@@ -283,7 +327,33 @@ select {
   border-radius: 3px;
 }
 
-.two-panel { display: flex; }
-.panel-narrow { flex: 1 1 30%; background: #eee; padding: 10px; margin-right: 10px; }
-.panel-wide { flex: 1 1 70%; }
+.two-panel {
+  display: flex; margin: 0;
+  width: 100%;
+}
+
+/* lefthand, narrow side with selections */
+.panel-narrow {
+  flex: 1 0 350px; background: #eee; padding: 0;
+  margin-right: 0; border-right: solid 1px #ccc;
+}
+
+.main-options-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.subpanel { padding: 20px; }
+
+.main { flex: 1 1; }
+.options {
+  margin-top: 1em; flex: 0 1; background-color: #bbb; padding: 20px;
+  border-top: solid 1px #ccc;
+}
+.options label { color: #333; margin-left: 3px; }
+.options .option-fieldset { display: flex; align-items: baseline; }
+
+/* righthand, wide side with map */
+.panel-wide { flex: 1 1 100%; }
+.full-height { height: 100%; }
 </style>
