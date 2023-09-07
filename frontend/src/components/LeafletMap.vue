@@ -176,4 +176,3 @@ export default defineComponent({
     <!-- Using v-once to make sure Vue will not update -->
     <div class="full-height" ref="mapElement" v-once></div>
 </template>
-@/components/map-elements/leafletLegend
