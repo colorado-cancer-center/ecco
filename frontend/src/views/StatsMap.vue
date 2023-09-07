@@ -334,7 +334,7 @@ select {
 
 /* lefthand, narrow side with selections */
 .panel-narrow {
-  flex: 1 0 350px; background: #eee; padding: 0;
+  flex: 0 0 380px; background: #eee; padding: 0;
   margin-right: 0; border-right: solid 1px #ccc;
 }
 
