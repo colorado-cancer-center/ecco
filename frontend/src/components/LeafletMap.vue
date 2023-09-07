@@ -12,6 +12,7 @@ import L, {Map} from 'leaflet';
 
 import Legend from '@/components/map-elements/leafletLegend';
 import CustomButton from '@/components/map-elements/leafletButton';
+import BigImage from 'leaflet.bigimage'
 
 function initMap(element: HTMLElement, props, emit): [Map, L.GeoJSON, L.Control] {
     const map = L.map(element, { /* options */})
@@ -51,6 +52,9 @@ function initMap(element: HTMLElement, props, emit): [Map, L.GeoJSON, L.Control]
     const legendControl = new Legend({
         legendData: props.legend
     }).addTo(map);
+
+    // add download button
+    // L.control.bigImage({position: 'topright'}).addTo(map);
 
     // if initial bounds specified, set us to that
     if (props.initialBounds) {

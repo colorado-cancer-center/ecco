@@ -27,14 +27,23 @@
         </div>
       </div>
 
-      <!--
-      <div class="fieldset" v-if="measureAnnotations">
+      <div class="fieldset" v-if="measureAnnotations" style="padding: 20px;">
         <label for="category">Statistics:</label>
         <p>Minimum: {{ measureAnnotations.min?.toLocaleString() }}</p>
         <p>Maximum: {{ measureAnnotations.max?.toLocaleString() }}</p>
         <p># of Values: {{ Object.keys(measureAnnotations.values).length }}</p>
       </div>
-      -->
+
+      <div class="button-columns">
+        <button @click="downloadMap">
+          <i class="fa-solid fa-map"></i>
+          Download Map
+        </button>
+        <button @click="downloadData">
+          <i class="fa-solid fa-table"></i>
+          Download Data
+        </button>
+      </div>
 
       <div class="subpanel options">
         <div class="option-fieldset">
@@ -75,8 +84,11 @@ const route = useRoute()
 // (the map will pick up the 'bounds' key on load and use that as its initial bounds)
 const persistBoundsInURL = ref(false);
 
+const mapRef = ref(null);
+
 const mapCreated = (map) => {
   // console.log("New map: ", map);
+  mapRef.value = map;
 };
 
 // map controls
@@ -150,6 +162,20 @@ onMounted(() => {
     }
 });
 
+// ===========================================================================
+// === button handlers
+// ===========================================================================
+
+const downloadMap = () => {
+  
+}
+
+const downloadData = () => {
+  // open a new tab to the latest data
+  // FIXME: this should come from our API, not the remote
+  const targetURL = 'https://cancerinfocus.org/public-data/Current/us.zip'
+  window.open(targetURL, '_blank')
+}
 
 // ===========================================================================
 // === watches
@@ -338,14 +364,20 @@ select {
   margin-right: 0; border-right: solid 1px #ccc;
 }
 
+/* the lefthand sidebar, consisting of a top "main" subpanel and a bottom "options" subpanel */
 .main-options-panel {
   display: flex;
   flex-direction: column;
 }
 
+/* shared characteristics for all sidebar subpanels (main and options) */
 .subpanel { padding: 20px; }
 
 .main { flex: 1 1; }
+
+.button-columns { display: flex; justify-content: space-around; padding: 10px; padding-bottom: 0; }
+.button-columns button { background-color: rgb(185, 206, 220); }
+
 .options {
   margin-top: 1em; flex: 0 1; background-color: #bbb; padding: 20px;
   border-top: solid 1px #ccc;
