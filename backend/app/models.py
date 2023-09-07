@@ -117,16 +117,16 @@ class CancerIncidenceCounty(CancerStatsByCounty, table=True):
     # we add aliases for 'measure' and 'value' so that the cancer stats
     # can be treated similarly to the other stats, even though the
     # data's schema differs
-    measure : str = synonym("Site")
-    value : float = synonym("AAR")
+    # measure : str = synonym("Site")
+    # value : float = synonym("AAR")
 
 class CancerMortalityCounty(CancerStatsByCounty, table=True):
     class Config:
         display_name = "Cancer Mortality (age-adj per 100k)"
 
     # same as CancerIncidenceCounty, we alias measure and value
-    measure : str = synonym("Site")
-    value : float = synonym("AAR")
+    # measure : str = synonym("Site")
+    # value : float = synonym("AAR")
 
 # county general measures
 
