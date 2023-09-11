@@ -78,7 +78,7 @@ import domtoimage from 'dom-to-image';
 import { saveAs } from 'file-saver';
 import slugify from 'slugify';
 
-import LeafletMap from '@/components/LeafletMap.vue'
+import LeafletMap, { getArrayBounds } from '@/components/LeafletMap.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -88,6 +88,7 @@ const route = useRoute()
 const persistBoundsInURL = ref(false);
 
 // map controls
+const initialBounds = ref(null); // read from querystring on mount
 const selectedGeoLevel = ref('County');
 const selectedCategory = ref(null);
 const selectedMeasure = ref(null);
@@ -142,21 +143,60 @@ function omit(key, obj) {
   return rest;
 }
 
-const boundsChanged = (map, newBounds) => {
-  if (persistBoundsInURL.value) {
-    router.replace({ path: route.path, query: { ...route.query, bounds: JSON.stringify(newBounds) } })
-  }
-  else {
-    router.replace({ path: route.path, query: omit('bounds', route.query) })
-  }
-}
-
-const initialBounds = ref(null);
 onMounted(() => {
-    if (route.query.bounds) {
-        initialBounds.value = JSON.parse(route.query.bounds);
+    // at mount, check the querystring 'view' key for various options
+    // to apply to the map, e.g. the initial bounds, geometry, category/measure, etc.
+    try {
+      if (route.query.view) {
+        const viewData = JSON.parse(route.query.view);
+        
+        initialBounds.value = JSON.parse(viewData.bounds || null);
+
+        selectedGeoLevel.value = viewData.geom || 'County';
+        selectedCategory.value = viewData.category || null;
+        selectedMeasure.value = viewData.measure || null;
+      }
+    }
+    catch (e) {
+      console.warn("Error when rehydrating view: ", e);
     }
 });
+
+// track current bounds
+const currentBounds = ref(null);
+const boundsChanged = (map, newBounds) => {
+  currentBounds.value = newBounds;
+}
+
+// view persistence in querystring:
+// watches all options that inform the map view (i.e., the bounds, variable selections,
+// etc.) and, if persistBoundsInURL is true, updates the URL's querystring with the
+// current values. if it's false, removes the 'view' key from the URL's querystring.
+watch([selectedGeoLevel, selectedCategory, selectedMeasure, currentBounds, persistBoundsInURL], () => {
+  // before we do any work, if they just don't want to persist the bounds
+  // remove them and return immediately
+  if (!persistBoundsInURL.value) {
+    router.replace({ path: route.path, query: omit('view', route.query) })
+    return;
+  }
+
+  // if currentBounds is null, grab it from the map
+  if (!currentBounds.value && mapRef.value) {
+    currentBounds.value = getArrayBounds(mapRef.value);;
+  }
+
+  // produce object that represents the current view
+  const view = {
+    bounds: JSON.stringify(currentBounds.value),
+    geom: selectedGeoLevel.value,
+    category: selectedCategory.value,
+    measure: selectedMeasure.value
+  };
+
+  // presumably persistBoundsInURL is true since we handled it being false already,
+  // so just write the current view into the querystring
+  router.replace({ path: route.path, query: { ...route.query, view: JSON.stringify(view) } })
+})
 
 // ===========================================================================
 // === map init, button handlers
@@ -197,7 +237,7 @@ const downloadData = () => {
 }
 
 // ===========================================================================
-// === watches
+// === measure, category watches
 // === (used for async updates to refs/other actions that don't produce values)
 // ===========================================================================
 

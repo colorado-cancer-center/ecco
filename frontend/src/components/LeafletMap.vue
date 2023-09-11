@@ -13,7 +13,20 @@ import L, {Map} from 'leaflet';
 import Legend from '@/components/map-elements/leafletLegend';
 import CustomButton from '@/components/map-elements/leafletButton';
 
+/**
+ * Given a map, returns an array of the maps' current lat/lng bounds
+ * in the form [[north, east], [south, west]]
+ * @param map the map from which to extract the bounds
+ */
+export const getArrayBounds = (map: Map | undefined) => {
+    if (!map) { return null; }
 
+    const bounds = map.getBounds();
+    return [
+        [bounds.getNorth(), bounds.getEast()],
+        [bounds.getSouth(), bounds.getWest()]
+    ];
+}
 function initMap(element: HTMLElement, props, emit): [Map, L.GeoJSON, L.Control] {
     const map = L.map(element, { /* options */})
         .setView([38.939949, -105.617083], 7);
@@ -84,12 +97,7 @@ function initMap(element: HTMLElement, props, emit): [Map, L.GeoJSON, L.Control]
     // whenever the map is changed, emit the new bounds
     // (this is used, e.g., for our parent StatsMap control to update the URL)
     map.on('moveend', function(e) {
-        const bounds = map.getBounds();
-        const boundsArray = [
-            [bounds.getNorth(), bounds.getEast()],
-            [bounds.getSouth(), bounds.getWest()]
-        ];
-        emit('bounds-changed', map, boundsArray);
+        emit('bounds-changed', map, getArrayBounds(map));
     });
 
     return [map, geojsonLayer, legendControl];
