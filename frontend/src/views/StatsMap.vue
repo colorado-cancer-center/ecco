@@ -27,12 +27,14 @@
         </div>
       </div>
 
+      <!--
       <div class="fieldset" v-if="measureAnnotations" style="padding: 20px;">
         <label for="category">Statistics:</label>
         <p>Minimum: {{ measureAnnotations.min?.toLocaleString() }}</p>
         <p>Maximum: {{ measureAnnotations.max?.toLocaleString() }}</p>
         <p># of Values: {{ Object.keys(measureAnnotations.values).length }}</p>
       </div>
+      -->
 
       <div class="button-columns">
         <button @click="downloadMap" :disabled="!mapRef">
