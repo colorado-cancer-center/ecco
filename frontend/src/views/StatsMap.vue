@@ -35,7 +35,7 @@
       </div>
 
       <div class="button-columns">
-        <button @click="downloadMap">
+        <button @click="downloadMap" :disabled="!mapRef">
           <i class="fa-solid fa-map"></i>
           Download Map
         </button>
@@ -57,7 +57,7 @@
       </div>
     </div>
 
-    <div class="panel-wide">
+    <div class="panel-wide" id="map-panel">
       <LeafletMap
         @created="mapCreated"
         @bounds-changed="boundsChanged"
@@ -71,11 +71,14 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { scaleSequential, scaleLinear } from 'd3-scale';
-import { useRouter, useRoute } from 'vue-router'
+import domtoimage from 'dom-to-image';
+import { saveAs } from 'file-saver';
+import slugify from 'slugify';
 
-import LeafletMap from '@/components/LeafletMap.vue';
+import LeafletMap from '@/components/LeafletMap.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -83,13 +86,6 @@ const route = useRoute()
 // if true, moving the map adds the new bounds to the URL's querystring as '?bounds=[[n, e], [s, w]]'
 // (the map will pick up the 'bounds' key on load and use that as its initial bounds)
 const persistBoundsInURL = ref(false);
-
-const mapRef = ref(null);
-
-const mapCreated = (map) => {
-  // console.log("New map: ", map);
-  mapRef.value = map;
-};
 
 // map controls
 const selectedGeoLevel = ref('County');
@@ -163,11 +159,34 @@ onMounted(() => {
 });
 
 // ===========================================================================
-// === button handlers
+// === map init, button handlers
 // ===========================================================================
 
+const mapRef = ref(null);
+
+const mapCreated = (map) => {
+  // console.log("New map: ", map);
+  mapRef.value = map;
+};
+
 const downloadMap = () => {
-  
+  if (!mapRef.value) { return; }
+
+  domtoimage.toBlob(document.getElementById('map-panel'))
+    .then(function (blob) {
+        const filename = (
+          [
+            "cancerscope_map",
+            selectedGeoLevel.value,
+            selectedMeasureName.value
+          ]
+            .filter(x => x)
+            .map(x => slugify(x))
+            .join("_")
+        )
+        
+        saveAs(blob, `${filename}.png`);
+    });
 }
 
 const downloadData = () => {

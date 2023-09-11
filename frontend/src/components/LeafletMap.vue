@@ -12,18 +12,25 @@ import L, {Map} from 'leaflet';
 
 import Legend from '@/components/map-elements/leafletLegend';
 import CustomButton from '@/components/map-elements/leafletButton';
-import BigImage from 'leaflet.bigimage'
+
 
 function initMap(element: HTMLElement, props, emit): [Map, L.GeoJSON, L.Control] {
     const map = L.map(element, { /* options */})
         .setView([38.939949, -105.617083], 7);
+
+    // ====================
+    // base tile layer
+    // ====================
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(map);
 
-    // add geojson layer
+    // ====================
+    // geojson layer for showing county, tract + coloration
+    // ====================
+
     const geojsonLayer = L.geoJSON(props.geojson, {
         style: function(feature) {
             if (props.colorScale) {
@@ -48,32 +55,13 @@ function initMap(element: HTMLElement, props, emit): [Map, L.GeoJSON, L.Control]
         }
     }).addTo(map);
 
-    // add legend layer
+    // ====================
+    // extra map controls: legend, fit bounds button
+    // ====================
+
     const legendControl = new Legend({
         legendData: props.legend
     }).addTo(map);
-
-    // add download button
-    // L.control.bigImage({position: 'topright'}).addTo(map);
-
-    // if initial bounds specified, set us to that
-    if (props.initialBounds) {
-        // const formattedBounds = L.latLngBounds(props.initialBounds);
-        map.fitBounds(props.initialBounds);
-    }
-
-    map.on('moveend', function(e) {
-        const bounds = map.getBounds();
-        const boundsArray = [
-            [bounds.getNorth(), bounds.getEast()],
-            [bounds.getSouth(), bounds.getWest()]
-        ];
-        emit('bounds-changed', map, boundsArray);
-    });
-
-    // L.easyButton('fa-globe', function(btn, map){
-    //     map.fitBounds(geojsonLayer.getBounds());
-    // }).addTo(map);
 
     map.addControl(new CustomButton({
         title: 'Fit View to Geometry',
@@ -83,6 +71,26 @@ function initMap(element: HTMLElement, props, emit): [Map, L.GeoJSON, L.Control]
             map.fitBounds(geojsonLayer.getBounds());
         }
     }));
+
+    // ====================
+    // layer bounds handling: setting initial bounds, updating bounds watchers
+    // ====================
+
+    // set us to the initial bounds, if specified
+    if (props.initialBounds) {
+        map.fitBounds(props.initialBounds);
+    }
+
+    // whenever the map is changed, emit the new bounds
+    // (this is used, e.g., for our parent StatsMap control to update the URL)
+    map.on('moveend', function(e) {
+        const bounds = map.getBounds();
+        const boundsArray = [
+            [bounds.getNorth(), bounds.getEast()],
+            [bounds.getSouth(), bounds.getWest()]
+        ];
+        emit('bounds-changed', map, boundsArray);
+    });
 
     return [map, geojsonLayer, legendControl];
 };

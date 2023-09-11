@@ -9,13 +9,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@fortawesome/free-solid-svg-icons": "^6.4.2",
     "@fortawesome/fontawesome-svg-core": "^6.4.2",
+    "@fortawesome/free-solid-svg-icons": "^6.4.2",
     "@fortawesome/vue-fontawesome": "^3.0.3",
+    "@types/file-saver": "^2.0.5",
     "@types/leaflet": "^1.9.3",
     "d3-scale": "^4.0.2",
     "d3-scale-chromatic": "^3.0.0",
+    "dom-to-image": "^2.6.0",
+    "file-saver": "^2.0.5",
     "leaflet": "^1.9.4",
+    "slugify": "^1.6.6",
     "vue": "^3.3.4",
     "vue-router": "4"
   },
