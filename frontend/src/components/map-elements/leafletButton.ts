@@ -21,9 +21,8 @@ export default L.Control.extend({
         container.innerHTML = options.body;
 
         container.onclick = function() {
-            console.log('buttonClicked');
             if (options.click) {
-                options.click();
+                (options.click as () => void)();
             }
         }
         

@@ -165,7 +165,7 @@ onMounted(() => {
 const mapRef = ref(null);
 
 const mapCreated = (map) => {
-  // console.log("New map: ", map);
+  // hold onto the map object so we can, e.g., download it as an image
   mapRef.value = map;
 };
 
@@ -333,8 +333,6 @@ const legendData = computed(() => {
 
   // produce X elements from the scale
   const steps = measureScale.ticks(5);
-
-  console.log("Steps: ", steps);
 
   // map those X elements to colored ranges of the domain
   const rows = steps.slice(0, steps.length-1).map((x, i) => ({

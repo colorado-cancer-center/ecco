@@ -142,11 +142,8 @@ export default defineComponent({
                 removeMap();
                 [map, geojsonLayer, legendControl] = initMap(mapElement.value, props, emit);
                 emit('created', map);
-                // console.log("loaded map")
             } else {
-                // Not shown - remove map
                 removeMap();
-                // console.log("removed map")
             }
         }, { threshold: [0] });
 
