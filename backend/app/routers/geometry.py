@@ -42,14 +42,14 @@ async def get_tracts(session: AsyncSession = Depends(get_session)):
     tracts = result.scalars().all()
     return tracts
 
-@router.get("/edds", response_model=list[Tract])
-async def get_tracts(session: AsyncSession = Depends(get_session)):
-    """
-    Returns metadata and geometry for economic development districts (EDDs),
-    which are groupings of counties. The geometry itself is in the
-    `wkb_geometry` subkey for each element and is in JSON-encoded GeoJSON
-    format.
-    """
-    result = await session.execute(select(Tract))
-    tracts = result.scalars().all()
-    return tracts
+# @router.get("/edds", response_model=list[Tract])
+# async def get_tracts(session: AsyncSession = Depends(get_session)):
+#     """
+#     Returns metadata and geometry for economic development districts (EDDs),
+#     which are groupings of counties. The geometry itself is in the
+#     `wkb_geometry` subkey for each element and is in JSON-encoded GeoJSON
+#     format.
+#     """
+#     result = await session.execute(select(Tract))
+#     tracts = result.scalars().all()
+#     return tracts
