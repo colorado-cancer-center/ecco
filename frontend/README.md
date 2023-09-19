@@ -1,7 +1,26 @@
-# Vue 3 + Vite
+# Frontend
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+This project was scaffolded using Vite with the following options:
 
-## Recommended IDE Setup
+- Vue 3
+- ESLint, for code quality
+- Prettier, for code formatting
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
+Notable technologies/packages/etc. used:
+
+- Leaflet and D3, for map visualizations
+
+## Requirements
+
+- Node `v18` or later
+- Yarn `v1` (classic)
+
+## Commands
+
+| Command        | Description                                       |
+| -------------- | ------------------------------------------------- |
+| `yarn install` | Install packages                                  |
+| `yarn dev`     | Start local dev server with hot-reloading         |
+| `yarn build`   | Build production version of app                   |
+| `yarn preview` | Serve built version of app (must run build first) |
+| `yarn lint`    | Fix linting and formatting                        |
