@@ -20,11 +20,8 @@ services:
     image: cocancerscope-frontend
     build: ./frontend
     command: yarn build
-    environment:
-      - "VITE_API=https://co-cancer-scope.cu-dbmi.dev/api"
-      - "VITE_TITLE=CO Cancer Scope"
-      - "VITE_URL=https://co-cancer-scope.cu-dbmi.dev"
-      - "VITE_DESCRIPTION=CO CancerScope is a tool for graphically exploring cancer incidence and mortality rates and other relevant statistics within Colorado."
+    env_file:
+      - ./frontend/.env
 
   db:
     build: ./services/postgres

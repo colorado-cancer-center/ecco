@@ -9,6 +9,8 @@ services:
     command: yarn build
     volumes:
       - built_frontend:/app/build
+    environment:
+      - "VITE_API=https://co-cancer-scope.cu-dbmi.dev/api"
 
   nginx:
     image: nginx:1.19.6-alpine
