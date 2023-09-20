@@ -51,7 +51,7 @@ import {
 import * as d3 from "d3";
 import domtoimage from "dom-to-image";
 import type { GeoJsonProperties } from "geojson";
-import L, { type LayerOptions, type MapOptions } from "leaflet";
+import L, { type MapOptions, type TileLayerOptions } from "leaflet";
 import { debounce, round } from "lodash";
 import { useElementSize, useResizeObserver } from "@vueuse/core";
 import type { Geometry } from "@/api";
@@ -123,7 +123,7 @@ const mapOptions: MapOptions = {
 };
 
 // https://leafletjs.com/reference.html#layer-option
-const layerOptions: LayerOptions = {
+const layerOptions: TileLayerOptions = {
   attribution:
     '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
 };
