@@ -112,7 +112,7 @@ class MeasuresByTract(MeasuresByCounty):
 
 class CancerIncidenceCounty(CancerStatsByCounty, table=True):
     class Config:
-        display_name = "Cancer Incidence (age-adj per 100k)"
+        label = "Cancer Incidence (age-adj per 100k)"
 
     # we add aliases for 'measure' and 'value' so that the cancer stats
     # can be treated similarly to the other stats, even though the
@@ -122,7 +122,7 @@ class CancerIncidenceCounty(CancerStatsByCounty, table=True):
 
 class CancerMortalityCounty(CancerStatsByCounty, table=True):
     class Config:
-        display_name = "Cancer Mortality (age-adj per 100k)"
+        label = "Cancer Mortality (age-adj per 100k)"
 
     # same as CancerIncidenceCounty, we alias measure and value
     # measure : str = synonym("Site")
@@ -132,49 +132,49 @@ class CancerMortalityCounty(CancerStatsByCounty, table=True):
 
 class EconomyCounty(MeasuresByCounty, table=True):
     class Config:
-        display_name = "Economics & Insurance"
+        label = "Economics & Insurance"
 
 class EnvironmentCounty(MeasuresByCounty, table=True):
     class Config:
-        display_name = "Environment"
+        label = "Environment"
 
 class HousingTransCounty(MeasuresByCounty, table=True):
     class Config:
-        display_name = "Housing & Transportation"
+        label = "Housing & Transportation"
 
 class RfAndScreeningCounty(MeasuresByCounty, table=True):
     class Config:
-        display_name = "Screening & Risk Factors"
+        label = "Screening & Risk Factors"
 
 class SociodemographicsCounty(MeasuresByCounty, table=True):
     class Config:
-        display_name = "Sociodemographics"
+        label = "Sociodemographics"
 
 # tract general measures
 
 class EconomyTract(MeasuresByTract, table=True):
     class Config:
-        display_name = "Economics & Insurance"
+        label = "Economics & Insurance"
 
 class EnvironmentTract(MeasuresByTract, table=True):
     class Config:
-        display_name = "Environment"
+        label = "Environment"
 
 class FoodDesertTract(MeasuresByTract, table=True):
     class Config:
-        display_name = "Food Deserts"
+        label = "Food Deserts"
 
 class HousingTransTract(MeasuresByTract, table=True):
     class Config:
-        display_name = "Housing & Transportation"
+        label = "Housing & Transportation"
 
 class RfAndScreeningTract(MeasuresByTract, table=True):
     class Config:
-        display_name = "Screening & Risk Factors"
+        label = "Screening & Risk Factors"
 
 class SociodemographicsTract(MeasuresByTract, table=True):
     class Config:
-        display_name = "Sociodemographics"
+        label = "Sociodemographics"
 
 
 # ===========================================================================

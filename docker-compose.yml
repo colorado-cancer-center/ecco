@@ -20,6 +20,8 @@ services:
     image: cocancerscope-frontend
     build: ./frontend
     command: yarn build
+    env_file:
+      - ./frontend/.env
 
   db:
     build: ./services/postgres
