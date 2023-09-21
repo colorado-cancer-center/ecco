@@ -42,14 +42,14 @@ class FIPSMeasureResponse(BaseModel):
 # by iterating over the STATS_MODELS dict
 
 class MeasuresMetaResponse(BaseModel):
-    display_name: str
+    label: str
 
 class CateogryMetaResponse(BaseModel):
-    display_name: str
+    label: str
     measures: dict[str, MeasuresMetaResponse]
 
 class StatsMetaResponse(BaseModel):
-    display_name: str
+    label: str
     categories: dict[str, CateogryMetaResponse]
 
 @router.get(f"/measures", response_model=dict[str, StatsMetaResponse])
@@ -63,7 +63,7 @@ async def get_measures(session: AsyncSession = Depends(get_session)):
 
     for type, models in STATS_MODELS.items():
         all_measures[type] = {
-            "display_name": type.capitalize(),
+            "label": type.capitalize(),
             "categories": {}
         }
 
@@ -81,10 +81,10 @@ async def get_measures(session: AsyncSession = Depends(get_session)):
             result = await session.execute(query)
 
             all_measures[type]["categories"][simple_model_name] = {
-                "display_name": model.Config.display_name or simple_model_name,
+                "label": model.Config.label or simple_model_name,
                 "measures": {
                     x: {
-                        "display_name": MEASURE_DESCRIPTIONS.get(simple_model_name, {}).get(x, x) or x,
+                        "label": MEASURE_DESCRIPTIONS.get(simple_model_name, {}).get(x, x) or x,
                     }
                     for x in result.scalars().all()
                 }
