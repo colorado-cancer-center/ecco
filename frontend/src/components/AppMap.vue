@@ -192,12 +192,14 @@ onBeforeUnmount(() => {
 });
 
 // fit view to data layer content
-const fit = debounce(function () {
+const fit = debounce(() => {
   if (!map || !dataLayer) return;
-  map.fitBounds(dataLayer.getBounds(), {
-    // make room for legend
-    paddingTopLeft: [props.showLegend ? 250 : 0, 0],
-  });
+  let bounds = dataLayer.getBounds();
+  if (bounds.isValid())
+    map.fitBounds(bounds, {
+      // make room for legend
+      paddingTopLeft: [props.showLegend ? 250 : 0, 0],
+    });
 }, 300);
 
 // auto-fit when legend enabled/disabled
