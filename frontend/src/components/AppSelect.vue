@@ -38,7 +38,7 @@
                 :style="{ opacity: selected ? 1 : 0 }"
                 :icon="faCheck"
               />
-              <span>{{ capitalize(option.name) }}</span>
+              <span>{{ capitalize(option.label) }}</span>
               <svg
                 v-if="option.colors?.length"
                 :viewBox="`0 0 ${option.colors.length} 1`"
@@ -82,7 +82,7 @@ import {
 import AppButton from "@/components/AppButton.vue";
 import { sleep } from "@/util/misc";
 
-export type Option = { id: string; name: string; colors?: string[] };
+export type Option = { id: string; label: string; colors?: string[] };
 
 type Props = {
   label: string;
@@ -131,8 +131,8 @@ const selectedLabel = computed<string>(() => {
   const value = props.multi
     ? props.options
         .filter((option) => props.modelValue.includes(option.id))
-        .map((option) => option.name)
-    : props.options.find((option) => option.id === props.modelValue)?.name ||
+        .map((option) => option.label)
+    : props.options.find((option) => option.id === props.modelValue)?.label ||
       "";
   if (!Array.isArray(value)) return value;
   if (value.length === 0) return "None selected";

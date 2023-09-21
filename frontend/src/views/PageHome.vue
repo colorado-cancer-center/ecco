@@ -12,13 +12,13 @@
         />
         <AppSelect
           v-model="selectedCategory"
-          label="Variable category"
+          label="Measure category"
           :options="facetToOptions(categories)"
         />
         <AppSelect
-          v-model="selectedVariable"
-          label="Variable"
-          :options="facetToOptions(variables)"
+          v-model="selectedMeasure"
+          label="Measure"
+          :options="facetToOptions(measures)"
         />
 
         <AppButton :icon="faTable" :accent="true">Download Data</AppButton>
@@ -51,13 +51,17 @@
         </AppAccordion>
       </div>
 
-      <div ref="mapContainer" class="map-container">
+      <div
+        ref="mapContainer"
+        class="map-container"
+        :style="{ opacity: geometryStatus === 'loading' ? 0.5 : 1 }"
+      >
         <AppMap
           ref="map"
           v-model:zoom="zoom"
           v-model:lat="lat"
           v-model:long="long"
-          :geometry="geometry"
+          :geometry="selectedGeometry"
           :base-opacity="baseOpacity"
           :data-opacity="dataOpacity"
           :values="values?.values"
@@ -70,9 +74,9 @@
           :height="mapHeight"
         >
           <template #legend>
-            <strong>{{ variables[selectedVariable]?.name }}</strong>
-            <small>({{ categories[selectedCategory]?.name }})</small>
-            <small>by {{ levels[selectedLevel]?.name }}</small>
+            <strong>{{ measures[selectedMeasure]?.label }}</strong>
+            <small>({{ categories[selectedCategory]?.label }})</small>
+            <small>by {{ levels[selectedLevel]?.label }}</small>
           </template>
         </AppMap>
       </div>
@@ -135,12 +139,12 @@ import {
   faTable,
 } from "@fortawesome/free-solid-svg-icons";
 import {
+  getFacets,
   getGeometry,
-  getMeasures,
   getValues,
   type Facet,
+  type Facets,
   type Geometry,
-  type Measures,
   type Values,
 } from "@/api";
 import AppAccordion from "@/components/AppAccordion.vue";
@@ -175,15 +179,17 @@ useScrollable(mapContainer);
 
 // data state
 const status = ref<Status>("loading");
+const geometryStatus = ref<Status>("loading");
 const counties = ref<Geometry>();
 const tracts = ref<Geometry>();
-const measures = ref<Measures>();
+const selectedGeometry = ref<Geometry>();
+const facets = ref<Facets>();
 const values = ref<Values>();
 
 // select boxes state
 const selectedLevel = useUrlParam("level", stringParam, "");
 const selectedCategory = useUrlParam("category", stringParam, "");
-const selectedVariable = useUrlParam("variable", stringParam, "");
+const selectedMeasure = useUrlParam("measure", stringParam, "");
 
 // map zoom state
 const zoom = useUrlParam("zoom", numberParam, 0);
@@ -203,54 +209,64 @@ const dataOpacity = ref(0.75);
 const mapWidth = ref(0);
 const mapHeight = ref(0);
 
-// load map and measure data
-async function loadData() {
+// load hierarchy of geographic levels, measure categories, and measures
+async function loadFacets() {
   try {
-    const [countiesData, tractsData, measureData] = await Promise.all([
-      getGeometry("counties", "us_fips"),
-      getGeometry("tracts", "fips"),
-      getMeasures(),
-    ]);
+    facets.value = await getFacets();
     status.value = "success";
-    counties.value = countiesData;
-    tracts.value = tractsData;
-    measures.value = measureData;
   } catch (error) {
     console.error(error);
     status.value = "error";
   }
 }
-loadData();
+loadFacets();
+
+// load and select geometry data to display on map, on request to save bandwidth
+watchEffect(async () => {
+  try {
+    geometryStatus.value = "loading";
+    // clear geometry while loading
+    selectedGeometry.value = undefined;
+    if (selectedLevel.value === "county")
+      selectedGeometry.value =
+        counties.value || (await getGeometry("counties", "us_fips"));
+    else if (selectedLevel.value === "tract")
+      selectedGeometry.value =
+        tracts.value || (await getGeometry("tracts", "fips"));
+    geometryStatus.value = "success";
+  } catch (error) {
+    console.error(error);
+    geometryStatus.value = "error";
+  }
+});
 
 // load map values data
 watchEffect(async () => {
-  if (
-    !(selectedLevel.value && selectedCategory.value && selectedVariable.value)
-  )
+  if (!(selectedLevel.value && selectedCategory.value && selectedMeasure.value))
     return;
   values.value = await getValues(
     selectedLevel.value,
     selectedCategory.value,
-    selectedVariable.value,
+    selectedMeasure.value,
   );
 });
 
-// geographic levels from data
-const levels = computed(() => cloneDeep(measures.value || {}));
+// geographic levels from facets data
+const levels = computed(() => cloneDeep(facets.value || {}));
 
-// variable categories from geographic level
+// measure categories from geographic level
 const categories = computed(() =>
-  cloneDeep(levels.value[selectedLevel.value]?.children || {}),
+  cloneDeep(levels.value[selectedLevel.value]?.list || {}),
 );
 
-// variables from variable category
-const variables = computed(() =>
-  cloneDeep(categories.value[selectedCategory.value]?.children || {}),
+// measures from measure category
+const measures = computed(() =>
+  cloneDeep(categories.value[selectedCategory.value]?.list || {}),
 );
 
 // turn facet into list of select box options
 function facetToOptions(facet: Facet): Option[] {
-  return Object.values(facet).map(({ id, name }) => ({ id, name }));
+  return Object.values(facet).map(({ id, label }) => ({ id, label }));
 }
 
 // auto-select level option
@@ -266,22 +282,15 @@ watch([selectedLevel, categories], () => {
     selectedCategory.value = Object.keys(categories.value)[0] || "";
 });
 
-// auto-select variable
-watch([selectedCategory, variables], () => {
-  if (!selectedVariable.value || !variables.value[selectedVariable.value])
-    selectedVariable.value = Object.keys(variables.value)[0] || "";
-});
-
-// geometry data to display on map
-const geometry = computed(() => {
-  let geometry = counties.value;
-  if (selectedLevel.value === "tract") geometry = tracts.value;
-  return geometry;
+// auto-select measure
+watch([selectedCategory, measures], () => {
+  if (!selectedMeasure.value || !measures.value[selectedMeasure.value])
+    selectedMeasure.value = Object.keys(measures.value)[0] || "";
 });
 
 // download map with filename
 function downloadMap() {
-  map.value?.download([selectedVariable.value, selectedLevel.value]);
+  map.value?.download([selectedMeasure.value, selectedLevel.value]);
 }
 </script>
 
@@ -324,6 +333,7 @@ function downloadMap() {
 .map-container {
   grid-area: map;
   overflow: auto;
+  transition: opacity var(--fast);
 }
 
 @media (max-width: 800px) {

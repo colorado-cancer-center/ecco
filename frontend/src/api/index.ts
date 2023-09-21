@@ -1,5 +1,5 @@
 import type { Feature, Geometry as GeoJsonGeometry } from "geojson";
-import { mapValues, startCase } from "lodash";
+import { mapValues } from "lodash";
 
 // api root
 const api = import.meta.env.VITE_API;
@@ -60,12 +60,19 @@ export async function getGeometry(type: string, idField: string) {
 
 export type Geometry = Awaited<ReturnType<typeof getGeometry>>;
 
-// response from measures api endpoint
-type _Measures = {
+// response from facets api endpoint
+type _Facets = {
   [key: string]: {
-    [key: string]: {
-      display_name: string;
-      measures: { name: string; display_name: string }[];
+    label: string;
+    categories: {
+      [key: string]: {
+        label: string;
+        measures: {
+          [key: string]: {
+            label: string;
+          };
+        };
+      };
     };
   };
 };
@@ -74,54 +81,52 @@ type _Measures = {
 export type Facet = {
   [key: string]: {
     id: string;
-    name: string;
-    children?: Facet;
+    label: string;
+    list?: Facet;
   };
 };
 
-// get hierarchical list of geographic levels, variable categories, and variables
-export async function getMeasures() {
-  const data = await request<_Measures>(`${api}/stats/measures`);
+// get hierarchical list of geographic levels, measure categories, and measures
+export async function getFacets() {
+  const data = await request<_Facets>(`${api}/stats/measures`);
 
   // transform data into desired format
-  return mapValues(data, (value, key) => ({
+  return mapValues(data, ({ label, categories }, key) => ({
     // geographic level
     id: key,
-    name: startCase(key),
-    children: mapValues(value, (value, key) => ({
-      // variable category
+    label,
+    list: mapValues(categories, ({ label, measures }, key) => ({
+      // measure category
       id: key,
-      name: value.display_name,
-      children: Object.fromEntries(
-        value.measures.map((entry) => [
-          // variable
-          entry.name,
-          {
-            id: entry.name,
-            name: entry.display_name,
-          },
-        ]),
-      ),
+      label,
+      list: mapValues(measures, ({ label }, key) => ({
+        // measure
+        id: key,
+        label,
+      })),
     })),
   })) satisfies Facet;
 }
 
-export type Measures = Awaited<ReturnType<typeof getMeasures>>;
+export type Facets = Awaited<ReturnType<typeof getFacets>>;
 
-type _Measure = {
+// response from values api endpoint
+type _Values = {
+  // range of values for specified measure
   max: number;
   min: number;
+  // map of feature id to measure value
   values: { [key: number]: number };
 };
 
-// get variable data for map
+// get values data for map
 export async function getValues(
   level: string,
   category: string,
-  variable: string,
+  measure: string,
 ) {
-  const params = new URLSearchParams({ measure: variable });
-  const data = await request<_Measure>(
+  const params = new URLSearchParams({ measure });
+  const data = await request<_Values>(
     `${api}/stats/${level}/${category}/fips-value?` + params,
   );
   return data;

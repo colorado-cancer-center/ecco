@@ -37,10 +37,10 @@ export const gradientOptions = (
   ] satisfies Extract<keyof typeof d3, `interpolate${string}`>[]
 ).map((key) => {
   const func = d3[key];
-  const name = key.replace("interpolate", "");
-  const id = name.toLowerCase();
+  const label = key.replace("interpolate", "");
+  const id = label.toLowerCase();
   const colors = range(0, 1.01, 0.1).map(func);
-  return { key, func, id, name, colors };
+  return { key, func, id, label, colors };
 }) satisfies Option[];
 
 // available gradient function names
