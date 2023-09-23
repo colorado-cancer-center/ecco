@@ -29,7 +29,7 @@ button {
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  min-height: 30px;
+  min-height: 35px;
   padding: 5px 10px;
   gap: 10px;
   border: none;
@@ -69,8 +69,8 @@ span {
 }
 
 .square {
-  min-width: 30px;
-  min-height: 30px;
+  width: 35px;
+  height: 35px;
   padding: 0;
 }
 </style>

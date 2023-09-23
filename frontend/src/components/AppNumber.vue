@@ -57,8 +57,8 @@ label {
 }
 
 input {
-  min-height: 30px;
-  padding: 0 10px;
+  min-height: 35px;
+  padding: 5px 10px;
   border: none;
   border-radius: var(--rounded);
   background: var(--off-white);

@@ -63,7 +63,7 @@
           />
         </div>
 
-        <AppAccordion label="More Map Styling">
+        <AppAccordion label="More Options">
           <AppSelect
             v-model="selectedBase"
             v-tooltip="'Provider to use for base map layer'"
@@ -132,82 +132,86 @@
         </AppAccordion>
       </div>
 
-      <div
-        ref="mapContainer"
-        class="map-container"
-        :style="{ opacity: geometryStatus === 'loading' ? 0.5 : 1 }"
-      >
-        <AppMap
-          ref="map"
-          v-model:zoom="zoom"
-          v-model:lat="lat"
-          v-model:long="long"
-          :geometry="selectedGeometry"
-          :values="values?.values"
-          :min="values?.min"
-          :max="values?.max"
-          :show-legend="showLegend"
-          :show-details="showDetails"
-          :data-opacity="dataOpacity"
-          :base-opacity="baseOpacity"
-          :base="selectedBase"
-          :gradient="selectedGradient"
-          :flip-gradient="flipGradient"
-          :scale-steps="scaleSteps"
-          :nice-steps="niceSteps"
-          :width="mapWidth"
-          :height="mapHeight"
-          :scroll-zoom="!mapScrollable"
+      <div class="map-container">
+        <div
+          ref="mapContainer"
+          class="map"
+          :style="{ opacity: geometryStatus === 'loading' ? 0.5 : 1 }"
         >
-          <template #heading>
-            <strong>{{ measures[selectedMeasure]?.label }}</strong>
-            <small>({{ categories[selectedCategory]?.label }})</small>
-            <small>by {{ levels[selectedLevel]?.label }}</small>
-          </template>
+          <AppMap
+            ref="map"
+            v-model:zoom="zoom"
+            v-model:lat="lat"
+            v-model:long="long"
+            :geometry="selectedGeometry"
+            :values="values?.values"
+            :min="values?.min"
+            :max="values?.max"
+            :show-legend="showLegend"
+            :show-details="showDetails"
+            :data-opacity="dataOpacity"
+            :base-opacity="baseOpacity"
+            :base="selectedBase"
+            :gradient="selectedGradient"
+            :flip-gradient="flipGradient"
+            :scale-steps="scaleSteps"
+            :nice-steps="niceSteps"
+            :width="mapWidth"
+            :height="mapHeight"
+            :scroll-zoom="!mapScrollable"
+          >
+            <template #heading>
+              <strong>{{ measures[selectedMeasure]?.label }}</strong>
+              <small>({{ categories[selectedCategory]?.label }})</small>
+              <small>by {{ levels[selectedLevel]?.label }}</small>
+            </template>
 
-          <template #details>
-            <div class="mini-table">
-              <span>Min:</span>
-              <span>
-                {{ formatValue(values?.min, values?.min, values?.max) }}</span
-              >
-              <span>Max:</span>
-              <span>
-                {{ formatValue(values?.max, values?.min, values?.max) }}</span
-              >
-              <span>Mean:</span>
-              <span>
-                {{ formatValue(values?.mean, values?.min, values?.max) }}</span
-              >
-              <span>Median:</span>
-              <span>
-                {{
-                  formatValue(values?.median, values?.min, values?.max)
-                }}</span
-              >
-            </div>
-          </template>
-        </AppMap>
-      </div>
+            <template #details>
+              <div class="mini-table">
+                <span>Min:</span>
+                <span>
+                  {{ formatValue(values?.min, values?.min, values?.max) }}</span
+                >
+                <span>Max:</span>
+                <span>
+                  {{ formatValue(values?.max, values?.min, values?.max) }}</span
+                >
+                <span>Mean:</span>
+                <span>
+                  {{
+                    formatValue(values?.mean, values?.min, values?.max)
+                  }}</span
+                >
+                <span>Median:</span>
+                <span>
+                  {{
+                    formatValue(values?.median, values?.min, values?.max)
+                  }}</span
+                >
+              </div>
+            </template>
+          </AppMap>
+        </div>
 
-      <div class="controls">
-        <AppButton
-          aria-label="Zoom out of map"
-          :icon="faMinus"
-          @click="map?.zoomOut()"
-        />
-        <AppButton
-          aria-label="Zoom in of map"
-          :icon="faPlus"
-          @click="map?.zoomIn()"
-        />
-        <AppButton
-          aria-label="Fit map view"
-          :icon="faCropSimple"
-          @click="map?.fit"
-        >
-          Fit
-        </AppButton>
+        <div class="controls">
+          <AppButton
+            aria-label="Zoom out of map"
+            :icon="faMinus"
+            @click="map?.zoomOut()"
+          />
+          <AppButton
+            aria-label="Zoom in of map"
+            :icon="faPlus"
+            @click="map?.zoomIn()"
+          />
+          <AppButton
+            aria-label="Fit map view"
+            :icon="faCropSimple"
+            @click="map?.fit"
+          >
+            Fit
+          </AppButton>
+        </div>
       </div>
     </div>
 
@@ -412,28 +416,18 @@ function downloadMap() {
 <style scoped>
 .layout {
   display: grid;
-  grid-template-rows: 1fr min-content;
-  grid-template-columns: 300px 1fr;
-  grid-template-areas:
-    "panel map"
-    "panel controls";
-  grid-auto-flow: row;
-  min-height: 75vh;
+  grid-template-columns: 320px 1fr;
   margin: 40px 0;
   gap: 30px;
 }
 
 .panel {
   display: flex;
-  grid-area: panel;
   flex-direction: column;
   align-items: stretch;
-  height: 0; /* remove from height calculation */
-  min-height: 100%; /* match other row's height */
   margin: 0;
   padding: 0;
   padding-right: 10px;
-  overflow-y: auto;
   gap: 20px;
   border: none;
   border-radius: var(--rounded);
@@ -470,34 +464,33 @@ function downloadMap() {
 
 .controls {
   display: flex;
-  grid-area: controls;
   gap: 10px;
 }
 
 .map-container {
-  grid-area: map;
+  display: flex;
+  position: sticky;
+  top: 20px;
+  flex-direction: column;
+  width: 0;
+  min-width: 100%;
+  max-height: calc(100vh - 35px);
+  gap: 20px;
+}
+
+.map {
+  flex-grow: 1;
   overflow: auto;
   transition: opacity var(--fast);
 }
 
 @media (max-width: 800px) {
   .layout {
-    grid-template-rows: max-content minmax(400px, 1fr) min-content;
     grid-template-columns: 1fr;
-    grid-template-areas:
-      "panel"
-      "map"
-      "controls";
   }
 
-  .panel {
-    height: unset;
-    min-height: unset;
-    overflow-y: unset;
-  }
-
-  .layout > * {
-    min-width: 0;
+  .map {
+    height: 90vh;
   }
 }
 </style>

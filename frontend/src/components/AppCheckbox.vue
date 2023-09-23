@@ -40,7 +40,7 @@ const emit = defineEmits<Emits>();
   display: flex;
   flex-shrink: 0;
   align-items: stretch;
-  min-height: 30px;
+
   border-radius: var(--rounded);
   transition: background var(--fast);
 }
@@ -64,8 +64,8 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 35px;
+  height: 35px;
   border: none;
   background: none;
   color: var(--theme);
