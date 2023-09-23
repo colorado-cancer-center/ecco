@@ -21,33 +21,114 @@
           :options="facetToOptions(measures)"
         />
 
-        <AppButton :icon="faTable" :accent="true">Download Data</AppButton>
-        <AppButton :icon="faMap" :accent="true" @click="downloadMap"
+        <AppButton
+          v-tooltip="'Download selected data in CSV format'"
+          :icon="faTable"
+          :accent="true"
+          >Download Data</AppButton
+        >
+        <AppButton
+          v-tooltip="'Download current map view as PNG'"
+          :icon="faMap"
+          :accent="true"
+          @click="downloadMap"
           >Download Map</AppButton
         >
 
-        <AppAccordion label="Map Styling">
-          <AppCheckbox v-model="showLegend" label="Show legend" />
+        <hr />
+
+        <div class="double-control">
+          <AppCheckbox
+            v-model="showLegend"
+            v-tooltip="'Show/hide legend on map'"
+            label="Show legend"
+          />
+          <AppCheckbox
+            v-model="showDetails"
+            v-tooltip="'Show/hide extra details in map legend'"
+            label="Show details"
+          />
+        </div>
+
+        <div class="double-control">
+          <AppSlider
+            v-model="dataOpacity"
+            v-tooltip="'Transparency of map data layer'"
+            label="Data opacity"
+          />
+          <AppSlider
+            v-model="baseOpacity"
+            v-tooltip="'Transparency of map base layer'"
+            label="Base opacity"
+          />
+        </div>
+
+        <AppAccordion label="More Map Styling">
+          <AppSelect
+            v-model="selectedBase"
+            v-tooltip="'Provider to use for base map layer'"
+            label="Base layer"
+            :options="baseOptions"
+          />
+
           <AppSelect
             v-model="selectedGradient"
+            v-tooltip="'Gradient to use for coloring map data'"
             label="Gradient"
             :options="gradientOptions"
           />
-          <AppCheckbox v-model="flipGradient" label="Flip gradient" />
-          <AppNumber
-            v-model="mapWidth"
-            label="Map width"
-            :max="2000"
-            :step="10"
-          />
-          <AppNumber
-            v-model="mapHeight"
-            label="Map height"
-            :max="2000"
-            :step="10"
-          />
-          <AppSlider v-model="baseOpacity" label="Base layer opacity" />
-          <AppSlider v-model="dataOpacity" label="Data layer opacity" />
+
+          <div class="double-control">
+            <AppCheckbox
+              v-model="flipGradient"
+              v-tooltip="'Reverse direction of color gradient'"
+              label="Flip gradient"
+            />
+          </div>
+
+          <div class="double-control">
+            <AppNumber
+              v-model="scaleSteps"
+              v-tooltip="
+                'Number of steps to divide data scale into. Only approximate if &quot;nice steps&quot; on.'
+              "
+              :min="3"
+              :max="20"
+              :step="1"
+              label="Scale steps"
+            />
+            <AppCheckbox
+              v-model="niceSteps"
+              v-tooltip="'Round scale steps to nice, even intervals'"
+              label="Nice steps"
+            />
+          </div>
+
+          <label
+            v-tooltip="
+              'Dimensions of map, useful to set exactly when downloading as image. Use 0 to fit to window.'
+            "
+            class="dimensions-label"
+          >
+            <span>Map dimensions</span>
+            <div class="dimensions">
+              <AppNumber
+                v-model="mapWidth"
+                label="Map width"
+                :hide-label="true"
+                :max="2000"
+                :step="100"
+              />
+              <span> &times; </span>
+              <AppNumber
+                v-model="mapHeight"
+                label="Map height"
+                :hide-label="true"
+                :max="2000"
+                :step="100"
+              />
+            </div>
+          </label>
         </AppAccordion>
       </div>
 
@@ -62,21 +143,49 @@
           v-model:lat="lat"
           v-model:long="long"
           :geometry="selectedGeometry"
-          :base-opacity="baseOpacity"
-          :data-opacity="dataOpacity"
           :values="values?.values"
           :min="values?.min"
           :max="values?.max"
+          :show-legend="showLegend"
+          :show-details="showDetails"
+          :data-opacity="dataOpacity"
+          :base-opacity="baseOpacity"
+          :base="selectedBase"
           :gradient="selectedGradient"
           :flip-gradient="flipGradient"
-          :show-legend="showLegend"
+          :scale-steps="scaleSteps"
+          :nice-steps="niceSteps"
           :width="mapWidth"
           :height="mapHeight"
+          :scroll-zoom="!mapScrollable"
         >
-          <template #legend>
+          <template #heading>
             <strong>{{ measures[selectedMeasure]?.label }}</strong>
             <small>({{ categories[selectedCategory]?.label }})</small>
             <small>by {{ levels[selectedLevel]?.label }}</small>
+          </template>
+
+          <template #details>
+            <div class="mini-table">
+              <span>Min:</span>
+              <span>
+                {{ formatValue(values?.min, values?.min, values?.max) }}</span
+              >
+              <span>Max:</span>
+              <span>
+                {{ formatValue(values?.max, values?.min, values?.max) }}</span
+              >
+              <span>Mean:</span>
+              <span>
+                {{ formatValue(values?.mean, values?.min, values?.max) }}</span
+              >
+              <span>Median:</span>
+              <span>
+                {{
+                  formatValue(values?.median, values?.min, values?.max)
+                }}</span
+              >
+            </div>
           </template>
         </AppMap>
       </div>
@@ -156,6 +265,7 @@ import AppSelect, { type Option } from "@/components/AppSelect.vue";
 import AppSlider from "@/components/AppSlider.vue";
 import AppStatus, { type Status } from "@/components/AppStatus.vue";
 import { gradientOptions } from "@/components/gradient";
+import { baseOptions } from "@/components/tile-providers";
 import {
   booleanParam,
   numberParam,
@@ -163,6 +273,7 @@ import {
   useScrollable,
   useUrlParam,
 } from "@/util/composables";
+import { formatValue } from "@/util/math";
 import "leaflet/dist/leaflet.css";
 
 // project info
@@ -175,7 +286,7 @@ const map = ref<InstanceType<typeof AppMap>>();
 
 // show gradients on elements when scrollable
 useScrollable(panel);
-useScrollable(mapContainer);
+const mapScrollable = useScrollable(mapContainer);
 
 // data state
 const status = ref<Status>("loading");
@@ -198,14 +309,18 @@ const long = useUrlParam("long", numberParam, 0);
 
 // map style state
 const showLegend = ref(true);
+const showDetails = ref(false);
+const dataOpacity = ref(0.75);
+const selectedBase = useUrlParam("base", stringParam, baseOptions[0]?.id || "");
+const baseOpacity = ref(1);
 const selectedGradient = useUrlParam(
   "grad",
   stringParam,
   gradientOptions[0]?.id || "",
 );
-const flipGradient = useUrlParam("flip-grad", booleanParam, false);
-const baseOpacity = ref(1);
-const dataOpacity = ref(0.75);
+const flipGradient = useUrlParam("flip", booleanParam, false);
+const scaleSteps = ref(5);
+const niceSteps = ref(true);
 const mapWidth = ref(0);
 const mapHeight = ref(0);
 
@@ -322,6 +437,35 @@ function downloadMap() {
   gap: 20px;
   border: none;
   border-radius: var(--rounded);
+}
+
+.double-control {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: flex-end;
+  width: 100%;
+  gap: 10px 20px;
+}
+
+@media (max-width: 400px) {
+  .double-control {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dimensions-label {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.dimensions {
+  display: grid;
+  grid-template-columns: 1fr min-content 1fr;
+  align-items: center;
+  gap: 5px;
 }
 
 .controls {

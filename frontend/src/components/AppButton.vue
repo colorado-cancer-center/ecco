@@ -26,9 +26,9 @@ const hasText = computed(() => !!useSlots().default);
 <style scoped>
 button {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  max-width: 100%;
   min-height: 30px;
   padding: 5px 10px;
   gap: 10px;

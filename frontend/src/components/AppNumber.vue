@@ -1,12 +1,13 @@
 <template>
   <label>
-    <span>{{ label }}</span>
+    <span v-if="!hideLabel">{{ label }}</span>
     <input
       type="number"
       :value="modelValue"
       :min="min"
       :max="max"
       :step="step"
+      :aria-label="label"
       @change="onChange"
     />
   </label>
@@ -21,12 +22,14 @@ type Props = {
   min?: number;
   max?: number;
   step?: number;
+  hideLabel?: boolean;
 };
 
 const props = withDefaults(defineProps<Props>(), {
   min: 0,
   max: 1,
   step: 0.01,
+  hideLabel: false,
 });
 
 type Emits = {
@@ -46,6 +49,7 @@ function onChange(event: Event) {
 <style scoped>
 label {
   display: flex;
+  flex-shrink: 0;
   flex-direction: column;
   align-items: stretch;
   gap: 10px;

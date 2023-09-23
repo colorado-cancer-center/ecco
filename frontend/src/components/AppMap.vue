@@ -10,8 +10,12 @@
 
   <Teleport v-if="legendTeleport && showLegend" :to="legendTeleport">
     <div class="legend" @mousedown.stop>
-      <div class="header">
-        <slot name="legend" />
+      <div class="legend-slot">
+        <slot name="heading" />
+      </div>
+
+      <div v-if="showDetails" class="legend-slot">
+        <slot name="details" />
       </div>
 
       <div class="steps">
@@ -28,7 +32,7 @@
   </Teleport>
 
   <Teleport v-if="popupTeleport && popupFeature" :to="popupTeleport">
-    <div class="popup">
+    <div class="mini-table">
       <span>Name</span>
       <span>{{ popupFeature.name }}</span>
       <span>FIPS</span>
@@ -51,61 +55,71 @@ import {
 import * as d3 from "d3";
 import domtoimage from "dom-to-image";
 import type { GeoJsonProperties } from "geojson";
-import L, { type MapOptions, type TileLayerOptions } from "leaflet";
-import { debounce, round } from "lodash";
+import L, { type MapOptions } from "leaflet";
+import { debounce } from "lodash";
 import { useElementSize, useResizeObserver } from "@vueuse/core";
 import type { Geometry } from "@/api";
 import { gradientOptions, type GradientFunc } from "@/components/gradient";
 import { downloadPng } from "@/util/download";
+import { formatValue } from "@/util/math";
+import { sleep } from "@/util/misc";
 import "leaflet/dist/leaflet.css";
 
 // ref to root element
 const element = ref<HTMLDivElement>();
 
 type Props = {
+  // geojson
+  geometry?: Geometry;
   // map pan/zoom
   lat?: number;
   long?: number;
   zoom?: number;
-  // geojson
-  geometry?: Geometry;
-  // show/hide legend
-  showLegend?: boolean;
+  // map of feature id to value
+  values?: { [key: number]: number };
   // value domain
   min?: number;
   max?: number;
-  // map of feature id to value
-  values?: { [key: number]: number };
-  // number of scale steps
-  steps?: number;
+  // show/hide elements
+  showLegend?: boolean;
+  showDetails?: boolean;
+  // layer opacities
+  dataOpacity?: number;
+  baseOpacity?: number;
+  // tile provider for base layer
+  base?: string;
   // color gradient id
   gradient?: string;
-  // reverse direction of gradient
+  // scale props
   flipGradient?: boolean;
+  scaleSteps?: number;
+  niceSteps?: boolean;
   // forced dimensions
   width?: number;
   height?: number;
-  // layer opacities
-  baseOpacity?: number;
-  dataOpacity?: number;
+  // whether to enable scroll-to-zoom
+  scrollZoom: boolean;
 };
 
 const props = withDefaults(defineProps<Props>(), {
+  geometry: () => [],
   lat: undefined,
   long: undefined,
   zoom: undefined,
-  geometry: () => [],
-  showLegend: true,
+  values: () => ({}),
   min: 0,
   max: 0,
-  values: () => ({}),
-  steps: 5,
+  showLegend: true,
+  showDetails: false,
+  dataOpacity: 0.75,
+  baseOpacity: 1,
+  base: "Stadia.AlidadeSmooth",
   gradient: "interpolateCool",
   flipGradient: false,
+  scaleSteps: 5,
+  niceSteps: true,
   width: 0,
   height: 0,
-  baseOpacity: 1,
-  dataOpacity: 0.75,
 });
 
 type Emits = {
@@ -117,25 +131,23 @@ type Emits = {
 const emit = defineEmits<Emits>();
 
 // https://leafletjs.com/reference.html#map-option
-const mapOptions: MapOptions = {
-  // preferCanvas: true,
-  zoomSnap: 0.1,
-};
+const mapOptions: MapOptions = { zoomControl: false };
 
-// https://leafletjs.com/reference.html#layer-option
-const layerOptions: TileLayerOptions = {
-  attribution:
-    '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+// set fine level of zoom snap, e.g. for tighter fitbounds
+const fineZoom = () => {
+  if (map) map.options.zoomSnap = 0.1;
 };
-
-// open street map data
-const urlTemplate = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+// set coarse level of zoom snap, to make track pad pinch zoom not frustrating
+const coarseZoom = async () => {
+  await sleep();
+  if (map) map.options.zoomSnap = 1;
+};
 
 // leaflet map object
 let map: L.Map | null = null;
 
 // base layer of open street map data
-const baseLayer = L.tileLayer(urlTemplate, layerOptions);
+let baseLayer = L.tileLayer("");
 
 // layer for our own geojson data
 let dataLayer = L.geoJSON();
@@ -154,9 +166,6 @@ onMounted(() => {
 
   // init map
   map = L.map(element.value, mapOptions);
-
-  // disable default zoom controls
-  map.removeControl(map.zoomControl);
 
   // add layers
   baseLayer.addTo(map);
@@ -181,6 +190,11 @@ onMounted(() => {
     emit("update:zoom", map.getZoom());
   });
 
+  // preserve fine-grain fitted zoom on drag
+  map.on("dragstart", fineZoom);
+  // reset zoom snap when done dragging
+  map.on("dragend", coarseZoom);
+
   // update stuff once map init'd
   updateGeometry();
 });
@@ -191,22 +205,45 @@ onBeforeUnmount(() => {
   map.remove();
 });
 
+// update base layer of map
+function updateBase() {
+  if (!map) return;
+  map.removeLayer(baseLayer);
+  // @ts-expect-error no workable type defs for leaflet-providers
+  baseLayer = L.tileLayer.provider?.(props.base);
+  map.addLayer(baseLayer);
+}
+
+// update base layer when props change
+watch(() => props.base, updateBase, { immediate: true });
+
 // fit view to data layer content
-const fit = debounce(() => {
+const fit = debounce(async () => {
   if (!map || !dataLayer) return;
+
+  // get bounding box of geojson data
   let bounds = dataLayer.getBounds();
-  if (bounds.isValid())
-    map.fitBounds(bounds, {
-      // make room for legend
-      paddingTopLeft: [props.showLegend ? 250 : 0, 0],
-    });
-}, 300);
+
+  if (!bounds.isValid()) return;
+
+  // get tight fit
+  fineZoom();
+  // reset zoom snap when zoom animation finishes
+  map.once("zoomend", coarseZoom);
+
+  map.fitBounds(bounds, {
+    // make room for legend
+    paddingTopLeft: [props.showLegend ? 220 : 0, 0],
+  });
+}, 200);
 
 // auto-fit when legend enabled/disabled
 watch(() => props.showLegend, fit);
 
 // auto-fit when map container element changes size
+let first = true;
 useResizeObserver(element, () => {
+  if (first) return (first = false);
   map?.invalidateSize();
   fit();
 });
@@ -237,7 +274,7 @@ function updateGeometry() {
   }));
 
   // attach popups
-  dataLayer.bindPopup(() => "xxxxxxxxxxxxxxxxxxxxxxxxxx");
+  dataLayer.bindPopup(() => "");
   dataLayer.on("popupopen", async (event) => {
     // wait for
     await nextTick();
@@ -256,11 +293,14 @@ function updateGeometry() {
   });
 
   // if no pan/zoom specified, fit view to content,
-  if (!props.lat && !props.long && !props.zoom) fit();
+  if (!props.lat && !props.long && !props.zoom) {
+    fit();
+  }
   // otherwise, set view from props
   else updateView();
 
   // update stuff once layers init'd
+  updateBase();
   updateColors();
   updateOpacities();
 }
@@ -308,27 +348,43 @@ watch([() => props.baseOpacity, () => props.dataOpacity], updateOpacities, {
   immediate: true,
 });
 
-// format map data value
-function formatValue(value: number): string {
-  if (props.min >= 0 && props.max <= 1) return round(value * 100, 1) + "%";
-  else return value.toLocaleString(undefined, { notation: "compact" });
-}
-
 // legend steps
 const legendSteps = computed(() => {
-  const ticks = scale.value.nice().ticks(props.steps);
+  const steps = props.niceSteps
+    ? // "nice", approximate number of stems
+      scale.value.ticks(props.scaleSteps)
+    : // exact number of steps
+      d3.range(
+        props.min,
+        props.max,
+        (props.max - props.min) / (props.scaleSteps + 1),
+      );
 
-  // map spaced ticks to ranges and colors
-  return ticks.slice(0, -1).map((value, index, array) => ({
-    // use actual min for first
-    start: formatValue(index === 0 ? props.min : value),
-    // use actual max for last
-    end: formatValue(
-      index === array.length - 1 ? props.max : ticks[index + 1] || value,
+  // map spaced steps to ranges and colors
+  return steps.slice(0, -1).map((value, index) => ({
+    start: formatValue(value, props.min, props.max),
+    end: formatValue(steps[index + 1], props.min, props.max),
+    color: gradientFunc.value(
+      scale.value(
+        index === 0
+          ? props.min
+          : index === steps.length - 2
+          ? props.max
+          : (value + (steps[index + 1] || 0)) / 2,
+      ),
     ),
-    color: gradientFunc.value(scale.value(value)),
   }));
 });
+
+// enable/disable zooming by scrolling
+watch(
+  () => props.scrollZoom,
+  () => {
+    if (!map) return;
+    if (props.scrollZoom) map.scrollWheelZoom.enable();
+    else map.scrollWheelZoom.disable();
+  },
+);
 
 // actual client size of map
 const { width: actualWidth, height: actualHeight } = useElementSize(element);
@@ -368,7 +424,7 @@ defineExpose({ download, fit, zoomIn, zoomOut });
 .legend {
   display: flex;
   flex-direction: column;
-  max-width: 15rem;
+  width: min-content;
   padding: 20px;
   gap: 20px;
   border-radius: var(--rounded);
@@ -376,7 +432,7 @@ defineExpose({ download, fit, zoomIn, zoomOut });
   box-shadow: var(--shadow);
 }
 
-.header {
+.legend-slot {
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -395,25 +451,11 @@ defineExpose({ download, fit, zoomIn, zoomOut });
 .steps svg {
   width: 100%;
 }
-
-.popup {
-  display: grid;
-  grid-template-columns: auto auto;
-  gap: 10px;
-}
-
-.popup span:nth-child(odd) {
-  font-weight: var(--bold);
-}
 </style>
 
 <style>
 .leaflet-container {
   font: inherit !important;
-}
-
-.leaflet-layer {
-  filter: saturate(0);
 }
 
 .leaflet-control-attribution {

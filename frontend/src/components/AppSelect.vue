@@ -6,7 +6,7 @@
       :multiple="multi"
       @update:model-value="onChange"
     >
-      <ListboxLabel>{{ capitalize(label) || "-" }}:</ListboxLabel>
+      <ListboxLabel>{{ label || "-" }}</ListboxLabel>
       <Float
         :shift="10"
         :middleware="middleware"
@@ -21,8 +21,9 @@
             :icon="open ? faAngleUp : faAngleDown"
             :flip="true"
             class="button"
+            @keydown="onKeypress"
           >
-            {{ capitalize(selectedLabel) }}
+            {{ selectedLabel }}
           </AppButton>
         </ListboxButton>
         <ListboxOptions>
@@ -33,12 +34,17 @@
             as="template"
             :value="option"
           >
-            <li :class="{ active, selected }">
+            <li
+              :class="{ active, selected }"
+              @vue:mounted="(node: VNode) => selected && onOpen(node)"
+            >
               <font-awesome-icon
                 :style="{ opacity: selected ? 1 : 0 }"
                 :icon="faCheck"
               />
-              <span>{{ capitalize(option.label) }}</span>
+              <span>{{ option.label }}</span>
+
+              <!-- color gradient preview -->
               <svg
                 v-if="option.colors?.length"
                 :viewBox="`0 0 ${option.colors.length} 1`"
@@ -54,6 +60,9 @@
                   height="1"
                 />
               </svg>
+
+              <!-- image preview -->
+              <img v-if="option.image" :src="option.image" alt="" />
             </li>
           </ListboxOption>
         </ListboxOptions>
@@ -63,8 +72,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
-import { capitalize } from "lodash";
+import { computed, type VNode } from "vue";
+import { clamp } from "lodash";
 import { size } from "@floating-ui/dom";
 import {
   faAngleDown,
@@ -80,9 +89,14 @@ import {
   ListboxOptions,
 } from "@headlessui/vue";
 import AppButton from "@/components/AppButton.vue";
-import { sleep } from "@/util/misc";
+import { frame, sleep } from "@/util/misc";
 
-export type Option = { id: string; label: string; colors?: string[] };
+export type Option = {
+  id: string;
+  label: string;
+  colors?: string[];
+  image?: string;
+};
 
 type Props = {
   label: string;
@@ -140,6 +154,24 @@ const selectedLabel = computed<string>(() => {
   if (value.length === props.options.length) return "All selected";
   return value.length + " selected";
 });
+
+// add "quick" arrow key select
+function onKeypress(event: KeyboardEvent) {
+  let index = props.options.findIndex(
+    (option) => option.id === props.modelValue,
+  );
+  if (event.key === "ArrowLeft") index--;
+  if (event.key === "ArrowRight") index++;
+  index = clamp(index, 0, props.options.length - 1);
+  const id = props.options[index]?.id;
+  if (id) emit("update:modelValue", id);
+}
+
+// when listbox opened
+async function onOpen(node: VNode) {
+  await frame();
+  (node.el as Element).scrollIntoView();
+}
 </script>
 
 <style scoped>
@@ -185,6 +217,10 @@ li span {
 li svg {
   max-width: 100px;
   height: 1em;
+}
+
+li img {
+  height: 3em;
 }
 
 .active {

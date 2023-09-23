@@ -1,4 +1,5 @@
 import {
+  computed,
   nextTick,
   onMounted,
   shallowRef,
@@ -55,15 +56,21 @@ export function useUrlParam<T>(
   const variable = shallowRef(initialValue);
 
   // when url changes, update variable
-  watchEffect(() => {
-    const param = params[name] || "";
-    const value = parse(Array.isArray(param) ? param.join() : param);
-    if (value) variable.value = value;
-  });
+  watch(
+    () => params[name],
+    () => {
+      const param = params[name] || "";
+      const value = parse(Array.isArray(param) ? param.join() : param);
+      if (param === stringify(variable.value)) return;
+      if (value) variable.value = value;
+    },
+    { immediate: true },
+  );
 
   // when variable changes, update url
   const updateUrl = debounce(() => {
     const value = stringify(variable.value);
+    if (params[name] === value) return;
     if (value) params[name] = value;
     else delete params[name];
   }, 200);
@@ -78,6 +85,12 @@ export function useScrollable(
   thickness = "100px",
 ) {
   const { arrivedState } = useScroll(element);
+
+  // whether any scrolling is possible
+  const scrollable = computed(() => {
+    const { left, top, right, bottom } = arrivedState;
+    return !left || !top || !right || !bottom;
+  });
 
   // add gradient styles
   watchEffect(() => {
@@ -110,12 +123,14 @@ export function useScrollable(
   });
 
   // force scroll to update
-  async function updateScroll() {
+  async function update() {
     await nextTick();
     element.value?.dispatchEvent(new Event("scroll"));
   }
   // update scroll on any events that might affect element's scrollWidth/Height
-  onMounted(updateScroll);
-  useResizeObserver(element, updateScroll);
-  useMutationObserver(element, updateScroll, { childList: true });
+  onMounted(update);
+  useResizeObserver(element, update);
+  useMutationObserver(element, update, { childList: true, subtree: true });
+
+  return scrollable;
 }

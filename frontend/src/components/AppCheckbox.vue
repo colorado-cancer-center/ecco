@@ -38,6 +38,7 @@ const emit = defineEmits<Emits>();
 <style scoped>
 .container {
   display: flex;
+  flex-shrink: 0;
   align-items: stretch;
   min-height: 30px;
   border-radius: var(--rounded);

@@ -18,4 +18,8 @@ footer {
   padding: 20px;
   gap: 20px;
 }
+
+footer a:hover {
+  text-decoration: underline;
+}
 </style>

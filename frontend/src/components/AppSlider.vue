@@ -17,7 +17,7 @@
           <SliderRange class="range" />
         </SliderTrack>
         <SliderThumb :as-child="true">
-          <div class="thumb" />
+          <div class="thumb" :aria-label="label" />
         </SliderThumb>
       </span>
     </SliderRoot>
@@ -57,7 +57,7 @@ label {
   position: relative;
   align-items: center;
   height: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
   padding: 10px 0;
   cursor: pointer;
 }

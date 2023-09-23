@@ -15,7 +15,7 @@
     "vuejs-accessibility/label-has-for": [
       "error",
       {
-        "controlComponents": ["SliderRoot"],
+        "controlComponents": ["SliderRoot", "AppNumber"],
         "required": { "some": ["nesting"] },
         "allowChildren": true
       }

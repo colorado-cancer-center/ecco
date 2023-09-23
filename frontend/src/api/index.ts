@@ -1,3 +1,4 @@
+import * as d3 from "d3";
 import type { Feature, Geometry as GeoJsonGeometry } from "geojson";
 import { mapValues } from "lodash";
 
@@ -129,7 +130,16 @@ export async function getValues(
   const data = await request<_Values>(
     `${api}/stats/${level}/${category}/fips-value?` + params,
   );
-  return data;
+
+  const values = Object.values(data.values);
+
+  return {
+    min: d3.min(values),
+    max: d3.max(values),
+    mean: d3.mean(values),
+    median: d3.median(values),
+    values: data.values,
+  };
 }
 
 export type Values = Awaited<ReturnType<typeof getValues>>;
