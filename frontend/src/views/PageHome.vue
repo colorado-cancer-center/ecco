@@ -10,11 +10,13 @@
           label="Geographic level"
           :options="facetToOptions(levels)"
         />
+
         <AppSelect
           v-model="selectedCategory"
           label="Measure category"
           :options="facetToOptions(categories)"
         />
+
         <AppSelect
           v-model="selectedMeasure"
           label="Measure"
@@ -23,16 +25,9 @@
 
         <AppButton
           v-tooltip="'Download selected data in CSV format'"
-          :icon="faTable"
+          :icon="faDownload"
           :accent="true"
           >Download Data</AppButton
-        >
-        <AppButton
-          v-tooltip="'Download current map view as PNG'"
-          :icon="faMap"
-          :accent="true"
-          @click="downloadMap"
-          >Download Map</AppButton
         >
 
         <hr />
@@ -43,23 +38,11 @@
             v-tooltip="'Show/hide legend on map'"
             label="Show legend"
           />
+
           <AppCheckbox
             v-model="showDetails"
             v-tooltip="'Show/hide extra details in map legend'"
             label="Show details"
-          />
-        </div>
-
-        <div class="double-control">
-          <AppSlider
-            v-model="dataOpacity"
-            v-tooltip="'Transparency of map data layer'"
-            label="Data opacity"
-          />
-          <AppSlider
-            v-model="baseOpacity"
-            v-tooltip="'Transparency of map base layer'"
-            label="Base opacity"
           />
         </div>
 
@@ -69,6 +52,14 @@
             v-tooltip="'Provider to use for base map layer'"
             label="Base layer"
             :options="baseOptions"
+          />
+
+          <AppSelect
+            v-model="selectedOverlays"
+            v-tooltip="'Providers to use as overlay layers'"
+            label="Overlay layers"
+            :options="overlayOptions"
+            :multi="true"
           />
 
           <AppSelect
@@ -84,6 +75,26 @@
               v-tooltip="'Reverse direction of color gradient'"
               label="Flip gradient"
             />
+
+            <AppSlider
+              v-model="dataOpacity"
+              v-tooltip="'Transparency of map data layer'"
+              label="Data opacity"
+            />
+          </div>
+
+          <div class="double-control">
+            <AppSlider
+              v-model="overlayOpacity"
+              v-tooltip="'Transparency of map overlay layers'"
+              label="Overlays opacity"
+            />
+
+            <AppSlider
+              v-model="baseOpacity"
+              v-tooltip="'Transparency of map base layer'"
+              label="Base opacity"
+            />
           </div>
 
           <div class="double-control">
@@ -92,21 +103,24 @@
               v-tooltip="
                 'Number of steps to divide data scale into. Only approximate if &quot;nice steps&quot; on.'
               "
-              :min="3"
+              :min="2"
               :max="20"
               :step="1"
               label="Scale steps"
             />
+
             <AppCheckbox
               v-model="niceSteps"
-              v-tooltip="'Round scale steps to nice, even intervals'"
+              v-tooltip="
+                'Adjust number of scale steps to get nice, round intervals'
+              "
               label="Nice steps"
             />
           </div>
 
           <label
             v-tooltip="
-              'Dimensions of map, useful to set exactly when downloading as image. Use 0 to fit to window.'
+              'Exact dimensions of map. Useful to set when downloading as image. Use 0 to fit to page.'
             "
             class="dimensions-label"
           >
@@ -132,87 +146,55 @@
         </AppAccordion>
       </div>
 
-      <div class="map-container">
-        <div
-          ref="mapContainer"
-          class="map"
-          :style="{ opacity: geometryStatus === 'loading' ? 0.5 : 1 }"
-        >
-          <AppMap
-            ref="map"
-            v-model:zoom="zoom"
-            v-model:lat="lat"
-            v-model:long="long"
-            :geometry="selectedGeometry"
-            :values="values?.values"
-            :min="values?.min"
-            :max="values?.max"
-            :show-legend="showLegend"
-            :show-details="showDetails"
-            :data-opacity="dataOpacity"
-            :base-opacity="baseOpacity"
-            :base="selectedBase"
-            :gradient="selectedGradient"
-            :flip-gradient="flipGradient"
-            :scale-steps="scaleSteps"
-            :nice-steps="niceSteps"
-            :width="mapWidth"
-            :height="mapHeight"
-            :scroll-zoom="!mapScrollable"
-          >
-            <template #heading>
-              <strong>{{ measures[selectedMeasure]?.label }}</strong>
-              <small>({{ categories[selectedCategory]?.label }})</small>
-              <small>by {{ levels[selectedLevel]?.label }}</small>
-            </template>
+      <AppMap
+        v-model:zoom="zoom"
+        v-model:lat="lat"
+        v-model:long="long"
+        class="map"
+        :style="{ opacity: geometryStatus === 'loading' ? 0.25 : 1 }"
+        :geometry="selectedGeometry"
+        :values="values?.values"
+        :min="values?.min"
+        :max="values?.max"
+        :data-opacity="dataOpacity"
+        :overlay-opacity="overlayOpacity"
+        :base-opacity="baseOpacity"
+        :base="selectedBase"
+        :overlays="selectedOverlays"
+        :gradient="selectedGradient"
+        :flip-gradient="flipGradient"
+        :scale-steps="scaleSteps"
+        :nice-steps="niceSteps"
+        :width="mapWidth"
+        :height="mapHeight"
+      >
+        <template v-if="showLegend" #heading>
+          <strong>{{ measures[selectedMeasure]?.label }}</strong>
+          <small>({{ categories[selectedCategory]?.label }})</small>
+          <small>by {{ levels[selectedLevel]?.label }}</small>
+        </template>
 
-            <template #details>
-              <div class="mini-table">
-                <span>Min:</span>
-                <span>
-                  {{ formatValue(values?.min, values?.min, values?.max) }}</span
-                >
-                <span>Max:</span>
-                <span>
-                  {{ formatValue(values?.max, values?.min, values?.max) }}</span
-                >
-                <span>Mean:</span>
-                <span>
-                  {{
-                    formatValue(values?.mean, values?.min, values?.max)
-                  }}</span
-                >
-                <span>Median:</span>
-                <span>
-                  {{
-                    formatValue(values?.median, values?.min, values?.max)
-                  }}</span
-                >
-              </div>
-            </template>
-          </AppMap>
-        </div>
-
-        <div class="controls">
-          <AppButton
-            aria-label="Zoom out of map"
-            :icon="faMinus"
-            @click="map?.zoomOut()"
-          />
-          <AppButton
-            aria-label="Zoom in of map"
-            :icon="faPlus"
-            @click="map?.zoomIn()"
-          />
-          <AppButton
-            aria-label="Fit map view"
-            :icon="faCropSimple"
-            @click="map?.fit"
-          >
-            Fit
-          </AppButton>
-        </div>
-      </div>
+        <template v-if="showDetails" #details>
+          <div class="mini-table">
+            <span>Min:</span>
+            <span>
+              {{ formatValue(values?.min, values?.min, values?.max) }}</span
+            >
+            <span>Max:</span>
+            <span>
+              {{ formatValue(values?.max, values?.min, values?.max) }}</span
+            >
+            <span>Mean:</span>
+            <span>
+              {{ formatValue(values?.mean, values?.min, values?.max) }}</span
+            >
+            <span>Median:</span>
+            <span>
+              {{ formatValue(values?.median, values?.min, values?.max) }}</span
+            >
+          </div>
+        </template>
+      </AppMap>
     </div>
 
     <AppStatus v-else :status="status" />
@@ -244,13 +226,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, watchEffect } from "vue";
 import { cloneDeep } from "lodash";
-import { faMap } from "@fortawesome/free-regular-svg-icons";
-import {
-  faCropSimple,
-  faMinus,
-  faPlus,
-  faTable,
-} from "@fortawesome/free-solid-svg-icons";
+import { faDownload } from "@fortawesome/free-solid-svg-icons";
 import {
   getFacets,
   getGeometry,
@@ -271,7 +247,6 @@ import AppStatus, { type Status } from "@/components/AppStatus.vue";
 import { gradientOptions } from "@/components/gradient";
 import { baseOptions } from "@/components/tile-providers";
 import {
-  booleanParam,
   numberParam,
   stringParam,
   useScrollable,
@@ -285,12 +260,9 @@ const { VITE_AREA: area } = import.meta.env;
 
 // element refs
 const panel = ref<HTMLElement>();
-const mapContainer = ref<HTMLElement>();
-const map = ref<InstanceType<typeof AppMap>>();
 
 // show gradients on elements when scrollable
 useScrollable(panel);
-const mapScrollable = useScrollable(mapContainer);
 
 // data state
 const status = ref<Status>("loading");
@@ -300,6 +272,7 @@ const tracts = ref<Geometry>();
 const selectedGeometry = ref<Geometry>();
 const facets = ref<Facets>();
 const values = ref<Values>();
+const overlayOptions = ref<Option[]>([]);
 
 // select boxes state
 const selectedLevel = useUrlParam("level", stringParam, "");
@@ -314,15 +287,13 @@ const long = useUrlParam("long", numberParam, 0);
 // map style state
 const showLegend = ref(true);
 const showDetails = ref(false);
+const selectedBase = ref(baseOptions[0]?.id || "");
+const selectedOverlays = ref([]);
+const selectedGradient = ref(gradientOptions[3]?.id || "");
 const dataOpacity = ref(0.75);
-const selectedBase = useUrlParam("base", stringParam, baseOptions[0]?.id || "");
+const overlayOpacity = ref(0.75);
 const baseOpacity = ref(1);
-const selectedGradient = useUrlParam(
-  "grad",
-  stringParam,
-  gradientOptions[0]?.id || "",
-);
-const flipGradient = useUrlParam("flip", booleanParam, false);
+const flipGradient = ref(false);
 const scaleSteps = ref(5);
 const niceSteps = ref(true);
 const mapWidth = ref(0);
@@ -346,12 +317,13 @@ watchEffect(async () => {
     geometryStatus.value = "loading";
     // clear geometry while loading
     selectedGeometry.value = undefined;
-    if (selectedLevel.value === "county")
-      selectedGeometry.value =
-        counties.value || (await getGeometry("counties", "us_fips"));
-    else if (selectedLevel.value === "tract")
-      selectedGeometry.value =
-        tracts.value || (await getGeometry("tracts", "fips"));
+    if (selectedLevel.value === "county") {
+      counties.value ??= await getGeometry("counties", "us_fips");
+      selectedGeometry.value = counties.value;
+    } else if (selectedLevel.value === "tract") {
+      tracts.value ??= await getGeometry("tracts", "fips");
+      selectedGeometry.value = tracts.value;
+    }
     geometryStatus.value = "success";
   } catch (error) {
     console.error(error);
@@ -406,11 +378,6 @@ watch([selectedCategory, measures], () => {
   if (!selectedMeasure.value || !measures.value[selectedMeasure.value])
     selectedMeasure.value = Object.keys(measures.value)[0] || "";
 });
-
-// download map with filename
-function downloadMap() {
-  map.value?.download([selectedMeasure.value, selectedLevel.value]);
-}
 </script>
 
 <style scoped>
@@ -462,25 +429,12 @@ function downloadMap() {
   gap: 5px;
 }
 
-.controls {
-  display: flex;
-  gap: 10px;
-}
-
-.map-container {
-  display: flex;
+.map {
   position: sticky;
   top: 20px;
-  flex-direction: column;
   width: 0;
   min-width: 100%;
-  max-height: calc(100vh - 35px);
-  gap: 20px;
-}
-
-.map {
-  flex-grow: 1;
-  overflow: auto;
+  height: calc(100vh - 40px);
   transition: opacity var(--fast);
 }
 

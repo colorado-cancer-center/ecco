@@ -6,11 +6,6 @@ import type { Option } from "@/components/AppSelect.vue";
 // from https://github.com/d3/d3-scale-chromatic
 export const gradientOptions = (
   [
-    "interpolateCool",
-    "interpolateViridis",
-    "interpolatePlasma",
-    "interpolateTurbo",
-
     "interpolatePuBuGn",
     "interpolatePuBu",
     "interpolateGnBu",
@@ -26,6 +21,11 @@ export const gradientOptions = (
     "interpolatePurples",
     "interpolateReds",
     "interpolateGreys",
+
+    "interpolateCool",
+    "interpolateViridis",
+    "interpolatePlasma",
+    "interpolateTurbo",
 
     "interpolateSpectral",
     "interpolateRdYlGn",
@@ -48,3 +48,11 @@ export type GradientName = (typeof gradientOptions)[number]["key"];
 
 // available gradient functions
 export type GradientFunc = (typeof gradientOptions)[number]["func"];
+
+// get gradient interpolator function from shorthand id/name
+export function getGradient(id: string) {
+  return (
+    gradientOptions.find((option) => option.id === id)?.func ||
+    d3.interpolateCool
+  );
+}

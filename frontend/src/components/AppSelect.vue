@@ -18,7 +18,7 @@
         >
         <ListboxButton as="template">
           <AppButton
-            :icon="open ? faAngleUp : faAngleDown"
+            :icon="open ? faCaretUp : faCaretDown"
             :flip="true"
             class="button"
             @keydown="onKeypress"
@@ -76,8 +76,8 @@ import { computed, type VNode } from "vue";
 import { clamp } from "lodash";
 import { size } from "@floating-ui/dom";
 import {
-  faAngleDown,
-  faAngleUp,
+  faCaretDown,
+  faCaretUp,
   faCheck,
 } from "@fortawesome/free-solid-svg-icons";
 import { Float } from "@headlessui-float/vue";
@@ -187,6 +187,10 @@ async function onOpen(node: VNode) {
   text-align: left;
 }
 
+.button :deep(svg) {
+  color: var(--gray);
+}
+
 ul {
   max-width: calc(100vw - 60px);
   margin: 0;
@@ -221,6 +225,7 @@ li svg {
 
 li img {
   height: 3em;
+  background: var(--light-gray);
 }
 
 .active {

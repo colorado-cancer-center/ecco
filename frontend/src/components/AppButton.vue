@@ -20,6 +20,12 @@ type Props = {
 
 defineProps<Props>();
 
+type Slots = {
+  default?: () => unknown;
+};
+
+defineSlots<Slots>();
+
 const hasText = computed(() => !!useSlots().default);
 </script>
 

@@ -35,7 +35,7 @@ type Props = {
   step?: number;
 };
 
-withDefaults(defineProps<Props>(), { min: 0, max: 1, step: 0.01 });
+withDefaults(defineProps<Props>(), { min: 0, max: 1, step: 0.1 });
 
 type Emits = {
   "update:modelValue": [Props["modelValue"]];

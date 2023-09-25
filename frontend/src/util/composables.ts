@@ -44,6 +44,12 @@ export const booleanParam: Param<boolean> = {
   stringify: (value) => String(value),
 };
 
+// param treated as array of other params
+export const arrayParam = <T>(param: Param<T>): Param<T[]> => ({
+  parse: (value) => value.split(",").map(param.parse),
+  stringify: (value) => value.map(param.stringify).join(","),
+});
+
 // reactive variable synced with a specific url param
 // no good third party solution exists for this, so write our own basic version
 // see https://github.com/vueuse/vueuse/issues/3398

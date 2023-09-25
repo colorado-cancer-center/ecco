@@ -1,46 +1,76 @@
 <template>
-  <div
-    ref="element"
-    class="map"
-    :style="{
-      width: width ? width + 'px' : '100%',
-      height: height ? height + 'px' : '100%',
-    }"
-  />
-
-  <Teleport v-if="legendTeleport && showLegend" :to="legendTeleport">
-    <div class="legend" @mousedown.stop>
-      <div class="legend-slot">
-        <slot name="heading" />
-      </div>
-
-      <div v-if="showDetails" class="legend-slot">
-        <slot name="details" />
-      </div>
-
-      <div class="steps">
-        <template v-for="(step, index) of legendSteps" :key="index">
-          <svg viewBox="0 0 1 1">
-            <rect x="0" y="0" width="1" height="1" :fill="step.color" />
-          </svg>
-          <span>{{ step.start }}</span>
-          <span>&ndash;</span>
-          <span>{{ step.end }}</span>
-        </template>
-      </div>
+  <div class="container">
+    <div ref="scroll" class="scroll">
+      <div
+        ref="element"
+        class="map"
+        :style="{
+          width: width ? width + 'px' : '100%',
+          height: height ? height + 'px' : '100%',
+        }"
+      />
     </div>
-  </Teleport>
 
-  <Teleport v-if="popupTeleport && popupFeature" :to="popupTeleport">
-    <div class="mini-table">
-      <span>Name</span>
-      <span>{{ popupFeature.name }}</span>
-      <span>FIPS</span>
-      <span>{{ popupFeature.id }}</span>
-      <span>Value</span>
-      <span>{{ formatValue(values[popupFeature.id] || 0) }}</span>
+    <div class="controls">
+      <AppButton
+        v-tooltip="'Download current map view as PNG'"
+        :icon="faDownload"
+        :accent="true"
+        @click="download"
+        >Download Map</AppButton
+      >
+      <AppButton
+        v-tooltip="'Zoom out'"
+        :icon="faMinus"
+        @click="map?.zoomOut()"
+      />
+      <AppButton v-tooltip="'Zoom in'" :icon="faPlus" @click="map?.zoomIn()" />
+      <AppButton
+        v-tooltip="'Fit view to data'"
+        :icon="faCropSimple"
+        @click="fit"
+      />
+      <AppButton
+        v-tooltip="'View map in full screen'"
+        :icon="faExpand"
+        @click="fullscreen"
+      />
     </div>
-  </Teleport>
+
+    <Teleport v-if="legendTeleport && $slots.heading" :to="legendTeleport">
+      <div class="legend" @mousedown.stop>
+        <div class="legend-slot">
+          <slot name="heading" />
+        </div>
+
+        <div v-if="$slots.details" class="legend-slot">
+          <slot name="details" />
+        </div>
+
+        <div class="steps">
+          <template v-for="(step, index) of [...steps].reverse()" :key="index">
+            <svg viewBox="0 0 1 1">
+              <rect x="0" y="0" width="1" height="1" :fill="step.color" />
+            </svg>
+            <span>{{ step.lower }}</span>
+            <span>&ndash;</span>
+            <span>{{ step.upper }}</span>
+          </template>
+        </div>
+      </div>
+    </Teleport>
+
+    <Teleport v-if="popupTeleport && popupFeature" :to="popupTeleport">
+      <div class="mini-table">
+        <span>Name</span>
+        <span>{{ popupFeature.name }}</span>
+        <span>FIPS</span>
+        <span>{{ popupFeature.id }}</span>
+        <span>Value</span>
+        <span>{{ formatValue(values[popupFeature.id], min, max) }}</span>
+      </div>
+    </Teleport>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -57,15 +87,25 @@ import domtoimage from "dom-to-image";
 import type { GeoJsonProperties } from "geojson";
 import L, { type MapOptions } from "leaflet";
 import { debounce } from "lodash";
-import { useElementSize, useResizeObserver } from "@vueuse/core";
+import { useElementSize, useFullscreen, useResizeObserver } from "@vueuse/core";
 import type { Geometry } from "@/api";
-import { gradientOptions, type GradientFunc } from "@/components/gradient";
+import { getGradient } from "@/components/gradient";
 import { downloadPng } from "@/util/download";
 import { formatValue } from "@/util/math";
 import { sleep } from "@/util/misc";
 import "leaflet/dist/leaflet.css";
+import {
+  faCropSimple,
+  faDownload,
+  faExpand,
+  faMinus,
+  faPlus,
+} from "@fortawesome/free-solid-svg-icons";
+import AppButton from "@/components/AppButton.vue";
+import { useScrollable } from "@/util/composables";
 
-// ref to root element
+// element refs
+const scroll = ref<HTMLDivElement>();
 const element = ref<HTMLDivElement>();
 
 type Props = {
@@ -84,10 +124,12 @@ type Props = {
   showLegend?: boolean;
   showDetails?: boolean;
   // layer opacities
-  dataOpacity?: number;
   baseOpacity?: number;
-  // tile provider for base layer
+  overlayOpacity?: number;
+  dataOpacity?: number;
+  // tile providers for layers
   base?: string;
+  overlays?: string[];
   // color gradient id
   gradient?: string;
   // scale props
@@ -97,8 +139,6 @@ type Props = {
   // forced dimensions
   width?: number;
   height?: number;
-  // whether to enable scroll-to-zoom
-  scrollZoom: boolean;
 };
 
 const props = withDefaults(defineProps<Props>(), {
@@ -110,10 +150,11 @@ const props = withDefaults(defineProps<Props>(), {
   min: 0,
   max: 0,
   showLegend: true,
-  showDetails: false,
-  dataOpacity: 0.75,
   baseOpacity: 1,
+  overlayOpacity: 1,
+  dataOpacity: 0.75,
   base: "Stadia.AlidadeSmooth",
+  overlays: () => [],
   gradient: "interpolateCool",
   flipGradient: false,
   scaleSteps: 5,
@@ -130,27 +171,12 @@ type Emits = {
 
 const emit = defineEmits<Emits>();
 
-// https://leafletjs.com/reference.html#map-option
-const mapOptions: MapOptions = { zoomControl: false };
-
-// set fine level of zoom snap, e.g. for tighter fitbounds
-const fineZoom = () => {
-  if (map) map.options.zoomSnap = 0.1;
-};
-// set coarse level of zoom snap, to make track pad pinch zoom not frustrating
-const coarseZoom = async () => {
-  await sleep();
-  if (map) map.options.zoomSnap = 1;
+type Slots = {
+  heading: () => unknown;
+  details: () => unknown;
 };
 
-// leaflet map object
-let map: L.Map | null = null;
-
-// base layer of open street map data
-let baseLayer = L.tileLayer("");
-
-// layer for our own geojson data
-let dataLayer = L.geoJSON();
+defineSlots<Slots>();
 
 // element to teleport legend template content to
 const legendTeleport = ref<HTMLElement>();
@@ -161,20 +187,102 @@ const popupTeleport = ref<HTMLElement>();
 // properties of selected feature for popup
 const popupFeature = ref<GeoJsonProperties>();
 
+// https://leafletjs.com/reference.html#map-option
+const mapOptions: MapOptions = { zoomControl: false };
+
+// leaflet map object
+let map = L.map(document.createElement("div"), mapOptions);
+
+// layer groups
+let baseGroup = L.featureGroup();
+let overlayGroup = L.featureGroup();
+let dataLayer = L.geoJSON();
+
+// custom control class
+const Control = L.Control.extend({
+  onAdd: () => document.createElement("div"),
+});
+
+// set fine level of zoom snap, e.g. for tighter fit-bounds
+function fineZoom() {
+  if (map) map.options.zoomSnap = 0.1;
+}
+
+// set coarse level of zoom snap, to make track pad pinch zoom not frustrating
+async function coarseZoom() {
+  await sleep();
+  if (map) map.options.zoomSnap = 1;
+}
+
+// get gradient interpolator function from shorthand id/name
+const _gradient = computed(() => getGradient(props.gradient));
+
+// steps to split scale into
+const steps = computed(() => {
+  // generate spaced list of points between min and max
+  const intervals = props.niceSteps
+    ? // "nice", approximate number
+      d3
+        .scaleLinear()
+        .domain([props.min, props.max])
+        .nice()
+        .ticks(props.scaleSteps)
+    : // exact number
+      d3
+        .range(props.min, props.max, (props.max - props.min) / props.scaleSteps)
+        .concat([props.max]);
+
+  // get range of points
+  const [min = 0, max = 1] = d3.extent(intervals);
+
+  // normalize value from [min, max] to [0, 1] or [1, 0] for mapping to color
+  function normalize(value: number) {
+    return (value - min) / (max - min);
+  }
+
+  // derive props for each step between points
+  const steps = d3.pairs(intervals).map(([lower, upper], index, array) => ({
+    lower: formatValue(lower, props.min, props.max),
+    upper: formatValue(upper, props.min, props.max),
+    color: _gradient.value(
+      normalize(
+        index === 0
+          ? lower
+          : index === array.length - 1
+          ? upper
+          : (lower + upper) / 2,
+      ),
+    ),
+  }));
+
+  // flip color values
+  if (props.flipGradient) {
+    const colors = steps.map((step) => step.color);
+    colors.reverse();
+    steps.forEach((step, index) => (step.color = colors[index] || ""));
+  }
+
+  return steps;
+});
+
+// scale interpolator
+const scale = computed(() => {
+  const range = steps.value.map((step) => step.color);
+  return d3.scaleQuantize<string>().domain([props.min, props.max]).range(range);
+});
+
+// when map container created
 onMounted(() => {
   if (!element.value) return;
 
   // init map
+  map.remove();
   map = L.map(element.value, mapOptions);
 
-  // add layers
-  baseLayer.addTo(map);
+  // add layer groups
+  baseGroup.addTo(map);
+  overlayGroup.addTo(map);
   dataLayer.addTo(map);
-
-  // custom control class
-  const Control = L.Control.extend({
-    onAdd: () => document.createElement("div"),
-  });
 
   // add control to map and set element to teleport legend template into
   legendTeleport.value = new Control({ position: "bottomleft" })
@@ -183,7 +291,6 @@ onMounted(() => {
 
   // update props from map pan/zoom
   map.on("moveend", () => {
-    if (!map) return;
     const { lat, lng } = map.getCenter();
     emit("update:lat", lat);
     emit("update:long", lng);
@@ -199,28 +306,33 @@ onMounted(() => {
   updateGeometry();
 });
 
+// when map container destroyed
 onBeforeUnmount(() => {
-  if (!map) return;
   // cleanup map on unmount
   map.remove();
 });
 
 // update base layer of map
 function updateBase() {
-  if (!map) return;
-  map.removeLayer(baseLayer);
-  // @ts-expect-error no workable type defs for leaflet-providers
-  baseLayer = L.tileLayer.provider?.(props.base);
-  map.addLayer(baseLayer);
+  baseGroup.clearLayers();
+  baseGroup.addLayer(L.tileLayer.provider(props.base));
 }
 
 // update base layer when props change
 watch(() => props.base, updateBase, { immediate: true });
 
+// update overlay layers of map
+function updateOverlays() {
+  overlayGroup.clearLayers();
+  for (const overlay of props.overlays)
+    overlayGroup.addLayer(L.tileLayer.provider(overlay));
+}
+
+// update overlay layers when props change
+watch(() => props.overlays, updateOverlays, { immediate: true, deep: true });
+
 // fit view to data layer content
 const fit = debounce(async () => {
-  if (!map || !dataLayer) return;
-
   // get bounding box of geojson data
   let bounds = dataLayer.getBounds();
 
@@ -233,7 +345,7 @@ const fit = debounce(async () => {
 
   map.fitBounds(bounds, {
     // make room for legend
-    paddingTopLeft: [props.showLegend ? 220 : 0, 0],
+    paddingTopLeft: [props.showLegend ? 220 : 20, 20],
   });
 }, 200);
 
@@ -250,7 +362,6 @@ useResizeObserver(element, () => {
 
 // update map pan/zoom
 function updateView() {
-  if (!map) return;
   map.setView([props.lat || 0, props.long || 0], props.zoom || 1);
 }
 
@@ -259,8 +370,6 @@ watch([() => props.lat, () => props.long, () => props.zoom], updateView);
 
 // update geometry of map
 function updateGeometry() {
-  if (!map) return;
-
   // reset data layer
   dataLayer.clearLayers();
 
@@ -268,15 +377,15 @@ function updateGeometry() {
   for (const feature of props.geometry) dataLayer.addData(feature);
 
   // set feature static styles
-  dataLayer.setStyle(() => ({
+  dataLayer.setStyle({
     weight: 0.5,
     color: "black",
-  }));
+  });
 
   // attach popups
   dataLayer.bindPopup(() => "");
   dataLayer.on("popupopen", async (event) => {
-    // wait for
+    // wait for teleported slot to render
     await nextTick();
     const wrapper = event.popup
       .getElement()
@@ -293,14 +402,11 @@ function updateGeometry() {
   });
 
   // if no pan/zoom specified, fit view to content,
-  if (!props.lat && !props.long && !props.zoom) {
-    fit();
-  }
+  if (!props.lat && !props.long && !props.zoom) fit();
   // otherwise, set view from props
   else updateView();
 
   // update stuff once layers init'd
-  updateBase();
   updateColors();
   updateOpacities();
 }
@@ -308,83 +414,53 @@ function updateGeometry() {
 // update map geometry when props change
 watch(() => props.geometry, updateGeometry, { immediate: true, deep: true });
 
-// scale interpolator
-const scale = computed(() =>
-  d3
-    .scaleLinear()
-    .domain([props.min, props.max])
-    .range(props.flipGradient ? [1, 0] : [0, 1]),
-);
-
-// get gradient interpolator function from shorthand id/name
-const gradientFunc = computed<GradientFunc>(
-  () =>
-    gradientOptions.find((option) => option.id === props.gradient)?.func ||
-    d3.interpolateCool,
-);
-
-// update feature colors
+// update data feature colors
 function updateColors() {
   dataLayer.setStyle((feature) => ({
-    fillColor: gradientFunc.value(
-      scale.value(props.values?.[feature?.properties.id] || 0),
-    ),
+    fillColor: scale.value(props.values?.[feature?.properties.id] || 0),
   }));
 }
 
 // update colors when data values or color scheme changes
-watch([() => props.values, scale, gradientFunc], updateColors, {
+watch([() => props.values, scale], updateColors, {
   immediate: true,
 });
 
 // update layer opacities
 function updateOpacities() {
-  baseLayer.setOpacity(props.baseOpacity);
-  dataLayer.setStyle({ fillOpacity: props.dataOpacity });
+  baseGroup.eachLayer((layer) => {
+    if (layer instanceof L.TileLayer) layer.setOpacity(props.baseOpacity);
+  });
+  overlayGroup.eachLayer((layer) => {
+    if (layer instanceof L.TileLayer) layer.setOpacity(props.overlayOpacity);
+  });
+  dataLayer.setStyle({
+    opacity: props.dataOpacity,
+    fillOpacity: props.dataOpacity,
+  });
 }
 
 // update opacities when props change
-watch([() => props.baseOpacity, () => props.dataOpacity], updateOpacities, {
-  immediate: true,
-});
-
-// legend steps
-const legendSteps = computed(() => {
-  const steps = props.niceSteps
-    ? // "nice", approximate number of stems
-      scale.value.ticks(props.scaleSteps)
-    : // exact number of steps
-      d3.range(
-        props.min,
-        props.max,
-        (props.max - props.min) / (props.scaleSteps + 1),
-      );
-
-  // map spaced steps to ranges and colors
-  return steps.slice(0, -1).map((value, index) => ({
-    start: formatValue(value, props.min, props.max),
-    end: formatValue(steps[index + 1], props.min, props.max),
-    color: gradientFunc.value(
-      scale.value(
-        index === 0
-          ? props.min
-          : index === steps.length - 2
-          ? props.max
-          : (value + (steps[index + 1] || 0)) / 2,
-      ),
-    ),
-  }));
-});
-
-// enable/disable zooming by scrolling
 watch(
-  () => props.scrollZoom,
-  () => {
-    if (!map) return;
-    if (props.scrollZoom) map.scrollWheelZoom.enable();
-    else map.scrollWheelZoom.disable();
+  [
+    () => props.baseOpacity,
+    () => props.overlayOpacity,
+    () => props.dataOpacity,
+  ],
+  updateOpacities,
+  {
+    immediate: true,
   },
 );
+
+// whether element has scrollbars
+const scrollable = useScrollable(scroll);
+
+// enable/disable zooming by scrolling
+watch(scrollable, () => {
+  if (scrollable.value) map.scrollWheelZoom.disable();
+  else map.scrollWheelZoom.enable();
+});
 
 // actual client size of map
 const { width: actualWidth, height: actualHeight } = useElementSize(element);
@@ -406,21 +482,28 @@ async function download(filename: string | string[]) {
   downloadPng(blob, filename);
 }
 
-// zoom map in one step
-function zoomIn() {
-  map?.zoomIn();
-}
-
-// zoom map out one step
-function zoomOut() {
-  map?.zoomOut();
-}
-
-// allow parent to funcs
-defineExpose({ download, fit, zoomIn, zoomOut });
+// toggle fullscreen on element
+const { toggle: fullscreen } = useFullscreen(element);
 </script>
 
 <style scoped>
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.scroll {
+  flex-grow: 1;
+  overflow: auto;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .legend {
   display: flex;
   flex-direction: column;

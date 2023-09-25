@@ -1,9 +1,14 @@
 <template>
   <Disclosure v-slot="{ open }">
     <DisclosureButton as="template">
-      <AppButton :icon="open ? faAngleUp : faAngleDown">{{ label }}</AppButton>
+      <AppButton
+        ref="button"
+        :icon="open ? faAngleUp : faAngleDown"
+        class="button"
+        >{{ label }}</AppButton
+      >
     </DisclosureButton>
-    <DisclosurePanel class="panel">
+    <DisclosurePanel ref="panel" class="panel">
       <slot />
     </DisclosurePanel>
   </Disclosure>
@@ -19,10 +24,24 @@ type Props = {
 };
 
 defineProps<Props>();
+
+type Slots = {
+  default: () => unknown;
+};
+
+defineSlots<Slots>();
 </script>
 
 <style scoped>
 .panel {
   display: contents;
+}
+
+.button :deep(span) {
+  flex-grow: 1;
+}
+
+.button :deep(svg) {
+  color: var(--gray);
 }
 </style>
