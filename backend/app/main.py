@@ -4,6 +4,8 @@ from fastapi_pagination import  add_pagination
 
 from routers import geometry, statistics
 
+from settings import IS_DEV
+
 # ============================================================================
 # === configuration
 # ============================================================================
@@ -17,7 +19,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=origins if not IS_DEV else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
