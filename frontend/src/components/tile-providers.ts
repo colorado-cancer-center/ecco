@@ -13,10 +13,6 @@ export const baseOptions: Option[] = [
   "Stadia.StamenToner",
   "Stadia.StamenTerrain",
   "Stadia.Outdoors",
-  "Stadia.StamenTerrainLines",
-  "Stadia.StamenTonerLines",
-  "Stadia.StamenTonerLabels",
-  "Stadia.StamenTerrainLabels",
   "Stadia.StamenWatercolor",
   "CartoDB.Voyager",
   "CartoDB.VoyagerNoLabels",
@@ -38,8 +34,12 @@ export const baseOptions: Option[] = [
   "USGS.USImagery",
   "USGS.USImageryTopo",
   "OpenTopoMap",
-  "OpenRailwayMap",
   "NASAGIBS.ViirsEarthAtNight2012",
+  "Stadia.StamenTerrainLines",
+  "Stadia.StamenTonerLines",
+  "Stadia.StamenTonerLabels",
+  "Stadia.StamenTerrainLabels",
+  "OpenRailwayMap",
 ].map(nameToOption);
 
 // get selectable option from tile provider name

@@ -1,4 +1,4 @@
-import type { TippyInstance, TippyOptions } from "vue-tippy";
+import type { TippyOptions } from "vue-tippy";
 import { type Instance } from "tippy.js";
 import { makeLabel } from "@/util/string";
 
@@ -21,7 +21,7 @@ export const tippyOptions: {
 // create or update tooltip instance
 function update({ reference, props: { content }, setProps }: Instance) {
   // don't show if content blank
-  if (!content) return;
+  if (!content) return false;
 
   setProps({
     // only make interactive if content includes link to click on

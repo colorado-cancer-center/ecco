@@ -1,7 +1,6 @@
 <template>
   <div class="container">
     <Listbox
-      v-slot="{ open }"
       :model-value="value"
       :multiple="multi"
       @update:model-value="onChange"
@@ -15,12 +14,13 @@
         adaptive-width
         strategy="fixed"
       >
-        >
-        <ListboxButton as="template">
+        <ListboxButton v-slot="{ open }" as="template">
           <AppButton
+            v-tooltip="tooltip"
             :icon="open ? faCaretUp : faCaretDown"
             :flip="true"
             class="button"
+            :style="{ gridColumn: multi ? '' : 'span 2' }"
             @keydown="onKeypress"
           >
             {{ selectedLabel }}
@@ -28,9 +28,9 @@
         </ListboxButton>
         <ListboxOptions>
           <ListboxOption
-            v-for="option in options"
+            v-for="(option, index) in options"
             v-slot="{ active, selected }"
-            :key="option.id"
+            :key="index"
             as="template"
             :value="option"
           >
@@ -51,10 +51,10 @@
                 preserveAspectRatio="none"
               >
                 <rect
-                  v-for="(color, index) in option.colors"
-                  :key="index"
+                  v-for="(color, colorIndex) in option.colors"
+                  :key="colorIndex"
                   :fill="color"
-                  :x="index"
+                  :x="colorIndex"
                   y="0"
                   width="1"
                   height="1"
@@ -68,6 +68,12 @@
         </ListboxOptions>
       </Float>
     </Listbox>
+    <AppButton
+      v-if="multi"
+      v-tooltip="allSelected ? 'Deselect all' : 'Select all'"
+      :icon="allSelected ? faXmark : faCheckDouble"
+      @click="toggleAll"
+    />
   </div>
 </template>
 
@@ -79,6 +85,8 @@ import {
   faCaretDown,
   faCaretUp,
   faCheck,
+  faCheckDouble,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { Float } from "@headlessui-float/vue";
 import {
@@ -89,7 +97,7 @@ import {
   ListboxOptions,
 } from "@headlessui/vue";
 import AppButton from "@/components/AppButton.vue";
-import { frame, sleep } from "@/util/misc";
+import { frame } from "@/util/misc";
 
 export type Option = {
   id: string;
@@ -103,9 +111,13 @@ type Props = {
   options: Option[];
   multi?: boolean;
   modelValue: Option["id"] | Option["id"][];
+  tooltip?: string;
 };
 
-const props = withDefaults(defineProps<Props>(), { multi: false });
+const props = withDefaults(defineProps<Props>(), {
+  multi: false,
+  tooltip: "",
+});
 
 type Emits = {
   "update:modelValue": [Props["modelValue"]];
@@ -125,46 +137,67 @@ const middleware = [
   }),
 ];
 
+// normalize single/multi to array
+function normalize<T>(value: T | T[]): T[] {
+  return Array.isArray(value) ? value : [value];
+}
+
 // model value to pass from parent to headlessui
-const value = computed(() =>
-  props.multi
-    ? props.options.filter((option) => props.modelValue.includes(option.id))
-    : props.options.find((option) => option.id === props.modelValue) || "",
-);
+const value = computed(() => {
+  let list = normalize(props.modelValue);
+  return props.multi
+    ? props.options.filter((option) => list.includes(option.id))
+    : props.options.find((option) => list.includes(option.id)) || "";
+});
 
 // model value to emit from headlessui to parent
 async function onChange(value: Option | Option[]) {
-  const id = Array.isArray(value) ? value.map((v) => v.id) : value.id;
-  // https://github.com/ycs77/headlessui-float/issues/80
-  await sleep(10);
+  let list = normalize(value);
+  const id = props.multi ? list.map((v) => v.id) : list[0]?.id || "";
   emit("update:modelValue", id);
 }
 
 // label to show as selected value in box
 const selectedLabel = computed<string>(() => {
-  const value = props.multi
-    ? props.options
-        .filter((option) => props.modelValue.includes(option.id))
-        .map((option) => option.label)
-    : props.options.find((option) => option.id === props.modelValue)?.label ||
-      "";
-  if (!Array.isArray(value)) return value;
+  // normalize to array
+  let list = normalize(props.modelValue);
+  if (!props.multi)
+    return (
+      props.options.find((option) => option.id === list[0])?.label ||
+      "None selected"
+    );
+  const value = props.options.filter((option) => list.includes(option.id));
   if (value.length === 0) return "None selected";
-  if (value.length === 1) return value[0] || "";
+  if (value.length === 1) return value[0]?.label || "1 Selected";
   if (value.length === props.options.length) return "All selected";
   return value.length + " selected";
 });
 
-// add "quick" arrow key select
-function onKeypress(event: KeyboardEvent) {
-  let index = props.options.findIndex(
-    (option) => option.id === props.modelValue,
+// whether all options are selected
+const allSelected = computed(
+  () => props.multi && props.options.length === props.modelValue.length,
+);
+
+// select/deselect all
+function toggleAll() {
+  emit(
+    "update:modelValue",
+    allSelected.value ? [] : props.options.map((option) => option.id),
   );
-  if (event.key === "ArrowLeft") index--;
-  if (event.key === "ArrowRight") index++;
-  index = clamp(index, 0, props.options.length - 1);
-  const id = props.options[index]?.id;
-  if (id) emit("update:modelValue", id);
+}
+
+// add "quick" arrow key select
+function onKeypress({ key }: KeyboardEvent) {
+  if (!props.multi && (key === "ArrowLeft" || key === "ArrowRight")) {
+    let index = props.options.findIndex(
+      (option) => option.id === props.modelValue,
+    );
+    if (key === "ArrowLeft") index--;
+    if (key === "ArrowRight") index++;
+    index = clamp(index, 0, props.options.length - 1);
+    const id = props.options[index]?.id;
+    if (id) emit("update:modelValue", id);
+  }
 }
 
 // when listbox opened
@@ -176,10 +209,13 @@ async function onOpen(node: VNode) {
 
 <style scoped>
 .container {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  display: grid;
+  grid-template-columns: 1fr min-content;
   gap: 10px;
+}
+
+.container > label {
+  grid-column: span 2;
 }
 
 .button :deep(span) {

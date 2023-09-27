@@ -57,6 +57,13 @@
             <span>{{ step.upper }}</span>
           </template>
         </div>
+
+        <div v-if="Object.keys(symbols).length" class="symbols">
+          <template v-for="(symbol, index) of symbols" :key="index">
+            <img :src="symbol.image" alt="" />
+            <small>{{ symbol.label }}</small>
+          </template>
+        </div>
       </div>
     </Teleport>
 
@@ -86,14 +93,7 @@ import * as d3 from "d3";
 import domtoimage from "dom-to-image";
 import type { GeoJsonProperties } from "geojson";
 import L, { type MapOptions } from "leaflet";
-import { debounce } from "lodash";
-import { useElementSize, useFullscreen, useResizeObserver } from "@vueuse/core";
-import type { Geometry } from "@/api";
-import { getGradient } from "@/components/gradient";
-import { downloadPng } from "@/util/download";
-import { formatValue } from "@/util/math";
-import { sleep } from "@/util/misc";
-import "leaflet/dist/leaflet.css";
+import { debounce, mapValues } from "lodash";
 import {
   faCropSimple,
   faDownload,
@@ -101,32 +101,41 @@ import {
   faMinus,
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
+import { useElementSize, useFullscreen, useResizeObserver } from "@vueuse/core";
+import type { Geometry, Markers } from "@/api";
 import AppButton from "@/components/AppButton.vue";
+import { getGradient } from "@/components/gradient";
+import { markerOptions } from "@/components/markers";
 import { useScrollable } from "@/util/composables";
+import { downloadPng } from "@/util/download";
+import { formatValue } from "@/util/math";
+import { sleep } from "@/util/misc";
+import "leaflet/dist/leaflet.css";
 
 // element refs
 const scroll = ref<HTMLDivElement>();
 const element = ref<HTMLDivElement>();
 
 type Props = {
-  // geojson
+  // data
   geometry?: Geometry;
-  // map pan/zoom
-  lat?: number;
-  long?: number;
-  zoom?: number;
+  markers?: Markers;
   // map of feature id to value
   values?: { [key: number]: number };
   // value domain
   min?: number;
   max?: number;
+  // map pan/zoom
+  lat?: number;
+  long?: number;
+  zoom?: number;
   // show/hide elements
   showLegend?: boolean;
   showDetails?: boolean;
   // layer opacities
   baseOpacity?: number;
-  overlayOpacity?: number;
   dataOpacity?: number;
+  markerOpacity?: number;
   // tile providers for layers
   base?: string;
   overlays?: string[];
@@ -139,20 +148,23 @@ type Props = {
   // forced dimensions
   width?: number;
   height?: number;
+  // filename for download
+  filename?: string | string[];
 };
 
 const props = withDefaults(defineProps<Props>(), {
   geometry: () => [],
+  markers: () => ({}),
+  values: () => ({}),
+  min: 0,
+  max: 1,
   lat: undefined,
   long: undefined,
   zoom: undefined,
-  values: () => ({}),
-  min: 0,
-  max: 0,
   showLegend: true,
   baseOpacity: 1,
-  overlayOpacity: 1,
   dataOpacity: 0.75,
+  markerOpacity: 1,
   base: "Stadia.AlidadeSmooth",
   overlays: () => [],
   gradient: "interpolateCool",
@@ -161,6 +173,7 @@ const props = withDefaults(defineProps<Props>(), {
   niceSteps: true,
   width: 0,
   height: 0,
+  filename: "map",
 });
 
 type Emits = {
@@ -191,12 +204,7 @@ const popupFeature = ref<GeoJsonProperties>();
 const mapOptions: MapOptions = { zoomControl: false };
 
 // leaflet map object
-let map = L.map(document.createElement("div"), mapOptions);
-
-// layer groups
-let baseGroup = L.featureGroup();
-let overlayGroup = L.featureGroup();
-let dataLayer = L.geoJSON();
+let map: L.Map | undefined;
 
 // custom control class
 const Control = L.Control.extend({
@@ -271,26 +279,49 @@ const scale = computed(() => {
   return d3.scaleQuantize<string>().domain([props.min, props.max]).range(range);
 });
 
+// fit view to data layer content
+const fit = debounce(async () => {
+  // get bounding box of geojson data
+  let bounds = getLayers<L.GeoJSON>("data", L.GeoJSON)[0]?.getBounds();
+
+  if (!bounds?.isValid()) return;
+
+  // get tight fit
+  fineZoom();
+  // reset zoom snap when zoom animation finishes
+  map?.once("zoomend", coarseZoom);
+
+  map?.fitBounds(bounds, {
+    // make room for legend
+    paddingTopLeft: [props.showLegend ? 220 : 20, 20],
+  });
+}, 200);
+
+// auto-fit when legend enabled/disabled
+watch(() => props.showLegend, fit);
+
 // when map container created
 onMounted(() => {
   if (!element.value) return;
 
   // init map
-  map.remove();
+  map?.remove();
   map = L.map(element.value, mapOptions);
 
-  // add layer groups
-  baseGroup.addTo(map);
-  overlayGroup.addTo(map);
-  dataLayer.addTo(map);
+  // add panes to map
+  map.createPane("base").style.zIndex = "0";
+  map.createPane("data").style.zIndex = "1";
+  map.createPane("overlay").style.zIndex = "2";
+  map.createPane("markers").style.zIndex = "3";
 
   // add control to map and set element to teleport legend template into
-  legendTeleport.value = new Control({ position: "bottomleft" })
+  legendTeleport.value = new Control({ position: "topleft" })
     .addTo(map)
     .getContainer();
 
   // update props from map pan/zoom
   map.on("moveend", () => {
+    if (!map) return;
     const { lat, lng } = map.getCenter();
     emit("update:lat", lat);
     emit("update:long", lng);
@@ -303,88 +334,62 @@ onMounted(() => {
   map.on("dragend", coarseZoom);
 
   // update stuff once map init'd
-  updateGeometry();
+  updateBase();
+  updateData();
+  updateMarkers();
 });
 
 // when map container destroyed
 onBeforeUnmount(() => {
   // cleanup map on unmount
-  map.remove();
+  map?.remove();
 });
 
-// update base layer of map
+// func to get map layers, since leaflet doesn't have one
+function getLayers<T extends L.Layer = L.Layer>(
+  pane: string,
+  type: Function = L.Layer,
+) {
+  const layers: L.Layer[] = [];
+  map?.eachLayer((layer) => {
+    if (layer.options.pane === pane && layer instanceof type)
+      layers.push(layer);
+  });
+
+  return layers as T[];
+}
+
+// update base layer
 function updateBase() {
-  baseGroup.clearLayers();
-  baseGroup.addLayer(L.tileLayer.provider(props.base));
+  getLayers("base").forEach((layer) => layer.remove());
+  const layer = L.tileLayer.provider(props.base, { pane: "base" });
+  map?.addLayer(layer);
 }
 
 // update base layer when props change
 watch(() => props.base, updateBase, { immediate: true });
 
-// update overlay layers of map
-function updateOverlays() {
-  overlayGroup.clearLayers();
-  for (const overlay of props.overlays)
-    overlayGroup.addLayer(L.tileLayer.provider(overlay));
-}
+// update data layers
+function updateData() {
+  // update layer
+  getLayers("data").forEach((layer) => layer.remove());
+  const layer = L.geoJSON(undefined, { pane: "data" });
+  map?.addLayer(layer);
 
-// update overlay layers when props change
-watch(() => props.overlays, updateOverlays, { immediate: true, deep: true });
-
-// fit view to data layer content
-const fit = debounce(async () => {
-  // get bounding box of geojson data
-  let bounds = dataLayer.getBounds();
-
-  if (!bounds.isValid()) return;
-
-  // get tight fit
-  fineZoom();
-  // reset zoom snap when zoom animation finishes
-  map.once("zoomend", coarseZoom);
-
-  map.fitBounds(bounds, {
-    // make room for legend
-    paddingTopLeft: [props.showLegend ? 220 : 20, 20],
-  });
-}, 200);
-
-// auto-fit when legend enabled/disabled
-watch(() => props.showLegend, fit);
-
-// auto-fit when map container element changes size
-let first = true;
-useResizeObserver(element, () => {
-  if (first) return (first = false);
-  map?.invalidateSize();
-  fit();
-});
-
-// update map pan/zoom
-function updateView() {
-  map.setView([props.lat || 0, props.long || 0], props.zoom || 1);
-}
-
-// update map view when props change
-watch([() => props.lat, () => props.long, () => props.zoom], updateView);
-
-// update geometry of map
-function updateGeometry() {
-  // reset data layer
-  dataLayer.clearLayers();
-
-  // re-load geometry
-  for (const feature of props.geometry) dataLayer.addData(feature);
+  // re-load geojson
+  for (const feature of props.geometry) layer.addData(feature);
 
   // set feature static styles
-  dataLayer.setStyle({
-    weight: 0.5,
+  layer.setStyle({
+    weight: 1,
     color: "black",
+    opacity: 1,
+    fillOpacity: 1,
   });
 
   // attach popups
-  dataLayer.bindPopup(() => "");
-  dataLayer.on("popupopen", async (event) => {
+  layer.bindPopup(() => "");
+  layer.on("popupopen", async (event) => {
     // wait for teleported slot to render
     await nextTick();
     const wrapper = event.popup
@@ -396,7 +401,7 @@ function updateGeometry() {
     await nextTick();
     event.popup.update();
   });
-  dataLayer.on("popupclose", () => {
+  layer.on("popupclose", () => {
     popupTeleport.value = undefined;
     popupFeature.value = undefined;
   });
@@ -411,14 +416,58 @@ function updateGeometry() {
   updateOpacities();
 }
 
-// update map geometry when props change
-watch(() => props.geometry, updateGeometry, { immediate: true, deep: true });
+// update map data layer when props change
+watch(() => props.geometry, updateData, { immediate: true, deep: true });
+
+// icons associated with each marker key
+const symbols = computed(() => {
+  let index = 0;
+  return mapValues(props.markers, ({ label }) => {
+    const icon = markerOptions[index++ % markerOptions.length];
+    const image = icon?.options.iconUrl || "";
+    return { label, icon, image };
+  });
+});
+
+// update marker layers
+function updateMarkers() {
+  getLayers("markers").forEach((layer) => layer.remove());
+  for (const [key, value] of Object.entries(props.markers)) {
+    const icon = symbols.value[key]?.icon;
+    for (const { coords } of value.points) {
+      const [long, lat] = coords;
+      const marker = L.marker([lat, long], { icon, pane: "markers" });
+      map?.addLayer(marker);
+    }
+  }
+}
+
+// update marker layers when props change
+watch(() => props.markers, updateMarkers, { immediate: true, deep: true });
+
+// auto-fit when map container element changes size
+let first = true;
+useResizeObserver(element, () => {
+  if (first) return (first = false);
+  map?.invalidateSize();
+  fit();
+});
+
+// update map pan/zoom
+function updateView() {
+  map?.setView([props.lat || 0, props.long || 0], props.zoom || 1);
+}
+
+// update map view when props change
+watch([() => props.lat, () => props.long, () => props.zoom], updateView);
 
 // update data feature colors
 function updateColors() {
-  dataLayer.setStyle((feature) => ({
-    fillColor: scale.value(props.values?.[feature?.properties.id] || 0),
-  }));
+  getLayers<L.GeoJSON>("data", L.GeoJSON).forEach((layer) =>
+    layer.setStyle((feature) => ({
+      fillColor: scale.value(props.values?.[feature?.properties.id] || 0),
+    })),
+  );
 }
 
 // update colors when data values or color scheme changes
@@ -428,25 +477,22 @@ watch([() => props.values, scale], updateColors, {
 
 // update layer opacities
 function updateOpacities() {
-  baseGroup.eachLayer((layer) => {
-    if (layer instanceof L.TileLayer) layer.setOpacity(props.baseOpacity);
-  });
-  overlayGroup.eachLayer((layer) => {
-    if (layer instanceof L.TileLayer) layer.setOpacity(props.overlayOpacity);
-  });
-  dataLayer.setStyle({
-    opacity: props.dataOpacity,
-    fillOpacity: props.dataOpacity,
-  });
+  if (!map) return;
+
+  // get layers
+  const base = map.getPane("base");
+  const data = map.getPane("data");
+  const markers = map.getPane("markers");
+
+  // set layer opacities
+  if (base) base.style.opacity = String(props.baseOpacity);
+  if (data) data.style.opacity = String(props.dataOpacity);
+  if (markers) markers.style.opacity = String(props.markerOpacity);
 }
 
 // update opacities when props change
 watch(
-  [
-    () => props.baseOpacity,
-    () => props.overlayOpacity,
-    () => props.dataOpacity,
-  ],
+  [() => props.baseOpacity, () => props.dataOpacity, () => props.markerOpacity],
   updateOpacities,
   {
     immediate: true,
@@ -458,15 +504,16 @@ const scrollable = useScrollable(scroll);
 
 // enable/disable zooming by scrolling
 watch(scrollable, () => {
+  if (!map) return;
   if (scrollable.value) map.scrollWheelZoom.disable();
   else map.scrollWheelZoom.enable();
 });
 
-// actual client size of map
+// actual client size
 const { width: actualWidth, height: actualHeight } = useElementSize(element);
 
 // download map as png
-async function download(filename: string | string[]) {
+async function download() {
   const el = element.value;
   if (!el) return;
   // upscale for better quality
@@ -479,7 +526,7 @@ async function download(filename: string | string[]) {
       transformOrigin: "top left",
     },
   });
-  downloadPng(blob, filename);
+  downloadPng(blob, props.filename);
 }
 
 // toggle fullscreen on element
@@ -523,7 +570,7 @@ const { toggle: fullscreen } = useFullscreen(element);
 }
 
 .steps {
-  display: inline-grid;
+  display: grid;
   grid-template-columns: 1.5em max-content max-content max-content;
   grid-auto-rows: 1.5em;
   align-items: center;
@@ -533,6 +580,17 @@ const { toggle: fullscreen } = useFullscreen(element);
 
 .steps svg {
   width: 100%;
+}
+
+.symbols {
+  display: grid;
+  grid-template-columns: 1em auto;
+  gap: 10px;
+}
+
+.symbols img {
+  position: relative;
+  top: 0.15em;
 }
 </style>
 

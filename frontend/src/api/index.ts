@@ -1,6 +1,7 @@
 import * as d3 from "d3";
 import type { Feature, Geometry as GeoJsonGeometry } from "geojson";
 import { mapValues } from "lodash";
+import fakeData from "./fake-marker-data.json";
 
 // api root
 const api = import.meta.env.VITE_API;
@@ -133,6 +134,7 @@ export async function getValues(
 
   const values = Object.values(data.values);
 
+  // calculate stats
   return {
     min: d3.min(values),
     max: d3.max(values),
@@ -143,3 +145,22 @@ export async function getValues(
 }
 
 export type Values = Awaited<ReturnType<typeof getValues>>;
+
+// response from markers api endpoint
+type _Markers = {
+  [key: string]: {
+    label: string;
+    points: {
+      coords: [number, number];
+      info: string;
+    }[];
+  };
+};
+
+// get markers for map
+export async function getMarkers() {
+  // const data = await request<_Markers>(`${api}/markers`);
+  return fakeData as unknown as _Markers;
+}
+
+export type Markers = Awaited<ReturnType<typeof getMarkers>>;

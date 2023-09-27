@@ -2,7 +2,7 @@
   <section class="full">
     <h2>Explore cancer data in {{ area }}</h2>
 
-    <div v-if="status === 'success'" class="layout">
+    <div v-if="dataStatus === 'success'" class="layout">
       <!-- https://bugs.chromium.org/p/chromium/issues/detail?id=1484663 -->
       <div ref="panel" class="panel" role="group">
         <AppSelect
@@ -32,6 +32,14 @@
 
         <hr />
 
+        <AppSelect
+          v-model="selectedMarkers"
+          label="Markers"
+          :options="markerOptions"
+          :multi="true"
+          tooltip="Locations to show on map"
+        />
+
         <div class="double-control">
           <AppCheckbox
             v-model="showLegend"
@@ -49,17 +57,9 @@
         <AppAccordion label="More Options">
           <AppSelect
             v-model="selectedBase"
-            v-tooltip="'Provider to use for base map layer'"
             label="Base layer"
             :options="baseOptions"
-          />
-
-          <AppSelect
-            v-model="selectedOverlays"
-            v-tooltip="'Providers to use as overlay layers'"
-            label="Overlay layers"
-            :options="overlayOptions"
-            :multi="true"
+            tooltip="Provider to use for base map layer"
           />
 
           <AppSelect
@@ -85,9 +85,9 @@
 
           <div class="double-control">
             <AppSlider
-              v-model="overlayOpacity"
-              v-tooltip="'Transparency of map overlay layers'"
-              label="Overlays opacity"
+              v-model="markerOpacity"
+              v-tooltip="'Transparency of map markers'"
+              label="Markers opacity"
             />
 
             <AppSlider
@@ -153,20 +153,22 @@
         class="map"
         :style="{ opacity: geometryStatus === 'loading' ? 0.25 : 1 }"
         :geometry="selectedGeometry"
+        :markers="_markers"
         :values="values?.values"
         :min="values?.min"
         :max="values?.max"
-        :data-opacity="dataOpacity"
-        :overlay-opacity="overlayOpacity"
+        :show-legend="showLegend"
         :base-opacity="baseOpacity"
+        :data-opacity="dataOpacity"
+        :marker-opacity="markerOpacity"
         :base="selectedBase"
-        :overlays="selectedOverlays"
         :gradient="selectedGradient"
         :flip-gradient="flipGradient"
         :scale-steps="scaleSteps"
         :nice-steps="niceSteps"
         :width="mapWidth"
         :height="mapHeight"
+        :filename="[selectedMeasure, selectedLevel]"
       >
         <template v-if="showLegend" #heading>
           <strong>{{ measures[selectedMeasure]?.label }}</strong>
@@ -197,7 +199,7 @@
       </AppMap>
     </div>
 
-    <AppStatus v-else :status="status" />
+    <AppStatus v-else :status="dataStatus" />
   </section>
 
   <section>
@@ -225,15 +227,17 @@
 
 <script setup lang="ts">
 import { computed, ref, watch, watchEffect } from "vue";
-import { cloneDeep } from "lodash";
+import { cloneDeep, pick } from "lodash";
 import { faDownload } from "@fortawesome/free-solid-svg-icons";
 import {
   getFacets,
   getGeometry,
+  getMarkers,
   getValues,
   type Facet,
   type Facets,
   type Geometry,
+  type Markers,
   type Values,
 } from "@/api";
 import AppAccordion from "@/components/AppAccordion.vue";
@@ -253,7 +257,6 @@ import {
   useUrlParam,
 } from "@/util/composables";
 import { formatValue } from "@/util/math";
-import "leaflet/dist/leaflet.css";
 
 // project info
 const { VITE_AREA: area } = import.meta.env;
@@ -265,14 +268,14 @@ const panel = ref<HTMLElement>();
 useScrollable(panel);
 
 // data state
-const status = ref<Status>("loading");
+const dataStatus = ref<Status>("loading");
 const geometryStatus = ref<Status>("loading");
 const counties = ref<Geometry>();
 const tracts = ref<Geometry>();
 const selectedGeometry = ref<Geometry>();
 const facets = ref<Facets>();
 const values = ref<Values>();
-const overlayOptions = ref<Option[]>([]);
+const markers = ref<Markers>();
 
 // select boxes state
 const selectedLevel = useUrlParam("level", stringParam, "");
@@ -288,25 +291,27 @@ const long = useUrlParam("long", numberParam, 0);
 const showLegend = ref(true);
 const showDetails = ref(false);
 const selectedBase = ref(baseOptions[0]?.id || "");
-const selectedOverlays = ref([]);
 const selectedGradient = ref(gradientOptions[3]?.id || "");
-const dataOpacity = ref(0.75);
-const overlayOpacity = ref(0.75);
+const selectedMarkers = ref<string[]>([]);
 const baseOpacity = ref(1);
+const dataOpacity = ref(0.75);
+const markerOpacity = ref(1);
 const flipGradient = ref(false);
 const scaleSteps = ref(5);
 const niceSteps = ref(true);
 const mapWidth = ref(0);
 const mapHeight = ref(0);
 
-// load hierarchy of geographic levels, measure categories, and measures
+// load "core" data once on load
 async function loadFacets() {
   try {
+    dataStatus.value = "loading";
     facets.value = await getFacets();
-    status.value = "success";
+    markers.value = await getMarkers();
+    dataStatus.value = "success";
   } catch (error) {
     console.error(error);
-    status.value = "error";
+    dataStatus.value = "error";
   }
 }
 loadFacets();
@@ -324,6 +329,7 @@ watchEffect(async () => {
       tracts.value ??= await getGeometry("tracts", "fips");
       selectedGeometry.value = tracts.value;
     }
+
     geometryStatus.value = "success";
   } catch (error) {
     console.error(error);
@@ -378,6 +384,19 @@ watch([selectedCategory, measures], () => {
   if (!selectedMeasure.value || !measures.value[selectedMeasure.value])
     selectedMeasure.value = Object.keys(measures.value)[0] || "";
 });
+
+// marker dropdown options
+const markerOptions = computed<Option[]>(() =>
+  Object.entries(markers.value || {}).map(([key, value]) => ({
+    id: key,
+    label: value.label,
+  })),
+);
+
+// marker data to pass to map, filtered by selected markers
+const _markers = computed(
+  () => pick(markers.value, selectedMarkers.value) as Markers,
+);
 </script>
 
 <style scoped>
