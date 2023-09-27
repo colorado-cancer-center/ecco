@@ -12,6 +12,7 @@
   },
   "rules": {
     "prettier/prettier": "warn",
+    "vue/no-v-html": "off",
     "vuejs-accessibility/label-has-for": [
       "error",
       {

@@ -26,6 +26,9 @@
         <AppButton
           v-tooltip="'Download selected data in CSV format'"
           :icon="faDownload"
+          :to="
+            getDataDownload(selectedLevel, selectedCategory, selectedMeasure)
+          "
           :accent="true"
           >Download Data</AppButton
         >
@@ -73,7 +76,7 @@
                       v-for="(color, index) in option?.colors"
                       :key="index"
                       :offset="
-                        100 * (index / (option?.colors.length || 1)) + '%'
+                        100 * (index / ((option?.colors.length || 1) - 1)) + '%'
                       "
                       :stop-color="color"
                     />
@@ -103,7 +106,9 @@
             tooltip="Provider to use for base map layer"
           >
             <template #preview="{ option }">
-              <img :src="option?.image" alt="" class="image-preview" />
+              <div class="image-preview">
+                <img :src="option?.image" alt="" />
+              </div>
             </template>
           </AppSelect>
 
@@ -130,9 +135,9 @@
 
           <div class="multi-control">
             <AppSlider
-              v-model="overlayOpacity"
-              v-tooltip="'Transparency of map overlays'"
-              label="Over. trans."
+              v-model="baseOpacity"
+              v-tooltip="'Transparency of map base layer'"
+              label="Base trans."
             />
 
             <AppSlider
@@ -142,9 +147,9 @@
             />
 
             <AppSlider
-              v-model="baseOpacity"
-              v-tooltip="'Transparency of map base layer'"
-              label="Base trans."
+              v-model="overlayOpacity"
+              v-tooltip="'Transparency of map overlays'"
+              label="Over. trans."
             />
           </div>
 
@@ -259,6 +264,7 @@
       cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
       est laborum.
     </p>
+    <AppButton to="/about">Learn More</AppButton>
   </section>
 </template>
 
@@ -268,6 +274,7 @@ import { cloneDeep, pick } from "lodash";
 import { faDownload } from "@fortawesome/free-solid-svg-icons";
 import {
   getData,
+  getDataDownload,
   getFacets,
   getOverlays,
   getValues,
@@ -504,7 +511,17 @@ const _overlays = computed(
 }
 
 .image-preview {
-  height: 3em;
+  flex-shrink: 0;
+  width: 2em;
+  height: 2em;
+  overflow: hidden;
   background: var(--light-gray);
+}
+
+.image-preview img {
+  width: 100%;
+  height: 100%;
+  /* center map on particular place (continental US) */
+  transform: scale(4.9) translate(28%, 15.4%);
 }
 </style>

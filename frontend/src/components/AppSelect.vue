@@ -19,7 +19,7 @@
             v-tooltip="tooltip"
             :icon="open ? faCaretUp : faCaretDown"
             :flip="true"
-            class="button"
+            class="box"
             :style="{ gridColumn: multi ? '' : 'span 2' }"
             @keydown="onKeypress"
           >
@@ -221,12 +221,12 @@ async function onOpen(node: VNode) {
   grid-column: span 2;
 }
 
-.button :deep(span) {
+.box :deep(span) {
   flex-grow: 1;
   text-align: left;
 }
 
-.button :deep(svg) {
+.box :deep(svg) {
   color: var(--gray);
 }
 

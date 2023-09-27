@@ -57,8 +57,8 @@ function nameToOption(name: string) {
   const image = L.Util.template(_url, {
     x: 0,
     y: 0,
-    z: 1,
-    r: "",
+    z: 0,
+    r: "@2x",
     s: options.subdomains?.[0] || "",
     ...options,
   });

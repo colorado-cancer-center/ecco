@@ -3,7 +3,7 @@ import type { FeatureCollection, Geometry } from "geojson";
 import { mapValues } from "lodash";
 import fakeData from "./fake-overlay-data.json";
 
-// api root
+// api root, without trailing slash
 const api = import.meta.env.VITE_API;
 
 console.info("API:", api);
@@ -159,6 +159,15 @@ export async function getValues(
 }
 
 export type Values = Awaited<ReturnType<typeof getValues>>;
+
+// get data download link
+export function getDataDownload(
+  level: string,
+  category: string,
+  measure: string,
+) {
+  return `${api}/stats/${level}/${category}/as-csv?measure=${measure}`;
+}
 
 // overlay geojson properties fields
 type OverlayProps = {

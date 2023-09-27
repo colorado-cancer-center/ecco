@@ -145,7 +145,6 @@ type Props = {
   zoom?: number;
   // show/hide elements
   showLegends?: boolean;
-  showDetails?: boolean;
   // layer opacities
   baseOpacity?: number;
   dataOpacity?: number;
@@ -239,7 +238,7 @@ function fineZoom() {
 // set coarse level of zoom snap, to make track pad pinch zoom not frustrating
 async function coarseZoom() {
   await sleep();
-  if (map) map.options.zoomSnap = 1;
+  if (map) map.options.zoomSnap = 0.5;
 }
 
 // get gradient interpolator function from shorthand id/name
@@ -333,8 +332,8 @@ const fit = debounce(async () => {
   });
 }, 200);
 
-// auto-fit when legend enabled/disabled
-watch(() => props.showLegends, fit);
+// auto-fit when props change
+watch([() => props.showLegends, () => props.overlays], fit, { deep: true });
 
 // when map container created
 onMounted(() => {
@@ -343,6 +342,8 @@ onMounted(() => {
   // init map
   map?.remove();
   map = L.map(element.value, mapOptions);
+
+  coarseZoom();
 
   // add panes to map
   map.createPane("base").style.zIndex = "0";
@@ -454,7 +455,7 @@ function updateData() {
 }
 
 // update map data layer when props change
-watch(() => props.data, updateData, { immediate: true, deep: true });
+watch(() => props.data, updateData, { deep: true });
 
 // icons associated with each overlay key
 const symbols = computed(() => {
@@ -490,7 +491,7 @@ function updateOverlays() {
 }
 
 // update overlay layers when props change
-watch(() => props.overlays, updateOverlays, { immediate: true, deep: true });
+watch(() => props.overlays, updateOverlays, { deep: true });
 
 // auto-fit when map container element changes size
 let first = true;
@@ -518,9 +519,7 @@ function updateColors() {
 }
 
 // update colors when data values or color scheme changes
-watch([() => props.values, scale], updateColors, {
-  immediate: true,
-});
+watch([() => props.values, scale], updateColors, {});
 
 // update layer opacities
 function updateOpacities() {
@@ -545,9 +544,7 @@ watch(
     () => props.overlayOpacity,
   ],
   updateOpacities,
-  {
-    immediate: true,
-  },
+  {},
 );
 
 // whether element has scrollbars
