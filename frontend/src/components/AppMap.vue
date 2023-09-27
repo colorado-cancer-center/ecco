@@ -37,16 +37,14 @@
       />
     </div>
 
-    <Teleport v-if="legendTeleport && $slots.heading" :to="legendTeleport">
+    <Teleport v-if="showLegends && topRightLegend" :to="topRightLegend">
       <div class="legend" @mousedown.stop>
-        <div class="legend-slot">
-          <slot name="heading" />
-        </div>
+        <slot name="top-right" />
+      </div>
+    </Teleport>
 
-        <div v-if="$slots.details" class="legend-slot">
-          <slot name="details" />
-        </div>
-
+    <Teleport v-if="showLegends && topLeftLegend" :to="topLeftLegend">
+      <div class="legend legend-tight" @mousedown.stop>
         <div class="steps">
           <template v-for="(step, index) of [...steps].reverse()" :key="index">
             <svg viewBox="0 0 1 1">
@@ -58,6 +56,18 @@
           </template>
         </div>
 
+        <slot name="top-left" />
+      </div>
+    </Teleport>
+
+    <Teleport
+      v-if="showLegends && bottomLeftLegend"
+      :to="bottomLeftLegend"
+      class="test"
+    >
+      <div class="legend legend-tight" @mousedown.stop>
+        <slot name="bottom-left" />
+
         <div v-if="Object.keys(symbols).length" class="symbols">
           <template v-for="(symbol, index) of symbols" :key="index">
             <img :src="symbol.image" alt="" />
@@ -67,8 +77,9 @@
       </div>
     </Teleport>
 
-    <Teleport v-if="popupTeleport && popupFeature" :to="popupTeleport">
-      <div class="mini-table">
+    <Teleport v-if="popup && popupFeature" :to="popup">
+      <!-- county/tract popup -->
+      <div v-if="popupFeature.name && popupFeature.id" class="mini-table">
         <span>Name</span>
         <span>{{ popupFeature.name }}</span>
         <span>FIPS</span>
@@ -76,6 +87,9 @@
         <span>Value</span>
         <span>{{ formatValue(values[popupFeature.id], min, max) }}</span>
       </div>
+
+      <!-- overlay popup -->
+      <div v-if="popupFeature.info" v-html="popupFeature.info"></div>
     </Teleport>
   </div>
 </template>
@@ -102,14 +116,14 @@ import {
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import { useElementSize, useFullscreen, useResizeObserver } from "@vueuse/core";
-import type { Geometry, Markers } from "@/api";
+import type { Data, Overlays } from "@/api";
 import AppButton from "@/components/AppButton.vue";
 import { getGradient } from "@/components/gradient";
 import { markerOptions } from "@/components/markers";
 import { useScrollable } from "@/util/composables";
 import { downloadPng } from "@/util/download";
 import { formatValue } from "@/util/math";
-import { sleep } from "@/util/misc";
+import { getBbox, sleep } from "@/util/misc";
 import "leaflet/dist/leaflet.css";
 
 // element refs
@@ -118,8 +132,8 @@ const element = ref<HTMLDivElement>();
 
 type Props = {
   // data
-  geometry?: Geometry;
-  markers?: Markers;
+  data?: Data;
+  overlays?: Overlays;
   // map of feature id to value
   values?: { [key: number]: number };
   // value domain
@@ -130,15 +144,14 @@ type Props = {
   long?: number;
   zoom?: number;
   // show/hide elements
-  showLegend?: boolean;
+  showLegends?: boolean;
   showDetails?: boolean;
   // layer opacities
   baseOpacity?: number;
   dataOpacity?: number;
-  markerOpacity?: number;
+  overlayOpacity?: number;
   // tile providers for layers
   base?: string;
-  overlays?: string[];
   // color gradient id
   gradient?: string;
   // scale props
@@ -153,20 +166,19 @@ type Props = {
 };
 
 const props = withDefaults(defineProps<Props>(), {
-  geometry: () => [],
-  markers: () => ({}),
+  data: () => ({ type: "FeatureCollection", features: [] }),
+  overlays: () => ({}),
   values: () => ({}),
   min: 0,
   max: 1,
   lat: undefined,
   long: undefined,
   zoom: undefined,
-  showLegend: true,
+  showLegends: true,
   baseOpacity: 1,
   dataOpacity: 0.75,
-  markerOpacity: 1,
+  overlayOpacity: 1,
   base: "Stadia.AlidadeSmooth",
-  overlays: () => [],
   gradient: "interpolateCool",
   flipGradient: false,
   scaleSteps: 5,
@@ -185,17 +197,20 @@ type Emits = {
 const emit = defineEmits<Emits>();
 
 type Slots = {
-  heading: () => unknown;
-  details: () => unknown;
+  "top-right": () => unknown;
+  "top-left": () => unknown;
+  "bottom-left": () => unknown;
 };
 
 defineSlots<Slots>();
 
-// element to teleport legend template content to
-const legendTeleport = ref<HTMLElement>();
+// elements to teleport legend template content to
+const topLeftLegend = ref<HTMLElement>();
+const topRightLegend = ref<HTMLElement>();
+const bottomLeftLegend = ref<HTMLElement>();
 
 // element to teleport popup template content to
-const popupTeleport = ref<HTMLElement>();
+const popup = ref<HTMLElement>();
 
 // properties of selected feature for popup
 const popupFeature = ref<GeoJsonProperties>();
@@ -206,10 +221,15 @@ const mapOptions: MapOptions = { zoomControl: false };
 // leaflet map object
 let map: L.Map | undefined;
 
-// custom control class
-const Control = L.Control.extend({
-  onAdd: () => document.createElement("div"),
-});
+// create legend panel
+function createLegend(options: L.ControlOptions) {
+  const Control = L.Control.extend({
+    onAdd: () => document.createElement("div"),
+  });
+  const legend = new Control(options);
+  map?.addControl(legend);
+  return legend.getContainer();
+}
 
 // set fine level of zoom snap, e.g. for tighter fit-bounds
 function fineZoom() {
@@ -291,14 +311,30 @@ const fit = debounce(async () => {
   // reset zoom snap when zoom animation finishes
   map?.once("zoomend", coarseZoom);
 
+  // default fit padding
+  let padding = { top: 20, left: 20, bottom: 20, right: 20 };
+
+  // make room for legends
+  if (props.showLegends) {
+    // increase padding based on corner legend panel dimensions
+    const padCorner = (v: "top" | "bottom", h: "left" | "right") => {
+      const { width, height } = getBbox(`.leaflet-${v}.leaflet-${h}`);
+      if (height > width) padding[h] = Math.max(width, padding[h]);
+      else padding[v] = Math.max(height, padding[v]);
+    };
+    padCorner("top", "right");
+    padCorner("top", "left");
+    padCorner("bottom", "left");
+  }
+
   map?.fitBounds(bounds, {
-    // make room for legend
-    paddingTopLeft: [props.showLegend ? 220 : 20, 20],
+    paddingTopLeft: [padding.left, padding.top],
+    paddingBottomRight: [padding.right, padding.bottom],
   });
 }, 200);
 
 // auto-fit when legend enabled/disabled
-watch(() => props.showLegend, fit);
+watch(() => props.showLegends, fit);
 
 // when map container created
 onMounted(() => {
@@ -312,12 +348,12 @@ onMounted(() => {
   map.createPane("base").style.zIndex = "0";
   map.createPane("data").style.zIndex = "1";
   map.createPane("overlay").style.zIndex = "2";
-  map.createPane("markers").style.zIndex = "3";
+  map.createPane("overlays").style.zIndex = "3";
 
-  // add control to map and set element to teleport legend template into
-  legendTeleport.value = new Control({ position: "topleft" })
-    .addTo(map)
-    .getContainer();
+  // add controls (panels) to map and set elements to teleport slots into
+  topRightLegend.value = createLegend({ position: "topright" });
+  topLeftLegend.value = createLegend({ position: "topleft" });
+  bottomLeftLegend.value = createLegend({ position: "bottomleft" });
 
   // update props from map pan/zoom
   map.on("moveend", () => {
@@ -336,7 +372,7 @@ onMounted(() => {
   // update stuff once map init'd
   updateBase();
   updateData();
-  updateMarkers();
+  updateOverlays();
 });
 
 // when map container destroyed
@@ -359,6 +395,26 @@ function getLayers<T extends L.Layer = L.Layer>(
   return layers as T[];
 }
 
+// bind popup to layer
+function bindPopup(layer: L.Layer) {
+  layer.bindPopup(() => "");
+  layer.on("popupopen", async (event) => {
+    await nextTick();
+    const wrapper = event.popup
+      .getElement()
+      ?.querySelector<HTMLElement>(".leaflet-popup-content-wrapper");
+    if (wrapper) wrapper.innerHTML = "";
+    popup.value = wrapper || undefined;
+    popupFeature.value = event.sourceTarget.feature.properties;
+    await nextTick();
+    event.popup.update();
+  });
+  layer.on("popupclose", () => {
+    popup.value = undefined;
+    popupFeature.value = undefined;
+  });
+}
+
 // update base layer
 function updateBase() {
   getLayers("base").forEach((layer) => layer.remove());
@@ -375,9 +431,7 @@ function updateData() {
   getLayers("data").forEach((layer) => layer.remove());
   const layer = L.geoJSON(undefined, { pane: "data" });
   map?.addLayer(layer);
-
-  // re-load geojson
-  for (const feature of props.geometry) layer.addData(feature);
+  layer.addData(props.data);
 
   // set feature static styles
   layer.setStyle({
@@ -387,24 +441,7 @@ function updateData() {
     fillOpacity: 1,
   });
 
-  // attach popups
-  layer.bindPopup(() => "");
-  layer.on("popupopen", async (event) => {
-    // wait for teleported slot to render
-    await nextTick();
-    const wrapper = event.popup
-      .getElement()
-      ?.querySelector<HTMLElement>(".leaflet-popup-content-wrapper");
-    if (wrapper) wrapper.innerHTML = "";
-    popupTeleport.value = wrapper || undefined;
-    popupFeature.value = event.sourceTarget.feature.properties;
-    await nextTick();
-    event.popup.update();
-  });
-  layer.on("popupclose", () => {
-    popupTeleport.value = undefined;
-    popupFeature.value = undefined;
-  });
+  bindPopup(layer);
 
   // if no pan/zoom specified, fit view to content,
   if (!props.lat && !props.long && !props.zoom) fit();
@@ -417,33 +454,43 @@ function updateData() {
 }
 
 // update map data layer when props change
-watch(() => props.geometry, updateData, { immediate: true, deep: true });
+watch(() => props.data, updateData, { immediate: true, deep: true });
 
-// icons associated with each marker key
+// icons associated with each overlay key
 const symbols = computed(() => {
   let index = 0;
-  return mapValues(props.markers, ({ label }) => {
+  return mapValues(props.overlays, ({ label }) => {
     const icon = markerOptions[index++ % markerOptions.length];
     const image = icon?.options.iconUrl || "";
     return { label, icon, image };
   });
 });
 
-// update marker layers
-function updateMarkers() {
-  getLayers("markers").forEach((layer) => layer.remove());
-  for (const [key, value] of Object.entries(props.markers)) {
+// update overlay layers
+function updateOverlays() {
+  getLayers<L.GeoJSON>("overlays", L.GeoJSON).forEach((layer) =>
+    layer.remove(),
+  );
+  for (const [key, { features }] of Object.entries(props.overlays)) {
     const icon = symbols.value[key]?.icon;
-    for (const { coords } of value.points) {
-      const [long, lat] = coords;
-      const marker = L.marker([lat, long], { icon, pane: "markers" });
-      map?.addLayer(marker);
-    }
+
+    const layer = L.geoJSON(undefined, {
+      pointToLayer: (feature, coords) => {
+        // for point, display as marker
+        if (feature.geometry.type === "Point")
+          return L.marker(coords, { icon });
+        return L.layerGroup();
+      },
+      pane: "overlays",
+    });
+    bindPopup(layer);
+    map?.addLayer(layer);
+    layer.addData(features);
   }
 }
 
-// update marker layers when props change
-watch(() => props.markers, updateMarkers, { immediate: true, deep: true });
+// update overlay layers when props change
+watch(() => props.overlays, updateOverlays, { immediate: true, deep: true });
 
 // auto-fit when map container element changes size
 let first = true;
@@ -482,17 +529,21 @@ function updateOpacities() {
   // get layers
   const base = map.getPane("base");
   const data = map.getPane("data");
-  const markers = map.getPane("markers");
+  const overlays = map.getPane("overlays");
 
   // set layer opacities
   if (base) base.style.opacity = String(props.baseOpacity);
   if (data) data.style.opacity = String(props.dataOpacity);
-  if (markers) markers.style.opacity = String(props.markerOpacity);
+  if (overlays) overlays.style.opacity = String(props.overlayOpacity);
 }
 
 // update opacities when props change
 watch(
-  [() => props.baseOpacity, () => props.dataOpacity, () => props.markerOpacity],
+  [
+    () => props.baseOpacity,
+    () => props.dataOpacity,
+    () => props.overlayOpacity,
+  ],
   updateOpacities,
   {
     immediate: true,
@@ -545,28 +596,30 @@ const { toggle: fullscreen } = useFullscreen(element);
   overflow: auto;
 }
 
-.controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
 .legend {
   display: flex;
   flex-direction: column;
-  width: min-content;
+  width: max-content;
+  max-width: 300px;
   padding: 20px;
-  gap: 20px;
+  gap: 5px;
   border-radius: var(--rounded);
   background: var(--white);
   box-shadow: var(--shadow);
 }
 
-.legend-slot {
+.legend:empty {
+  display: none;
+}
+
+.legend-tight {
+  max-width: 200px;
+}
+
+.controls {
   display: flex;
-  flex-direction: column;
-  gap: 5px;
-  overflow-wrap: break-word;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .steps {
@@ -599,11 +652,17 @@ const { toggle: fullscreen } = useFullscreen(element);
   font: inherit !important;
 }
 
+.leaflet-right {
+  text-align: right;
+}
+
 .leaflet-control-attribution {
+  max-width: 500px;
   padding: 0.25em 0.5em;
   border-radius: var(--rounded) 0 0 0;
   background: var(--white);
   box-shadow: var(--shadow) !important;
+  font: inherit;
   font-size: 0.8rem;
 }
 

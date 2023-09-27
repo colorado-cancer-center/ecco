@@ -61,15 +61,24 @@ const colors = [
 ];
 
 export const markerOptions = icons.map((def, index) => {
+  // lookup icon definition
+  const { node, icon: props } = icon(def);
+
   // get html node of icon
-  const svg = icon(def).node[0] as SVGSVGElement;
+  const svg = node[0] as SVGSVGElement;
 
   // skip every N colors to space them out visually
   // don't use N that is factor of number of colors or else you'll get repeats
   const color = colors[(index * 3) % colors.length] || "black";
 
+  // get size of icon
+  const size = Math.min(props[0], props[1]);
+
+  // outline thickness (normalize by size of icon)
+  const stroke = size / 5;
+
   // expand viewbox to account for stroke
-  const padding = 40;
+  const padding = stroke / 2;
   const [x = 0, y = 0, w = 512, h = 512] =
     svg.getAttribute("viewBox")?.split(" ").map(Number) || [];
   svg.setAttribute(
@@ -80,13 +89,14 @@ export const markerOptions = icons.map((def, index) => {
   // hard-code styles
   svg.style.color = color;
   svg.style.stroke = "black";
-  svg.style.strokeWidth = String(padding * 2);
+  svg.style.strokeWidth = String(stroke);
+  svg.style.paintOrder = "stroke";
 
   // encode url
   const url = "data:image/svg+xml;base64," + window.btoa(svg.outerHTML);
 
   return L.icon({
     iconUrl: url,
-    iconSize: [12, 12],
+    iconSize: [15, 15],
   });
 });

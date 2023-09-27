@@ -24,6 +24,13 @@
             @keydown="onKeypress"
           >
             {{ selectedLabel }}
+            <template #preview>
+              <slot
+                v-if="selectedOption"
+                name="preview"
+                :option="selectedOption"
+              />
+            </template>
           </AppButton>
         </ListboxButton>
         <ListboxOptions>
@@ -43,26 +50,7 @@
                 :icon="faCheck"
               />
               <span>{{ option.label }}</span>
-
-              <!-- color gradient preview -->
-              <svg
-                v-if="option.colors?.length"
-                :viewBox="`0 0 ${option.colors.length} 1`"
-                preserveAspectRatio="none"
-              >
-                <rect
-                  v-for="(color, colorIndex) in option.colors"
-                  :key="colorIndex"
-                  :fill="color"
-                  :x="colorIndex"
-                  y="0"
-                  width="1"
-                  height="1"
-                />
-              </svg>
-
-              <!-- image preview -->
-              <img v-if="option.image" :src="option.image" alt="" />
+              <slot name="preview" :option="option" />
             </li>
           </ListboxOption>
         </ListboxOptions>
@@ -77,7 +65,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" generic="O extends Option">
 import { computed, type VNode } from "vue";
 import { clamp } from "lodash";
 import { size } from "@floating-ui/dom";
@@ -102,15 +90,14 @@ import { frame } from "@/util/misc";
 export type Option = {
   id: string;
   label: string;
-  colors?: string[];
-  image?: string;
+  [key: string]: unknown;
 };
 
 type Props = {
   label: string;
-  options: Option[];
+  options: O[];
   multi?: boolean;
-  modelValue: Option["id"] | Option["id"][];
+  modelValue: O["id"] | O["id"][];
   tooltip?: string;
 };
 
@@ -124,6 +111,13 @@ type Emits = {
 };
 
 const emit = defineEmits<Emits>();
+
+type Slots = {
+  // extra preview element to show for each option in dropdown and selected option in label
+  preview: (props: { option?: O }) => unknown;
+};
+
+defineSlots<Slots>();
 
 // floating-ui middleware
 const middleware = [
@@ -151,11 +145,20 @@ const value = computed(() => {
 });
 
 // model value to emit from headlessui to parent
-async function onChange(value: Option | Option[]) {
+async function onChange(value: O | O[]) {
   let list = normalize(value);
   const id = props.multi ? list.map((v) => v.id) : list[0]?.id || "";
   emit("update:modelValue", id);
 }
+
+// full selected option
+const selectedOption = computed(() => {
+  // normalize to array
+  let list = normalize(props.modelValue);
+  if (!props.multi)
+    return props.options.find((option) => option.id === list[0]);
+  else return undefined;
+});
 
 // label to show as selected value in box
 const selectedLabel = computed<string>(() => {
@@ -252,16 +255,6 @@ li span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-li svg {
-  max-width: 100px;
-  height: 1em;
-}
-
-li img {
-  height: 3em;
-  background: var(--light-gray);
 }
 
 .active {

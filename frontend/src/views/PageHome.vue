@@ -2,7 +2,7 @@
   <section class="full">
     <h2>Explore cancer data in {{ area }}</h2>
 
-    <div v-if="dataStatus === 'success'" class="layout">
+    <div v-if="defsStatus === 'success'" class="layout">
       <!-- https://bugs.chromium.org/p/chromium/issues/detail?id=1484663 -->
       <div ref="panel" class="panel" role="group">
         <AppSelect
@@ -33,71 +33,81 @@
         <hr />
 
         <AppSelect
-          v-model="selectedMarkers"
-          label="Markers"
-          :options="markerOptions"
+          v-model="selectedOverlays"
+          label="Overlays"
+          :options="overlayOptions"
           :multi="true"
           tooltip="Locations to show on map"
         />
 
-        <div class="double-control">
+        <div class="multi-control">
           <AppCheckbox
-            v-model="showLegend"
-            v-tooltip="'Show/hide legend on map'"
-            label="Show legend"
+            v-model="showLegends"
+            v-tooltip="'Show/hide legend panels on map'"
+            label="Show legends"
           />
 
           <AppCheckbox
             v-model="showDetails"
-            v-tooltip="'Show/hide extra details in map legend'"
+            v-tooltip="'Show/hide extra details in legends, like stats'"
             label="Show details"
           />
         </div>
 
         <AppAccordion label="More Options">
           <AppSelect
-            v-model="selectedBase"
-            label="Base layer"
-            :options="baseOptions"
-            tooltip="Provider to use for base map layer"
-          />
-
-          <AppSelect
             v-model="selectedGradient"
             v-tooltip="'Gradient to use for coloring map data'"
             label="Gradient"
             :options="gradientOptions"
+          >
+            <template #preview="{ option }">
+              <svg
+                :viewBox="`0 0 10 1`"
+                preserveAspectRatio="none"
+                class="gradient-preview"
+              >
+                <defs>
+                  <linearGradient :id="option?.id">
+                    <stop
+                      v-for="(color, index) in option?.colors"
+                      :key="index"
+                      :offset="
+                        100 * (index / (option?.colors.length || 1)) + '%'
+                      "
+                      :stop-color="color"
+                    />
+                  </linearGradient>
+                </defs>
+                <rect
+                  :fill="`url('#${option?.id}')`"
+                  x="0"
+                  y="0"
+                  width="10"
+                  height="1"
+                />
+              </svg>
+            </template>
+          </AppSelect>
+
+          <AppCheckbox
+            v-model="flipGradient"
+            v-tooltip="'Reverse direction of color gradient'"
+            label="Flip gradient"
           />
 
-          <div class="double-control">
-            <AppCheckbox
-              v-model="flipGradient"
-              v-tooltip="'Reverse direction of color gradient'"
-              label="Flip gradient"
-            />
+          <AppSelect
+            v-model="selectedBase"
+            label="Base layer"
+            :options="baseOptions"
+            tooltip="Provider to use for base map layer"
+          >
+            <template #preview="{ option }">
+              <img :src="option?.image" alt="" class="image-preview" />
+            </template>
+          </AppSelect>
 
-            <AppSlider
-              v-model="dataOpacity"
-              v-tooltip="'Transparency of map data layer'"
-              label="Data opacity"
-            />
-          </div>
-
-          <div class="double-control">
-            <AppSlider
-              v-model="markerOpacity"
-              v-tooltip="'Transparency of map markers'"
-              label="Markers opacity"
-            />
-
-            <AppSlider
-              v-model="baseOpacity"
-              v-tooltip="'Transparency of map base layer'"
-              label="Base opacity"
-            />
-          </div>
-
-          <div class="double-control">
+          <div class="multi-control">
             <AppNumber
               v-model="scaleSteps"
               v-tooltip="
@@ -115,6 +125,26 @@
                 'Adjust number of scale steps to get nice, round intervals'
               "
               label="Nice steps"
+            />
+          </div>
+
+          <div class="multi-control">
+            <AppSlider
+              v-model="overlayOpacity"
+              v-tooltip="'Transparency of map overlays'"
+              label="Over. trans."
+            />
+
+            <AppSlider
+              v-model="dataOpacity"
+              v-tooltip="'Transparency of map data layer'"
+              label="Data trans."
+            />
+
+            <AppSlider
+              v-model="baseOpacity"
+              v-tooltip="'Transparency of map base layer'"
+              label="Base trans."
             />
           </div>
 
@@ -151,16 +181,16 @@
         v-model:lat="lat"
         v-model:long="long"
         class="map"
-        :style="{ opacity: geometryStatus === 'loading' ? 0.25 : 1 }"
-        :geometry="selectedGeometry"
-        :markers="_markers"
+        :style="{ opacity: dataStatus === 'loading' ? 0.25 : 1 }"
+        :data="selectedData"
+        :overlays="_overlays"
         :values="values?.values"
         :min="values?.min"
         :max="values?.max"
-        :show-legend="showLegend"
+        :show-legends="showLegends"
         :base-opacity="baseOpacity"
         :data-opacity="dataOpacity"
-        :marker-opacity="markerOpacity"
+        :overlay-opacity="overlayOpacity"
         :base="selectedBase"
         :gradient="selectedGradient"
         :flip-gradient="flipGradient"
@@ -170,36 +200,43 @@
         :height="mapHeight"
         :filename="[selectedMeasure, selectedLevel]"
       >
-        <template v-if="showLegend" #heading>
+        <template #top-right>
           <strong>{{ measures[selectedMeasure]?.label }}</strong>
-          <small>({{ categories[selectedCategory]?.label }})</small>
-          <small>by {{ levels[selectedLevel]?.label }}</small>
+          <small>
+            {{ categories[selectedCategory]?.label }}
+            | by {{ levels[selectedLevel]?.label }}
+          </small>
         </template>
 
-        <template v-if="showDetails" #details>
-          <div class="mini-table">
-            <span>Min:</span>
-            <span>
-              {{ formatValue(values?.min, values?.min, values?.max) }}</span
-            >
-            <span>Max:</span>
-            <span>
-              {{ formatValue(values?.max, values?.min, values?.max) }}</span
-            >
-            <span>Mean:</span>
-            <span>
-              {{ formatValue(values?.mean, values?.min, values?.max) }}</span
-            >
-            <span>Median:</span>
-            <span>
-              {{ formatValue(values?.median, values?.min, values?.max) }}</span
-            >
-          </div>
+        <template #top-left>
+          <template v-if="showDetails">
+            <hr />
+            <div class="mini-table">
+              <span>Min:</span>
+              <span>
+                {{ formatValue(values?.min, values?.min, values?.max) }}</span
+              >
+              <span>Max:</span>
+              <span>
+                {{ formatValue(values?.max, values?.min, values?.max) }}</span
+              >
+              <span>Mean:</span>
+              <span>
+                {{ formatValue(values?.mean, values?.min, values?.max) }}</span
+              >
+              <span>Median:</span>
+              <span>
+                {{
+                  formatValue(values?.median, values?.min, values?.max)
+                }}</span
+              >
+            </div>
+          </template>
         </template>
       </AppMap>
     </div>
 
-    <AppStatus v-else :status="dataStatus" />
+    <AppStatus v-else :status="defsStatus" />
   </section>
 
   <section>
@@ -230,14 +267,14 @@ import { computed, ref, watch, watchEffect } from "vue";
 import { cloneDeep, pick } from "lodash";
 import { faDownload } from "@fortawesome/free-solid-svg-icons";
 import {
+  getData,
   getFacets,
-  getGeometry,
-  getMarkers,
+  getOverlays,
   getValues,
+  type Data,
   type Facet,
   type Facets,
-  type Geometry,
-  type Markers,
+  type Overlays,
   type Values,
 } from "@/api";
 import AppAccordion from "@/components/AppAccordion.vue";
@@ -268,14 +305,14 @@ const panel = ref<HTMLElement>();
 useScrollable(panel);
 
 // data state
+const defsStatus = ref<Status>("loading");
 const dataStatus = ref<Status>("loading");
-const geometryStatus = ref<Status>("loading");
-const counties = ref<Geometry>();
-const tracts = ref<Geometry>();
-const selectedGeometry = ref<Geometry>();
+const counties = ref<Data>();
+const tracts = ref<Data>();
+const selectedData = ref<Data>();
 const facets = ref<Facets>();
 const values = ref<Values>();
-const markers = ref<Markers>();
+const overlays = ref<Overlays>();
 
 // select boxes state
 const selectedLevel = useUrlParam("level", stringParam, "");
@@ -288,14 +325,14 @@ const lat = useUrlParam("lat", numberParam, 0);
 const long = useUrlParam("long", numberParam, 0);
 
 // map style state
-const showLegend = ref(true);
+const showLegends = ref(true);
 const showDetails = ref(false);
 const selectedBase = ref(baseOptions[0]?.id || "");
 const selectedGradient = ref(gradientOptions[3]?.id || "");
-const selectedMarkers = ref<string[]>([]);
+const selectedOverlays = ref<string[]>([]);
 const baseOpacity = ref(1);
 const dataOpacity = ref(0.75);
-const markerOpacity = ref(1);
+const overlayOpacity = ref(1);
 const flipGradient = ref(false);
 const scaleSteps = ref(5);
 const niceSteps = ref(true);
@@ -303,37 +340,37 @@ const mapWidth = ref(0);
 const mapHeight = ref(0);
 
 // load "core" data once on load
-async function loadFacets() {
+async function loadDefs() {
   try {
-    dataStatus.value = "loading";
+    defsStatus.value = "loading";
     facets.value = await getFacets();
-    markers.value = await getMarkers();
-    dataStatus.value = "success";
+    overlays.value = await getOverlays();
+    defsStatus.value = "success";
   } catch (error) {
     console.error(error);
-    dataStatus.value = "error";
+    defsStatus.value = "error";
   }
 }
-loadFacets();
+loadDefs();
 
 // load and select geometry data to display on map, on request to save bandwidth
 watchEffect(async () => {
   try {
-    geometryStatus.value = "loading";
+    dataStatus.value = "loading";
     // clear geometry while loading
-    selectedGeometry.value = undefined;
+    selectedData.value = undefined;
     if (selectedLevel.value === "county") {
-      counties.value ??= await getGeometry("counties", "us_fips");
-      selectedGeometry.value = counties.value;
+      counties.value ??= await getData("counties", "us_fips");
+      selectedData.value = counties.value;
     } else if (selectedLevel.value === "tract") {
-      tracts.value ??= await getGeometry("tracts", "fips");
-      selectedGeometry.value = tracts.value;
+      tracts.value ??= await getData("tracts", "fips");
+      selectedData.value = tracts.value;
     }
 
-    geometryStatus.value = "success";
+    dataStatus.value = "success";
   } catch (error) {
     console.error(error);
-    geometryStatus.value = "error";
+    dataStatus.value = "error";
   }
 });
 
@@ -385,17 +422,17 @@ watch([selectedCategory, measures], () => {
     selectedMeasure.value = Object.keys(measures.value)[0] || "";
 });
 
-// marker dropdown options
-const markerOptions = computed<Option[]>(() =>
-  Object.entries(markers.value || {}).map(([key, value]) => ({
+// overlay dropdown options
+const overlayOptions = computed<Option[]>(() =>
+  Object.entries(overlays.value || {}).map(([key, value]) => ({
     id: key,
     label: value.label,
   })),
 );
 
-// marker data to pass to map, filtered by selected markers
-const _markers = computed(
-  () => pick(markers.value, selectedMarkers.value) as Markers,
+// overlay data to pass to map, filtered by selected overlays
+const _overlays = computed(
+  () => pick(overlays.value, selectedOverlays.value) as Overlays,
 );
 </script>
 
@@ -404,7 +441,7 @@ const _markers = computed(
   display: grid;
   grid-template-columns: 320px 1fr;
   margin: 40px 0;
-  gap: 30px;
+  gap: 20px;
 }
 
 .panel {
@@ -419,18 +456,12 @@ const _markers = computed(
   border-radius: var(--rounded);
 }
 
-.double-control {
+.multi-control {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
   align-items: flex-end;
   width: 100%;
-  gap: 10px 20px;
-}
-
-@media (max-width: 400px) {
-  .double-control {
-    grid-template-columns: 1fr;
-  }
+  gap: 10px;
 }
 
 .dimensions-label {
@@ -465,5 +496,15 @@ const _markers = computed(
   .map {
     height: 90vh;
   }
+}
+
+.gradient-preview {
+  max-width: 100px;
+  height: 1em;
+}
+
+.image-preview {
+  height: 3em;
+  background: var(--light-gray);
 }
 </style>

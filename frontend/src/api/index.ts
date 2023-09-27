@@ -1,7 +1,7 @@
 import * as d3 from "d3";
-import type { Feature, Geometry as GeoJsonGeometry } from "geojson";
+import type { FeatureCollection, Geometry } from "geojson";
 import { mapValues } from "lodash";
-import fakeData from "./fake-marker-data.json";
+import fakeData from "./fake-overlay-data.json";
 
 // api root
 const api = import.meta.env.VITE_API;
@@ -41,26 +41,40 @@ type _Geometry = {
   wkb_geometry: string;
 }[];
 
+// data geojson properties fields
+type DataProps = {
+  id: string | number | undefined;
+  name: string;
+  full?: string | undefined;
+  fips?: string | undefined;
+  us_fips?: string | undefined;
+  objectid: number;
+  ogc_fid: number;
+};
+
 // get geojson from geography data
-export async function getGeometry(type: string, idField: string) {
+export async function getData(
+  type: string,
+  idField: string,
+): Promise<FeatureCollection<Geometry, DataProps>> {
   const data = await request<_Geometry>(`${api}/${type}`);
 
   // transform data into desired format
-  return data.map(
-    ({ wkb_geometry, ...d }) =>
-      ({
-        type: "Feature",
-        geometry: JSON.parse(wkb_geometry) as GeoJsonGeometry,
-        properties: {
-          ...d,
-          id: d[idField],
-          name: d.full || d.name || "",
-        },
-      }) satisfies Feature,
-  );
+  return {
+    type: "FeatureCollection",
+    features: data.map(({ wkb_geometry, ...d }) => ({
+      type: "Feature",
+      geometry: JSON.parse(wkb_geometry) as Geometry,
+      properties: {
+        ...d,
+        id: d[idField],
+        name: d.full || d.name || "",
+      },
+    })),
+  };
 }
 
-export type Geometry = Awaited<ReturnType<typeof getGeometry>>;
+export type Data = Awaited<ReturnType<typeof getData>>;
 
 // response from facets api endpoint
 type _Facets = {
@@ -121,7 +135,7 @@ type _Values = {
   values: { [key: number]: number };
 };
 
-// get values data for map
+// get values data
 export async function getValues(
   level: string,
   category: string,
@@ -146,21 +160,23 @@ export async function getValues(
 
 export type Values = Awaited<ReturnType<typeof getValues>>;
 
-// response from markers api endpoint
-type _Markers = {
+// overlay geojson properties fields
+type OverlayProps = {
+  info: string;
+};
+
+// response from overlays api endpoint
+type _Overlays = {
   [key: string]: {
     label: string;
-    points: {
-      coords: [number, number];
-      info: string;
-    }[];
+    features: FeatureCollection<Geometry, OverlayProps>;
   };
 };
 
-// get markers for map
-export async function getMarkers() {
-  // const data = await request<_Markers>(`${api}/markers`);
-  return fakeData as unknown as _Markers;
+// get overlays (location markers, highlighted areas, etc)
+export async function getOverlays() {
+  // const data = await request<_Overlays>(`${api}/overlays`);
+  return fakeData as _Overlays;
 }
 
-export type Markers = Awaited<ReturnType<typeof getMarkers>>;
+export type Overlays = Awaited<ReturnType<typeof getOverlays>>;

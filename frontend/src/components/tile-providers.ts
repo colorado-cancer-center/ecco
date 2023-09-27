@@ -4,7 +4,7 @@ import "leaflet-providers";
 
 // some pretty base layer tile providers
 // from https://leaflet-extras.github.io/leaflet-providers/preview/
-export const baseOptions: Option[] = [
+export const baseOptions = [
   "Stadia.OSMBright",
   "Stadia.AlidadeSmooth",
   "Stadia.AlidadeSmoothDark",
@@ -40,7 +40,7 @@ export const baseOptions: Option[] = [
   "Stadia.StamenTonerLabels",
   "Stadia.StamenTerrainLabels",
   "OpenRailwayMap",
-].map(nameToOption);
+].map(nameToOption) satisfies Option[];
 
 // get selectable option from tile provider name
 function nameToOption(name: string) {

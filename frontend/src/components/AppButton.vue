@@ -1,15 +1,15 @@
 <template>
-  <button :class="{ square: !!icon && !hasText, accent }">
+  <button :class="{ square: !!icon && !$slots.default, accent }">
     <font-awesome-icon v-if="icon && !flip" :icon="icon" class="icon" />
-    <span v-if="hasText">
+    <span v-if="$slots.default">
       <slot />
     </span>
+    <slot v-if="$slots.preview" name="preview" />
     <font-awesome-icon v-if="icon && flip" :icon="icon" class="icon" />
   </button>
 </template>
 
 <script setup lang="ts">
-import { computed, useSlots } from "vue";
 import type { IconDefinition } from "@fortawesome/free-solid-svg-icons";
 
 type Props = {
@@ -22,11 +22,10 @@ defineProps<Props>();
 
 type Slots = {
   default?: () => unknown;
+  preview?: () => unknown;
 };
 
 defineSlots<Slots>();
-
-const hasText = computed(() => !!useSlots().default);
 </script>
 
 <style scoped>
@@ -43,6 +42,7 @@ button {
   background: var(--off-white);
   color: var(--dark-gray);
   font: inherit;
+  overflow-wrap: break-word;
   cursor: pointer;
   transition:
     color var(--fast),
@@ -51,10 +51,6 @@ button {
 
 button:hover {
   background: var(--light-gray);
-}
-
-span {
-  overflow-wrap: break-word;
 }
 
 .icon {
