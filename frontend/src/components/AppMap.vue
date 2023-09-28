@@ -31,13 +31,37 @@
         v-tooltip="'Fit view to data'"
         :icon="faCropSimple"
         @click="fit"
-      />
+        >Fit</AppButton
+      >
       <AppButton
         v-tooltip="'View map in full screen'"
         :icon="faExpand"
         @click="fullscreen"
-      />
+        >Fullscreen</AppButton
+      >
     </div>
+
+    <!-- top left legend -->
+    <Teleport v-if="showLegends && topLeftLegend" :to="topLeftLegend">
+      <div class="legend" @mousedown.stop>
+        <slot name="top-left" />
+
+        <!-- scale key -->
+        <div class="steps">
+          <template
+            v-for="(step, index) of [...scale.steps].reverse()"
+            :key="index"
+          >
+            <svg viewBox="0 0 1 1">
+              <rect x="0" y="0" width="1" height="1" :fill="step.color" />
+            </svg>
+            <span>{{ formatValue(step.lower, min, max) }}</span>
+            <span>&ndash;</span>
+            <span>{{ formatValue(step.upper, min, max) }}</span>
+          </template>
+        </div>
+      </div>
+    </Teleport>
 
     <!-- top right legend -->
     <Teleport v-if="showLegends && topRightLegend" :to="topRightLegend">
@@ -46,33 +70,16 @@
       </div>
     </Teleport>
 
-    <!-- top left legend -->
-    <Teleport v-if="showLegends && topLeftLegend" :to="topLeftLegend">
-      <div class="legend legend-tight" @mousedown.stop>
-        <div class="steps">
-          <template v-for="(step, index) of [...steps].reverse()" :key="index">
-            <svg viewBox="0 0 1 1">
-              <rect x="0" y="0" width="1" height="1" :fill="step.color" />
-            </svg>
-            <span>{{ step.lower }}</span>
-            <span>&ndash;</span>
-            <span>{{ step.upper }}</span>
-          </template>
-        </div>
-
-        <slot name="top-left" />
-      </div>
-    </Teleport>
-
-    <!-- bottom left legend -->
+    <!-- bottom right legend -->
     <Teleport
-      v-if="showLegends && bottomLeftLegend"
-      :to="bottomLeftLegend"
+      v-if="showLegends && bottomRightLegend"
+      :to="bottomRightLegend"
       class="test"
     >
-      <div class="legend legend-tight" @mousedown.stop>
-        <slot name="bottom-left" />
+      <div class="legend" @mousedown.stop>
+        <slot name="bottom-right" />
 
+        <!-- symbol key -->
         <div v-if="Object.keys(symbols).length" class="symbols">
           <template v-for="(symbol, index) of symbols" :key="index">
             <img :src="symbol.image" alt="" />
@@ -90,7 +97,7 @@
         <span>FIPS</span>
         <span>{{ popupFeature.id }}</span>
         <span>Value</span>
-        <span>{{ formatValue(values[popupFeature.id], min, max) }}</span>
+        <span>{{ formatValue(values[popupFeature.id], min, max, false) }}</span>
       </div>
 
       <!-- overlay popup -->
@@ -127,7 +134,7 @@ import { getGradient } from "@/components/gradient";
 import { markerOptions } from "@/components/markers";
 import { useScrollable } from "@/util/composables";
 import { downloadPng } from "@/util/download";
-import { formatValue } from "@/util/math";
+import { formatValue, normalizedApply } from "@/util/math";
 import { getBbox, sleep } from "@/util/misc";
 import "leaflet/dist/leaflet.css";
 
@@ -145,28 +152,29 @@ type Props = {
   min?: number;
   max?: number;
   /** map pan/zoom */
-  lat?: number;
-  long?: number;
-  zoom?: number;
+  lat: number;
+  long: number;
+  zoom: number;
   /** show/hide elements */
-  showLegends?: boolean;
+  showLegends: boolean;
   /** layer opacities */
-  baseOpacity?: number;
-  dataOpacity?: number;
-  overlayOpacity?: number;
+  baseOpacity: number;
+  dataOpacity: number;
+  overlayOpacity: number;
   /** tile providers for layers */
-  base?: string;
+  base: string;
   /** color gradient id */
-  gradient?: string;
+  gradient: string;
   /** scale props */
-  flipGradient?: boolean;
-  scaleSteps?: number;
-  niceSteps?: boolean;
+  flipGradient: boolean;
+  scaleSteps: number;
+  niceSteps: boolean;
+  scalePower: number;
   /** forced dimensions */
-  width?: number;
-  height?: number;
+  width: number;
+  height: number;
   /** filename for download */
-  filename?: string | string[];
+  filename: string | string[];
 };
 
 const props = withDefaults(defineProps<Props>(), {
@@ -175,21 +183,6 @@ const props = withDefaults(defineProps<Props>(), {
   values: () => ({}),
   min: 0,
   max: 1,
-  lat: undefined,
-  long: undefined,
-  zoom: undefined,
-  showLegends: true,
-  baseOpacity: 1,
-  dataOpacity: 0.75,
-  overlayOpacity: 1,
-  base: "Stadia.AlidadeSmooth",
-  gradient: "interpolateCool",
-  flipGradient: false,
-  scaleSteps: 5,
-  niceSteps: true,
-  width: 0,
-  height: 0,
-  filename: "map",
 });
 
 type Emits = {
@@ -201,12 +194,9 @@ type Emits = {
 const emit = defineEmits<Emits>();
 
 type Slots = {
-  /** top right legend */
-  "top-right": () => unknown;
-  /** top left legend */
   "top-left": () => unknown;
-  /** bottom left legend */
-  "bottom-left": () => unknown;
+  "top-right": () => unknown;
+  "bottom-right": () => unknown;
 };
 
 defineSlots<Slots>();
@@ -214,7 +204,7 @@ defineSlots<Slots>();
 /** elements to teleport legend template content to */
 const topLeftLegend = ref<HTMLElement>();
 const topRightLegend = ref<HTMLElement>();
-const bottomLeftLegend = ref<HTMLElement>();
+const bottomRightLegend = ref<HTMLElement>();
 
 /** element to teleport popup template content to */
 const popup = ref<HTMLElement>();
@@ -223,7 +213,10 @@ const popup = ref<HTMLElement>();
 const popupFeature = ref<GeoJsonProperties>();
 
 /** https://leafletjs.com/reference.html#map-option */
-const mapOptions: MapOptions = { zoomControl: false };
+const mapOptions: MapOptions = {
+  zoomControl: false,
+  attributionControl: false,
+};
 
 /** map object */
 let map: L.Map | undefined;
@@ -243,71 +236,63 @@ function fineZoom() {
   if (map) map.options.zoomSnap = 0.1;
 }
 
-/** set coarse level of zoom snap, to make track pad pinch zoom not frustrating */
+/** set coarse level of zoom snap, to make track pad pinch zoom less frustrating */
 async function coarseZoom() {
   /** wait for any in progress zoom to finish */
   await sleep();
-  if (map) map.options.zoomSnap = 0.5;
+  if (map) map.options.zoomSnap = 0.2;
 }
 
-/** steps to split scale into */
-const steps = computed(() => {
-  /** generate spaced list of points between min and max */
-  const intervals = props.niceSteps
-    ? /** "nice", approximate number */
-      d3
-        .scaleLinear()
-        .domain([props.min, props.max])
-        .nice()
-        .ticks(props.scaleSteps)
-    : /** exact number */
-      d3
-        .range(props.min, props.max, (props.max - props.min) / props.scaleSteps)
-        .concat([props.max]);
+const scale = computed(() => {
+  /** "nice", approximate number of steps */
+  const nice = d3
+    .scalePow()
+    .exponent(props.scalePower)
+    .domain([props.min, props.max])
+    .ticks(props.scaleSteps);
 
-  /** get range of points */
-  const [min = 0, max = 1] = d3.extent(intervals);
+  /** exact number of steps */
+  const exact = d3
+    .range(props.min, props.max, (props.max - props.min) / props.scaleSteps)
+    .concat([props.max]);
 
-  /** normalize value from [min, max] to [0, 1] or [1, 0] for mapping to color */
-  function normalize(value: number) {
-    return (value - min) / (max - min);
-  }
+  /** spaced list of points between min and max */
+  let intervals = props.niceSteps ? nice : exact;
+
+  /** make sure enough intervals */
+  if (intervals.length < 3)
+    intervals = [props.min, (props.min + props.max) / 2, props.max];
+
+  /** apply power */
+  intervals = intervals.map((value) =>
+    normalizedApply(value, 0, Math.max(...intervals), (value) =>
+      Math.pow(value, props.scalePower),
+    ),
+  );
 
   /** get gradient interpolator function from shorthand id/name */
   const gradient = getGradient(props.gradient);
 
   /** derive props for each step between points */
   const steps = d3.pairs(intervals).map(([lower, upper], index, array) => ({
-    lower: formatValue(lower, props.min, props.max),
-    upper: formatValue(upper, props.min, props.max),
-    color: gradient(
-      normalize(
-        index === 0
-          ? lower
-          : index === array.length - 1
-          ? upper
-          : (lower + upper) / 2,
-      ),
-    ),
+    lower,
+    upper,
+    color: gradient(index / (array.length - 1)),
   }));
 
   /** reverse color values */
+  const colors = steps.map((step) => step.color);
   if (props.flipGradient) {
-    const colors = steps.map((step) => step.color);
     colors.reverse();
     steps.forEach((step, index) => (step.color = colors[index] || ""));
   }
 
-  return steps;
-});
+  /** scale interpolator */
+  const getColor = (value: number) =>
+    d3.scaleQuantile<string>().domain(intervals).range(colors)(value);
 
-/** scale interpolator */
-const scale = computed(() =>
-  d3
-    .scaleQuantize<string>()
-    .domain([props.min, props.max])
-    .range(steps.value.map((step) => step.color)),
-);
+  return { steps, getColor };
+});
 
 /** fit view to data layer content */
 const fit = debounce(async () => {
@@ -321,7 +306,7 @@ const fit = debounce(async () => {
   map?.once("zoomend", coarseZoom);
 
   /** default fit padding */
-  let padding = { top: 20, left: 20, bottom: 20, right: 20 };
+  let padding = { top: 0, left: 0, bottom: 0, right: 0 };
 
   /** make room for legends */
   if (props.showLegends) {
@@ -331,14 +316,15 @@ const fit = debounce(async () => {
       if (height > width) padding[h] = Math.max(width, padding[h]);
       else padding[v] = Math.max(height, padding[v]);
     };
-    padCorner("top", "right");
     padCorner("top", "left");
+    padCorner("top", "right");
     padCorner("bottom", "left");
+    padCorner("bottom", "right");
   }
 
   map?.fitBounds(bounds, {
-    paddingTopLeft: [padding.left, padding.top],
-    paddingBottomRight: [padding.right, padding.bottom],
+    paddingTopLeft: [padding.left + 20, padding.top + 20],
+    paddingBottomRight: [padding.right + 20, padding.bottom + 20],
   });
 }, 200);
 
@@ -353,15 +339,18 @@ onMounted(() => {
   map?.remove();
   map = L.map(element.value, mapOptions);
 
+  /** manually make attribution again to specify position */
+  L.control.attribution({ position: "bottomleft" }).addTo(map);
+
   /** add panes to map */
   map.createPane("base").style.zIndex = "0";
   map.createPane("data").style.zIndex = "1";
   map.createPane("overlays").style.zIndex = "2";
 
   /** add legends to map and set elements to teleport slots into */
-  topRightLegend.value = createLegend({ position: "topright" });
   topLeftLegend.value = createLegend({ position: "topleft" });
-  bottomLeftLegend.value = createLegend({ position: "bottomleft" });
+  topRightLegend.value = createLegend({ position: "topright" });
+  bottomRightLegend.value = createLegend({ position: "bottomright" });
 
   /** update props from map pan/zoom */
   map.on("moveend", () => {
@@ -438,7 +427,6 @@ watch(() => props.base, updateBase, { immediate: true });
 
 /** update data layers */
 function updateData() {
-  /** update layers */
   getLayers("data").forEach((layer) => layer.remove());
   const layer = L.geoJSON(undefined, { pane: "data" });
   map?.addLayer(layer);
@@ -521,7 +509,9 @@ watch([() => props.lat, () => props.long, () => props.zoom], updateView);
 function updateColors() {
   getLayers<L.GeoJSON>("data", L.GeoJSON).forEach((layer) =>
     layer.setStyle((feature) => ({
-      fillColor: scale.value(props.values?.[feature?.properties.id] || 0),
+      fillColor: scale.value.getColor(
+        props.values?.[feature?.properties.id] || 0,
+      ),
     })),
   );
 }
@@ -606,10 +596,9 @@ const { toggle: fullscreen } = useFullscreen(element);
 .legend {
   display: flex;
   flex-direction: column;
-  width: max-content;
-  max-width: 300px;
+  max-width: 250px;
   padding: 20px;
-  gap: 5px;
+  gap: 20px;
   border-radius: var(--rounded);
   background: var(--white);
   box-shadow: var(--shadow);
@@ -617,10 +606,6 @@ const { toggle: fullscreen } = useFullscreen(element);
 
 .legend:empty {
   display: none;
-}
-
-.legend-tight {
-  max-width: 200px;
 }
 
 .controls {
@@ -633,8 +618,8 @@ const { toggle: fullscreen } = useFullscreen(element);
   display: grid;
   grid-template-columns: 1.5em max-content max-content max-content;
   grid-auto-rows: 1.5em;
-  align-items: center;
-  justify-items: flex-end;
+  place-items: center;
+  width: fit-content;
   gap: 0 10px;
 }
 
@@ -644,23 +629,19 @@ const { toggle: fullscreen } = useFullscreen(element);
 
 .symbols {
   display: grid;
-  grid-template-columns: 1em auto;
+  grid-template-columns: auto auto;
   gap: 10px;
 }
 
 .symbols img {
-  position: relative;
-  top: 0.15em;
+  place-self: center;
+  height: 1em;
 }
 </style>
 
 <style>
 .leaflet-container {
   font: inherit !important;
-}
-
-.leaflet-right {
-  text-align: right;
 }
 
 .leaflet-control-attribution {

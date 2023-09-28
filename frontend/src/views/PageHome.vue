@@ -51,9 +51,9 @@
           />
 
           <AppCheckbox
-            v-model="showDetails"
-            v-tooltip="'Show/hide extra details in legends, like stats'"
-            label="Show details"
+            v-model="showStats"
+            v-tooltip="'Show/hide extra stats in legends'"
+            label="Show stats"
           />
         </div>
 
@@ -114,20 +114,33 @@
 
           <div class="multi-control">
             <AppNumber
+              v-model="scalePower"
+              v-tooltip="
+                'Power to raise values by (normalized so max doesn\'t change). 1 = linear.'
+              "
+              :min="0"
+              :max="10"
+              :step="scalePower < 1 ? 0.05 : 0.5"
+              label="Scale power"
+            />
+
+            <AppNumber
               v-model="scaleSteps"
               v-tooltip="
                 'Number of steps to divide data scale into. Only approximate if &quot;nice steps&quot; on.'
               "
               :min="2"
-              :max="20"
+              :max="10"
               :step="1"
               label="Scale steps"
             />
+          </div>
 
+          <div class="multi-control">
             <AppCheckbox
               v-model="niceSteps"
               v-tooltip="
-                'Adjust number of scale steps to get nice, round intervals'
+                'Adjust number of scale steps to get nice, round intervals (when power 1)'
               "
               label="Nice steps"
             />
@@ -155,7 +168,7 @@
 
           <label
             v-tooltip="
-              'Exact dimensions of map. Useful to set when downloading as image. Use 0 to fit to page.'
+              'Exact dimensions of map. Useful to set before downloading as image. Leave as 0 to fit to page.'
             "
             class="dimensions-label"
           >
@@ -201,40 +214,54 @@
         :flip-gradient="flipGradient"
         :scale-steps="scaleSteps"
         :nice-steps="niceSteps"
+        :scale-power="scalePower"
         :width="mapWidth"
         :height="mapHeight"
         :filename="[selectedMeasure, selectedLevel]"
       >
-        <template #top-right>
-          <strong>{{ measures[selectedMeasure]?.label }}</strong>
-          <small>
-            {{ categories[selectedCategory]?.label }}
-            | by {{ levels[selectedLevel]?.label }}
-          </small>
-        </template>
-
         <template #top-left>
-          <template v-if="showDetails">
-            <hr />
+          <div>
+            <strong>{{ measures[selectedMeasure]?.label }}</strong>
+            <br />
+            <small> {{ categories[selectedCategory]?.label }} </small>
+            <br />
+            <small>by {{ levels[selectedLevel]?.label }}</small>
+          </div>
+
+          <template v-if="showStats">
             <div class="mini-table">
-              <span>Min:</span>
-              <span>
-                {{ formatValue(values?.min, values?.min, values?.max) }}</span
+              <span>Min</span>
+              <span
+                v-tooltip="
+                  formatValue(values?.min, values?.min, values?.max, false)
+                "
               >
-              <span>Max:</span>
-              <span>
-                {{ formatValue(values?.max, values?.min, values?.max) }}</span
+                {{ formatValue(values?.min, values?.min, values?.max) }}
+              </span>
+              <span>Max</span>
+              <span
+                v-tooltip="
+                  formatValue(values?.max, values?.min, values?.max, false)
+                "
               >
-              <span>Mean:</span>
-              <span>
-                {{ formatValue(values?.mean, values?.min, values?.max) }}</span
+                {{ formatValue(values?.max, values?.min, values?.max) }}
+              </span>
+              <span>Mean</span>
+              <span
+                v-tooltip="
+                  formatValue(values?.mean, values?.min, values?.max, false)
+                "
               >
-              <span>Median:</span>
-              <span>
-                {{
-                  formatValue(values?.median, values?.min, values?.max)
-                }}</span
+                {{ formatValue(values?.mean, values?.min, values?.max) }}
+              </span>
+              <span>Median</span>
+              <span
+                v-tooltip="
+                  formatValue(values?.median, values?.min, values?.max, false)
+                "
               >
+                {{ formatValue(values?.median, values?.min, values?.max) }}
+              </span>
             </div>
           </template>
         </template>
@@ -295,6 +322,7 @@ import AppStatus, { type Status } from "@/components/AppStatus.vue";
 import { gradientOptions } from "@/components/gradient";
 import { baseOptions } from "@/components/tile-providers";
 import {
+  arrayParam,
   numberParam,
   stringParam,
   useScrollable,
@@ -333,16 +361,17 @@ const long = useUrlParam("long", numberParam, 0);
 
 /** map style state */
 const showLegends = ref(true);
-const showDetails = ref(false);
+const showStats = ref(false);
 const selectedBase = ref(baseOptions[0]?.id || "");
 const selectedGradient = ref(gradientOptions[3]?.id || "");
-const selectedOverlays = ref<string[]>([]);
+const selectedOverlays = useUrlParam("overlays", arrayParam(stringParam), []);
 const baseOpacity = ref(1);
 const dataOpacity = ref(0.75);
 const overlayOpacity = ref(1);
 const flipGradient = ref(false);
 const scaleSteps = ref(5);
-const niceSteps = ref(true);
+const niceSteps = ref(false);
+const scalePower = ref(1);
 const mapWidth = ref(0);
 const mapHeight = ref(0);
 
@@ -421,13 +450,17 @@ watch([levels], () => {
 /** auto-select category */
 watch([selectedLevel, categories], () => {
   if (!selectedCategory.value || !categories.value[selectedCategory.value])
-    selectedCategory.value = Object.keys(categories.value)[0] || "";
+    selectedCategory.value = categories.value["sociodemographics"]
+      ? "sociodemographics"
+      : Object.keys(categories.value)[0] || "";
 });
 
 /** auto-select measure */
 watch([selectedCategory, measures], () => {
   if (!selectedMeasure.value || !measures.value[selectedMeasure.value])
-    selectedMeasure.value = Object.keys(measures.value)[0] || "";
+    selectedMeasure.value = measures.value["Total"]
+      ? "Total"
+      : Object.keys(measures.value)[0] || "";
 });
 
 /** overlay dropdown options */
@@ -440,7 +473,7 @@ const overlayOptions = computed<Option[]>(() =>
 
 /** overlay data to pass to map, filtered by selected overlays */
 const _overlays = computed(
-  () => pick(overlays.value, selectedOverlays.value) as Overlays,
+  () => pick(overlays.value, selectedOverlays.value) as Overlays | undefined,
 );
 </script>
 

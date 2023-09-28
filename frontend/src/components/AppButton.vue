@@ -52,7 +52,7 @@ const component = computed(() => (props.to ? AppLink : "button"));
   color: var(--dark-gray);
   font: inherit;
   text-decoration: none;
-  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
   cursor: pointer;
   transition:
     color var(--fast),

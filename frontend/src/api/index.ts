@@ -1,6 +1,6 @@
 import * as d3 from "d3";
 import type { FeatureCollection, Geometry } from "geojson";
-import { mapValues } from "lodash";
+import { mapValues, random, sample } from "lodash";
 import fakeData from "./fake-overlay-data.json";
 
 /** api root (no trailing slash) */
@@ -184,8 +184,43 @@ type _Overlays = {
 
 /** get overlays (location markers, highlighted areas, etc) */
 export async function getOverlays() {
-  /** const data = await request<_Overlays>(`${api}/overlays`); */
-  return fakeData as _Overlays;
+  // const data = await request<_Overlays>(`${api}/overlays`);
+
+  // temp fake data
+  const data = fakeData as _Overlays;
+  // add extra fake entries to see all marker icons
+  for (let i = 0; i < 0; i++)
+    data[i] = {
+      label: sample([
+        "Lorem",
+        "Ipsum",
+        "Dolor",
+        "Consectetur",
+        "Adipiscing",
+        "Eliteiusmod",
+        "Tempor",
+        "Incididunt",
+        "Labore",
+        "Dolore",
+        "Magna",
+        "Aliqua",
+      ]),
+      features: {
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            properties: { info: "" },
+            geometry: {
+              type: "Point",
+              coordinates: [-105.7821 + random(-2, 2), 39.5501 + random(-2, 2)],
+            },
+          },
+        ],
+      },
+    };
+
+  return data;
 }
 
 export type Overlays = Awaited<ReturnType<typeof getOverlays>>;

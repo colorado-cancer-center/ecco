@@ -173,7 +173,7 @@ input {
 .mini-table {
   display: grid;
   grid-template-columns: max-content auto;
-  gap: 5px 10px;
+  gap: 5px 15px;
 }
 
 .mini-table > :nth-child(odd) {

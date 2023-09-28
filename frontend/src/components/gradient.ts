@@ -39,7 +39,7 @@ export const gradientOptions = (
   const func = d3[key];
   const label = key.replace("interpolate", "");
   const id = label.toLowerCase();
-  const colors = range(0, 1.01, 0.1).map(func);
+  const colors = range(0, 1, 0.1).concat([1]).map(func);
   return { key, func, id, label, colors };
 }) satisfies Option[];
 
