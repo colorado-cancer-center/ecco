@@ -1,13 +1,12 @@
 import * as L from "leaflet";
-import { chunk } from "lodash";
 import { icon } from "@fortawesome/fontawesome-svg-core";
 import {
+  faBolt,
   faBurst,
   faCertificate,
   faCircle,
-  faCircleHalfStroke,
+  faCloud,
   faClover,
-  faCube,
   faDiamond,
   faLocationArrow,
   faLocationCrosshairs,
@@ -21,25 +20,27 @@ import {
   faThumbTack,
 } from "@fortawesome/free-solid-svg-icons";
 
-/** neutral-looking shapes from font-awesome */
+/** choose shapes from font-awesome that look neutral (don't imply any good/bad
+ * connotation). put simpler shapes first. also be careful that similar looking
+ * shapes don't get assigned similar looking colors. */
 const icons = [
   faCircle,
   faSquare,
   faDiamond,
-  faCertificate,
+  faLocationPin,
+  faStarOfLife,
   faSplotch,
   faMound,
   faBurst,
   faClover,
-  faCircleHalfStroke,
-  faCube,
+  faCertificate,
   faStar,
-  faStarOfLife,
-  faLocationPin,
+  faCloud,
+  faBolt,
   faLocationArrow,
-  faLocationCrosshairs,
   faMapPin,
   faThumbTack,
+  faLocationCrosshairs,
 ];
 
 /** https://tailwindcss.com/docs/customizing-colors */

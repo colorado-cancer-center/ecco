@@ -43,7 +43,7 @@
 
     <!-- top left legend -->
     <Teleport v-if="showLegends && topLeftLegend" :to="topLeftLegend">
-      <div class="legend" @mousedown.stop>
+      <div v-stop class="legend">
         <slot name="top-left" />
 
         <!-- scale key -->
@@ -65,7 +65,7 @@
 
     <!-- top right legend -->
     <Teleport v-if="showLegends && topRightLegend" :to="topRightLegend">
-      <div class="legend" @mousedown.stop>
+      <div v-stop class="legend">
         <slot name="top-right" />
       </div>
     </Teleport>
@@ -76,7 +76,7 @@
       :to="bottomRightLegend"
       class="test"
     >
-      <div class="legend" @mousedown.stop>
+      <div v-stop class="legend">
         <slot name="bottom-right" />
 
         <!-- symbol key -->
