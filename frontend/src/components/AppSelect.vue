@@ -151,9 +151,8 @@ async function onChange(value: O | O[]) {
   emit("update:modelValue", id);
 }
 
-/** full selected option */
+/** full selected option (only relevant in single mode) */
 const selectedOption = computed(() => {
-  /** normalize to array */
   let list = normalize(props.modelValue);
   if (!props.multi)
     return props.options.find((option) => option.id === list[0]);
@@ -162,7 +161,6 @@ const selectedOption = computed(() => {
 
 /** label to show as selected value in box */
 const selectedLabel = computed<string>(() => {
-  /** normalize to array */
   let list = normalize(props.modelValue);
   if (!props.multi)
     return (

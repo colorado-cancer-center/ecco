@@ -71,11 +71,7 @@
     </Teleport>
 
     <!-- bottom right legend -->
-    <Teleport
-      v-if="showLegends && bottomRightLegend"
-      :to="bottomRightLegend"
-      class="test"
-    >
+    <Teleport v-if="showLegends && bottomRightLegend" :to="bottomRightLegend">
       <div v-stop class="legend">
         <slot name="bottom-right" />
 
@@ -243,6 +239,42 @@ async function coarseZoom() {
   if (map) map.options.zoomSnap = 0.2;
 }
 
+/** get map layers by type */
+function getLayers<T extends L.Layer = L.Layer>(
+  pane: string,
+  type: Function = L.Layer,
+) {
+  const layers: L.Layer[] = [];
+  map?.eachLayer((layer) => {
+    if (layer.options.pane === pane && layer instanceof type)
+      layers.push(layer);
+  });
+  return layers as T[];
+}
+
+/** bind popup to layer */
+function bindPopup(layer: L.Layer) {
+  layer.bindPopup(() => "");
+  layer.on("popupopen", async (event) => {
+    const wrapper = event.popup
+      .getElement()
+      ?.querySelector<HTMLElement>(".leaflet-popup-content-wrapper");
+    if (wrapper) wrapper.innerHTML = "";
+    popup.value = wrapper || undefined;
+    /** wait for popup to teleport */
+    await nextTick();
+    popupFeature.value = event.sourceTarget.feature.properties;
+    /** wait for popup to populate to full size before updating position */
+    await nextTick();
+    event.popup.update();
+  });
+  layer.on("popupclose", () => {
+    /** unset popup */
+    popup.value = undefined;
+    popupFeature.value = undefined;
+  });
+}
+
 const scale = computed(() => {
   /** "nice", approximate number of steps */
   const nice = d3
@@ -381,42 +413,6 @@ onBeforeUnmount(() => {
   /** cleanup map on unmount */
   map?.remove();
 });
-
-/** get map layers by type */
-function getLayers<T extends L.Layer = L.Layer>(
-  pane: string,
-  type: Function = L.Layer,
-) {
-  const layers: L.Layer[] = [];
-  map?.eachLayer((layer) => {
-    if (layer.options.pane === pane && layer instanceof type)
-      layers.push(layer);
-  });
-  return layers as T[];
-}
-
-/** bind popup to layer */
-function bindPopup(layer: L.Layer) {
-  layer.bindPopup(() => "");
-  layer.on("popupopen", async (event) => {
-    const wrapper = event.popup
-      .getElement()
-      ?.querySelector<HTMLElement>(".leaflet-popup-content-wrapper");
-    if (wrapper) wrapper.innerHTML = "";
-    popup.value = wrapper || undefined;
-    /** wait for popup to teleport */
-    await nextTick();
-    popupFeature.value = event.sourceTarget.feature.properties;
-    /** wait for popup to populate to full size before updating position */
-    await nextTick();
-    event.popup.update();
-  });
-  layer.on("popupclose", () => {
-    /** unset popup */
-    popup.value = undefined;
-    popupFeature.value = undefined;
-  });
-}
 
 /** update base layer */
 function updateBase() {

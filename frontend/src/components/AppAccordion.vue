@@ -8,7 +8,7 @@
         >{{ label }}</AppButton
       >
     </DisclosureButton>
-    <DisclosurePanel ref="panel" class="panel">
+    <DisclosurePanel class="panel">
       <slot />
     </DisclosurePanel>
   </Disclosure>
