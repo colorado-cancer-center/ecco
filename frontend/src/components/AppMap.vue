@@ -263,9 +263,12 @@ const scale = computed(() => {
   if (intervals.length < 3)
     intervals = [props.min, (props.min + props.max) / 2, props.max];
 
+  /** range of intervals */
+  const [min = 0, max = 1] = d3.extent(intervals);
+
   /** apply power */
   intervals = intervals.map((value) =>
-    normalizedApply(value, 0, Math.max(...intervals), (value) =>
+    normalizedApply(value, min, max, (value) =>
       Math.pow(value, props.scalePower),
     ),
   );

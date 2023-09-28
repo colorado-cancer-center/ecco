@@ -116,9 +116,18 @@
             <AppNumber
               v-model="scalePower"
               v-tooltip="
-                'Power to raise values by (normalized so max doesn\'t change). 1 = linear.'
+                `
+                Power to raise step ranges by. Only affects which colors are assigned to which values.
+                <br />
+                <br />
+                = 1 is linear
+                <br />
+                > 1 exaggerates differences at low values
+                <br />
+                < 1 exaggerates differences at high values
+                `
               "
-              :min="0"
+              :min="scalePower < 1 ? 0.05 : 0"
               :max="10"
               :step="scalePower < 1 ? 0.05 : 0.5"
               label="Scale power"
@@ -127,7 +136,7 @@
             <AppNumber
               v-model="scaleSteps"
               v-tooltip="
-                'Number of steps to divide data scale into. Only approximate if &quot;nice steps&quot; on.'
+                'Number of bins to divide data into for coloring. Only approximate if &quot;nice steps&quot; on.'
               "
               :min="2"
               :max="10"
@@ -369,8 +378,8 @@ const baseOpacity = ref(1);
 const dataOpacity = ref(0.75);
 const overlayOpacity = ref(1);
 const flipGradient = ref(false);
-const scaleSteps = ref(5);
-const niceSteps = ref(false);
+const scaleSteps = ref(6);
+const niceSteps = ref(true);
 const scalePower = ref(1);
 const mapWidth = ref(0);
 const mapHeight = ref(0);
