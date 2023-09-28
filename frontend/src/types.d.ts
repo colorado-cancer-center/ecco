@@ -1,8 +1,8 @@
 import * as L from "leaflet";
 
-// modified from:
-// https://github.com/DefinitelyTyped/DefinitelyTyped/blob/e4dc6495cdfd9c29449bc91c01bfb9b9ab150f38/types/leaflet-providers/index.d.ts
-// installing normally doesn't work
+/** modified from: */
+/** https://github.com/DefinitelyTyped/DefinitelyTyped/blob/e4dc6495cdfd9c29449bc91c01bfb9b9ab150f38/types/leaflet-providers/index.d.ts */
+/** installing normally doesn't work */
 
 declare module "leaflet" {
   namespace TileLayer {
@@ -12,7 +12,7 @@ declare module "leaflet" {
         options?: TileLayerOptions | { [name: string]: string },
       );
 
-      // modified
+      /** modified */
       _url: string;
     }
 

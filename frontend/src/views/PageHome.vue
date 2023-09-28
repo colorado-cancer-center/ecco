@@ -302,16 +302,16 @@ import {
 } from "@/util/composables";
 import { formatValue } from "@/util/math";
 
-// project info
+/** project info */
 const { VITE_AREA: area } = import.meta.env;
 
-// element refs
+/** element refs */
 const panel = ref<HTMLElement>();
 
-// show gradients on elements when scrollable
+/** show gradients on elements when scrollable */
 useScrollable(panel);
 
-// data state
+/** data state */
 const defsStatus = ref<Status>("loading");
 const dataStatus = ref<Status>("loading");
 const counties = ref<Data>();
@@ -321,17 +321,17 @@ const facets = ref<Facets>();
 const values = ref<Values>();
 const overlays = ref<Overlays>();
 
-// select boxes state
+/** select boxes state */
 const selectedLevel = useUrlParam("level", stringParam, "");
 const selectedCategory = useUrlParam("category", stringParam, "");
 const selectedMeasure = useUrlParam("measure", stringParam, "");
 
-// map zoom state
+/** map zoom state */
 const zoom = useUrlParam("zoom", numberParam, 0);
 const lat = useUrlParam("lat", numberParam, 0);
 const long = useUrlParam("long", numberParam, 0);
 
-// map style state
+/** map style state */
 const showLegends = ref(true);
 const showDetails = ref(false);
 const selectedBase = ref(baseOptions[0]?.id || "");
@@ -346,7 +346,7 @@ const niceSteps = ref(true);
 const mapWidth = ref(0);
 const mapHeight = ref(0);
 
-// load "core" data once on load
+/** get "core" data once on page load */
 async function loadDefs() {
   try {
     defsStatus.value = "loading";
@@ -360,12 +360,14 @@ async function loadDefs() {
 }
 loadDefs();
 
-// load and select geometry data to display on map, on request to save bandwidth
+/** load and select geometry data to display on map, on request to save bandwidth */
 watchEffect(async () => {
   try {
     dataStatus.value = "loading";
-    // clear geometry while loading
+    /** clear geometry while loading */
     selectedData.value = undefined;
+
+    /** choose and fetch data */
     if (selectedLevel.value === "county") {
       counties.value ??= await getData("counties", "us_fips");
       selectedData.value = counties.value;
@@ -381,55 +383,54 @@ watchEffect(async () => {
   }
 });
 
-// load map values data
+/** load map values data */
 watchEffect(async () => {
-  if (!(selectedLevel.value && selectedCategory.value && selectedMeasure.value))
-    return;
-  values.value = await getValues(
-    selectedLevel.value,
-    selectedCategory.value,
-    selectedMeasure.value,
-  );
+  if (selectedLevel.value && selectedCategory.value && selectedMeasure.value)
+    values.value = await getValues(
+      selectedLevel.value,
+      selectedCategory.value,
+      selectedMeasure.value,
+    );
 });
 
-// geographic levels from facets data
+/** geographic levels from facets data */
 const levels = computed(() => cloneDeep(facets.value || {}));
 
-// measure categories from geographic level
+/** measure categories from geographic level */
 const categories = computed(() =>
   cloneDeep(levels.value[selectedLevel.value]?.list || {}),
 );
 
-// measures from measure category
+/** measures from measure category */
 const measures = computed(() =>
   cloneDeep(categories.value[selectedCategory.value]?.list || {}),
 );
 
-// turn facet into list of select box options
+/** turn facet into list of select box options */
 function facetToOptions(facet: Facet): Option[] {
   return Object.values(facet).map(({ id, label }) => ({ id, label }));
 }
 
-// auto-select level option
+/** auto-select level option */
 watch([levels], () => {
-  // if not already selected, or selection no longer valid
+  /** if not already selected, or selection no longer valid */
   if (!selectedLevel.value || !levels.value[selectedLevel.value])
     selectedLevel.value = Object.keys(levels.value)[0] || "";
 });
 
-// auto-select category
+/** auto-select category */
 watch([selectedLevel, categories], () => {
   if (!selectedCategory.value || !categories.value[selectedCategory.value])
     selectedCategory.value = Object.keys(categories.value)[0] || "";
 });
 
-// auto-select measure
+/** auto-select measure */
 watch([selectedCategory, measures], () => {
   if (!selectedMeasure.value || !measures.value[selectedMeasure.value])
     selectedMeasure.value = Object.keys(measures.value)[0] || "";
 });
 
-// overlay dropdown options
+/** overlay dropdown options */
 const overlayOptions = computed<Option[]>(() =>
   Object.entries(overlays.value || {}).map(([key, value]) => ({
     id: key,
@@ -437,7 +438,7 @@ const overlayOptions = computed<Option[]>(() =>
   })),
 );
 
-// overlay data to pass to map, filtered by selected overlays
+/** overlay data to pass to map, filtered by selected overlays */
 const _overlays = computed(
   () => pick(overlays.value, selectedOverlays.value) as Overlays,
 );

@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-// project info
+/** project info */
 const { VITE_SOURCE_CODE: sourceCode, VITE_LICENSE: license } = import.meta.env;
 </script>
 

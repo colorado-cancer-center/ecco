@@ -27,8 +27,6 @@ defineSlots<Slots>();
 const component = computed(() => (isExternal.value ? "a" : "router-link"));
 
 const isExternal = computed(() =>
-  ["http:", "https:", "ftp:", "mailto:"].some(
-    (prefix) => props.to?.startsWith(prefix),
-  ),
+  ["http:", "https:"].some((prefix) => props.to?.startsWith(prefix)),
 );
 </script>

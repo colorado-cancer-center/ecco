@@ -113,30 +113,30 @@ type Emits = {
 const emit = defineEmits<Emits>();
 
 type Slots = {
-  // extra preview element to show for each option in dropdown and selected option in label
+  /** extra preview element to show for each option in dropdown and selected option in label */
   preview: (props: { option?: O }) => unknown;
 };
 
 defineSlots<Slots>();
 
-// floating-ui middleware
+/** floating-ui middleware */
 const middleware = [
   size({
     apply({ availableHeight, elements }) {
       Object.assign(elements.floating.style, {
-        // limit popover height to available height
+        /** limit popover height to available height */
         maxHeight: `${availableHeight - 20}px`,
       });
     },
   }),
 ];
 
-// normalize single/multi to array
+/** normalize single/multi to array */
 function normalize<T>(value: T | T[]): T[] {
   return Array.isArray(value) ? value : [value];
 }
 
-// model value to pass from parent to headlessui
+/** model value to pass from parent to headlessui */
 const value = computed(() => {
   let list = normalize(props.modelValue);
   return props.multi
@@ -144,25 +144,25 @@ const value = computed(() => {
     : props.options.find((option) => list.includes(option.id)) || "";
 });
 
-// model value to emit from headlessui to parent
+/** model value to emit from headlessui to parent */
 async function onChange(value: O | O[]) {
   let list = normalize(value);
   const id = props.multi ? list.map((v) => v.id) : list[0]?.id || "";
   emit("update:modelValue", id);
 }
 
-// full selected option
+/** full selected option */
 const selectedOption = computed(() => {
-  // normalize to array
+  /** normalize to array */
   let list = normalize(props.modelValue);
   if (!props.multi)
     return props.options.find((option) => option.id === list[0]);
   else return undefined;
 });
 
-// label to show as selected value in box
+/** label to show as selected value in box */
 const selectedLabel = computed<string>(() => {
-  // normalize to array
+  /** normalize to array */
   let list = normalize(props.modelValue);
   if (!props.multi)
     return (
@@ -176,12 +176,12 @@ const selectedLabel = computed<string>(() => {
   return value.length + " selected";
 });
 
-// whether all options are selected
+/** whether all options are selected */
 const allSelected = computed(
   () => props.multi && props.options.length === props.modelValue.length,
 );
 
-// select/deselect all
+/** select/deselect all */
 function toggleAll() {
   emit(
     "update:modelValue",
@@ -189,7 +189,7 @@ function toggleAll() {
   );
 }
 
-// add "quick" arrow key select
+/** add "quick" arrow key select */
 function onKeypress({ key }: KeyboardEvent) {
   if (!props.multi && (key === "ArrowLeft" || key === "ArrowRight")) {
     let index = props.options.findIndex(
@@ -203,7 +203,7 @@ function onKeypress({ key }: KeyboardEvent) {
   }
 }
 
-// when listbox opened
+/** when listbox opened */
 async function onOpen(node: VNode) {
   await frame();
   (node.el as Element).scrollIntoView();

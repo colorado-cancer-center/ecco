@@ -18,16 +18,16 @@ export const tippyOptions: {
   },
 };
 
-// create or update tooltip instance
+/** create or update tooltip instance */
 function update({ reference, props: { content }, setProps }: Instance) {
-  // don't show if content blank
+  /** don't show if content blank */
   if (!content) return false;
 
   setProps({
-    // only make interactive if content includes link to click on
+    /** only make interactive if content includes link to click on */
     interactive: String(content).includes("<a"),
   });
 
-  // set aria label to content
+  /** set aria label to content */
   reference.setAttribute("aria-label", makeLabel(String(content)));
 }

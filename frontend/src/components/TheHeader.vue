@@ -24,7 +24,7 @@
 <script setup lang="ts">
 import { routes } from "@/views";
 
-// project info
+/** project info */
 const {
   VITE_TITLE: title,
   VITE_PRESENTED_BY: presentedBy,

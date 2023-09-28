@@ -1,4 +1,4 @@
-// download blob as file
+/** download blob as file */
 export function download(
   data: BlobPart,
   filename: string | string[],
@@ -17,7 +17,7 @@ export function download(
   window.URL.revokeObjectURL(url);
 }
 
-// download blob as png
+/** download blob as png */
 export function downloadPng(data: BlobPart, filename: string | string[]) {
   download(data, filename, "image/png");
 }

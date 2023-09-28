@@ -2,8 +2,8 @@ import * as d3 from "d3";
 import { range } from "lodash";
 import type { Option } from "@/components/AppSelect.vue";
 
-// a few pretty color gradient options
-// from https://github.com/d3/d3-scale-chromatic
+/** a few pretty color gradient options */
+/** from https://github.com/d3/d3-scale-chromatic */
 export const gradientOptions = (
   [
     "interpolatePuBuGn",
@@ -43,13 +43,13 @@ export const gradientOptions = (
   return { key, func, id, label, colors };
 }) satisfies Option[];
 
-// available gradient function names
+/** available gradient function names */
 export type GradientName = (typeof gradientOptions)[number]["key"];
 
-// available gradient functions
+/** available gradient functions */
 export type GradientFunc = (typeof gradientOptions)[number]["func"];
 
-// get gradient interpolator function from shorthand id/name
+/** get gradient interpolator function from shorthand id/name */
 export function getGradient(id: string) {
   return (
     gradientOptions.find((option) => option.id === id)?.func ||

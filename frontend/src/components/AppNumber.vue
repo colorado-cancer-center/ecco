@@ -38,7 +38,7 @@ type Emits = {
 
 const emit = defineEmits<Emits>();
 
-// emit model value to parent
+/** emit model value to parent */
 function onChange(event: Event) {
   let value = Number((event.target as HTMLInputElement).value);
   value = clamp(value, props.min, props.max);

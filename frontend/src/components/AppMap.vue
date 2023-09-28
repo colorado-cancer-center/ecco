@@ -1,6 +1,7 @@
 <template>
   <div class="container">
     <div ref="scroll" class="scroll">
+      <!-- map container -->
       <div
         ref="element"
         class="map"
@@ -11,6 +12,7 @@
       />
     </div>
 
+    <!-- control set -->
     <div class="controls">
       <AppButton
         v-tooltip="'Download current map view as PNG'"
@@ -37,12 +39,14 @@
       />
     </div>
 
+    <!-- top right legend -->
     <Teleport v-if="showLegends && topRightLegend" :to="topRightLegend">
       <div class="legend" @mousedown.stop>
         <slot name="top-right" />
       </div>
     </Teleport>
 
+    <!-- top left legend -->
     <Teleport v-if="showLegends && topLeftLegend" :to="topLeftLegend">
       <div class="legend legend-tight" @mousedown.stop>
         <div class="steps">
@@ -60,6 +64,7 @@
       </div>
     </Teleport>
 
+    <!-- bottom left legend -->
     <Teleport
       v-if="showLegends && bottomLeftLegend"
       :to="bottomLeftLegend"
@@ -126,41 +131,41 @@ import { formatValue } from "@/util/math";
 import { getBbox, sleep } from "@/util/misc";
 import "leaflet/dist/leaflet.css";
 
-// element refs
+/** element refs */
 const scroll = ref<HTMLDivElement>();
 const element = ref<HTMLDivElement>();
 
 type Props = {
-  // data
+  /** data */
   data?: Data;
   overlays?: Overlays;
-  // map of feature id to value
+  /** map of feature id to value */
   values?: { [key: number]: number };
-  // value domain
+  /** value domain */
   min?: number;
   max?: number;
-  // map pan/zoom
+  /** map pan/zoom */
   lat?: number;
   long?: number;
   zoom?: number;
-  // show/hide elements
+  /** show/hide elements */
   showLegends?: boolean;
-  // layer opacities
+  /** layer opacities */
   baseOpacity?: number;
   dataOpacity?: number;
   overlayOpacity?: number;
-  // tile providers for layers
+  /** tile providers for layers */
   base?: string;
-  // color gradient id
+  /** color gradient id */
   gradient?: string;
-  // scale props
+  /** scale props */
   flipGradient?: boolean;
   scaleSteps?: number;
   niceSteps?: boolean;
-  // forced dimensions
+  /** forced dimensions */
   width?: number;
   height?: number;
-  // filename for download
+  /** filename for download */
   filename?: string | string[];
 };
 
@@ -196,31 +201,34 @@ type Emits = {
 const emit = defineEmits<Emits>();
 
 type Slots = {
+  /** top right legend */
   "top-right": () => unknown;
+  /** top left legend */
   "top-left": () => unknown;
+  /** bottom left legend */
   "bottom-left": () => unknown;
 };
 
 defineSlots<Slots>();
 
-// elements to teleport legend template content to
+/** elements to teleport legend template content to */
 const topLeftLegend = ref<HTMLElement>();
 const topRightLegend = ref<HTMLElement>();
 const bottomLeftLegend = ref<HTMLElement>();
 
-// element to teleport popup template content to
+/** element to teleport popup template content to */
 const popup = ref<HTMLElement>();
 
-// properties of selected feature for popup
+/** properties of selected feature for popup */
 const popupFeature = ref<GeoJsonProperties>();
 
-// https://leafletjs.com/reference.html#map-option
+/** https://leafletjs.com/reference.html#map-option */
 const mapOptions: MapOptions = { zoomControl: false };
 
-// leaflet map object
+/** map object */
 let map: L.Map | undefined;
 
-// create legend panel
+/** create legend panel */
 function createLegend(options: L.ControlOptions) {
   const Control = L.Control.extend({
     onAdd: () => document.createElement("div"),
@@ -230,48 +238,49 @@ function createLegend(options: L.ControlOptions) {
   return legend.getContainer();
 }
 
-// set fine level of zoom snap, e.g. for tighter fit-bounds
+/** set fine level of zoom snap, e.g. for tighter fit-bounds */
 function fineZoom() {
   if (map) map.options.zoomSnap = 0.1;
 }
 
-// set coarse level of zoom snap, to make track pad pinch zoom not frustrating
+/** set coarse level of zoom snap, to make track pad pinch zoom not frustrating */
 async function coarseZoom() {
+  /** wait for any in progress zoom to finish */
   await sleep();
   if (map) map.options.zoomSnap = 0.5;
 }
 
-// get gradient interpolator function from shorthand id/name
-const _gradient = computed(() => getGradient(props.gradient));
-
-// steps to split scale into
+/** steps to split scale into */
 const steps = computed(() => {
-  // generate spaced list of points between min and max
+  /** generate spaced list of points between min and max */
   const intervals = props.niceSteps
-    ? // "nice", approximate number
+    ? /** "nice", approximate number */
       d3
         .scaleLinear()
         .domain([props.min, props.max])
         .nice()
         .ticks(props.scaleSteps)
-    : // exact number
+    : /** exact number */
       d3
         .range(props.min, props.max, (props.max - props.min) / props.scaleSteps)
         .concat([props.max]);
 
-  // get range of points
+  /** get range of points */
   const [min = 0, max = 1] = d3.extent(intervals);
 
-  // normalize value from [min, max] to [0, 1] or [1, 0] for mapping to color
+  /** normalize value from [min, max] to [0, 1] or [1, 0] for mapping to color */
   function normalize(value: number) {
     return (value - min) / (max - min);
   }
 
-  // derive props for each step between points
+  /** get gradient interpolator function from shorthand id/name */
+  const gradient = getGradient(props.gradient);
+
+  /** derive props for each step between points */
   const steps = d3.pairs(intervals).map(([lower, upper], index, array) => ({
     lower: formatValue(lower, props.min, props.max),
     upper: formatValue(upper, props.min, props.max),
-    color: _gradient.value(
+    color: gradient(
       normalize(
         index === 0
           ? lower
@@ -282,7 +291,7 @@ const steps = computed(() => {
     ),
   }));
 
-  // flip color values
+  /** reverse color values */
   if (props.flipGradient) {
     const colors = steps.map((step) => step.color);
     colors.reverse();
@@ -292,30 +301,31 @@ const steps = computed(() => {
   return steps;
 });
 
-// scale interpolator
-const scale = computed(() => {
-  const range = steps.value.map((step) => step.color);
-  return d3.scaleQuantize<string>().domain([props.min, props.max]).range(range);
-});
+/** scale interpolator */
+const scale = computed(() =>
+  d3
+    .scaleQuantize<string>()
+    .domain([props.min, props.max])
+    .range(steps.value.map((step) => step.color)),
+);
 
-// fit view to data layer content
+/** fit view to data layer content */
 const fit = debounce(async () => {
-  // get bounding box of geojson data
+  /** get bounding box of geojson data */
   let bounds = getLayers<L.GeoJSON>("data", L.GeoJSON)[0]?.getBounds();
-
   if (!bounds?.isValid()) return;
 
-  // get tight fit
+  /** get tight fit */
   fineZoom();
-  // reset zoom snap when zoom animation finishes
+  /** reset zoom snap when zoom animation finishes */
   map?.once("zoomend", coarseZoom);
 
-  // default fit padding
+  /** default fit padding */
   let padding = { top: 20, left: 20, bottom: 20, right: 20 };
 
-  // make room for legends
+  /** make room for legends */
   if (props.showLegends) {
-    // increase padding based on corner legend panel dimensions
+    /** increase padding based on corner legend panel dimensions */
     const padCorner = (v: "top" | "bottom", h: "left" | "right") => {
       const { width, height } = getBbox(`.leaflet-${v}.leaflet-${h}`);
       if (height > width) padding[h] = Math.max(width, padding[h]);
@@ -332,31 +342,28 @@ const fit = debounce(async () => {
   });
 }, 200);
 
-// auto-fit when props change
+/** auto-fit when props change */
 watch([() => props.showLegends, () => props.overlays], fit, { deep: true });
 
-// when map container created
+/** when map container created */
 onMounted(() => {
   if (!element.value) return;
 
-  // init map
+  /** init map */
   map?.remove();
   map = L.map(element.value, mapOptions);
 
-  coarseZoom();
-
-  // add panes to map
+  /** add panes to map */
   map.createPane("base").style.zIndex = "0";
   map.createPane("data").style.zIndex = "1";
-  map.createPane("overlay").style.zIndex = "2";
-  map.createPane("overlays").style.zIndex = "3";
+  map.createPane("overlays").style.zIndex = "2";
 
-  // add controls (panels) to map and set elements to teleport slots into
+  /** add legends to map and set elements to teleport slots into */
   topRightLegend.value = createLegend({ position: "topright" });
   topLeftLegend.value = createLegend({ position: "topleft" });
   bottomLeftLegend.value = createLegend({ position: "bottomleft" });
 
-  // update props from map pan/zoom
+  /** update props from map pan/zoom */
   map.on("moveend", () => {
     if (!map) return;
     const { lat, lng } = map.getCenter();
@@ -365,24 +372,25 @@ onMounted(() => {
     emit("update:zoom", map.getZoom());
   });
 
-  // preserve fine-grain fitted zoom on drag
+  /** preserve fine-grain fitted zoom on drag */
   map.on("dragstart", fineZoom);
-  // reset zoom snap when done dragging
+  /** reset zoom snap when done dragging */
   map.on("dragend", coarseZoom);
+  coarseZoom();
 
-  // update stuff once map init'd
+  /** update stuff once map init'd */
   updateBase();
   updateData();
   updateOverlays();
 });
 
-// when map container destroyed
+/** when map container destroyed */
 onBeforeUnmount(() => {
-  // cleanup map on unmount
+  /** cleanup map on unmount */
   map?.remove();
 });
 
-// func to get map layers, since leaflet doesn't have one
+/** get map layers by type */
 function getLayers<T extends L.Layer = L.Layer>(
   pane: string,
   type: Function = L.Layer,
@@ -392,49 +400,52 @@ function getLayers<T extends L.Layer = L.Layer>(
     if (layer.options.pane === pane && layer instanceof type)
       layers.push(layer);
   });
-
   return layers as T[];
 }
 
-// bind popup to layer
+/** bind popup to layer */
 function bindPopup(layer: L.Layer) {
   layer.bindPopup(() => "");
   layer.on("popupopen", async (event) => {
-    await nextTick();
     const wrapper = event.popup
       .getElement()
       ?.querySelector<HTMLElement>(".leaflet-popup-content-wrapper");
     if (wrapper) wrapper.innerHTML = "";
     popup.value = wrapper || undefined;
+    /** wait for popup to teleport */
+    await nextTick();
     popupFeature.value = event.sourceTarget.feature.properties;
+    /** wait for popup to populate to full size before updating position */
     await nextTick();
     event.popup.update();
   });
   layer.on("popupclose", () => {
+    /** unset popup */
     popup.value = undefined;
     popupFeature.value = undefined;
   });
 }
 
-// update base layer
+/** update base layer */
 function updateBase() {
   getLayers("base").forEach((layer) => layer.remove());
   const layer = L.tileLayer.provider(props.base, { pane: "base" });
   map?.addLayer(layer);
 }
 
-// update base layer when props change
+/** update base layer when props change */
 watch(() => props.base, updateBase, { immediate: true });
 
-// update data layers
+/** update data layers */
 function updateData() {
-  // update layer
+  /** update layers */
   getLayers("data").forEach((layer) => layer.remove());
   const layer = L.geoJSON(undefined, { pane: "data" });
   map?.addLayer(layer);
   layer.addData(props.data);
+  bindPopup(layer);
 
-  // set feature static styles
+  /** set feature static styles */
   layer.setStyle({
     weight: 1,
     color: "black",
@@ -442,22 +453,19 @@ function updateData() {
     fillOpacity: 1,
   });
 
-  bindPopup(layer);
-
-  // if no pan/zoom specified, fit view to content,
+  /** if no pan/zoom specified, fit view to content, */
   if (!props.lat && !props.long && !props.zoom) fit();
-  // otherwise, set view from props
-  else updateView();
+  /** otherwise, set view from props */ else updateView();
 
-  // update stuff once layers init'd
+  /** update stuff once layers init'd */
   updateColors();
   updateOpacities();
 }
 
-// update map data layer when props change
+/** update map data layer when props change */
 watch(() => props.data, updateData, { deep: true });
 
-// icons associated with each overlay key
+/** symbols (icon + label) associated with each overlay */
 const symbols = computed(() => {
   let index = 0;
   return mapValues(props.overlays, ({ label }) => {
@@ -467,17 +475,16 @@ const symbols = computed(() => {
   });
 });
 
-// update overlay layers
+/** update overlay layers */
 function updateOverlays() {
   getLayers<L.GeoJSON>("overlays", L.GeoJSON).forEach((layer) =>
     layer.remove(),
   );
   for (const [key, { features }] of Object.entries(props.overlays)) {
     const icon = symbols.value[key]?.icon;
-
     const layer = L.geoJSON(undefined, {
       pointToLayer: (feature, coords) => {
-        // for point, display as marker
+        /** for point, display as marker */
         if (feature.geometry.type === "Point")
           return L.marker(coords, { icon });
         return L.layerGroup();
@@ -490,26 +497,27 @@ function updateOverlays() {
   }
 }
 
-// update overlay layers when props change
+/** update overlay layers when props change */
 watch(() => props.overlays, updateOverlays, { deep: true });
 
-// auto-fit when map container element changes size
+/** auto-fit when map container element changes size */
 let first = true;
 useResizeObserver(element, () => {
+  /** don't fit on page load (don't override url map view params) */
   if (first) return (first = false);
   map?.invalidateSize();
   fit();
 });
 
-// update map pan/zoom
+/** update map pan/zoom */
 function updateView() {
   map?.setView([props.lat || 0, props.long || 0], props.zoom || 1);
 }
 
-// update map view when props change
+/** update map view when props change */
 watch([() => props.lat, () => props.long, () => props.zoom], updateView);
 
-// update data feature colors
+/** update data feature colors */
 function updateColors() {
   getLayers<L.GeoJSON>("data", L.GeoJSON).forEach((layer) =>
     layer.setStyle((feature) => ({
@@ -518,25 +526,25 @@ function updateColors() {
   );
 }
 
-// update colors when data values or color scheme changes
+/** update colors when data values or color scheme changes */
 watch([() => props.values, scale], updateColors, {});
 
-// update layer opacities
+/** update layer opacities */
 function updateOpacities() {
   if (!map) return;
 
-  // get layers
+  /** get layers */
   const base = map.getPane("base");
   const data = map.getPane("data");
   const overlays = map.getPane("overlays");
 
-  // set layer opacities
+  /** set layer opacities */
   if (base) base.style.opacity = String(props.baseOpacity);
   if (data) data.style.opacity = String(props.dataOpacity);
   if (overlays) overlays.style.opacity = String(props.overlayOpacity);
 }
 
-// update opacities when props change
+/** update opacities when props change */
 watch(
   [
     () => props.baseOpacity,
@@ -547,26 +555,27 @@ watch(
   {},
 );
 
-// whether element has scrollbars
+/** whether element has scrollbars */
 const scrollable = useScrollable(scroll);
 
-// enable/disable zooming by scrolling
+/** enable/disable zooming by scrolling */
 watch(scrollable, () => {
   if (!map) return;
   if (scrollable.value) map.scrollWheelZoom.disable();
   else map.scrollWheelZoom.enable();
 });
 
-// actual client size
+/** actual client size */
 const { width: actualWidth, height: actualHeight } = useElementSize(element);
 
-// download map as png
+/** download map as png */
 async function download() {
-  const el = element.value;
-  if (!el) return;
-  // upscale for better quality
+  if (!element.value) return;
+
+  /** upscale for better quality */
   const scale = window.devicePixelRatio;
-  const blob = await domtoimage.toBlob(el, {
+
+  const blob = await domtoimage.toBlob(element.value, {
     width: actualWidth.value * scale,
     height: actualHeight.value * scale,
     style: {
@@ -574,10 +583,11 @@ async function download() {
       transformOrigin: "top left",
     },
   });
+
   downloadPng(blob, props.filename);
 }
 
-// toggle fullscreen on element
+/** toggle fullscreen on element */
 const { toggle: fullscreen } = useFullscreen(element);
 </script>
 
