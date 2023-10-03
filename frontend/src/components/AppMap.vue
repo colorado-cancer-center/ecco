@@ -87,11 +87,11 @@
 
     <Teleport v-if="popup && popupFeature" :to="popup">
       <!-- county/tract popup -->
-      <div v-if="popupFeature.name && popupFeature.id" class="mini-table">
+      <div v-if="popupFeature.id || popupFeature.name" class="mini-table">
         <span>Name</span>
-        <span>{{ popupFeature.name }}</span>
+        <span>{{ popupFeature.name || "-" }}</span>
         <span>FIPS</span>
-        <span>{{ popupFeature.id }}</span>
+        <span>{{ popupFeature.id || "-" }}</span>
         <span>Value</span>
         <span>{{ formatValue(values[popupFeature.id], min, max, false) }}</span>
       </div>
