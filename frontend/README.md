@@ -3,6 +3,7 @@
 This project was scaffolded using Vite with the following options:
 
 - Vue 3
+- TypeScript, for static type checking
 - ESLint, for code quality
 - Prettier, for code formatting
 
