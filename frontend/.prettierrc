@@ -4,5 +4,5 @@
     "prettier-plugin-css-order"
   ],
   "importOrder": ["^vue", "^[a-zA-Z]", "^@[a-zA-Z]", "^@/", "^./", "^../"],
-  "order": "smacss"
+  "cssDeclarationSorterOrder": "smacss"
 }

@@ -1,12 +1,11 @@
 <template>
   <div class="container">
     <Listbox
-      v-slot="{ open }"
       :model-value="value"
       :multiple="multi"
       @update:model-value="onChange"
     >
-      <ListboxLabel>{{ capitalize(label) || "-" }}:</ListboxLabel>
+      <ListboxLabel>{{ label || "-" }}</ListboxLabel>
       <Float
         :shift="10"
         :middleware="middleware"
@@ -15,61 +14,67 @@
         adaptive-width
         strategy="fixed"
       >
-        >
-        <ListboxButton as="template">
+        <ListboxButton v-slot="{ open }" as="template">
           <AppButton
-            :icon="open ? faAngleUp : faAngleDown"
+            v-tooltip="tooltip"
+            :icon="open ? faCaretUp : faCaretDown"
             :flip="true"
-            class="button"
+            class="box"
+            :style="{ gridColumn: multi ? '' : 'span 2' }"
+            @keydown="onKeypress"
           >
-            {{ capitalize(selectedLabel) }}
+            {{ selectedLabel }}
+            <template #preview>
+              <slot
+                v-if="selectedOption"
+                name="preview"
+                :option="selectedOption"
+              />
+            </template>
           </AppButton>
         </ListboxButton>
         <ListboxOptions>
           <ListboxOption
-            v-for="option in options"
+            v-for="(option, index) in options"
             v-slot="{ active, selected }"
-            :key="option.id"
+            :key="index"
             as="template"
             :value="option"
           >
-            <li :class="{ active, selected }">
+            <li
+              :class="{ active, selected }"
+              @vue:mounted="(node: VNode) => selected && onOpen(node)"
+            >
               <font-awesome-icon
                 :style="{ opacity: selected ? 1 : 0 }"
                 :icon="faCheck"
               />
-              <span>{{ capitalize(option.label) }}</span>
-              <svg
-                v-if="option.colors?.length"
-                :viewBox="`0 0 ${option.colors.length} 1`"
-                preserveAspectRatio="none"
-              >
-                <rect
-                  v-for="(color, index) in option.colors"
-                  :key="index"
-                  :fill="color"
-                  :x="index"
-                  y="0"
-                  width="1"
-                  height="1"
-                />
-              </svg>
+              <span>{{ option.label }}</span>
+              <slot name="preview" :option="option" />
             </li>
           </ListboxOption>
         </ListboxOptions>
       </Float>
     </Listbox>
+    <AppButton
+      v-if="multi"
+      v-tooltip="allSelected ? 'Deselect all' : 'Select all'"
+      :icon="allSelected ? faXmark : faCheckDouble"
+      @click="toggleAll"
+    />
   </div>
 </template>
 
-<script setup lang="ts">
-import { computed } from "vue";
-import { capitalize } from "lodash";
+<script setup lang="ts" generic="O extends Option">
+import { computed, type VNode } from "vue";
+import { clamp } from "lodash";
 import { size } from "@floating-ui/dom";
 import {
-  faAngleDown,
-  faAngleUp,
+  faCaretDown,
+  faCaretUp,
   faCheck,
+  faCheckDouble,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { Float } from "@headlessui-float/vue";
 import {
@@ -80,18 +85,26 @@ import {
   ListboxOptions,
 } from "@headlessui/vue";
 import AppButton from "@/components/AppButton.vue";
-import { sleep } from "@/util/misc";
+import { frame } from "@/util/misc";
 
-export type Option = { id: string; label: string; colors?: string[] };
+export type Option = {
+  id: string;
+  label: string;
+  [key: string]: unknown;
+};
 
 type Props = {
   label: string;
-  options: Option[];
+  options: O[];
   multi?: boolean;
-  modelValue: Option["id"] | Option["id"][];
+  modelValue: O["id"] | O["id"][];
+  tooltip?: string;
 };
 
-const props = withDefaults(defineProps<Props>(), { multi: false });
+const props = withDefaults(defineProps<Props>(), {
+  multi: false,
+  tooltip: "",
+});
 
 type Emits = {
   "update:modelValue": [Props["modelValue"]];
@@ -99,60 +112,120 @@ type Emits = {
 
 const emit = defineEmits<Emits>();
 
-// floating-ui middleware
+type Slots = {
+  /** extra preview element to show for each option in dropdown and selected option in label */
+  preview: (props: { option?: O }) => unknown;
+};
+
+defineSlots<Slots>();
+
+/** floating-ui middleware */
 const middleware = [
   size({
     apply({ availableHeight, elements }) {
       Object.assign(elements.floating.style, {
-        // limit popover height to available height
+        /** limit popover height to available height */
         maxHeight: `${availableHeight - 20}px`,
       });
     },
   }),
 ];
 
-// model value to pass from parent to headlessui
-const value = computed(() =>
-  props.multi
-    ? props.options.filter((option) => props.modelValue.includes(option.id))
-    : props.options.find((option) => option.id === props.modelValue) || "",
-);
+/** normalize single/multi to array */
+function toArray<T>(value: T | T[]): T[] {
+  return Array.isArray(value) ? value : [value];
+}
 
-// model value to emit from headlessui to parent
-async function onChange(value: Option | Option[]) {
-  const id = Array.isArray(value) ? value.map((v) => v.id) : value.id;
-  // https://github.com/ycs77/headlessui-float/issues/80
-  await sleep(10);
+/** model value to pass from parent to headlessui */
+const value = computed(() => {
+  let list = toArray(props.modelValue);
+  return props.multi
+    ? props.options.filter((option) => list.includes(option.id))
+    : props.options.find((option) => list.includes(option.id)) || "";
+});
+
+/** model value to emit from headlessui to parent */
+async function onChange(value: O | O[]) {
+  let list = toArray(value);
+  const id = props.multi ? list.map((v) => v.id) : list[0]?.id || "";
   emit("update:modelValue", id);
 }
 
-// label to show as selected value in box
+/** full selected option (only relevant in single mode) */
+const selectedOption = computed(() => {
+  let list = toArray(props.modelValue);
+  if (!props.multi)
+    return props.options.find((option) => option.id === list[0]);
+  else return undefined;
+});
+
+/** label to show as selected value in box */
 const selectedLabel = computed<string>(() => {
-  const value = props.multi
-    ? props.options
-        .filter((option) => props.modelValue.includes(option.id))
-        .map((option) => option.label)
-    : props.options.find((option) => option.id === props.modelValue)?.label ||
-      "";
-  if (!Array.isArray(value)) return value;
+  let list = toArray(props.modelValue);
+  if (!props.multi)
+    return (
+      props.options.find((option) => option.id === list[0])?.label ||
+      "None selected"
+    );
+  const value = props.options.filter((option) => list.includes(option.id));
   if (value.length === 0) return "None selected";
-  if (value.length === 1) return value[0] || "";
+  if (value.length === 1) return value[0]?.label || "1 Selected";
   if (value.length === props.options.length) return "All selected";
   return value.length + " selected";
 });
+
+/** whether all options are selected */
+const allSelected = computed(
+  () => props.multi && props.options.length === props.modelValue.length,
+);
+
+/** select/deselect all */
+function toggleAll() {
+  emit(
+    "update:modelValue",
+    allSelected.value ? [] : props.options.map((option) => option.id),
+  );
+}
+
+/** add "quick" arrow key select */
+function onKeypress({ key }: KeyboardEvent) {
+  if (!props.multi && (key === "ArrowLeft" || key === "ArrowRight")) {
+    let index = props.options.findIndex(
+      (option) => option.id === props.modelValue,
+    );
+    if (key === "ArrowLeft") index--;
+    if (key === "ArrowRight") index++;
+    index = clamp(index, 0, props.options.length - 1);
+    const id = props.options[index]?.id;
+    if (id) emit("update:modelValue", id);
+  }
+}
+
+/** when listbox opened */
+async function onOpen(node: VNode) {
+  await frame();
+  (node.el as Element).scrollIntoView();
+}
 </script>
 
 <style scoped>
 .container {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  display: grid;
+  grid-template-columns: 1fr min-content;
   gap: 10px;
 }
 
-.button :deep(span) {
+.container > label {
+  grid-column: span 2;
+}
+
+.box :deep(span) {
   flex-grow: 1;
   text-align: left;
+}
+
+.box :deep(svg) {
+  color: var(--gray);
 }
 
 ul {
@@ -180,11 +253,6 @@ li span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-li svg {
-  max-width: 100px;
-  height: 1em;
 }
 
 .active {

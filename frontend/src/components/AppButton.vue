@@ -1,35 +1,49 @@
 <template>
-  <button :class="{ square: !!icon && !hasText, accent }">
+  <component
+    :is="component"
+    :class="{ button: true, square: !!icon && !$slots.default, accent }"
+    :to="to"
+  >
     <font-awesome-icon v-if="icon && !flip" :icon="icon" class="icon" />
-    <span v-if="hasText">
+    <span v-if="$slots.default">
       <slot />
     </span>
+    <slot v-if="$slots.preview" name="preview" />
     <font-awesome-icon v-if="icon && flip" :icon="icon" class="icon" />
-  </button>
+  </component>
 </template>
 
 <script setup lang="ts">
-import { computed, useSlots } from "vue";
+import { computed } from "vue";
 import type { IconDefinition } from "@fortawesome/free-solid-svg-icons";
+import AppLink from "@/components/AppLink.vue";
 
 type Props = {
   icon?: IconDefinition;
+  to?: string;
   flip?: boolean;
   accent?: boolean;
 };
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
-const hasText = computed(() => !!useSlots().default);
+type Slots = {
+  default?: () => unknown;
+  preview?: () => unknown;
+};
+
+defineSlots<Slots>();
+
+const component = computed(() => (props.to ? AppLink : "button"));
 </script>
 
 <style scoped>
-button {
-  display: flex;
+.button {
+  display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  max-width: 100%;
-  min-height: 30px;
+  min-height: 35px;
   padding: 5px 10px;
   gap: 10px;
   border: none;
@@ -37,18 +51,16 @@ button {
   background: var(--off-white);
   color: var(--dark-gray);
   font: inherit;
+  text-decoration: none;
+  overflow-wrap: anywhere;
   cursor: pointer;
   transition:
     color var(--fast),
     background var(--fast);
 }
 
-button:hover {
+.button:hover {
   background: var(--light-gray);
-}
-
-span {
-  overflow-wrap: break-word;
 }
 
 .icon {
@@ -69,8 +81,8 @@ span {
 }
 
 .square {
-  min-width: 30px;
-  min-height: 30px;
+  width: 35px;
+  height: 35px;
   padding: 0;
 }
 </style>

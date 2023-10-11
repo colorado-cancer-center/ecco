@@ -23,10 +23,12 @@
   --fast: 0.25s ease;
   --shadow: 0 2px 5px #0f172a30;
   --spacing: 2;
+  --compact: 1.5;
 
   background: var(--white);
   color: var(--black);
   font-weight: var(--regular);
+  line-height: var(--compact);
   font-family: "Inter", sans-serif;
   text-underline-offset: 2px;
 }
@@ -54,6 +56,14 @@ header,
 footer {
   background: var(--theme);
   box-shadow: var(--shadow);
+  color: var(--white);
+}
+
+:is(header, footer) a {
+  text-decoration: none;
+}
+
+:is(header, footer) a:hover {
   color: var(--white);
 }
 
@@ -133,15 +143,8 @@ a:hover {
   color: var(--theme);
 }
 
-:is(header, footer) a {
-  text-decoration: none;
-}
-
-:is(header, footer) a:hover {
-  color: color-mix(in hsl, var(--white), var(--theme) 25%);
-}
-
 hr {
+  flex-shrink: 0;
   width: 100%;
   height: 1px;
   margin: 20px 0;
@@ -160,4 +163,31 @@ p {
 
 strong {
   font-weight: var(--bold);
+}
+
+label,
+input {
+  min-width: 0;
+}
+
+.mini-table {
+  display: grid;
+  grid-template-columns: max-content auto;
+  gap: 5px 15px;
+}
+
+.mini-table > :nth-child(odd) {
+  font-weight: var(--bold);
+}
+
+.tippy-box {
+  padding: 5px;
+  background: var(--off-black);
+  box-shadow: var(--shadow);
+  color: var(--white);
+  font: inherit;
+}
+
+.tippy-arrow {
+  color: var(--off-black);
 }

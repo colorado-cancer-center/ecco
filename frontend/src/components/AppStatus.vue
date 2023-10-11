@@ -28,6 +28,12 @@ type Props = {
 
 const props = withDefaults(defineProps<Props>(), { status: "info" });
 
+type Slots = {
+  default?: () => unknown;
+};
+
+defineSlots<Slots>();
+
 type Code = {
   icon: IconDefinition;
   color: string;

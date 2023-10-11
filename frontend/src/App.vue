@@ -12,7 +12,7 @@ import { useRoute } from "vue-router";
 import TheFooter from "@/components/TheFooter.vue";
 import TheHeader from "@/components/TheHeader.vue";
 
-// project info
+/** project info */
 const { VITE_TITLE: title } = import.meta.env;
 
 const route = useRoute();
@@ -20,7 +20,7 @@ const route = useRoute();
 watch(
   route,
   () => {
-    // update tab title
+    /** update tab title */
     document.title = [String(route.name || ""), title]
       .filter(Boolean)
       .join(" | ");

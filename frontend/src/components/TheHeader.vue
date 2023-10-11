@@ -24,7 +24,7 @@
 <script setup lang="ts">
 import { routes } from "@/views";
 
-// project info
+/** project info */
 const {
   VITE_TITLE: title,
   VITE_PRESENTED_BY: presentedBy,
@@ -87,14 +87,6 @@ nav {
   text-decoration: none;
 }
 
-.nav-link[data-active="true"] {
-  opacity: 0.65;
-}
-
-.nav-link:hover {
-  color: var(--white);
-}
-
 .nav-link::after {
   position: absolute;
   right: 50%;
@@ -106,7 +98,7 @@ nav {
   transition: inset var(--fast);
 }
 
-.nav-link:hover::after {
+.nav-link:is(:hover, [data-active="true"])::after {
   right: 5px;
   left: 5px;
 }

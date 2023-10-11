@@ -17,7 +17,7 @@
           <SliderRange class="range" />
         </SliderTrack>
         <SliderThumb :as-child="true">
-          <div class="thumb" />
+          <div class="thumb" :aria-label="label" />
         </SliderThumb>
       </span>
     </SliderRoot>
@@ -35,7 +35,7 @@ type Props = {
   step?: number;
 };
 
-withDefaults(defineProps<Props>(), { min: 0, max: 1, step: 0.01 });
+withDefaults(defineProps<Props>(), { min: 0, max: 1, step: 0.1 });
 
 type Emits = {
   "update:modelValue": [Props["modelValue"]];
@@ -57,7 +57,7 @@ label {
   position: relative;
   align-items: center;
   height: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
   padding: 10px 0;
   cursor: pointer;
 }

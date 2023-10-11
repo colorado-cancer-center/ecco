@@ -1,0 +1,146 @@
+{
+  "cancerceter": {
+    "label": "Cancer Centers",
+    "features": {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "properties": {
+            "info": "<b>MacDade Ave</b><br>(555) 867-5309<br>Hours: 24/7"
+          },
+          "geometry": {
+            "coordinates": [-104.96675868697851, 39.70166098264522],
+            "type": "Point"
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "info": "<b>Rules Blvd</b><br>(555) 867-5309<br>Hours: 24/7"
+          },
+          "geometry": {
+            "coordinates": [-103.63241385454212, 40.57340187234726],
+            "type": "Point"
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "info": "<b>Fake St</b><br>(555) 867-5309<br>Hours: 24/7"
+          },
+          "geometry": {
+            "coordinates": [-103.58576837514403, 38.99030572180229],
+            "type": "Point"
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "info": "<b>Unreal Rd</b><br>(555) 867-5309<br>Hours: 24/7"
+          },
+          "geometry": {
+            "coordinates": [-105.98801056412982, 38.881456237534394],
+            "type": "Point"
+          }
+        }
+      ]
+    }
+  },
+  "lungscreening": {
+    "label": "Lung Cancer Screening Facilities",
+    "features": {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "properties": {
+            "info": "<b>Main St</b><br>(555) 867-5309<br>Hours: 24/7"
+          },
+          "geometry": {
+            "coordinates": [-106.85872617955457, 39.91472807151945],
+            "type": "Point"
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "info": "<b>Noway Way</b><br>(555) 867-5309<br>Hours: 24/7"
+          },
+          "geometry": {
+            "coordinates": [-103.8578670049644, 38.505252806831635],
+            "type": "Point"
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "info": "<b>Yep St</b><br>(555) 867-5309<br>Hours: 24/7"
+          },
+          "geometry": {
+            "coordinates": [-105.86362261906876, 40.3960141222845],
+            "type": "Point"
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "info": "<b>Nope St</b><br>(555) 867-5309<br>Hours: 24/7"
+          },
+          "geometry": {
+            "coordinates": [-104.66638864785945, 39.87894163379741],
+            "type": "Point"
+          }
+        }
+      ]
+    }
+  },
+  "waste": {
+    "label": "Hazardous Waste Sites",
+    "features": {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "properties": {
+            "info": "<b>Huh St</b><br>(555) 867-5309<br>Hours: 24/7"
+          },
+          "geometry": {
+            "coordinates": [-105.24168289376505, 40.0100671919507],
+            "type": "Point"
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "info": "<b>What St</b><br>(555) 867-5309<br>Hours: 24/7"
+          },
+          "geometry": {
+            "coordinates": [-105.1095207021379, 39.418025319507166],
+            "type": "Point"
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "info": "<b>Say Again St</b><br>(555) 867-5309<br>Hours: 24/7"
+          },
+          "geometry": {
+            "coordinates": [-104.75967960665457, 39.3338924587361],
+            "type": "Point"
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "info": "<b>Oh Dear St</b><br>(555) 867-5309<br>Hours: 24/7"
+          },
+          "geometry": {
+            "coordinates": [-107.20079302847185, 37.992407606340464],
+            "type": "Point"
+          }
+        }
+      ]
+    }
+  }
+}

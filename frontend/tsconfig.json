@@ -1,6 +1,6 @@
 {
   "extends": ["@vue/tsconfig/tsconfig.json"],
-  "include": ["src/**/*", "./*"],
+  "include": ["src/**/*", "./*", "src/**/*.json"],
   "compilerOptions": {
     "composite": true,
     "esModuleInterop": true,

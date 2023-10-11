@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-// project info
+/** project info */
 const { VITE_SOURCE_CODE: sourceCode, VITE_LICENSE: license } = import.meta.env;
 </script>
 
@@ -17,5 +17,9 @@ footer {
   justify-content: center;
   padding: 20px;
   gap: 20px;
+}
+
+footer a:hover {
+  text-decoration: underline;
 }
 </style>
