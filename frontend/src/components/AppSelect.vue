@@ -132,13 +132,13 @@ const middleware = [
 ];
 
 /** normalize single/multi to array */
-function normalize<T>(value: T | T[]): T[] {
+function toArray<T>(value: T | T[]): T[] {
   return Array.isArray(value) ? value : [value];
 }
 
 /** model value to pass from parent to headlessui */
 const value = computed(() => {
-  let list = normalize(props.modelValue);
+  let list = toArray(props.modelValue);
   return props.multi
     ? props.options.filter((option) => list.includes(option.id))
     : props.options.find((option) => list.includes(option.id)) || "";
@@ -146,14 +146,14 @@ const value = computed(() => {
 
 /** model value to emit from headlessui to parent */
 async function onChange(value: O | O[]) {
-  let list = normalize(value);
+  let list = toArray(value);
   const id = props.multi ? list.map((v) => v.id) : list[0]?.id || "";
   emit("update:modelValue", id);
 }
 
 /** full selected option (only relevant in single mode) */
 const selectedOption = computed(() => {
-  let list = normalize(props.modelValue);
+  let list = toArray(props.modelValue);
   if (!props.multi)
     return props.options.find((option) => option.id === list[0]);
   else return undefined;
@@ -161,7 +161,7 @@ const selectedOption = computed(() => {
 
 /** label to show as selected value in box */
 const selectedLabel = computed<string>(() => {
-  let list = normalize(props.modelValue);
+  let list = toArray(props.modelValue);
   if (!props.multi)
     return (
       props.options.find((option) => option.id === list[0])?.label ||

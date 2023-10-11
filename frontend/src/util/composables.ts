@@ -67,6 +67,9 @@ export function useUrlParam<T>(
     () => {
       const param = params[name] || "";
       const value = parse(Array.isArray(param) ? param.join() : param);
+      /** stringify process is sometimes "lossy" (e.g. rounding decimal places),
+       * so compare values after that process
+       */
       if (param === stringify(variable.value)) return;
       if (value) variable.value = value;
     },
