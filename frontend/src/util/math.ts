@@ -2,11 +2,12 @@ import { round } from "lodash";
 
 /** format map data value */
 export function formatValue(
-  value: number,
-  min: number,
-  max: number,
+  value?: number,
+  min?: number,
+  max?: number,
   compact = true,
 ): string {
+  if (value === undefined || min === undefined || max === undefined) return "-";
   /** if all values between 0 and 1, value represents percentage */
   if (min >= 0 && max <= 1) return round(value * 100, compact ? 1 : 3) + "%";
   /** otherwise, format as regular number */ else
