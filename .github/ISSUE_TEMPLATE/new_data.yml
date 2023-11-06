@@ -34,15 +34,6 @@ body:
     render: markdown
   validations:
     required: true
-
-- type: checkboxes
-  attributes:
-    label: Publicly available?
-    description: Are the data publicly available? 
-    options:
-    - label: Yes
-    - label: No
-    - label: Unsure
 - type: textarea
   attributes:
     label: Anything else?
