@@ -2,6 +2,8 @@ FROM node:18
 
 WORKDIR /app
 
-COPY . .
+COPY package.json yarn.lock  .
 
 RUN yarn install --production=false
+
+COPY . .

@@ -1,23 +1,29 @@
 volumes:
   pgdata:
   built_frontend:
+  certbot:
 
 services:
   frontend:
     image: cocancerscope-frontend
     build: ./frontend
-    command: yarn build
+    command: "/bin/bash -c 'yarn build ; cp -R ./dist/* /app/build/'"
     volumes:
-      - built_frontend:/app/build
+      - built_frontend:/app/build/
     environment:
       - "VITE_API=https://co-cancer-scope.cu-dbmi.dev/api"
 
-  nginx:
-    image: nginx:1.19.6-alpine
+  nginx-certbot:
+    # image: nginx:1.19.6-alpine
+    build: ./services/nginx-certbot/
     ports:
       - "80:80"
+      - "443:443"
+    env_file:
+      - .env
     volumes:
-      - ./services/nginx/default.conf:/etc/nginx/conf.d/default.conf
       - built_frontend:/usr/share/nginx/html
+      - certbot:/etc/letsencrypt/
+      - ./services/nginx-certbot/config/templates/:/etc/nginx/templates/
     depends_on:
       - backend
