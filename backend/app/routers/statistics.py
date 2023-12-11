@@ -37,10 +37,14 @@ router = APIRouter(prefix="/stats")
 # === statistics routes
 # ============================================================================
 
+class FIPSValue(BaseModel):
+    v: float
+    aac: Optional[float]
+
 class FIPSMeasureResponse(BaseModel):
     min: Optional[float]
     max: Optional[float]
-    values: dict[str,float]
+    values: dict[str, FIPSValue]
 
 # provides high-level information about the available categories and measures
 # by iterating over the STATS_MODELS dict
@@ -173,7 +177,7 @@ for type, family in STATS_MODELS.items():
                 if model not in CANCER_MODELS:
                     query = select((model.FIPS, model.value)).where(model.measure == measure)
                 else:
-                    query = select((model.FIPS, model.AAR.label("value"))).where(model.Site == measure)
+                    query = select((model.FIPS, model.AAR.label("value"), model.AAC.label("aac"))).where(model.Site == measure)
                 
                 if LIMIT_TO_STATE is not None:
                     query = query.where(model.State == LIMIT_TO_STATE)
@@ -190,10 +194,18 @@ for type, family in STATS_MODELS.items():
 
                 result = await session.execute(query)
                 objects = result.all()
+
+                # for non-cancer models, return a dict of FIPS and values
+                # for cancer models, return a dict of FIPS and a sub-dict of AAR and AAC values
+                if model not in CANCER_MODELS:
+                    values = {x["FIPS"]: {"v": x["value"]} for x in objects}
+                else:
+                    values = {x["FIPS"]: {"v": x["value"], "aac": x["aac"]} for x in objects}
+
                 return FIPSMeasureResponse(
                     min=stats[0],
                     max=stats[1],
-                    values={x["FIPS"]: x["value"] for x in objects}
+                    values=values
                 )
 
             @router.get(
