@@ -132,7 +132,7 @@ type _Values = {
   max: number;
   min: number;
   /** map of feature id to measure value */
-  values: { [key: number]: number };
+  values: { [key: string]: { v: number, aac?: number } };
 };
 
 /** get values data */
@@ -146,7 +146,7 @@ export async function getValues(
     `${api}/stats/${level}/${category}/fips-value?` + params,
   );
 
-  const values = Object.values(data.values);
+  const values = Object.values(data.values).map(({ v }) => v);
 
   /** calculate stats */
   return {
