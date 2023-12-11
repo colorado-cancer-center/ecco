@@ -38,7 +38,7 @@ router = APIRouter(prefix="/stats")
 # ============================================================================
 
 class FIPSValue(BaseModel):
-    v: float
+    value: float
     aac: Optional[float]
 
 class FIPSMeasureResponse(BaseModel):
@@ -198,9 +198,9 @@ for type, family in STATS_MODELS.items():
                 # for non-cancer models, return a dict of FIPS and values
                 # for cancer models, return a dict of FIPS and a sub-dict of AAR and AAC values
                 if model not in CANCER_MODELS:
-                    values = {x["FIPS"]: {"v": x["value"]} for x in objects}
+                    values = {x["FIPS"]: {"value": x["value"]} for x in objects}
                 else:
-                    values = {x["FIPS"]: {"v": x["value"], "aac": x["aac"]} for x in objects}
+                    values = {x["FIPS"]: {"value": x["value"], "aac": x["aac"]} for x in objects}
 
                 return FIPSMeasureResponse(
                     min=stats[0],

@@ -93,12 +93,12 @@
         <span>FIPS</span>
         <span>{{ popupFeature.id || "-" }}</span>
         <span>Value</span>
-        <span>{{ formatValue(values[popupFeature.id]?.v, min, max, false) }}</span>
+        <span>{{ formatValue(values[popupFeature.id]?.value, min, max, false) }}</span>
 
         <!-- optional AAC field for cancer stats -->
         <template v-if="values[popupFeature.id]?.aac">
           <span>AAC</span>
-          <span>{{ values[popupFeature.id]?.aac }}</span>
+          <span>{{ formatValue(values[popupFeature.id]?.aac, 0, 100, false) }}</span>
         </template>
       </div>
 
@@ -149,7 +149,7 @@ type Props = {
   data?: Data;
   overlays?: Overlays;
   /** map of feature id to value */
-  values?: { [key: number]: { v: number, aac?: number } };
+  values?: { [key: string]: { value: number, aac?: number } };
   /** value domain */
   min?: number;
   max?: number;
@@ -515,7 +515,7 @@ function updateColors() {
   getLayers<L.GeoJSON>("data", L.GeoJSON).forEach((layer) =>
     layer.setStyle((feature) => ({
       fillColor: scale.value.getColor(
-        props.values?.[feature?.properties.id]?.v || 0,
+        props.values?.[feature?.properties.id]?.value || 0,
       ),
     })),
   );
