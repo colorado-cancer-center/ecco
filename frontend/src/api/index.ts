@@ -1,7 +1,8 @@
 import * as d3 from "d3";
 import type { FeatureCollection, Geometry } from "geojson";
-import { mapValues, random, sample } from "lodash";
-import fakeData from "./fake-overlay-data.json";
+import { mapValues } from "lodash";
+import cancerCenterOverlays from "./cancer-center-overlays.json";
+import cancerInFocusOverlays from "./cancer-in-focus-overlays.json";
 
 /** api root (no trailing slash) */
 const api = import.meta.env.VITE_API;
@@ -132,7 +133,7 @@ type _Values = {
   max: number;
   min: number;
   /** map of feature id to measure value */
-  values: { [key: string]: { value: number, aac?: number } };
+  values: { [key: string]: { value: number; aac?: number | null } };
 };
 
 /** get values data */
@@ -171,7 +172,13 @@ export function getDataDownload(
 
 /** overlay geojson properties fields */
 type OverlayProps = {
-  info: string;
+  name?: string;
+  org?: string;
+  link?: string;
+  address?: string;
+  phone?: string;
+  notes?: string;
+  fips?: string;
 };
 
 /** response from overlays api endpoint */
@@ -186,39 +193,12 @@ type _Overlays = {
 export async function getOverlays() {
   // const data = await request<_Overlays>(`${api}/overlays`);
 
-  // temp fake data
-  const data = fakeData as _Overlays;
-  // add extra fake entries to see all marker icons
-  for (let i = 0; i < 0; i++)
-    data[i] = {
-      label: sample([
-        "Lorem",
-        "Ipsum",
-        "Dolor",
-        "Consectetur",
-        "Adipiscing",
-        "Eliteiusmod",
-        "Tempor",
-        "Incididunt",
-        "Labore",
-        "Dolore",
-        "Magna",
-        "Aliqua",
-      ]),
-      features: {
-        type: "FeatureCollection",
-        features: [
-          {
-            type: "Feature",
-            properties: { info: "" },
-            geometry: {
-              type: "Point",
-              coordinates: [-105.7821 + random(-2, 2), 39.5501 + random(-2, 2)],
-            },
-          },
-        ],
-      },
-    };
+  const data =
+    /** merge together, assume no overlap in keys */
+    {
+      ...cancerInFocusOverlays,
+      ...cancerCenterOverlays,
+    } as _Overlays;
 
   return data;
 }

@@ -9,7 +9,7 @@ services:
 
   frontend:
     ports:
-      - 8021:8001
+      - 8022:8001
     environment:
       - VITE_API=http://localhost:8020
       - VITE_ENV=dev

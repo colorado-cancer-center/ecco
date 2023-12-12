@@ -1,7 +1,18 @@
 <template>
-  <section class="full">
+  <section>
     <h2>Explore cancer data in {{ area }}</h2>
+    <p>
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+      tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+      veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+      commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+      velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
+      cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
+      est laborum.
+    </p>
+  </section>
 
+  <section class="full">
     <div v-if="defsStatus === 'success'" class="layout">
       <!-- https://bugs.chromium.org/p/chromium/issues/detail?id=1484663 -->
       <div ref="panel" class="panel" role="group">
@@ -30,14 +41,15 @@
             getDataDownload(selectedLevel, selectedCategory, selectedMeasure)
           "
           :accent="true"
-          >Download Data</AppButton
         >
+          Download Data
+        </AppButton>
 
         <hr />
 
         <AppSelect
           v-model="selectedOverlays"
-          label="Overlays"
+          label="Markers"
           :options="overlayOptions"
           :multi="true"
           tooltip="Locations to show on map"
@@ -239,38 +251,33 @@
 
           <template v-if="showStats">
             <div class="mini-table">
-              <span>Min</span>
-              <span
-                v-tooltip="
-                  formatValue(values?.min, values?.min, values?.max, false)
-                "
-              >
-                {{ formatValue(values?.min, values?.min, values?.max) }}
-              </span>
-              <span>Max</span>
-              <span
-                v-tooltip="
-                  formatValue(values?.max, values?.min, values?.max, false)
-                "
-              >
-                {{ formatValue(values?.max, values?.min, values?.max) }}
-              </span>
-              <span>Mean</span>
-              <span
-                v-tooltip="
-                  formatValue(values?.mean, values?.min, values?.max, false)
-                "
-              >
-                {{ formatValue(values?.mean, values?.min, values?.max) }}
-              </span>
-              <span>Median</span>
-              <span
-                v-tooltip="
-                  formatValue(values?.median, values?.min, values?.max, false)
-                "
-              >
-                {{ formatValue(values?.median, values?.min, values?.max) }}
-              </span>
+              <template v-if="typeof values?.min === 'number'">
+                <span>Min</span>
+                <span v-tooltip="formatValue(values?.min, percent, false)">
+                  {{ formatValue(values?.min, percent) }}
+                </span>
+              </template>
+
+              <template v-if="typeof values?.max === 'number'">
+                <span>Max</span>
+                <span v-tooltip="formatValue(values?.max, percent, false)">
+                  {{ formatValue(values?.max, percent) }}
+                </span>
+              </template>
+
+              <template v-if="typeof values?.mean === 'number'">
+                <span>Mean</span>
+                <span v-tooltip="formatValue(values?.mean, percent, false)">
+                  {{ formatValue(values?.mean, percent) }}
+                </span>
+              </template>
+
+              <template v-if="typeof values?.median === 'number'">
+                <span>Median</span>
+                <span v-tooltip="formatValue(values?.median, percent, false)">
+                  {{ formatValue(values?.median, percent) }}
+                </span>
+              </template>
             </div>
           </template>
         </template>
@@ -290,17 +297,10 @@
       cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
       est laborum.
     </p>
-
-    <p>
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-      tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
-      veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-      commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
-      velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
-      cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
-      est laborum.
-    </p>
-    <AppButton to="/about">Learn More</AppButton>
+    <div class="actions">
+      <AppButton to="/about"> Learn More </AppButton>
+      <AppButton to="/about" :accent="true"> Help </AppButton>
+    </div>
   </section>
 </template>
 
@@ -337,7 +337,7 @@ import {
   useScrollable,
   useUrlParam,
 } from "@/util/composables";
-import { formatValue } from "@/util/math";
+import { formatValue, isPercent } from "@/util/math";
 
 /** project info */
 const { VITE_AREA: area } = import.meta.env;
@@ -373,7 +373,7 @@ const showLegends = ref(true);
 const showStats = ref(false);
 const selectedBase = ref(baseOptions[0]?.id || "");
 const selectedGradient = ref(gradientOptions[3]?.id || "");
-const selectedOverlays = useUrlParam("overlays", arrayParam(stringParam), []);
+const selectedOverlays = useUrlParam("markers", arrayParam(stringParam), []);
 const baseOpacity = ref(1);
 const dataOpacity = ref(0.75);
 const overlayOpacity = ref(1);
@@ -444,6 +444,11 @@ const measures = computed(() =>
   cloneDeep(categories.value[selectedCategory.value]?.list || {}),
 );
 
+/** is measure a percent */
+const percent = computed(() =>
+  isPercent(values.value?.min || 0, values.value?.max || 1),
+);
+
 /** turn facet into list of select box options */
 function facetToOptions(facet: Facet): Option[] {
   return Object.values(facet).map(({ id, label }) => ({ id, label }));
@@ -489,7 +494,7 @@ const _overlays = computed(
 <style scoped>
 .layout {
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: 340px 1fr;
   margin: 40px 0;
   gap: 20px;
 }
@@ -566,5 +571,11 @@ const _overlays = computed(
   height: 100%;
   /* center map on particular place (continental US) */
   transform: scale(4.9) translate(28%, 15.4%);
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
 }
 </style>

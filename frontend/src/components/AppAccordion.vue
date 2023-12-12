@@ -5,8 +5,9 @@
         ref="button"
         :icon="open ? faAngleUp : faAngleDown"
         class="button"
-        >{{ label }}</AppButton
       >
+        {{ label }}
+      </AppButton>
     </DisclosureButton>
     <DisclosurePanel class="panel">
       <slot />

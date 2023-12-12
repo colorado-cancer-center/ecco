@@ -20,9 +20,11 @@ import {
   faThumbTack,
 } from "@fortawesome/free-solid-svg-icons";
 
-/** choose shapes from font-awesome that look neutral (don't imply any good/bad
+/**
+ * choose shapes from font-awesome that look neutral (don't imply any good/bad
  * connotation). put simpler shapes first. also be careful that similar looking
- * shapes don't get assigned similar looking colors. */
+ * shapes don't get assigned similar looking colors.
+ */
 const icons = [
   faCircle,
   faSquare,
