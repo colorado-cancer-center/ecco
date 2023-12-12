@@ -24,21 +24,23 @@
   --shadow: 0 2px 5px #0f172a30;
   --spacing: 2;
   --compact: 1.5;
-
-  background: var(--white);
-  color: var(--black);
-  font-weight: var(--regular);
-  line-height: var(--compact);
-  font-family: "Inter", sans-serif;
-  text-underline-offset: 2px;
 }
 
 * {
   box-sizing: border-box;
 }
 
+html {
+  background: var(--white);
+  color: var(--black);
+  font-weight: var(--regular);
+  font-size: 13pt;
+  line-height: var(--compact);
+  font-family: "Inter", sans-serif;
+  text-underline-offset: 2px;
+}
+
 body {
-  min-height: 100vh;
   margin: 0;
 }
 
@@ -91,9 +93,7 @@ section > :last-child {
 h1,
 h2,
 h3,
-h4,
-h5,
-h6 {
+h4 {
   color: var(--theme);
   font-weight: var(--regular);
 }
@@ -120,16 +120,6 @@ h3 {
 h4 {
   margin: 20px 0;
   font-size: 1.1rem;
-}
-
-h5 {
-  margin: 20px 0;
-  font-size: 1em;
-}
-
-h6 {
-  margin: 20px 0;
-  font-size: 1rem;
 }
 
 a {
@@ -168,6 +158,19 @@ strong {
 label,
 input {
   min-width: 0;
+}
+
+a,
+p,
+button {
+  overflow-wrap: anywhere;
+}
+
+.truncate:not(:focus) {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mini-table {

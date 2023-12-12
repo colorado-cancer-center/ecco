@@ -19,8 +19,9 @@
         :icon="faDownload"
         :accent="true"
         @click="download"
-        >Download Map</AppButton
       >
+        Download Map
+      </AppButton>
       <AppButton
         v-tooltip="'Zoom out'"
         :icon="faMinus"
@@ -31,14 +32,16 @@
         v-tooltip="'Fit view to data'"
         :icon="faCropSimple"
         @click="fit"
-        >Fit</AppButton
       >
+        Fit
+      </AppButton>
       <AppButton
         v-tooltip="'View map in full screen'"
         :icon="faExpand"
         @click="fullscreen"
-        >Fullscreen</AppButton
       >
+        Fullscreen
+      </AppButton>
     </div>
 
     <!-- top left legend -->
@@ -55,9 +58,9 @@
             <svg viewBox="0 0 1 1">
               <rect x="0" y="0" width="1" height="1" :fill="step.color" />
             </svg>
-            <span>{{ formatValue(step.lower, min, max) }}</span>
+            <span>{{ formatValue(step.lower, percent) }}</span>
             <span>&ndash;</span>
-            <span>{{ formatValue(step.upper, min, max) }}</span>
+            <span>{{ formatValue(step.upper, percent) }}</span>
           </template>
         </div>
       </div>
@@ -87,23 +90,67 @@
 
     <Teleport v-if="popup && popupFeature" :to="popup">
       <!-- county/tract popup -->
-      <div v-if="popupFeature.id || popupFeature.name" class="mini-table">
-        <span>Name</span>
-        <span>{{ popupFeature.name || "-" }}</span>
-        <span>FIPS</span>
-        <span>{{ popupFeature.id || "-" }}</span>
-        <span>Value</span>
-        <span>{{ formatValue(values[popupFeature.id]?.value, min, max, false) }}</span>
+      <div class="mini-table">
+        <!-- name -->
+        <template v-if="popupFeature.name">
+          <span>Name</span>
+          <span>{{ popupFeature.name }}</span>
+        </template>
 
-        <!-- optional AAC field for cancer stats -->
-        <template v-if="values[popupFeature.id]?.aac">
-          <span>AAC</span>
-          <span>{{ formatValue(values[popupFeature.id]?.aac, 0, 100, false) }}</span>
+        <!-- fips/id -->
+        <template v-if="popupFeature.id || popupFeature.fips">
+          <span>FIPS</span>
+          <span>{{ popupFeature.id || popupFeature.fips }}</span>
+        </template>
+
+        <!-- primary "value" for feature -->
+        <template v-if="values[popupFeature.id]">
+          <span>Value</span>
+          <span>{{
+            formatValue(values[popupFeature.id]?.value || 0, percent, false)
+          }}</span>
+        </template>
+
+        <!-- age adjusted count -->
+        <template v-if="typeof values[popupFeature.id]?.aac === 'number'">
+          <span>Age-adj. Count</span>
+          <span>{{
+            formatValue(values[popupFeature.id]?.aac || 0, false, false)
+          }}</span>
+        </template>
+
+        <!-- organization -->
+        <template v-if="popupFeature.org">
+          <span>Org</span>
+          <span>{{ popupFeature.org }}</span>
+        </template>
+
+        <!-- link -->
+        <template v-if="popupFeature.link">
+          <span>Link</span>
+          <AppLink :to="popupFeature.link" class="truncate">
+            {{ popupFeature.link.replace(/(https?:\/\/)?(www\.)?/, "") }}
+          </AppLink>
+        </template>
+
+        <!-- address -->
+        <template v-if="popupFeature.address">
+          <span>Address</span>
+          <span>{{ popupFeature.address }}</span>
+        </template>
+
+        <!-- phone -->
+        <template v-if="popupFeature.phone">
+          <span>Phone</span>
+          <span>{{ popupFeature.phone }}</span>
+        </template>
+
+        <!-- notes -->
+        <template v-if="popupFeature.notes">
+          <span>Notes</span>
+          <span>{{ popupFeature.notes }}</span>
         </template>
       </div>
-
-      <!-- overlay popup -->
-      <div v-if="popupFeature.info" v-html="popupFeature.info"></div>
     </Teleport>
   </div>
 </template>
@@ -130,15 +177,16 @@ import {
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import { useElementSize, useFullscreen, useResizeObserver } from "@vueuse/core";
-import type { Data, Overlays } from "@/api";
+import type { Data, Overlays, Values } from "@/api";
 import AppButton from "@/components/AppButton.vue";
 import { getGradient } from "@/components/gradient";
 import { markerOptions } from "@/components/markers";
 import { useScrollable } from "@/util/composables";
 import { downloadPng } from "@/util/download";
-import { formatValue, normalizedApply } from "@/util/math";
+import { formatValue, isPercent, normalizedApply } from "@/util/math";
 import { getBbox, sleep } from "@/util/misc";
 import "leaflet/dist/leaflet.css";
+import AppLink from "@/components/AppLink.vue";
 
 /** element refs */
 const scroll = ref<HTMLDivElement>();
@@ -149,7 +197,7 @@ type Props = {
   data?: Data;
   overlays?: Overlays;
   /** map of feature id to value */
-  values?: { [key: string]: { value: number, aac?: number } };
+  values?: Values["values"];
   /** value domain */
   min?: number;
   max?: number;
@@ -550,6 +598,9 @@ watch(
   {},
 );
 
+/** is measure a percent */
+const percent = computed(() => isPercent(props.min, props.max));
+
 /** whether element has scrollbars */
 const scrollable = useScrollable(scroll);
 
@@ -661,6 +712,7 @@ const { toggle: fullscreen } = useFullscreen(element);
 
 .leaflet-popup-content-wrapper {
   width: max-content;
+  max-width: 400px;
   padding: 20px 25px;
   border-radius: var(--rounded);
   box-shadow: var(--shadow);

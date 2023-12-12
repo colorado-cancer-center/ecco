@@ -15,7 +15,10 @@ import {
   useUrlSearchParams,
 } from "@vueuse/core";
 
-/** reactive variable synced with url params, as object of strings. only supports replace, not push */
+/**
+ * reactive variable synced with url params, as object of strings. only supports
+ * replace, not push
+ */
 const params = useUrlSearchParams("history");
 
 /** generic param type */
@@ -67,7 +70,8 @@ export function useUrlParam<T>(
     () => {
       const param = params[name] || "";
       const value = parse(Array.isArray(param) ? param.join() : param);
-      /** stringify process is sometimes "lossy" (e.g. rounding decimal places),
+      /**
+       * stringify process is sometimes "lossy" (e.g. rounding decimal places),
        * so compare values after that process
        */
       if (param === stringify(variable.value)) return;

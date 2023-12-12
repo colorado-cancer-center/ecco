@@ -16,7 +16,7 @@ case "$1" in
     "dev")
         # remove the arg, allow this to fall through to base case
         shift
-        ;&
+        ;;
     *)
         echo "${1} not recognized as a target env, ignoring"
         ;;

@@ -113,7 +113,10 @@ type Emits = {
 const emit = defineEmits<Emits>();
 
 type Slots = {
-  /** extra preview element to show for each option in dropdown and selected option in label */
+  /**
+   * extra preview element to show for each option in dropdown and selected
+   * option in label
+   */
   preview: (props: { option?: O }) => unknown;
 };
 

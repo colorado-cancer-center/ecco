@@ -12,7 +12,9 @@
           <font-awesome-icon :icon="modelValue ? faSquareCheck : faSquare" />
         </button>
       </Switch>
-      <SwitchLabel class="label">{{ label }}</SwitchLabel>
+      <SwitchLabel class="label">
+        {{ label }}
+      </SwitchLabel>
     </div>
   </SwitchGroup>
 </template>

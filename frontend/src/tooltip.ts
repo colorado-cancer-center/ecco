@@ -29,5 +29,6 @@ function update({ reference, props: { content }, setProps }: Instance) {
   });
 
   /** set aria label to content */
-  reference.setAttribute("aria-label", makeLabel(String(content)));
+  if (!(reference as HTMLElement).innerText.trim())
+    reference.setAttribute("aria-label", makeLabel(String(content)));
 }
