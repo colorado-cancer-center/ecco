@@ -75,7 +75,7 @@ label {
   position: absolute;
   height: 100%;
   border-radius: 999px;
-  background: var(--theme);
+  background: var(--black);
 }
 
 .thumb {
@@ -84,6 +84,6 @@ label {
   height: 15px;
   transform: translate(-50%, -50%);
   border-radius: 999px;
-  background: var(--theme);
+  background: var(--black);
 }
 </style>

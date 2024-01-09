@@ -70,7 +70,7 @@ button {
   height: 35px;
   border: none;
   background: none;
-  color: var(--theme);
+  color: var(--dark-gray);
   font-size: 1.25em;
 }
 

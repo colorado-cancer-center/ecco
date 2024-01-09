@@ -1,15 +1,19 @@
 <template>
   <section>
-    <h2>Explore cancer data in {{ area }}</h2>
     <p>
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-      tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
-      veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-      commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
-      velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
-      cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
-      est laborum.
+      Welcome to <i>{{ title }}</i> (ECCO), an interactive resource for
+      exploring cancer data in Colorado. You can view per-region data for things
+      like population, demographics, cancer burden, risk factors, cancer
+      disparities, health behaviors, environmental exposures, and much more. You
+      can also see local resources for cancer prevention, screening, treatment,
+      and survivorship.
     </p>
+
+    <div class="center">
+      <AppButton to="/about" :icon="faArrowRight" :flip="true" :accent="true"
+        >Learn More</AppButton
+      >
+    </div>
   </section>
 
   <section class="full">
@@ -286,28 +290,12 @@
 
     <AppStatus v-else :status="defsStatus" />
   </section>
-
-  <section>
-    <p>
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-      tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
-      veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-      commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
-      velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
-      cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
-      est laborum.
-    </p>
-    <div class="actions">
-      <AppButton to="/about"> Learn More </AppButton>
-      <AppButton to="/about" :accent="true"> Help </AppButton>
-    </div>
-  </section>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch, watchEffect } from "vue";
 import { cloneDeep, pick } from "lodash";
-import { faDownload } from "@fortawesome/free-solid-svg-icons";
+import { faArrowRight, faDownload } from "@fortawesome/free-solid-svg-icons";
 import {
   getData,
   getDataDownload,
@@ -340,7 +328,7 @@ import {
 import { formatValue, isPercent } from "@/util/math";
 
 /** project info */
-const { VITE_AREA: area } = import.meta.env;
+const { VITE_TITLE: title } = import.meta.env;
 
 /** element refs */
 const panel = ref<HTMLElement>();
@@ -571,11 +559,5 @@ const _overlays = computed(
   height: 100%;
   /* center map on particular place (continental US) */
   transform: scale(4.9) translate(28%, 15.4%);
-}
-
-.actions {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
 }
 </style>

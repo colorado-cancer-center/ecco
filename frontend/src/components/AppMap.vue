@@ -647,6 +647,7 @@ const { toggle: fullscreen } = useFullscreen(element);
 .scroll {
   flex-grow: 1;
   overflow: auto;
+  box-shadow: var(--shadow);
 }
 
 .legend {
