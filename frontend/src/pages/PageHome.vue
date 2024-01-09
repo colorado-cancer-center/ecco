@@ -1,21 +1,4 @@
 <template>
-  <section>
-    <p>
-      Welcome to <i>{{ title }}</i> (ECCO), an interactive resource for
-      exploring cancer data in Colorado. You can view per-region data for things
-      like population, demographics, cancer burden, risk factors, cancer
-      disparities, health behaviors, environmental exposures, and much more. You
-      can also see local resources for cancer prevention, screening, treatment,
-      and survivorship.
-    </p>
-
-    <div class="center">
-      <AppButton to="/about" :icon="faArrowRight" :flip="true" :accent="true"
-        >Learn More</AppButton
-      >
-    </div>
-  </section>
-
   <section class="full">
     <div v-if="defsStatus === 'success'" class="layout">
       <!-- https://bugs.chromium.org/p/chromium/issues/detail?id=1484663 -->
@@ -152,7 +135,7 @@
             <AppNumber
               v-model="scaleSteps"
               v-tooltip="
-                'Number of bins to divide data into for coloring. Only approximate if &quot;nice steps&quot; on.'
+                'Number of bins to divide data into for coloring. If &quot;nice steps&quot; on, only approximate.'
               "
               :min="2"
               :max="10"
@@ -289,6 +272,23 @@
     </div>
 
     <AppStatus v-else :status="defsStatus" />
+  </section>
+
+  <section>
+    <p>
+      Welcome to <i>{{ title }}</i> (<b>ECCO</b>), an interactive resource for
+      exploring cancer data in Colorado. You can view per-region data for things
+      like population, demographics, cancer burden, risk factors, cancer
+      disparities, health behaviors, environmental exposures, and much more. You
+      can also see local resources for cancer prevention, screening, treatment,
+      and survivorship.
+    </p>
+
+    <div class="center">
+      <AppButton to="/about" :icon="faArrowRight" :flip="true" :accent="true"
+        >Learn More</AppButton
+      >
+    </div>
   </section>
 </template>
 
