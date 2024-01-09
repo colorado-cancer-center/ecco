@@ -1,11 +1,9 @@
 <template>
   <header>
-    <div class="title">
-      <h1>{{ title }}</h1>
-      <a class="logo" :href="presentedByLink" target="_blank">
-        <img src="@/assets/logo.png" :alt="`Presented by ${presentedBy}`" />
-      </a>
-    </div>
+    <h1>
+      <div>{{ pretitle }}</div>
+      <div>{{ title }}</div>
+    </h1>
 
     <nav>
       <router-link
@@ -22,14 +20,10 @@
 </template>
 
 <script setup lang="ts">
-import { routes } from "@/views";
+import { routes } from "@/pages";
 
 /** project info */
-const {
-  VITE_TITLE: title,
-  VITE_PRESENTED_BY: presentedBy,
-  VITE_PRESENTED_BY_LINK: presentedByLink,
-} = import.meta.env;
+const { VITE_PRETITLE: pretitle, VITE_TITLE: title } = import.meta.env;
 </script>
 
 <style scoped>
@@ -45,29 +39,13 @@ header {
 @media (max-width: 800px) {
   header {
     flex-direction: column;
+    text-align: center;
   }
 }
 
-.title {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 10px 20px;
-  text-align: center;
-}
-
-h1 {
-  margin: 0;
-  color: currentColor;
-}
-
-.logo {
-  height: 1.5em;
-}
-
-.logo img {
-  height: 100%;
+h1 > :first-child {
+  font-weight: var(--regular);
+  font-size: 0.9rem;
 }
 
 nav {
@@ -75,6 +53,7 @@ nav {
   flex-wrap: wrap;
   justify-content: center;
   gap: 10px;
+  text-transform: uppercase;
 }
 
 .nav-link {
@@ -90,7 +69,7 @@ nav {
 .nav-link::after {
   position: absolute;
   right: 50%;
-  bottom: -2px;
+  bottom: 2px;
   left: 50%;
   height: 2px;
   background: currentColor;
@@ -99,7 +78,7 @@ nav {
 }
 
 .nav-link:is(:hover, [data-active="true"])::after {
-  right: 5px;
-  left: 5px;
+  right: 8px;
+  left: 8px;
 }
 </style>

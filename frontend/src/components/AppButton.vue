@@ -2,7 +2,8 @@
   <component
     :is="component"
     :class="{ button: true, square: !!icon && !$slots.default, accent }"
-    :to="to"
+    :[toAttr]="to"
+    :target="isExternal ? '_blank' : undefined"
   >
     <font-awesome-icon v-if="icon && !flip" :icon="icon" class="icon" />
     <span v-if="$slots.default">
@@ -34,7 +35,15 @@ type Slots = {
 
 defineSlots<Slots>();
 
-const component = computed(() => (props.to ? AppLink : "button"));
+const isExternal = computed(
+  () => props.to?.startsWith("http") || props.to?.startsWith("mailto"),
+);
+
+const toAttr = computed(() => (isExternal.value ? "href" : "to"));
+
+const component = computed(() =>
+  props.to ? (isExternal.value ? "a" : AppLink) : "button",
+);
 </script>
 
 <style scoped>
@@ -49,8 +58,8 @@ const component = computed(() => (props.to ? AppLink : "button"));
   border: none;
   border-radius: var(--rounded);
   background: var(--off-white);
-  color: var(--off-black);
   font: inherit;
+  line-height: var(--compact);
   text-decoration: none;
   overflow-wrap: anywhere;
   cursor: pointer;
@@ -63,21 +72,13 @@ const component = computed(() => (props.to ? AppLink : "button"));
   background: var(--light-gray);
 }
 
-.icon {
-  color: var(--theme);
-}
-
 .accent {
-  background: var(--theme);
+  background: var(--black);
   color: var(--white);
 }
 
 .accent:hover {
-  background: var(--dark-gray);
-}
-
-.accent .icon {
-  color: var(--white);
+  background: var(--gray);
 }
 
 .square {
