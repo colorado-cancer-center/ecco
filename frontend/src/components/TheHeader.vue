@@ -1,25 +1,28 @@
 <template>
   <header>
-    <h1>
-      <div>{{ pretitle }}</div>
-      <div>{{ title }}</div>
-    </h1>
+    <AppLink to="/">
+      <h1>
+        <div>{{ pretitle }}</div>
+        <div>{{ title }}</div>
+      </h1>
+    </AppLink>
 
     <nav>
-      <router-link
+      <AppLink
         v-for="(route, index) of routes"
         :key="index"
-        class="nav-link"
         :to="route.path"
+        class="nav-link"
         :data-active="route.name === $route.name"
       >
         {{ route.name }}
-      </router-link>
+      </AppLink>
     </nav>
   </header>
 </template>
 
 <script setup lang="ts">
+import AppLink from "@/components/AppLink.vue";
 import { routes } from "@/pages";
 
 /** project info */
@@ -46,6 +49,10 @@ header {
 h1 > :first-child {
   font-weight: var(--regular);
   font-size: 0.9rem;
+}
+
+h1 > :last-child {
+  text-transform: uppercase;
 }
 
 nav {

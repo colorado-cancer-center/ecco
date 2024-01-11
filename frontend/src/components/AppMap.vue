@@ -177,7 +177,7 @@ import {
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import { useElementSize, useFullscreen, useResizeObserver } from "@vueuse/core";
-import type { Data, Overlays, Values } from "@/api";
+import type { Data, Locations, Values } from "@/api";
 import AppButton from "@/components/AppButton.vue";
 import { getGradient } from "@/components/gradient";
 import { markerOptions } from "@/components/markers";
@@ -195,7 +195,7 @@ const element = ref<HTMLDivElement>();
 type Props = {
   /** data */
   data?: Data;
-  overlays?: Overlays;
+  locations?: Locations;
   /** map of feature id to value */
   values?: Values["values"];
   /** value domain */
@@ -210,7 +210,7 @@ type Props = {
   /** layer opacities */
   baseOpacity: number;
   dataOpacity: number;
-  overlayOpacity: number;
+  locationOpacity: number;
   /** tile providers for layers */
   base: string;
   /** color gradient id */
@@ -229,7 +229,7 @@ type Props = {
 
 const props = withDefaults(defineProps<Props>(), {
   data: () => ({ type: "FeatureCollection", features: [] }),
-  overlays: () => ({}),
+  locations: () => ({}),
   values: () => ({}),
   min: 0,
   max: 1,
@@ -418,7 +418,7 @@ const fit = debounce(async () => {
 }, 200);
 
 /** auto-fit when props change */
-watch([() => props.showLegends, () => props.overlays], fit, { deep: true });
+watch([() => props.showLegends, () => props.locations], fit, { deep: true });
 
 /** when map container created */
 onMounted(() => {
@@ -434,7 +434,7 @@ onMounted(() => {
   /** add panes to map */
   map.createPane("base").style.zIndex = "0";
   map.createPane("data").style.zIndex = "1";
-  map.createPane("overlays").style.zIndex = "2";
+  map.createPane("locations").style.zIndex = "2";
 
   /** add legends to map and set elements to teleport slots into */
   topLeftLegend.value = createLegend({ position: "topleft" });
@@ -459,7 +459,7 @@ onMounted(() => {
   /** update stuff once map init'd */
   updateBase();
   updateData();
-  updateOverlays();
+  updateLocations();
 });
 
 /** when map container destroyed */
@@ -495,8 +495,12 @@ function updateData() {
   });
 
   /** if no pan/zoom specified, fit view to content, */
-  if (!props.lat && !props.long && !props.zoom) fit();
-  /** otherwise, set view from props */ else updateView();
+  if (!props.lat && !props.long && !props.zoom) {
+    fit();
+  } else {
+    /** otherwise, set view from props */
+    updateView();
+  }
 
   /** update stuff once layers init'd */
   updateColors();
@@ -506,31 +510,30 @@ function updateData() {
 /** update map data layer when props change */
 watch(() => props.data, updateData, { deep: true });
 
-/** symbols (icon + label) associated with each overlay */
+/** symbols (icon + label) associated with each location */
 const symbols = computed(() => {
   let index = 0;
-  return mapValues(props.overlays, ({ label }) => {
+  return mapValues(props.locations, ({ label }) => {
     const icon = markerOptions[index++ % markerOptions.length];
     const image = icon?.options.iconUrl || "";
     return { label, icon, image };
   });
 });
 
-/** update overlay layers */
-function updateOverlays() {
-  getLayers<L.GeoJSON>("overlays", L.GeoJSON).forEach((layer) =>
+/** update location layers */
+function updateLocations() {
+  getLayers<L.GeoJSON>("locations", L.GeoJSON).forEach((layer) =>
     layer.remove(),
   );
-  for (const [key, { features }] of Object.entries(props.overlays)) {
+  for (const [key, { features }] of Object.entries(props.locations)) {
     const icon = symbols.value[key]?.icon;
     const layer = L.geoJSON(undefined, {
       pointToLayer: (feature, coords) => {
         /** for point, display as marker */
         if (feature.geometry.type === "Point")
-          return L.marker(coords, { icon });
+          return L.marker(coords, { icon, pane: "locations" });
         return L.layerGroup();
       },
-      pane: "overlays",
     });
     bindPopup(layer);
     map?.addLayer(layer);
@@ -538,8 +541,8 @@ function updateOverlays() {
   }
 }
 
-/** update overlay layers when props change */
-watch(() => props.overlays, updateOverlays, { deep: true });
+/** update location layers when props change */
+watch(() => props.locations, updateLocations, { deep: true });
 
 /** auto-fit when map container element changes size */
 let first = true;
@@ -579,12 +582,12 @@ function updateOpacities() {
   /** get layers */
   const base = map.getPane("base");
   const data = map.getPane("data");
-  const overlays = map.getPane("overlays");
+  const locations = map.getPane("locations");
 
   /** set layer opacities */
   if (base) base.style.opacity = String(props.baseOpacity);
   if (data) data.style.opacity = String(props.dataOpacity);
-  if (overlays) overlays.style.opacity = String(props.overlayOpacity);
+  if (locations) locations.style.opacity = String(props.locationOpacity);
 }
 
 /** update opacities when props change */
@@ -592,7 +595,7 @@ watch(
   [
     () => props.baseOpacity,
     () => props.dataOpacity,
-    () => props.overlayOpacity,
+    () => props.locationOpacity,
   ],
   updateOpacities,
   {},
@@ -699,6 +702,11 @@ const { toggle: fullscreen } = useFullscreen(element);
 <style>
 .leaflet-container {
   font: inherit !important;
+}
+
+.leaflet-interactive:hover {
+  filter: brightness(50%) saturate(0%);
+  opacity: 0.5;
 }
 
 .leaflet-control-attribution {

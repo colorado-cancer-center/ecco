@@ -1,8 +1,8 @@
 import * as d3 from "d3";
 import type { FeatureCollection, Geometry } from "geojson";
 import { mapValues } from "lodash";
-import cancerCenterOverlays from "./cancer-center-overlays.json";
-import cancerInFocusOverlays from "./cancer-in-focus-overlays.json";
+import cancerCenterLocations from "./cancer-center-locations.json";
+import cancerInFocusLocations from "./cancer-in-focus-locations.json";
 
 /** api root (no trailing slash) */
 const api = import.meta.env.VITE_API;
@@ -170,8 +170,8 @@ export function getDataDownload(
   return `${api}/stats/${level}/${category}/as-csv?measure=${measure}`;
 }
 
-/** overlay geojson properties fields */
-type OverlayProps = {
+/** location geojson properties fields */
+type LocationProps = {
   name?: string;
   org?: string;
   link?: string;
@@ -181,26 +181,26 @@ type OverlayProps = {
   fips?: string;
 };
 
-/** response from overlays api endpoint */
-type _Overlays = {
+/** response from locations api endpoint */
+type _Locations = {
   [key: string]: {
     label: string;
-    features: FeatureCollection<Geometry, OverlayProps>;
+    features: FeatureCollection<Geometry, LocationProps>;
   };
 };
 
-/** get overlays (location markers, highlighted areas, etc) */
-export async function getOverlays() {
-  // const data = await request<_Overlays>(`${api}/overlays`);
+/** get locations (markers, highlighted areas, etc) */
+export async function getLocations() {
+  // const data = await request<_Locations>(`${api}/locations`);
 
   const data =
     /** merge together, assume no overlap in keys */
     {
-      ...cancerInFocusOverlays,
-      ...cancerCenterOverlays,
-    } as _Overlays;
+      ...cancerInFocusLocations,
+      ...cancerCenterLocations,
+    } as _Locations;
 
   return data;
 }
 
-export type Overlays = Awaited<ReturnType<typeof getOverlays>>;
+export type Locations = Awaited<ReturnType<typeof getLocations>>;

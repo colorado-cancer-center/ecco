@@ -2,8 +2,7 @@
   <component
     :is="component"
     :class="{ button: true, square: !!icon && !$slots.default, accent }"
-    :[toAttr]="to"
-    :target="isExternal ? '_blank' : undefined"
+    :to="to"
   >
     <font-awesome-icon v-if="icon && !flip" :icon="icon" class="icon" />
     <span v-if="$slots.default">
@@ -35,15 +34,7 @@ type Slots = {
 
 defineSlots<Slots>();
 
-const isExternal = computed(
-  () => props.to?.startsWith("http") || props.to?.startsWith("mailto"),
-);
-
-const toAttr = computed(() => (isExternal.value ? "href" : "to"));
-
-const component = computed(() =>
-  props.to ? (isExternal.value ? "a" : AppLink) : "button",
-);
+const component = computed(() => (props.to ? AppLink : "button"));
 </script>
 
 <style scoped>

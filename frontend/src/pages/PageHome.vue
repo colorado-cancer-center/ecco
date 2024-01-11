@@ -35,11 +35,12 @@
         <hr />
 
         <AppSelect
-          v-model="selectedOverlays"
-          label="Markers"
-          :options="overlayOptions"
+          v-model="selectedLocations"
+          label="Locations"
+          :options="locationOptions"
           :multi="true"
-          tooltip="Locations to show on map"
+          tooltip="Locations to show on map, e.g. screening centers, clinics,
+      specialists"
         />
 
         <div class="multi-control">
@@ -168,9 +169,9 @@
             />
 
             <AppSlider
-              v-model="overlayOpacity"
-              v-tooltip="'Transparency of map overlays'"
-              label="Over. trans."
+              v-model="locationOpacity"
+              v-tooltip="'Transparency of map locations'"
+              label="Loc. trans."
             />
           </div>
 
@@ -209,14 +210,14 @@
         class="map"
         :style="{ opacity: dataStatus === 'loading' ? 0.25 : 1 }"
         :data="selectedData"
-        :overlays="_overlays"
+        :locations="_locations"
         :values="values?.values"
         :min="values?.min"
         :max="values?.max"
         :show-legends="showLegends"
         :base-opacity="baseOpacity"
         :data-opacity="dataOpacity"
-        :overlay-opacity="overlayOpacity"
+        :location-opacity="locationOpacity"
         :base="selectedBase"
         :gradient="selectedGradient"
         :flip-gradient="flipGradient"
@@ -276,12 +277,13 @@
 
   <section>
     <p>
-      Welcome to <i>{{ title }}</i> (<b>ECCO</b>), an interactive resource for
-      exploring cancer data in Colorado. You can view per-region data for things
-      like population, demographics, cancer burden, risk factors, cancer
-      disparities, health behaviors, environmental exposures, and much more. You
-      can also see local resources for cancer prevention, screening, treatment,
-      and survivorship.
+      Welcome to
+      <b>E</b>xploring <b>C</b>ancer in <b>Co</b>lorado (<b>ECCO</b>), an
+      interactive resource for exploring cancer data in Colorado. You can view
+      per-region data for things like population, demographics, cancer burden,
+      risk factors, cancer disparities, health behaviors, environmental
+      exposures, and more. You can also see local resources for cancer
+      prevention, screening, treatment, survivorship, and more.
     </p>
 
     <div class="center">
@@ -300,12 +302,12 @@ import {
   getData,
   getDataDownload,
   getFacets,
-  getOverlays,
+  getLocations,
   getValues,
   type Data,
   type Facet,
   type Facets,
-  type Overlays,
+  type Locations,
   type Values,
 } from "@/api";
 import AppAccordion from "@/components/AppAccordion.vue";
@@ -327,9 +329,6 @@ import {
 } from "@/util/composables";
 import { formatValue, isPercent } from "@/util/math";
 
-/** project info */
-const { VITE_TITLE: title } = import.meta.env;
-
 /** element refs */
 const panel = ref<HTMLElement>();
 
@@ -344,7 +343,7 @@ const tracts = ref<Data>();
 const selectedData = ref<Data>();
 const facets = ref<Facets>();
 const values = ref<Values>();
-const overlays = ref<Overlays>();
+const locations = ref<Locations>();
 
 /** select boxes state */
 const selectedLevel = useUrlParam("level", stringParam, "");
@@ -361,10 +360,10 @@ const showLegends = ref(true);
 const showStats = ref(false);
 const selectedBase = ref(baseOptions[0]?.id || "");
 const selectedGradient = ref(gradientOptions[3]?.id || "");
-const selectedOverlays = useUrlParam("markers", arrayParam(stringParam), []);
+const selectedLocations = useUrlParam("locations", arrayParam(stringParam), []);
 const baseOpacity = ref(1);
 const dataOpacity = ref(0.75);
-const overlayOpacity = ref(1);
+const locationOpacity = ref(1);
 const flipGradient = ref(false);
 const scaleSteps = ref(6);
 const niceSteps = ref(true);
@@ -377,7 +376,7 @@ async function loadDefs() {
   try {
     defsStatus.value = "loading";
     facets.value = await getFacets();
-    overlays.value = await getOverlays();
+    locations.value = await getLocations();
     defsStatus.value = "success";
   } catch (error) {
     console.error(error);
@@ -465,17 +464,17 @@ watch([selectedCategory, measures], () => {
       : Object.keys(measures.value)[0] || "";
 });
 
-/** overlay dropdown options */
-const overlayOptions = computed<Option[]>(() =>
-  Object.entries(overlays.value || {}).map(([key, value]) => ({
+/** location dropdown options */
+const locationOptions = computed<Option[]>(() =>
+  Object.entries(locations.value || {}).map(([key, value]) => ({
     id: key,
     label: value.label,
   })),
 );
 
-/** overlay data to pass to map, filtered by selected overlays */
-const _overlays = computed(
-  () => pick(overlays.value, selectedOverlays.value) as Overlays | undefined,
+/** location data to pass to map, filtered by selected locations */
+const _locations = computed(
+  () => pick(locations.value, selectedLocations.value) as Locations | undefined,
 );
 </script>
 

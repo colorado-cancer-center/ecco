@@ -1,8 +1,7 @@
 <template>
   <component
     :is="component"
-    :to="component !== 'a' && to"
-    :href="component === 'a' && to"
+    :[toAttr]="to"
     :target="isExternal ? '_blank' : ''"
   >
     <slot />
@@ -24,9 +23,11 @@ type Slots = {
 
 defineSlots<Slots>();
 
-const component = computed(() => (isExternal.value ? "a" : "router-link"));
-
 const isExternal = computed(() =>
-  ["http:", "https:"].some((prefix) => props.to?.startsWith(prefix)),
+  ["http:", "https:", "mailto:"].some((prefix) => props.to.startsWith(prefix)),
 );
+
+const toAttr = computed(() => (isExternal.value ? "href" : "to"));
+
+const component = computed(() => (isExternal.value ? "a" : "router-link"));
 </script>
