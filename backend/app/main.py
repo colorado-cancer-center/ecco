@@ -6,6 +6,9 @@ from routers import geometry, statistics
 
 from settings import IS_DEV
 
+# we'll just allow all origins for the time being
+ALLOW_ALL_ORIGINS = True
+
 # ============================================================================
 # === configuration
 # ============================================================================
@@ -19,7 +22,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins if not IS_DEV else ["*"],
+    allow_origins=origins if (not IS_DEV and not ALLOW_ALL_ORIGINS) else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
