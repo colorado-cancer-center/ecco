@@ -225,12 +225,6 @@ for type, family in STATS_MODELS.items():
                 def label_for_measure(measure):
                     return model_measure_labels.get(measure, measure) or measure
 
-                if measure is not None:
-                    measure_label = label_for_measure(measure)
-                    print(f"Downloading {model.__name__} ({simple_model_name}) for measure {measure} ({measure_label})")
-                else:
-                    print(f"Downloading {model.__name__} ({simple_model_name}) for all measure")
-
                 if model not in CANCER_MODELS:
                     query = select(
                         (model.FIPS.label("GEOID"), model.County, model.State, model.measure, model.value)
