@@ -62,6 +62,12 @@
             <span>&ndash;</span>
             <span>{{ formatValue(step.upper, percent) }}</span>
           </template>
+          <template v-if="noData">
+            <svg viewBox="0 0 1 1">
+              <rect x="0" y="0" width="1" height="1" :fill="noDataColor" />
+            </svg>
+            <span style="grid-column: 2 / -1">No data</span>
+          </template>
         </div>
       </div>
     </Teleport>
@@ -183,6 +189,9 @@ import { getBbox, sleep } from "@/util/misc";
 import "leaflet/dist/leaflet.css";
 import AppLink from "@/components/AppLink.vue";
 
+/** "no data" color */
+let noDataColor = "#a0a0a0";
+
 /** element refs */
 const scroll = ref<HTMLDivElement>();
 const element = ref<HTMLDivElement>();
@@ -215,6 +224,8 @@ type Props = {
   scaleSteps: number;
   niceSteps: boolean;
   scalePower: number;
+  /** number below which is treated as special "no-data" band */
+  noData?: number;
   /** forced dimensions */
   width: number;
   height: number;
@@ -228,6 +239,7 @@ const props = withDefaults(defineProps<Props>(), {
   values: () => ({}),
   min: 0,
   max: 1,
+  noData: 0,
 });
 
 type Emits = {
@@ -326,30 +338,35 @@ function bindPopup(layer: L.Layer) {
 }
 
 const scale = computed(() => {
+  /** get range of data (accounting for "no data" values) */
+  const min = props.noData ? Math.max(props.min, props.noData) : props.min;
+  const max = props.max;
+
   /** "nice", approximate number of steps */
-  const nice = d3.ticks(props.min, props.max, props.scaleSteps);
-  const step = d3.tickStep(props.min, props.max, props.scaleSteps);
-  if (nice.at(0)! > props.min) nice.unshift(nice.at(0)! - step);
-  if (nice.at(-1)! < props.max) nice.push(nice.at(-1)! + step);
+  const nice = d3.ticks(min, max, props.scaleSteps);
+
+  /** make sure steps always covers/contains range of values (min/max) */
+  const step = d3.tickStep(min, max, props.scaleSteps);
+  if (nice.at(0)! > min) nice.unshift(nice.at(0)! - step);
+  if (nice.at(-1)! < max) nice.push(nice.at(-1)! + step);
 
   /** exact number of steps */
   const exact = d3
-    .range(props.min, props.max, (props.max - props.min) / props.scaleSteps)
-    .concat([props.max]);
+    .range(min, max, (max - min) / props.scaleSteps)
+    .concat([max]);
 
   /** spaced list of points between min and max */
   let intervals = props.niceSteps ? nice : exact;
 
   /** make sure enough intervals */
-  if (intervals.length < 3)
-    intervals = [props.min, (props.min + props.max) / 2, props.max];
+  if (intervals.length < 3) intervals = [min, (min + max) / 2, max];
 
   /** range of intervals */
-  const [min = 0, max = 1] = d3.extent(intervals);
+  const [lower = 0, upper = 1] = d3.extent(intervals);
 
   /** apply power */
   intervals = intervals.map((value) =>
-    normalizedApply(value, min, max, (value) =>
+    normalizedApply(value, lower, upper, (value) =>
       Math.pow(value, props.scalePower),
     ),
   );
@@ -373,7 +390,9 @@ const scale = computed(() => {
 
   /** scale interpolator */
   const getColor = (value: number) =>
-    d3.scaleQuantile<string>().domain(intervals).range(colors)(value);
+    props.noData && value <= props.noData
+      ? noDataColor
+      : d3.scaleQuantile<string>().domain(intervals).range(colors)(value);
 
   return { steps, getColor };
 });

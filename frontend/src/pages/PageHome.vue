@@ -18,7 +18,7 @@
         <AppButton
           v-tooltip="'Download selected category data in CSV format'"
           :icon="faDownload"
-          :to="getDataDownload(selectedLevel, selectedCategory)"
+          :to="getDownload(selectedLevel, selectedCategory)"
           :accent="true"
         >
           Download Category
@@ -33,9 +33,7 @@
         <AppButton
           v-tooltip="'Download selected measure data in CSV format'"
           :icon="faDownload"
-          :to="
-            getDataDownload(selectedLevel, selectedCategory, selectedMeasure)
-          "
+          :to="getDownload(selectedLevel, selectedCategory, selectedMeasure)"
           :accent="true"
         >
           Download Measure
@@ -233,6 +231,11 @@
         :scale-steps="scaleSteps"
         :nice-steps="niceSteps"
         :scale-power="scalePower"
+        :no-data="
+          !categories[selectedCategory]?.label.includes('age-adj')
+            ? undefined
+            : 3
+        "
         :width="mapWidth"
         :height="mapHeight"
         :filename="[selectedMeasure, selectedLevel]"
@@ -278,6 +281,17 @@
             </div>
           </template>
         </template>
+
+        <template
+          v-if="categories[selectedCategory]?.label.includes('age-adj')"
+          #top-right
+        >
+          <small>
+            "No data" may indicate unavailable data, zero, or a low value
+            suppressed for privacy reasons.
+            <AppLink to="sources">Learn more</AppLink>.
+          </small>
+        </template>
       </AppMap>
     </div>
 
@@ -308,9 +322,9 @@ import { computed, ref, watch, watchEffect } from "vue";
 import { cloneDeep, pick } from "lodash";
 import { faArrowRight, faDownload } from "@fortawesome/free-solid-svg-icons";
 import {
-  getData,
-  getDataDownload,
+  getDownload,
   getFacets,
+  getGeo,
   getLocations,
   getValues,
   type Data,
@@ -322,6 +336,7 @@ import {
 import AppAccordion from "@/components/AppAccordion.vue";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
+import AppLink from "@/components/AppLink.vue";
 import AppMap from "@/components/AppMap.vue";
 import AppNumber from "@/components/AppNumber.vue";
 import AppSelect, { type Option } from "@/components/AppSelect.vue";
@@ -375,7 +390,7 @@ const dataOpacity = ref(0.75);
 const locationOpacity = ref(1);
 const flipGradient = ref(false);
 const scaleSteps = ref(6);
-const niceSteps = ref(true);
+const niceSteps = ref(false);
 const scalePower = ref(1);
 const mapWidth = ref(0);
 const mapHeight = ref(0);
@@ -403,10 +418,10 @@ watchEffect(async () => {
 
     /** choose and fetch data */
     if (selectedLevel.value === "county") {
-      counties.value ??= await getData("counties", "us_fips");
+      counties.value ??= await getGeo("counties", "us_fips");
       selectedData.value = counties.value;
     } else if (selectedLevel.value === "tract") {
-      tracts.value ??= await getData("tracts", "fips");
+      tracts.value ??= await getGeo("tracts", "fips");
       selectedData.value = tracts.value;
     }
 

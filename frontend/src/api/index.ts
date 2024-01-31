@@ -54,7 +54,7 @@ type DataProps = {
 };
 
 /** get geojson from geography data */
-export async function getData(
+export async function getGeo(
   type: string,
   idField: string,
 ): Promise<FeatureCollection<Geometry, DataProps>> {
@@ -75,7 +75,7 @@ export async function getData(
   };
 }
 
-export type Data = Awaited<ReturnType<typeof getData>>;
+export type Data = Awaited<ReturnType<typeof getGeo>>;
 
 /** response from facets api endpoint */
 type _Facets = {
@@ -162,11 +162,7 @@ export async function getValues(
 export type Values = Awaited<ReturnType<typeof getValues>>;
 
 /** get data download link */
-export function getDataDownload(
-  level: string,
-  category: string,
-  measure?: string,
-) {
+export function getDownload(level: string, category: string, measure?: string) {
   return `${api}/stats/${level}/${category}/as-csv${
     measure ? `?measure=${measure}` : ""
   }`;
