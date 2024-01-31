@@ -165,9 +165,11 @@ export type Values = Awaited<ReturnType<typeof getValues>>;
 export function getDataDownload(
   level: string,
   category: string,
-  measure: string,
+  measure?: string,
 ) {
-  return `${api}/stats/${level}/${category}/as-csv?measure=${measure}`;
+  return `${api}/stats/${level}/${category}/as-csv${
+    measure ? `?measure=${measure}` : ""
+  }`;
 }
 
 /** location geojson properties fields */

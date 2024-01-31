@@ -88,24 +88,19 @@
       </div>
     </Teleport>
 
+    <!-- county/tract popup -->
     <Teleport v-if="popup && popupFeature" :to="popup">
-      <!-- county/tract popup -->
+      <!-- name -->
+      <template v-if="popupFeature.name">
+        <strong>{{ popupFeature.name }}</strong>
+      </template>
+
       <div class="mini-table">
-        <!-- name -->
-        <template v-if="popupFeature.name">
-          <span>Name</span>
-          <span>{{ popupFeature.name }}</span>
-        </template>
-
-        <!-- fips/id -->
-        <template v-if="popupFeature.id || popupFeature.fips">
-          <span>FIPS</span>
-          <span>{{ popupFeature.id || popupFeature.fips }}</span>
-        </template>
-
         <!-- primary "value" for feature -->
         <template v-if="values[popupFeature.id]">
-          <span>Value</span>
+          <span>{{
+            typeof values[popupFeature.id]?.aac === "number" ? "Rate" : "Value"
+          }}</span>
           <span>{{
             formatValue(values[popupFeature.id]?.value || 0, percent, false)
           }}</span>
@@ -113,7 +108,7 @@
 
         <!-- age adjusted count -->
         <template v-if="typeof values[popupFeature.id]?.aac === 'number'">
-          <span>Age-adj. Count</span>
+          <span>Avg. Annual Count</span>
           <span>{{
             formatValue(values[popupFeature.id]?.aac || 0, false, false)
           }}</span>
@@ -313,7 +308,8 @@ function bindPopup(layer: L.Layer) {
     const wrapper = event.popup
       .getElement()
       ?.querySelector<HTMLElement>(".leaflet-popup-content-wrapper");
-    if (wrapper) wrapper.innerHTML = "";
+    if (!wrapper) return;
+    wrapper.innerHTML = "";
     popup.value = wrapper || undefined;
     /** wait for popup to teleport */
     await nextTick();
@@ -331,11 +327,10 @@ function bindPopup(layer: L.Layer) {
 
 const scale = computed(() => {
   /** "nice", approximate number of steps */
-  const nice = d3
-    .scalePow()
-    .exponent(props.scalePower)
-    .domain([props.min, props.max])
-    .ticks(props.scaleSteps);
+  const nice = d3.ticks(props.min, props.max, props.scaleSteps);
+  const step = d3.tickStep(props.min, props.max, props.scaleSteps);
+  if (nice.at(0)! > props.min) nice.unshift(nice.at(0)! - step);
+  if (nice.at(-1)! < props.max) nice.push(nice.at(-1)! + step);
 
   /** exact number of steps */
   const exact = d3
@@ -720,9 +715,12 @@ const { toggle: fullscreen } = useFullscreen(element);
 }
 
 .leaflet-popup-content-wrapper {
+  display: flex;
+  flex-direction: column;
   width: max-content;
   max-width: 400px;
   padding: 20px 25px;
+  gap: 10px;
   border-radius: var(--rounded);
   box-shadow: var(--shadow);
   font: inherit;

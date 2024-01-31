@@ -15,6 +15,15 @@
           :options="facetToOptions(categories)"
         />
 
+        <AppButton
+          v-tooltip="'Download selected category data in CSV format'"
+          :icon="faDownload"
+          :to="getDataDownload(selectedLevel, selectedCategory)"
+          :accent="true"
+        >
+          Download Category
+        </AppButton>
+
         <AppSelect
           v-model="selectedMeasure"
           label="Measure"
@@ -22,14 +31,14 @@
         />
 
         <AppButton
-          v-tooltip="'Download selected data in CSV format'"
+          v-tooltip="'Download selected measure data in CSV format'"
           :icon="faDownload"
           :to="
             getDataDownload(selectedLevel, selectedCategory, selectedMeasure)
           "
           :accent="true"
         >
-          Download Data
+          Download Measure
         </AppButton>
 
         <hr />

@@ -1,6 +1,6 @@
 {
   "wwc-15-jun-2021": {
-    "label": "WWC_15Jun2021",
+    "label": "Women’s Wellness Connection Site",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -1045,7 +1045,7 @@
     }
   },
   "ccsp-15-jun-2021": {
-    "label": "CCSP_15Jun2021",
+    "label": "Colorado Cancer Screening Program Site",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -2173,7 +2173,7 @@
     }
   },
   "title-x-15-jun-2021": {
-    "label": "TitleX_15Jun2021",
+    "label": "Family Planning Clinics",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -3147,7 +3147,7 @@
     }
   },
   "chc-15-jun-2021": {
-    "label": "CHC_15Jun2021",
+    "label": "Community Health Centers",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -6020,7 +6020,7 @@
     }
   },
   "rhc-15-jun-2021": {
-    "label": "RHC_15Jun2021",
+    "label": "Rural Health Centers",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -6714,7 +6714,7 @@
     }
   },
   "ihs-15-jun-2021": {
-    "label": "IHS_15Jun2021",
+    "label": "Indian Health Services",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -6764,7 +6764,7 @@
     }
   },
   "genetic-coun-15-jun-2021": {
-    "label": "GeneticCoun_15Jun2021",
+    "label": "Genetic Counseling Services",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -7595,7 +7595,7 @@
     }
   },
   "all-treatment-15-jun-2021": {
-    "label": "AllTreatment_15Jun2021",
+    "label": "All Treatment Sites",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -10036,7 +10036,7 @@
     }
   },
   "med-onc-15-jun-2021": {
-    "label": "MedOnc_15Jun2021",
+    "label": "Medical Oncology Sites",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -11812,7 +11812,7 @@
     }
   },
   "surg-onc-15-jun-2021": {
-    "label": "SurgOnc_15Jun2021",
+    "label": "Surgical Oncology Sites",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -13457,7 +13457,7 @@
     }
   },
   "rad-onc-15-jun-2021": {
-    "label": "RadOnc_15Jun2021",
+    "label": "Radiation Oncology Sites",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -14290,7 +14290,7 @@
     }
   },
   "ped-onc-15-jun-2021": {
-    "label": "PedOnc_15Jun2021",
+    "label": "Pediatric Oncology Sites",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -14438,7 +14438,7 @@
     }
   },
   "trials-15-jun-2021": {
-    "label": "Trials_15Jun2021",
+    "label": "Clinical Trials",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -15157,7 +15157,7 @@
     }
   },
   "all-support-services-15-jun-2021": {
-    "label": "AllSupportServices_15Jun2021",
+    "label": "All Support Services",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -16333,7 +16333,7 @@
     }
   },
   "pt-rehab-15-jun-2021": {
-    "label": "PTRehab_15Jun2021",
+    "label": "Patient Rehabilitation Sites",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -17011,7 +17011,7 @@
     }
   },
   "nutrition-15-jun-2021": {
-    "label": "Nutrition_15Jun2021",
+    "label": "Nutrition Services",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -17885,7 +17885,7 @@
     }
   },
   "support-grp-15-jun-2021": {
-    "label": "SupportGrp_15Jun2021",
+    "label": "Cancer Support Groups",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -18663,7 +18663,7 @@
     }
   },
   "support-coun-15-jun-2021": {
-    "label": "SupportCoun_15Jun2021",
+    "label": "Counseling Services",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -19427,7 +19427,7 @@
     }
   },
   "survivorship-15-jun-2021": {
-    "label": "Survivorship_15Jun2021",
+    "label": "Survivorship Program Sites",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -20187,7 +20187,7 @@
     }
   },
   "lodging-15-jun-2021": {
-    "label": "Lodging_15Jun2021",
+    "label": "Lodging",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -20778,7 +20778,7 @@
     }
   },
   "financial-coun-15-jun-2021": {
-    "label": "FinancialCoun_15Jun2021",
+    "label": "Financial Assistance",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -21706,7 +21706,7 @@
     }
   },
   "palliative-15-jun-2021": {
-    "label": "Palliative_15Jun2021",
+    "label": "Palliative Care",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -23608,7 +23608,7 @@
     }
   },
   "hospice-15-jun-2021": {
-    "label": "Hospice_15Jun2021",
+    "label": "Hospice Care",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -24855,7 +24855,7 @@
     }
   },
   "cancer-ed-29-jul-221": {
-    "label": "CancerEd_29Jul221",
+    "label": "Cancer Education",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -25026,7 +25026,7 @@
     }
   },
   "accessories-aids-29-jul-21": {
-    "label": "AccessoriesAids_29Jul21",
+    "label": "Accessories & Aids",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -25385,7 +25385,7 @@
     }
   },
   "programs-events-29-jul-21": {
-    "label": "ProgramsEvents_29Jul21",
+    "label": "Program and Events",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -25523,7 +25523,7 @@
     }
   },
   "fitness-29-jul-21": {
-    "label": "Fitness_29Jul21",
+    "label": "Fitness and Wellness",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -25648,7 +25648,7 @@
     }
   },
   "home-family-care-29-jul-21": {
-    "label": "HomeFamilyCare_29Jul21",
+    "label": "Home Healthcare",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -25682,7 +25682,7 @@
     }
   },
   "transportation-29-jul-21": {
-    "label": "Transportation_29Jul21",
+    "label": "Transportation Services",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -25768,7 +25768,7 @@
     }
   },
   "pediatric-29-jul-21": {
-    "label": "Pediatric_29Jul21",
+    "label": "Pediatric Oncology Sites",
     "features": {
       "type": "FeatureCollection",
       "features": [
@@ -25958,7 +25958,7 @@
     }
   },
   "radiology": {
-    "label": "Radiology",
+    "label": "Radiology Centers",
     "features": {
       "type": "FeatureCollection",
       "features": [
