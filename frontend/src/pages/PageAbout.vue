@@ -10,9 +10,8 @@
       tract (census). Then select what type of data measure you want to see,
       e.g. % college graduates, household income, high rent burden. Note that
       some measures are only available for certain geographic levels. You can
-      select markers to overlay local resources on the map, e.g. screening
-      centers, clinics, specialists. Click on a region or point on the map to
-      see more details about it.
+      select locations to overlay on the map, e.g. screening centers, clinics,
+      specialists. Click on a region or point on the map to see more details.
     </p>
 
     <p>
@@ -37,18 +36,6 @@
       <AppButton :icon="faEnvelope" to="mailto:jan.lowery@cuanschutz.edu"
         >Email</AppButton
       >
-    </p>
-
-    <h3>The data</h3>
-
-    <p>
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-      tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
-      veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-      commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
-      velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
-      cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
-      est laborum.
     </p>
   </section>
 </template>

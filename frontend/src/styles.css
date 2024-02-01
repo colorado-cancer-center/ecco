@@ -14,8 +14,8 @@
   --black: #000000;
 
   /* font weights */
+  --regular: 300;
   --bold: 600;
-  --regular: 400;
 
   /* effects */
   --rounded: 3px;
@@ -35,7 +35,7 @@ html {
   font-weight: var(--regular);
   font-size: 13pt;
   line-height: var(--compact);
-  font-family: "Roboto", sans-serif;
+  font-family: "Roboto Flex", sans-serif;
   text-underline-offset: 2px;
 }
 
@@ -50,7 +50,9 @@ body {
 }
 
 main {
+  display: flex;
   flex-grow: 1;
+  flex-direction: column;
 }
 
 header,
@@ -72,6 +74,10 @@ section {
   padding: 60px max(calc((100% - var(--col)) / 2), 40px);
 }
 
+section:last-child {
+  flex-grow: 1;
+}
+
 section:nth-child(even) {
   background: color-mix(in hsl, var(--white), var(--off-white) 25%);
 }
@@ -91,7 +97,6 @@ h4 {
   margin: 40px 0 20px 0;
   color: var(--dark-gray);
   font-weight: var(--bold);
-  text-transform: uppercase;
 }
 
 h1 {
@@ -104,10 +109,12 @@ h2 {
   font-size: 1.3rem;
   letter-spacing: 0.5px;
   text-align: center;
+  text-transform: uppercase;
 }
 
 h3 {
   font-size: 1.2rem;
+  text-transform: uppercase;
 }
 
 h4 {
@@ -123,6 +130,11 @@ a {
 
 a:hover {
   color: var(--dark-gray);
+}
+
+b,
+strong {
+  font-weight: var(--bold);
 }
 
 hr {

@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
+import PageSources from "@/pages/PageSources.vue";
 import PageAbout from "./PageAbout.vue";
 import PageHome from "./PageHome.vue";
 
@@ -12,6 +13,11 @@ export const routes = [
     name: "About",
     path: "/about",
     component: PageAbout,
+  },
+  {
+    name: "Sources",
+    path: "/sources",
+    component: PageSources,
   },
 ];
 

@@ -15,6 +15,15 @@
           :options="facetToOptions(categories)"
         />
 
+        <AppButton
+          v-tooltip="'Download selected category data in CSV format'"
+          :icon="faDownload"
+          :to="getDownload(selectedLevel, selectedCategory)"
+          :accent="true"
+        >
+          Download Category
+        </AppButton>
+
         <AppSelect
           v-model="selectedMeasure"
           label="Measure"
@@ -22,24 +31,23 @@
         />
 
         <AppButton
-          v-tooltip="'Download selected data in CSV format'"
+          v-tooltip="'Download selected measure data in CSV format'"
           :icon="faDownload"
-          :to="
-            getDataDownload(selectedLevel, selectedCategory, selectedMeasure)
-          "
+          :to="getDownload(selectedLevel, selectedCategory, selectedMeasure)"
           :accent="true"
         >
-          Download Data
+          Download Measure
         </AppButton>
 
         <hr />
 
         <AppSelect
-          v-model="selectedOverlays"
-          label="Markers"
-          :options="overlayOptions"
+          v-model="selectedLocations"
+          label="Locations"
+          :options="locationOptions"
           :multi="true"
-          tooltip="Locations to show on map"
+          tooltip="Locations to show on map, e.g. screening centers, clinics,
+      specialists"
         />
 
         <div class="multi-control">
@@ -168,9 +176,9 @@
             />
 
             <AppSlider
-              v-model="overlayOpacity"
-              v-tooltip="'Transparency of map overlays'"
-              label="Over. trans."
+              v-model="locationOpacity"
+              v-tooltip="'Transparency of map locations'"
+              label="Loc. trans."
             />
           </div>
 
@@ -209,20 +217,25 @@
         class="map"
         :style="{ opacity: dataStatus === 'loading' ? 0.25 : 1 }"
         :data="selectedData"
-        :overlays="_overlays"
+        :locations="_locations"
         :values="values?.values"
         :min="values?.min"
         :max="values?.max"
         :show-legends="showLegends"
         :base-opacity="baseOpacity"
         :data-opacity="dataOpacity"
-        :overlay-opacity="overlayOpacity"
+        :location-opacity="locationOpacity"
         :base="selectedBase"
         :gradient="selectedGradient"
         :flip-gradient="flipGradient"
         :scale-steps="scaleSteps"
         :nice-steps="niceSteps"
         :scale-power="scalePower"
+        :no-data="
+          !categories[selectedCategory]?.label.includes('age-adj')
+            ? undefined
+            : 3
+        "
         :width="mapWidth"
         :height="mapHeight"
         :filename="[selectedMeasure, selectedLevel]"
@@ -268,6 +281,17 @@
             </div>
           </template>
         </template>
+
+        <template
+          v-if="categories[selectedCategory]?.label.includes('age-adj')"
+          #top-right
+        >
+          <small>
+            "No data" may indicate unavailable data, zero, or a low value
+            suppressed for privacy reasons.
+            <AppLink to="sources">Learn more</AppLink>.
+          </small>
+        </template>
       </AppMap>
     </div>
 
@@ -276,12 +300,13 @@
 
   <section>
     <p>
-      Welcome to <i>{{ title }}</i> (<b>ECCO</b>), an interactive resource for
-      exploring cancer data in Colorado. You can view per-region data for things
-      like population, demographics, cancer burden, risk factors, cancer
-      disparities, health behaviors, environmental exposures, and much more. You
-      can also see local resources for cancer prevention, screening, treatment,
-      and survivorship.
+      Welcome to
+      <b>E</b>xploring <b>C</b>ancer in <b>Co</b>lorado (<b>ECCO</b>), an
+      interactive resource for exploring cancer data in Colorado. You can view
+      per-region data for things like population, demographics, cancer burden,
+      risk factors, cancer disparities, health behaviors, environmental
+      exposures, and more. You can also see local resources for cancer
+      prevention, screening, treatment, survivorship, and more.
     </p>
 
     <div class="center">
@@ -297,20 +322,21 @@ import { computed, ref, watch, watchEffect } from "vue";
 import { cloneDeep, pick } from "lodash";
 import { faArrowRight, faDownload } from "@fortawesome/free-solid-svg-icons";
 import {
-  getData,
-  getDataDownload,
+  getDownload,
   getFacets,
-  getOverlays,
+  getGeo,
+  getLocations,
   getValues,
   type Data,
   type Facet,
   type Facets,
-  type Overlays,
+  type Locations,
   type Values,
 } from "@/api";
 import AppAccordion from "@/components/AppAccordion.vue";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
+import AppLink from "@/components/AppLink.vue";
 import AppMap from "@/components/AppMap.vue";
 import AppNumber from "@/components/AppNumber.vue";
 import AppSelect, { type Option } from "@/components/AppSelect.vue";
@@ -327,9 +353,6 @@ import {
 } from "@/util/composables";
 import { formatValue, isPercent } from "@/util/math";
 
-/** project info */
-const { VITE_TITLE: title } = import.meta.env;
-
 /** element refs */
 const panel = ref<HTMLElement>();
 
@@ -344,7 +367,7 @@ const tracts = ref<Data>();
 const selectedData = ref<Data>();
 const facets = ref<Facets>();
 const values = ref<Values>();
-const overlays = ref<Overlays>();
+const locations = ref<Locations>();
 
 /** select boxes state */
 const selectedLevel = useUrlParam("level", stringParam, "");
@@ -361,13 +384,13 @@ const showLegends = ref(true);
 const showStats = ref(false);
 const selectedBase = ref(baseOptions[0]?.id || "");
 const selectedGradient = ref(gradientOptions[3]?.id || "");
-const selectedOverlays = useUrlParam("markers", arrayParam(stringParam), []);
+const selectedLocations = useUrlParam("locations", arrayParam(stringParam), []);
 const baseOpacity = ref(1);
 const dataOpacity = ref(0.75);
-const overlayOpacity = ref(1);
+const locationOpacity = ref(1);
 const flipGradient = ref(false);
 const scaleSteps = ref(6);
-const niceSteps = ref(true);
+const niceSteps = ref(false);
 const scalePower = ref(1);
 const mapWidth = ref(0);
 const mapHeight = ref(0);
@@ -377,7 +400,7 @@ async function loadDefs() {
   try {
     defsStatus.value = "loading";
     facets.value = await getFacets();
-    overlays.value = await getOverlays();
+    locations.value = await getLocations();
     defsStatus.value = "success";
   } catch (error) {
     console.error(error);
@@ -395,10 +418,10 @@ watchEffect(async () => {
 
     /** choose and fetch data */
     if (selectedLevel.value === "county") {
-      counties.value ??= await getData("counties", "us_fips");
+      counties.value ??= await getGeo("counties", "us_fips");
       selectedData.value = counties.value;
     } else if (selectedLevel.value === "tract") {
-      tracts.value ??= await getData("tracts", "fips");
+      tracts.value ??= await getGeo("tracts", "fips");
       selectedData.value = tracts.value;
     }
 
@@ -465,17 +488,17 @@ watch([selectedCategory, measures], () => {
       : Object.keys(measures.value)[0] || "";
 });
 
-/** overlay dropdown options */
-const overlayOptions = computed<Option[]>(() =>
-  Object.entries(overlays.value || {}).map(([key, value]) => ({
+/** location dropdown options */
+const locationOptions = computed<Option[]>(() =>
+  Object.entries(locations.value || {}).map(([key, value]) => ({
     id: key,
     label: value.label,
   })),
 );
 
-/** overlay data to pass to map, filtered by selected overlays */
-const _overlays = computed(
-  () => pick(overlays.value, selectedOverlays.value) as Overlays | undefined,
+/** location data to pass to map, filtered by selected locations */
+const _locations = computed(
+  () => pick(locations.value, selectedLocations.value) as Locations | undefined,
 );
 </script>
 

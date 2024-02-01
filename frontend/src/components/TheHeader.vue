@@ -1,29 +1,34 @@
 <template>
   <header>
-    <h1>
-      <div>{{ pretitle }}</div>
-      <div>{{ title }}</div>
-    </h1>
+    <AppLink to="/">
+      <h1>
+        <div>{{ pretitle }}</div>
+        <div>
+          <b>E</b>xploring <b>C</b>ancer in <b>Co</b>lorado (<b>ECCO</b>)
+        </div>
+      </h1>
+    </AppLink>
 
     <nav>
-      <router-link
+      <AppLink
         v-for="(route, index) of routes"
         :key="index"
-        class="nav-link"
         :to="route.path"
+        class="nav-link"
         :data-active="route.name === $route.name"
       >
         {{ route.name }}
-      </router-link>
+      </AppLink>
     </nav>
   </header>
 </template>
 
 <script setup lang="ts">
+import AppLink from "@/components/AppLink.vue";
 import { routes } from "@/pages";
 
 /** project info */
-const { VITE_PRETITLE: pretitle, VITE_TITLE: title } = import.meta.env;
+const { VITE_PRETITLE: pretitle } = import.meta.env;
 </script>
 
 <style scoped>
@@ -46,6 +51,11 @@ header {
 h1 > :first-child {
   font-weight: var(--regular);
   font-size: 0.9rem;
+}
+
+h1 > :last-child {
+  font-weight: var(--regular);
+  text-transform: uppercase;
 }
 
 nav {

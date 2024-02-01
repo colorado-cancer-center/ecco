@@ -62,6 +62,12 @@
             <span>&ndash;</span>
             <span>{{ formatValue(step.upper, percent) }}</span>
           </template>
+          <template v-if="noData">
+            <svg viewBox="0 0 1 1">
+              <rect x="0" y="0" width="1" height="1" :fill="noDataColor" />
+            </svg>
+            <span style="grid-column: 2 / -1">No data</span>
+          </template>
         </div>
       </div>
     </Teleport>
@@ -88,24 +94,19 @@
       </div>
     </Teleport>
 
+    <!-- county/tract popup -->
     <Teleport v-if="popup && popupFeature" :to="popup">
-      <!-- county/tract popup -->
+      <!-- name -->
+      <template v-if="popupFeature.name">
+        <strong>{{ popupFeature.name }}</strong>
+      </template>
+
       <div class="mini-table">
-        <!-- name -->
-        <template v-if="popupFeature.name">
-          <span>Name</span>
-          <span>{{ popupFeature.name }}</span>
-        </template>
-
-        <!-- fips/id -->
-        <template v-if="popupFeature.id || popupFeature.fips">
-          <span>FIPS</span>
-          <span>{{ popupFeature.id || popupFeature.fips }}</span>
-        </template>
-
         <!-- primary "value" for feature -->
         <template v-if="values[popupFeature.id]">
-          <span>Value</span>
+          <span>{{
+            typeof values[popupFeature.id]?.aac === "number" ? "Rate" : "Value"
+          }}</span>
           <span>{{
             formatValue(values[popupFeature.id]?.value || 0, percent, false)
           }}</span>
@@ -113,7 +114,7 @@
 
         <!-- age adjusted count -->
         <template v-if="typeof values[popupFeature.id]?.aac === 'number'">
-          <span>Age-adj. Count</span>
+          <span>Avg. Annual Count</span>
           <span>{{
             formatValue(values[popupFeature.id]?.aac || 0, false, false)
           }}</span>
@@ -177,7 +178,7 @@ import {
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import { useElementSize, useFullscreen, useResizeObserver } from "@vueuse/core";
-import type { Data, Overlays, Values } from "@/api";
+import type { Data, Locations, Values } from "@/api";
 import AppButton from "@/components/AppButton.vue";
 import { getGradient } from "@/components/gradient";
 import { markerOptions } from "@/components/markers";
@@ -188,6 +189,9 @@ import { getBbox, sleep } from "@/util/misc";
 import "leaflet/dist/leaflet.css";
 import AppLink from "@/components/AppLink.vue";
 
+/** "no data" color */
+let noDataColor = "#a0a0a0";
+
 /** element refs */
 const scroll = ref<HTMLDivElement>();
 const element = ref<HTMLDivElement>();
@@ -195,7 +199,7 @@ const element = ref<HTMLDivElement>();
 type Props = {
   /** data */
   data?: Data;
-  overlays?: Overlays;
+  locations?: Locations;
   /** map of feature id to value */
   values?: Values["values"];
   /** value domain */
@@ -210,7 +214,7 @@ type Props = {
   /** layer opacities */
   baseOpacity: number;
   dataOpacity: number;
-  overlayOpacity: number;
+  locationOpacity: number;
   /** tile providers for layers */
   base: string;
   /** color gradient id */
@@ -220,6 +224,8 @@ type Props = {
   scaleSteps: number;
   niceSteps: boolean;
   scalePower: number;
+  /** number below which is treated as special "no-data" band */
+  noData?: number;
   /** forced dimensions */
   width: number;
   height: number;
@@ -229,10 +235,11 @@ type Props = {
 
 const props = withDefaults(defineProps<Props>(), {
   data: () => ({ type: "FeatureCollection", features: [] }),
-  overlays: () => ({}),
+  locations: () => ({}),
   values: () => ({}),
   min: 0,
   max: 1,
+  noData: 0,
 });
 
 type Emits = {
@@ -313,7 +320,8 @@ function bindPopup(layer: L.Layer) {
     const wrapper = event.popup
       .getElement()
       ?.querySelector<HTMLElement>(".leaflet-popup-content-wrapper");
-    if (wrapper) wrapper.innerHTML = "";
+    if (!wrapper) return;
+    wrapper.innerHTML = "";
     popup.value = wrapper || undefined;
     /** wait for popup to teleport */
     await nextTick();
@@ -330,31 +338,35 @@ function bindPopup(layer: L.Layer) {
 }
 
 const scale = computed(() => {
+  /** get range of data (accounting for "no data" values) */
+  const min = props.noData ? Math.max(props.min, props.noData) : props.min;
+  const max = props.max;
+
   /** "nice", approximate number of steps */
-  const nice = d3
-    .scalePow()
-    .exponent(props.scalePower)
-    .domain([props.min, props.max])
-    .ticks(props.scaleSteps);
+  const nice = d3.ticks(min, max, props.scaleSteps);
+
+  /** make sure steps always covers/contains range of values (min/max) */
+  const step = d3.tickStep(min, max, props.scaleSteps);
+  if (nice.at(0)! > min) nice.unshift(nice.at(0)! - step);
+  if (nice.at(-1)! < max) nice.push(nice.at(-1)! + step);
 
   /** exact number of steps */
   const exact = d3
-    .range(props.min, props.max, (props.max - props.min) / props.scaleSteps)
-    .concat([props.max]);
+    .range(min, max, (max - min) / props.scaleSteps)
+    .concat([max]);
 
   /** spaced list of points between min and max */
   let intervals = props.niceSteps ? nice : exact;
 
   /** make sure enough intervals */
-  if (intervals.length < 3)
-    intervals = [props.min, (props.min + props.max) / 2, props.max];
+  if (intervals.length < 3) intervals = [min, (min + max) / 2, max];
 
   /** range of intervals */
-  const [min = 0, max = 1] = d3.extent(intervals);
+  const [lower = 0, upper = 1] = d3.extent(intervals);
 
   /** apply power */
   intervals = intervals.map((value) =>
-    normalizedApply(value, min, max, (value) =>
+    normalizedApply(value, lower, upper, (value) =>
       Math.pow(value, props.scalePower),
     ),
   );
@@ -378,7 +390,9 @@ const scale = computed(() => {
 
   /** scale interpolator */
   const getColor = (value: number) =>
-    d3.scaleQuantile<string>().domain(intervals).range(colors)(value);
+    props.noData && value <= props.noData
+      ? noDataColor
+      : d3.scaleQuantile<string>().domain(intervals).range(colors)(value);
 
   return { steps, getColor };
 });
@@ -418,7 +432,7 @@ const fit = debounce(async () => {
 }, 200);
 
 /** auto-fit when props change */
-watch([() => props.showLegends, () => props.overlays], fit, { deep: true });
+watch([() => props.showLegends, () => props.locations], fit, { deep: true });
 
 /** when map container created */
 onMounted(() => {
@@ -434,7 +448,7 @@ onMounted(() => {
   /** add panes to map */
   map.createPane("base").style.zIndex = "0";
   map.createPane("data").style.zIndex = "1";
-  map.createPane("overlays").style.zIndex = "2";
+  map.createPane("locations").style.zIndex = "2";
 
   /** add legends to map and set elements to teleport slots into */
   topLeftLegend.value = createLegend({ position: "topleft" });
@@ -459,7 +473,7 @@ onMounted(() => {
   /** update stuff once map init'd */
   updateBase();
   updateData();
-  updateOverlays();
+  updateLocations();
 });
 
 /** when map container destroyed */
@@ -495,8 +509,12 @@ function updateData() {
   });
 
   /** if no pan/zoom specified, fit view to content, */
-  if (!props.lat && !props.long && !props.zoom) fit();
-  /** otherwise, set view from props */ else updateView();
+  if (!props.lat && !props.long && !props.zoom) {
+    fit();
+  } else {
+    /** otherwise, set view from props */
+    updateView();
+  }
 
   /** update stuff once layers init'd */
   updateColors();
@@ -506,31 +524,30 @@ function updateData() {
 /** update map data layer when props change */
 watch(() => props.data, updateData, { deep: true });
 
-/** symbols (icon + label) associated with each overlay */
+/** symbols (icon + label) associated with each location */
 const symbols = computed(() => {
   let index = 0;
-  return mapValues(props.overlays, ({ label }) => {
+  return mapValues(props.locations, ({ label }) => {
     const icon = markerOptions[index++ % markerOptions.length];
     const image = icon?.options.iconUrl || "";
     return { label, icon, image };
   });
 });
 
-/** update overlay layers */
-function updateOverlays() {
-  getLayers<L.GeoJSON>("overlays", L.GeoJSON).forEach((layer) =>
+/** update location layers */
+function updateLocations() {
+  getLayers<L.GeoJSON>("locations", L.GeoJSON).forEach((layer) =>
     layer.remove(),
   );
-  for (const [key, { features }] of Object.entries(props.overlays)) {
+  for (const [key, { features }] of Object.entries(props.locations)) {
     const icon = symbols.value[key]?.icon;
     const layer = L.geoJSON(undefined, {
       pointToLayer: (feature, coords) => {
         /** for point, display as marker */
         if (feature.geometry.type === "Point")
-          return L.marker(coords, { icon });
+          return L.marker(coords, { icon, pane: "locations" });
         return L.layerGroup();
       },
-      pane: "overlays",
     });
     bindPopup(layer);
     map?.addLayer(layer);
@@ -538,8 +555,8 @@ function updateOverlays() {
   }
 }
 
-/** update overlay layers when props change */
-watch(() => props.overlays, updateOverlays, { deep: true });
+/** update location layers when props change */
+watch(() => props.locations, updateLocations, { deep: true });
 
 /** auto-fit when map container element changes size */
 let first = true;
@@ -579,12 +596,12 @@ function updateOpacities() {
   /** get layers */
   const base = map.getPane("base");
   const data = map.getPane("data");
-  const overlays = map.getPane("overlays");
+  const locations = map.getPane("locations");
 
   /** set layer opacities */
   if (base) base.style.opacity = String(props.baseOpacity);
   if (data) data.style.opacity = String(props.dataOpacity);
-  if (overlays) overlays.style.opacity = String(props.overlayOpacity);
+  if (locations) locations.style.opacity = String(props.locationOpacity);
 }
 
 /** update opacities when props change */
@@ -592,7 +609,7 @@ watch(
   [
     () => props.baseOpacity,
     () => props.dataOpacity,
-    () => props.overlayOpacity,
+    () => props.locationOpacity,
   ],
   updateOpacities,
   {},
@@ -701,6 +718,11 @@ const { toggle: fullscreen } = useFullscreen(element);
   font: inherit !important;
 }
 
+.leaflet-interactive:hover {
+  filter: brightness(50%) saturate(0%);
+  opacity: 0.5;
+}
+
 .leaflet-control-attribution {
   max-width: 500px;
   padding: 0.25em 0.5em;
@@ -712,9 +734,12 @@ const { toggle: fullscreen } = useFullscreen(element);
 }
 
 .leaflet-popup-content-wrapper {
+  display: flex;
+  flex-direction: column;
   width: max-content;
   max-width: 400px;
   padding: 20px 25px;
+  gap: 10px;
   border-radius: var(--rounded);
   box-shadow: var(--shadow);
   font: inherit;
