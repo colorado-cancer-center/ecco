@@ -3,7 +3,9 @@
     <AppLink to="/">
       <h1>
         <div>{{ pretitle }}</div>
-        <div>{{ title }}</div>
+        <div>
+          <b>E</b>xploring <b>C</b>ancer in <b>Co</b>lorado (<b>ECCO</b>)
+        </div>
       </h1>
     </AppLink>
 
@@ -26,7 +28,7 @@ import AppLink from "@/components/AppLink.vue";
 import { routes } from "@/pages";
 
 /** project info */
-const { VITE_PRETITLE: pretitle, VITE_TITLE: title } = import.meta.env;
+const { VITE_PRETITLE: pretitle } = import.meta.env;
 </script>
 
 <style scoped>
@@ -52,6 +54,7 @@ h1 > :first-child {
 }
 
 h1 > :last-child {
+  font-weight: var(--regular);
   text-transform: uppercase;
 }
 

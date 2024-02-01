@@ -14,8 +14,8 @@
   --black: #000000;
 
   /* font weights */
+  --regular: 300;
   --bold: 600;
-  --regular: 400;
 
   /* effects */
   --rounded: 3px;
