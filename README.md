@@ -2,7 +2,7 @@
 
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
-[**⭐️⭐️ View the Site ⭐️⭐️**](https://co-cancer-scope.cu-dbmi.dev/)
+[**⭐️⭐️ View the Site ⭐️⭐️**](https://exploring-cancer-in-colorado.netlify.app/)
 
 ## Background
 

@@ -101,6 +101,11 @@
         <strong>{{ popupFeature.name }}</strong>
       </template>
 
+      <!-- id -->
+      <template v-if="popupFeature.fips">
+        <strong>Census Tract<br />{{ popupFeature.fips }}</strong>
+      </template>
+
       <div class="mini-table">
         <!-- primary "value" for feature -->
         <template v-if="values[popupFeature.id]">
