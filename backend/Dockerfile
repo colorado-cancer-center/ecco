@@ -4,7 +4,8 @@ FROM python:3.10
 RUN apt-get update && apt-get install -y gdal-bin
 
 COPY ./requirements.txt /tmp/requirements.txt
-RUN pip install -r /tmp/requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install -r /tmp/requirements.txt
 
 COPY ./start_app.sh /opt/start_app.sh
 
