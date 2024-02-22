@@ -33,6 +33,9 @@ class CancerStatsByCounty(BaseStatsModel):
     # 'Type' is always Incidence for CancerIncidenceCounty, Mortality for CancerMortalityCounty
     # so it's not terribly useful...
     Type : str = Field(index=True)
+    # demographic data, added sometime in february 2024(?)
+    RE : str = Field(index=True, nullable=True)
+    Sex : str = Field(index=True, nullable=True)
     # the type of cancer
     Site : str = Field(index=True)
     AAR : float
