@@ -228,13 +228,31 @@ for type, family in STATS_MODELS.items():
                 measure: Optional[str] = None,
                 session: AsyncSession = Depends(get_session)
             ):
+                # determine if it's a cancer model; we handle them differently
+                is_cancer_model = model in CANCER_MODELS
                 # get human labels for measures within this model, if available
                 model_measure_labels = MEASURE_DESCRIPTIONS.get(simple_model_name, {})
 
                 def label_for_measure(measure):
                     return model_measure_labels.get(measure, measure) or measure
 
-                if model not in CANCER_MODELS:
+                def model_to_fields(x, is_cancer_model):
+                    fields = [
+                        x["GEOID"],
+                        x["County"],
+                        x["State"],
+                        label_for_measure(x["measure"]),
+                        x["value"],
+                    ]
+
+                    if is_cancer_model:
+                        fields += [
+                            x["RE"], x["Sex"]
+                        ]
+
+                    return fields
+
+                if not is_cancer_model:
                     query = select(
                         (model.FIPS.label("GEOID"), model.County, model.State, model.measure, model.value)
                     )
@@ -244,7 +262,7 @@ for type, family in STATS_MODELS.items():
 
                 else:
                     query = select(
-                        (model.FIPS.label("GEOID"), model.County, model.State, model.Site.label("measure"), model.AAR.label("value"))
+                        (model.FIPS.label("GEOID"), model.County, model.State, model.Site.label("measure"), model.AAR.label("value"), model.RE, model.Sex)
                     )
                     
                     if measure is not None:
@@ -258,15 +276,19 @@ for type, family in STATS_MODELS.items():
 
                 with StringIO() as fp:
                     writer = csv.writer(fp)
-                    writer.writerow(["GEOID", "County", "State", "measure", "value"])
+
+                    header_cols = ["GEOID", "County", "State", "measure", "value"]
+
+                    if is_cancer_model:
+                        header_cols += ["RE", "Sex"]
+
+                    writer.writerow(header_cols)
                     writer.writerows(
-                        [
-                            x["GEOID"],
-                            x["County"],
-                            x["State"],
-                            label_for_measure(x["measure"]),
-                            x["value"],
-                        ] for x in objects
+                        model_to_fields(
+                            x,
+                            is_cancer_model=is_cancer_model
+                        )
+                        for x in objects
                     )
 
                     response = StreamingResponse(iter([fp.getvalue()]), media_type="text/csv")
