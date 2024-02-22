@@ -49,6 +49,13 @@ SHEETS_TO_TYPES = {
     "us_sociodemographics_tract": SociodemographicsTract
 }
 
+class ModelForFileNotFoundException(Exception):
+    """
+    Raised when an input file is found that has no associated
+    model class.
+    """
+    pass
+
 async def import_file(file, session, model=None, delete_before_import=True, dont_limit_states=False):
     """
     Imports a single CSV file via the SQLModel 'model' into the database.
@@ -68,7 +75,9 @@ async def import_file(file, session, model=None, delete_before_import=True, dont
                 model = candidate
                 break
         else:
-            raise ValueError(f"Could not find model for file {file}")
+            raise ModelForFileNotFoundException(
+                f"Could not find model for file {file}"
+            )
 
     # delete all existing entries in the target model
     if delete_before_import:
@@ -106,7 +115,7 @@ async def import_file(file, session, model=None, delete_before_import=True, dont
         session.add_all(obj_list)
 
 
-async def import_us_data(data_folder, dont_limit_states=False):
+async def import_us_data(data_folder, dont_limit_states=False, warn_on_missing_model=False):
     """Imports all *_long_*.csv files from the KYS data folder into the database."""
 
     # get a list of all files in data_folder with filename matching *_long_*.csv
@@ -125,7 +134,18 @@ async def import_us_data(data_folder, dont_limit_states=False):
     async with async_session() as session:
         for file in tqdm(files, file=sys.stdout):
             tqdm.write(f"* About to import {file}...")
-            await import_file(file, session, dont_limit_states=dont_limit_states)
+            
+            try:
+                await import_file(
+                    file, session,
+                    dont_limit_states=dont_limit_states
+                )
+            except ModelForFileNotFoundException as ex:
+                if warn_on_missing_model:
+                    tqdm.write(f"Warning: {ex}")
+                else:
+                    raise ex
+                
             tqdm.write(f"...insert done, committing...")
             await session.commit()
             tqdm.write(f"done!\n")
@@ -138,8 +158,11 @@ async def import_us_data(data_folder, dont_limit_states=False):
 @click.option('--dont-limit-states', type=bool, default=False,
     help="If specified, will import everything; i.e. it won\'t filter to LIMIT_TO_STATE from settings"
 )
-def main(data_folder, dont_limit_states=False):
-    asyncio.run(import_us_data(data_folder, dont_limit_states))
+@click.option('--warn-on-missing-model', type=bool, default=False,
+    help="If specified, will only print a warning (rather than exit) if a model isn't found for a given input file"
+)
+def main(data_folder, dont_limit_states=False, warn_on_missing_model=False):
+    asyncio.run(import_us_data(data_folder, dont_limit_states, warn_on_missing_model))
 
 if __name__ == '__main__':
     main()
