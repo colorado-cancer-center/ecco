@@ -412,11 +412,23 @@ MEASURE_DESCRIPTIONS = {
 # descriptions of factors, i.e. additional enumerated values associated
 # with each record. for example, cancer stats have race/ethnicity and sex
 # associated with them, and can be filtered by those values.
-# format: { <model name>: { <field id>: { label: <field label>, values: { <value>: <label> } } } }
+# the 'default' field identifies which value is used if the user doesn't
+# supply one when querying.
+# format:
+# {
+#  <model name>: {
+#   <field id>: {
+#     label: <field label>,
+#     default: <default val>,
+#     values: { <value>: <label> }
+#   }, ...
+#  }, ...
+# }
 FACTOR_DESCRIPTIONS = {
     "cancerincidence": {
         "RE": {
             "label": "Race/Ethnicity",
+            "default": "All",
             "values": {
                 "All": "All",
                 "Black NH": "Black (non-Hispanic)",
@@ -426,6 +438,7 @@ FACTOR_DESCRIPTIONS = {
         },
         "Sex": {
             "label": "Sex",
+            "default": "All",
             "values": {
                 "All": "All",
                 "Female": "Female",
@@ -436,6 +449,7 @@ FACTOR_DESCRIPTIONS = {
     "cancermortality": {
         "RE": {
             "label": "Race/Ethnicity",
+            "default": "All",
             "values": {
                 "All": "All",
                 "Black NH": "Black (non-Hispanic)",
@@ -445,6 +459,7 @@ FACTOR_DESCRIPTIONS = {
         },
         "Sex": {
             "label": "Sex",
+            "default": "All",
             "values": {
                 "All": "All",
                 "Female": "Female",
