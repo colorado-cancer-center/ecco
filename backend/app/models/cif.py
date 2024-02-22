@@ -408,3 +408,48 @@ MEASURE_DESCRIPTIONS = {
     # - Uterine Cancer
     # - Uterine, NOS Cancer
 }
+
+# descriptions of factors, i.e. additional enumerated values associated
+# with each record. for example, cancer stats have race/ethnicity and sex
+# associated with them, and can be filtered by those values.
+# format: { <model name>: { <field id>: { label: <field label>, values: { <value>: <label> } } } }
+FACTOR_DESCRIPTIONS = {
+    "cancerincidence": {
+        "RE": {
+            "label": "Race/Ethnicity",
+            "values": {
+                "All": "All",
+                "Black NH": "Black (non-Hispanic)",
+                "Hispanic": "Hispanic",
+                "White NH": "White (Non-Hispanic)"
+            }
+        },
+        "Sex": {
+            "label": "Sex",
+            "values": {
+                "All": "All",
+                "Female": "Female",
+                "Male": "Male"
+            }
+        }
+    },
+    "cancermortality": {
+        "RE": {
+            "label": "Race/Ethnicity",
+            "values": {
+                "All": "All",
+                "Black NH": "Black (non-Hispanic)",
+                "Hispanic": "Hispanic",
+                "White NH": "White (Non-Hispanic)"
+            }
+        },
+        "Sex": {
+            "label": "Sex",
+            "values": {
+                "All": "All",
+                "Female": "Female",
+                "Male": "Male"
+            }
+        }
+    }
+}
