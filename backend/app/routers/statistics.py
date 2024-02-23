@@ -57,6 +57,7 @@ class MeasuresMetaResponse(BaseModel):
 
 class FactorMetaResponse(BaseModel):
     label : str
+    default : str | None
     values : dict[str, str]
 
 class CateogryMetaResponse(BaseModel):
@@ -126,7 +127,7 @@ async def get_measures(session: AsyncSession = Depends(get_session)):
                 "factors": {
                     f: {
                         "label": str(fv["label"] or f),
-                        "default": str(fv.get("default")),
+                        "default": fv.get("default"),
                         "values": {
                             x: fv.get("values", {}).get(x, x) or x
                             for x in factor_queries[f]["result"].scalars().all()
