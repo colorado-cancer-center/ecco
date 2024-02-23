@@ -165,7 +165,12 @@ def parse_filter_str(filters):
 class FactorsFilter(BaseModel):
     factors : dict[str,str]
 
+# the loop below creates routes dynamically from the models specified in the
+# STATS_MODELS dict; we get one set of routes per model in that dict
 for type, family in STATS_MODELS.items():
+    # data from CancerInFocus is represented on either a county or tract level.
+    # the "family" here is the geographic entity associated with the model,
+    # i.e. "county" or "tract"
     for model in family:
         simple_model_name = slug_modelname_sans_type(model, type)
 
@@ -177,6 +182,9 @@ for type, family in STATS_MODELS.items():
         # will always be the last model in the list.
 
         def generate_routes(type=type, model=model, simple_model_name=simple_model_name):
+            # ----------------------------------------------------------------
+            # --- measures, but for a specific model
+            # ----------------------------------------------------------------
             @router.get(
                 f"/{type}/{simple_model_name}/measures", 
                 response_model=list[str],
@@ -200,6 +208,9 @@ for type, family in STATS_MODELS.items():
 
                 return objects
 
+            # ----------------------------------------------------------------
+            # --- all records from a specific model
+            # ----------------------------------------------------------------
             @router.get(
                 f"/{type}/{simple_model_name}",
                 response_model=Page[model], 
@@ -222,6 +233,9 @@ for type, family in STATS_MODELS.items():
 
                 return result
             
+            # ----------------------------------------------------------------
+            # --- a list of FIPS-to-value pairs for populating the map
+            # ----------------------------------------------------------------
             @router.get(
                 f"/{type}/{simple_model_name}/fips-value",
                 response_model=FIPSMeasureResponse,
@@ -308,6 +322,9 @@ for type, family in STATS_MODELS.items():
                     values=values
                 )
 
+            # ----------------------------------------------------------------
+            # --- a CSV-formatted version of the model for downloading
+            # ----------------------------------------------------------------
             @router.get(
                 f"/{type}/{simple_model_name}/as-csv",
                 response_class=StreamingResponse,
