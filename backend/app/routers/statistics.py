@@ -60,14 +60,14 @@ class FactorMetaResponse(BaseModel):
     default : str | None
     values : dict[str, str]
 
-class CateogryMetaResponse(BaseModel):
+class CategoryMetaResponse(BaseModel):
     label: str
     measures: dict[str, MeasuresMetaResponse]
     factors: Optional[dict[str, FactorMetaResponse]]
 
 class StatsMetaResponse(BaseModel):
     label: str
-    categories: dict[str, CateogryMetaResponse]
+    categories: dict[str, CategoryMetaResponse]
 
 @router.get(f"/measures", response_model=dict[str, StatsMetaResponse])
 async def get_measures(session: AsyncSession = Depends(get_session)):
