@@ -16,6 +16,9 @@ const cache = new Map();
 export async function request<T>(url: string) {
   /** construct request */
   const request = new Request(url);
+  console.groupCollapsed(`📞 Request ${url}`);
+  console.info(request);
+  console.groupEnd();
   /** unique request id for caching */
   const id = JSON.stringify(request, ["url", "method", "headers"]);
   /** get response from cache or make new request */
@@ -24,6 +27,10 @@ export async function request<T>(url: string) {
   if (!response.ok) throw Error("Response not OK");
   /** parse response */
   const parsed = await response.clone().json();
+  console.groupCollapsed(`📣 Response ${url}`);
+  console.info(response);
+  console.info(parsed);
+  console.groupEnd();
   /** set cache for next time */
   if (request.method === "GET") cache.set(id, response);
   return parsed as T;
@@ -89,6 +96,13 @@ type _Facets = {
             label: string;
           };
         };
+        factors?: {
+          [key: string]: {
+            default: string;
+            label: string;
+            values: { [key: string]: string };
+          };
+        };
       };
     };
   };
@@ -100,6 +114,13 @@ export type Facet = {
     id: string;
     label: string;
     list?: Facet;
+    factors?: {
+      [key: string]: {
+        default: string;
+        label: string;
+        values: { [key: string]: string };
+      };
+    };
   };
 };
 
@@ -112,7 +133,7 @@ export async function getFacets() {
     /** geographic level */
     id: key,
     label,
-    list: mapValues(categories, ({ label, measures }, key) => ({
+    list: mapValues(categories, ({ label, measures, factors }, key) => ({
       /** measure category */
       id: key,
       label,
@@ -121,6 +142,7 @@ export async function getFacets() {
         id: key,
         label,
       })),
+      factors,
     })),
   })) satisfies Facet;
 }
@@ -141,8 +163,16 @@ export async function getValues(
   level: string,
   category: string,
   measure: string,
+  filters: { [key: string]: string },
 ) {
-  const params = new URLSearchParams({ measure });
+  const filtersString = Object.entries(filters || {})
+    .map((entry) => entry.join(":"))
+    .join(";");
+  const params = new URLSearchParams({
+    measure,
+    ...(filtersString && { filters: filtersString }),
+  });
+
   const data = await request<_Values>(
     `${api}/stats/${level}/${category}/fips-value?` + params,
   );

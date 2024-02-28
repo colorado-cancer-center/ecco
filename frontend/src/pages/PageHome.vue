@@ -15,6 +15,23 @@
           :options="facetToOptions(categories)"
         />
 
+        <template v-for="(factor, key) in factors" :key="key">
+          <AppSelect
+            v-if="selectedFactors[key]"
+            :model-value="selectedFactors[key]?.value || ''"
+            :label="factor.label"
+            :options="
+              Object.entries(factor.values).map(([key, value]) => ({
+                id: key,
+                label: value,
+              }))
+            "
+            @update:model-value="
+              (value) => (selectedFactors[key]!.value = [value].flat()[0] || '')
+            "
+          />
+        </template>
+
         <AppButton
           v-tooltip="'Download selected category data in CSV format'"
           :icon="faDownload"
@@ -319,7 +336,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch, watchEffect } from "vue";
-import { cloneDeep, pick } from "lodash";
+import { cloneDeep, mapValues, pick } from "lodash";
 import { faArrowRight, faDownload } from "@fortawesome/free-solid-svg-icons";
 import {
   getDownload,
@@ -432,16 +449,6 @@ watchEffect(async () => {
   }
 });
 
-/** load map values data */
-watchEffect(async () => {
-  if (selectedLevel.value && selectedCategory.value && selectedMeasure.value)
-    values.value = await getValues(
-      selectedLevel.value,
-      selectedCategory.value,
-      selectedMeasure.value,
-    );
-});
-
 /** geographic levels from facets data */
 const levels = computed(() => cloneDeep(facets.value || {}));
 
@@ -449,6 +456,21 @@ const levels = computed(() => cloneDeep(facets.value || {}));
 const categories = computed(() =>
   cloneDeep(levels.value[selectedLevel.value]?.list || {}),
 );
+
+/** stratification factors (e.g. race/ethnicity, sex, etc) */
+const factors = computed(() =>
+  cloneDeep(categories.value[selectedCategory.value]?.factors || {}),
+);
+
+/** selected value state for each factor */
+const selectedFactors = computed(() => {
+  return Object.fromEntries(
+    Object.entries(factors.value).map(([key, value]) => [
+      key,
+      useUrlParam(key, stringParam, value.default),
+    ]),
+  );
+});
 
 /** measures from measure category */
 const measures = computed(() =>
@@ -458,6 +480,21 @@ const measures = computed(() =>
 /** is measure a percent */
 const percent = computed(() =>
   isPercent(values.value?.min || 0, values.value?.max || 1),
+);
+
+/** load map values data */
+watch(
+  [selectedLevel, selectedCategory, selectedMeasure, selectedFactors],
+  async () => {
+    values.value = await getValues(
+      selectedLevel.value,
+      selectedCategory.value,
+      selectedMeasure.value,
+      /** unwrap nested refs */
+      mapValues(selectedFactors.value, (value) => value.value),
+    );
+  },
+  { deep: true },
 );
 
 /** turn facet into list of select box options */
