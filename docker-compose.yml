@@ -37,7 +37,7 @@ services:
       - ./db-exports:/db-exports
     healthcheck:
       test: ["CMD-SHELL", "/opt/healthcheck.sh || exit 1"]
-      interval: 10s
+      interval: 5s
       timeout: 60s
       retries: 5
-      start_period: 80s
+      start_period: 2m
