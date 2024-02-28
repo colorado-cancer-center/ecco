@@ -621,7 +621,7 @@ const _locations = computed(
   width: 2em;
   height: 2em;
   overflow: hidden;
-  background: var(--light-gray);
+  background: var(--gray);
 }
 
 .image-preview img {

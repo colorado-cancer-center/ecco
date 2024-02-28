@@ -6,11 +6,13 @@
 
   /* colors */
   --theme: #cfb87c;
+  --theme-dark: #a87800;
   --white: #ffffff;
-  --off-white: #e6e6e6;
-  --light-gray: #cccccc;
-  --gray: #4d4d4d;
-  --dark-gray: #1a1a1a;
+  --off-white: #fafafa;
+  --light-gray: #e6e6e6;
+  --gray: #cccccc;
+  --dark-gray: #4d4d4d;
+  --off-black: #1a1a1a;
   --black: #000000;
 
   /* font weights */
@@ -62,6 +64,7 @@ footer {
 }
 
 :is(header, footer) a {
+  color: inherit;
   text-decoration: none;
 }
 
@@ -79,7 +82,7 @@ section:last-child {
 }
 
 section:nth-child(even) {
-  background: color-mix(in hsl, var(--white), var(--off-white) 25%);
+  background: var(--off-white);
 }
 
 section > :first-child {
@@ -95,7 +98,7 @@ h2,
 h3,
 h4 {
   margin: 40px 0 20px 0;
-  color: var(--dark-gray);
+  color: var(--off-black);
   font-weight: var(--bold);
 }
 
@@ -122,18 +125,19 @@ h4 {
 }
 
 a {
-  color: inherit;
+  color: var(--theme-dark);
   transition:
     color var(--fast),
     background var(--fast);
 }
 
 a:hover {
-  color: var(--dark-gray);
+  color: var(--off-black);
 }
 
 b,
-strong {
+strong,
+th {
   font-weight: var(--bold);
 }
 
@@ -143,7 +147,7 @@ hr {
   height: 1px;
   margin: 20px 0;
   border: none;
-  background: var(--light-gray);
+  background: var(--gray);
 }
 
 small {
@@ -168,6 +172,22 @@ a,
 p,
 button {
   overflow-wrap: anywhere;
+}
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 5px 10px;
+  border-bottom: solid 1px var(--gray);
+  text-align: left;
 }
 
 .center {
@@ -205,12 +225,12 @@ button {
 
 .tippy-box {
   padding: 5px;
-  background: var(--dark-gray);
+  background: var(--off-black);
   box-shadow: var(--shadow);
   color: var(--white);
   font: inherit;
 }
 
 .tippy-arrow {
-  color: var(--dark-gray);
+  color: var(--off-black);
 }

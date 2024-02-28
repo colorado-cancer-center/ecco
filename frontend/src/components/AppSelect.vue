@@ -228,7 +228,7 @@ async function onOpen(node: VNode) {
 }
 
 .box :deep(svg) {
-  color: var(--gray);
+  color: var(--dark-gray);
 }
 
 ul {
@@ -259,6 +259,6 @@ li span {
 }
 
 .active {
-  background: var(--off-white);
+  background: var(--light-gray);
 }
 </style>
