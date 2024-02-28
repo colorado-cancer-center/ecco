@@ -33,6 +33,9 @@ class CancerStatsByCounty(BaseStatsModel):
     # 'Type' is always Incidence for CancerIncidenceCounty, Mortality for CancerMortalityCounty
     # so it's not terribly useful...
     Type : str = Field(index=True)
+    # demographic data, added sometime in february 2024(?)
+    RE : str = Field(index=True, nullable=True)
+    Sex : str = Field(index=True, nullable=True)
     # the type of cancer
     Site : str = Field(index=True)
     AAR : float
@@ -404,4 +407,64 @@ MEASURE_DESCRIPTIONS = {
     # - Thyroid Cancer
     # - Uterine Cancer
     # - Uterine, NOS Cancer
+}
+
+# descriptions of factors, i.e. additional enumerated values associated
+# with each record. for example, cancer stats have race/ethnicity and sex
+# associated with them, and can be filtered by those values.
+# the 'default' field identifies which value is used if the user doesn't
+# supply one when querying.
+# format:
+# {
+#  <model name>: {
+#   <field id>: {
+#     label: <field label>,
+#     default: <default val>,
+#     values: { <value>: <label> }
+#   }, ...
+#  }, ...
+# }
+FACTOR_DESCRIPTIONS = {
+    "cancerincidence": {
+        "RE": {
+            "label": "Race/Ethnicity",
+            "default": "All",
+            "values": {
+                "All": "All",
+                "Black NH": "Black (non-Hispanic)",
+                "Hispanic": "Hispanic",
+                "White NH": "White (Non-Hispanic)"
+            }
+        },
+        "Sex": {
+            "label": "Sex",
+            "default": "All",
+            "values": {
+                "All": "All",
+                "Female": "Female",
+                "Male": "Male"
+            }
+        }
+    },
+    "cancermortality": {
+        "RE": {
+            "label": "Race/Ethnicity",
+            "default": "All",
+            "values": {
+                "All": "All",
+                "Black NH": "Black (non-Hispanic)",
+                "Hispanic": "Hispanic",
+                "White NH": "White (Non-Hispanic)"
+            }
+        },
+        "Sex": {
+            "label": "Sex",
+            "default": "All",
+            "values": {
+                "All": "All",
+                "Female": "Female",
+                "Male": "Male"
+            }
+        }
+    }
 }

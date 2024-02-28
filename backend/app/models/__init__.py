@@ -28,7 +28,8 @@ from .cif import (
     # metadata
     STATS_MODELS,
     CANCER_MODELS,
-    MEASURE_DESCRIPTIONS
+    MEASURE_DESCRIPTIONS,
+    FACTOR_DESCRIPTIONS
 )
 from .scp import (
     COIncidenceData
