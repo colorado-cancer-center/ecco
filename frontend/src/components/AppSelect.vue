@@ -1,11 +1,12 @@
 <template>
-  <div class="container">
-    <Listbox
+  <label class="container" @click.prevent>
+    <div>{{ label }}</div>
+
+    <Combobox
       :model-value="value"
       :multiple="multi"
       @update:model-value="onChange"
     >
-      <ListboxLabel>{{ label || "-" }}</ListboxLabel>
       <Float
         :shift="10"
         :middleware="middleware"
@@ -14,28 +15,42 @@
         adaptive-width
         strategy="fixed"
       >
-        <ListboxButton v-slot="{ open }" as="template">
+        <!-- button -->
+        <div class="row">
+          <div class="label">
+            <span>
+              {{ selectedLabel }}
+            </span>
+            <slot
+              v-if="selectedOption"
+              name="preview"
+              :option="selectedOption"
+            />
+          </div>
+          <ComboboxInput
+            class="input"
+            @change="(event) => (query = event.target.value.toLowerCase())"
+          />
+          <ComboboxButton v-slot="{ open }" as="template">
+            <AppButton
+              ref="button"
+              :icon="open ? faCaretUp : faCaretDown"
+              class="button"
+              @keydown="onButtonKeypress"
+            />
+          </ComboboxButton>
           <AppButton
-            v-tooltip="tooltip"
-            :icon="open ? faCaretUp : faCaretDown"
-            :flip="true"
-            class="box"
-            :style="{ gridColumn: multi ? '' : 'span 2' }"
-            @keydown="onKeypress"
-          >
-            {{ selectedLabel }}
-            <template #preview>
-              <slot
-                v-if="selectedOption"
-                name="preview"
-                :option="selectedOption"
-              />
-            </template>
-          </AppButton>
-        </ListboxButton>
-        <ListboxOptions>
-          <ListboxOption
-            v-for="(option, index) in options"
+            v-if="multi"
+            v-tooltip="noneSelected ? 'Select all' : 'Deselect all'"
+            :icon="noneSelected ? faCheckDouble : faXmark"
+            @click="toggleAll"
+          />
+        </div>
+
+        <!-- dropdown -->
+        <ComboboxOptions>
+          <ComboboxOption
+            v-for="(option, index) in filtered"
             v-slot="{ active, selected }"
             :key="index"
             as="template"
@@ -43,7 +58,7 @@
           >
             <li
               :class="{ active, selected }"
-              @vue:mounted="(node: VNode) => selected && onOpen(node)"
+              @vue:mounted="(node: VNode) => selected && onDropdownOpen(node)"
             >
               <font-awesome-icon
                 :style="{ opacity: selected ? 1 : 0 }"
@@ -52,21 +67,15 @@
               <span>{{ option.label }}</span>
               <slot name="preview" :option="option" />
             </li>
-          </ListboxOption>
-        </ListboxOptions>
+          </ComboboxOption>
+        </ComboboxOptions>
       </Float>
-    </Listbox>
-    <AppButton
-      v-if="multi"
-      v-tooltip="allSelected ? 'Deselect all' : 'Select all'"
-      :icon="allSelected ? faXmark : faCheckDouble"
-      @click="toggleAll"
-    />
-  </div>
+    </Combobox>
+  </label>
 </template>
 
 <script setup lang="ts" generic="O extends Option">
-import { computed, type VNode } from "vue";
+import { computed, ref, type VNode } from "vue";
 import { clamp } from "lodash";
 import { size } from "@floating-ui/dom";
 import {
@@ -78,11 +87,11 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { Float } from "@headlessui-float/vue";
 import {
-  Listbox,
-  ListboxButton,
-  ListboxLabel,
-  ListboxOption,
-  ListboxOptions,
+  Combobox,
+  ComboboxButton,
+  ComboboxInput,
+  ComboboxOption,
+  ComboboxOptions,
 } from "@headlessui/vue";
 import AppButton from "@/components/AppButton.vue";
 import { frame } from "@/util/misc";
@@ -122,6 +131,10 @@ type Slots = {
 
 defineSlots<Slots>();
 
+const button = ref<InstanceType<typeof AppButton> | null>(null);
+
+const query = ref("");
+
 /** floating-ui middleware */
 const middleware = [
   size({
@@ -154,6 +167,15 @@ async function onChange(value: O | O[]) {
   emit("update:modelValue", id);
 }
 
+/** results filtered by query string typed into input */
+const filtered = computed(() =>
+  props.options.filter(
+    (option) =>
+      option.id.toLowerCase().includes(query.value) ||
+      option.label.toLowerCase().includes(query.value),
+  ),
+);
+
 /** full selected option (only relevant in single mode) */
 const selectedOption = computed(() => {
   let list = toArray(props.modelValue);
@@ -177,21 +199,19 @@ const selectedLabel = computed<string>(() => {
   return value.length + " selected";
 });
 
-/** whether all options are selected */
-const allSelected = computed(
-  () => props.multi && props.options.length === props.modelValue.length,
-);
+/** whether no options are selected */
+const noneSelected = computed(() => props.multi && !props.modelValue.length);
 
 /** select/deselect all */
 function toggleAll() {
   emit(
     "update:modelValue",
-    allSelected.value ? [] : props.options.map((option) => option.id),
+    noneSelected.value ? props.options.map((option) => option.id) : [],
   );
 }
 
 /** add "quick" arrow key select */
-function onKeypress({ key }: KeyboardEvent) {
+function onButtonKeypress({ key }: KeyboardEvent) {
   if (!props.multi && (key === "ArrowLeft" || key === "ArrowRight")) {
     let index = props.options.findIndex(
       (option) => option.id === props.modelValue,
@@ -204,8 +224,8 @@ function onKeypress({ key }: KeyboardEvent) {
   }
 }
 
-/** when listbox opened */
-async function onOpen(node: VNode) {
+/** when dropdown opened */
+async function onDropdownOpen(node: VNode) {
   await frame();
   (node.el as Element).scrollIntoView();
 }
@@ -213,22 +233,47 @@ async function onOpen(node: VNode) {
 
 <style scoped>
 .container {
-  display: grid;
-  grid-template-columns: 1fr min-content;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
-.container > label {
-  grid-column: span 2;
+.row {
+  display: grid;
+  grid-template-columns: 1fr min-content min-content;
+  align-items: center;
+  border-radius: var(--rounded);
+  background: var(--light-gray);
 }
 
-.box :deep(span) {
+.label,
+.input {
+  grid-row: 1;
+  grid-column: 1 / 2;
+  padding-left: 10px;
+}
+
+.label {
+  display: flex;
+  z-index: 1;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.label > :first-child {
   flex-grow: 1;
-  text-align: left;
 }
 
-.box :deep(svg) {
-  color: var(--dark-gray);
+.input {
+  align-self: stretch;
+  border: none;
+  background: none;
+  font: inherit;
+}
+
+.row:has(.input:focus) .label {
+  display: none;
 }
 
 ul {

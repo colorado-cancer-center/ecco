@@ -1,20 +1,18 @@
 <template>
   <component
     :is="component"
+    ref="button"
     :class="{ button: true, square: !!icon && !$slots.default, accent }"
     :to="to"
   >
     <font-awesome-icon v-if="icon && !flip" :icon="icon" class="icon" />
-    <span v-if="$slots.default">
-      <slot />
-    </span>
-    <slot v-if="$slots.preview" name="preview" />
+    <slot />
     <font-awesome-icon v-if="icon && flip" :icon="icon" class="icon" />
   </component>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import type { IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import AppLink from "@/components/AppLink.vue";
 
@@ -29,12 +27,15 @@ const props = defineProps<Props>();
 
 type Slots = {
   default?: () => unknown;
-  preview?: () => unknown;
 };
 
 defineSlots<Slots>();
 
 const component = computed(() => (props.to ? AppLink : "button"));
+
+const button = ref<HTMLButtonElement>();
+
+defineExpose({ ref: button });
 </script>
 
 <style scoped>
