@@ -482,17 +482,27 @@ const percent = computed(() =>
   isPercent(values.value?.min || 0, values.value?.max || 1),
 );
 
+/** keep track of latest query */
+let latest: Symbol;
+
 /** load map values data */
 watch(
   [selectedLevel, selectedCategory, selectedMeasure, selectedFactors],
   async () => {
-    values.value = await getValues(
+    /** assign unique id to query */
+    latest = Symbol();
+    const current = latest;
+
+    const result = await getValues(
       selectedLevel.value,
       selectedCategory.value,
       selectedMeasure.value,
       /** unwrap nested refs */
       mapValues(selectedFactors.value, (value) => value.value),
     );
+
+    /** check if current query is latest (prevents race conditions) */
+    if (current === latest) values.value = result;
   },
   { deep: true },
 );
