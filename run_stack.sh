@@ -2,11 +2,16 @@
 
 # first, resolve the target environment
 # 'dev' is the default
-TARGET_ENV="dev"
+CHOSEN_ENV="dev"
 COMPOSE_FILES=( "docker-compose.yml" "docker-compose.override.yml" )
 DEFAULT_ARGS="up --build"
 
-case "$1" in
+# on prod machine, always target prod
+if [ $( hostname ) = 'co-cancer-scope' ]; then
+	CHOSEN_ENV="prod"
+fi
+
+case "${1:-$CHOSEN_ENV}" in
     "prod")
         TARGET_ENV="prod"
         COMPOSE_FILES=( "docker-compose.yml" "docker-compose.prod.yml" )
