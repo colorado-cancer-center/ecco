@@ -541,9 +541,8 @@ const symbols = computed(() => {
 
 /** update location layers */
 function updateLocations() {
-  getLayers<L.GeoJSON>("locations", L.GeoJSON).forEach((layer) =>
-    layer.remove(),
-  );
+  const layers = getLayers<L.GeoJSON>("locations", L.Marker);
+  layers.forEach((layer) => layer.remove());
   for (const [key, { features }] of Object.entries(props.locations)) {
     const icon = symbols.value[key]?.icon;
     const layer = L.geoJSON(undefined, {
