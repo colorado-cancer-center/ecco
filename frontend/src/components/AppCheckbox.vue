@@ -52,7 +52,7 @@ const emit = defineEmits<Emits>();
 }
 
 .container:hover {
-  background: var(--off-white);
+  background: var(--light-gray);
 }
 
 .label {
@@ -70,7 +70,7 @@ button {
   height: 35px;
   border: none;
   background: none;
-  color: var(--dark-gray);
+  color: var(--off-black);
   font-size: 1.25em;
 }
 

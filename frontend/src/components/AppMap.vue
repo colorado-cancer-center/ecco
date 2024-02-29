@@ -1,9 +1,9 @@
 <template>
-  <div class="container">
-    <div ref="scroll" class="scroll">
+  <div ref="containerElement" class="container">
+    <div ref="scrollElement" class="scroll">
       <!-- map container -->
       <div
-        ref="element"
+        ref="mapElement"
         class="map"
         :style="{
           width: width ? width + 'px' : '100%',
@@ -198,8 +198,9 @@ import AppLink from "@/components/AppLink.vue";
 let noDataColor = "#a0a0a0";
 
 /** element refs */
-const scroll = ref<HTMLDivElement>();
-const element = ref<HTMLDivElement>();
+const containerElement = ref<HTMLDivElement>();
+const scrollElement = ref<HTMLDivElement>();
+const mapElement = ref<HTMLDivElement>();
 
 type Props = {
   /** data */
@@ -262,6 +263,8 @@ type Slots = {
 };
 
 defineSlots<Slots>();
+
+defineExpose({ ref: containerElement });
 
 /** elements to teleport legend template content to */
 const topLeftLegend = ref<HTMLElement>();
@@ -441,11 +444,11 @@ watch([() => props.showLegends, () => props.locations], fit, { deep: true });
 
 /** when map container created */
 onMounted(() => {
-  if (!element.value) return;
+  if (!mapElement.value) return;
 
   /** init map */
   map?.remove();
-  map = L.map(element.value, mapOptions);
+  map = L.map(mapElement.value, mapOptions);
 
   /** manually make attribution again to specify position */
   L.control.attribution({ position: "bottomleft" }).addTo(map);
@@ -541,9 +544,8 @@ const symbols = computed(() => {
 
 /** update location layers */
 function updateLocations() {
-  getLayers<L.GeoJSON>("locations", L.GeoJSON).forEach((layer) =>
-    layer.remove(),
-  );
+  const layers = getLayers<L.GeoJSON>("locations", L.Marker);
+  layers.forEach((layer) => layer.remove());
   for (const [key, { features }] of Object.entries(props.locations)) {
     const icon = symbols.value[key]?.icon;
     const layer = L.geoJSON(undefined, {
@@ -563,13 +565,9 @@ function updateLocations() {
 /** update location layers when props change */
 watch(() => props.locations, updateLocations, { deep: true });
 
-/** auto-fit when map container element changes size */
-let first = true;
-useResizeObserver(element, () => {
-  /** don't fit on page load (don't override url map view params) */
-  if (first) return (first = false);
+/** when map element changes size */
+useResizeObserver(mapElement, () => {
   map?.invalidateSize();
-  fit();
 });
 
 /** update map pan/zoom */
@@ -624,7 +622,7 @@ watch(
 const percent = computed(() => isPercent(props.min, props.max));
 
 /** whether element has scrollbars */
-const scrollable = useScrollable(scroll);
+const scrollable = useScrollable(scrollElement);
 
 /** enable/disable zooming by scrolling */
 watch(scrollable, () => {
@@ -634,16 +632,16 @@ watch(scrollable, () => {
 });
 
 /** actual client size */
-const { width: actualWidth, height: actualHeight } = useElementSize(element);
+const { width: actualWidth, height: actualHeight } = useElementSize(mapElement);
 
 /** download map as png */
 async function download() {
-  if (!element.value) return;
+  if (!mapElement.value) return;
 
   /** upscale for better quality */
   const scale = window.devicePixelRatio;
 
-  const blob = await domtoimage.toBlob(element.value, {
+  const blob = await domtoimage.toBlob(mapElement.value, {
     width: actualWidth.value * scale,
     height: actualHeight.value * scale,
     style: {
@@ -656,7 +654,7 @@ async function download() {
 }
 
 /** toggle fullscreen on element */
-const { toggle: fullscreen } = useFullscreen(element);
+const { toggle: fullscreen } = useFullscreen(mapElement);
 </script>
 
 <style scoped>

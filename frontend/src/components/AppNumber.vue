@@ -61,12 +61,12 @@ input {
   padding: 5px 10px;
   border: none;
   border-radius: var(--rounded);
-  background: var(--off-white);
+  background: var(--light-gray);
   font: inherit;
   transition: background var(--fast);
 }
 
 input:hover {
-  background: var(--light-gray);
+  background: var(--gray);
 }
 </style>

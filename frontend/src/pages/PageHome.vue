@@ -228,11 +228,15 @@
       </div>
 
       <AppMap
+        ref="map"
         v-model:zoom="zoom"
         v-model:lat="lat"
         v-model:long="long"
         class="map"
-        :style="{ opacity: dataStatus === 'loading' ? 0.25 : 1 }"
+        :style="{
+          opacity: dataStatus === 'loading' ? 0.25 : 1,
+          height: autoMapHeight,
+        }"
         :data="selectedData"
         :locations="_locations"
         :values="values?.values"
@@ -338,6 +342,7 @@
 import { computed, ref, watch, watchEffect } from "vue";
 import { cloneDeep, mapValues, pick } from "lodash";
 import { faArrowRight, faDownload } from "@fortawesome/free-solid-svg-icons";
+import { useElementBounding } from "@vueuse/core";
 import {
   getDownload,
   getFacets,
@@ -350,13 +355,14 @@ import {
   type Locations,
   type Values,
 } from "@/api";
+import locationGroups from "@/api/location-groups.json";
 import AppAccordion from "@/components/AppAccordion.vue";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
 import AppLink from "@/components/AppLink.vue";
 import AppMap from "@/components/AppMap.vue";
 import AppNumber from "@/components/AppNumber.vue";
-import AppSelect, { type Option } from "@/components/AppSelect.vue";
+import AppSelect, { type Entry, type Option } from "@/components/AppSelect.vue";
 import AppSlider from "@/components/AppSlider.vue";
 import AppStatus, { type Status } from "@/components/AppStatus.vue";
 import { gradientOptions } from "@/components/gradient";
@@ -489,6 +495,13 @@ let latest: Symbol;
 watch(
   [selectedLevel, selectedCategory, selectedMeasure, selectedFactors],
   async () => {
+    if (
+      !selectedLevel.value ||
+      !selectedCategory.value ||
+      !selectedMeasure.value
+    )
+      return;
+
     /** assign unique id to query */
     latest = Symbol();
     const current = latest;
@@ -536,17 +549,39 @@ watch([selectedCategory, measures], () => {
 });
 
 /** location dropdown options */
-const locationOptions = computed<Option[]>(() =>
-  Object.entries(locations.value || {}).map(([key, value]) => ({
-    id: key,
-    label: value.label,
-  })),
-);
+const locationOptions = computed<Entry[]>(() => {
+  const entries: Entry[] = [];
+  for (const [group, options] of Object.entries(locationGroups)) {
+    entries.push({ group });
+    for (const option of options) {
+      entries.push({
+        id: option,
+        label: locations.value?.[option]?.label || "",
+      });
+    }
+  }
+
+  return entries;
+});
 
 /** location data to pass to map, filtered by selected locations */
 const _locations = computed(
   () => pick(locations.value, selectedLocations.value) as Locations | undefined,
 );
+
+/** auto-adjust map height */
+const map = ref<InstanceType<typeof AppMap>>();
+const bounding = computed(() =>
+  map.value?.ref ? useElementBounding(map.value.ref) : null,
+);
+const autoMapHeight = computed(() => {
+  if (window.innerHeight < 400) return;
+  if (!bounding.value) return;
+  if (mapWidth.value || mapHeight.value) return;
+  const top = bounding.value.top.value;
+  if (top < 0) return;
+  return window.innerHeight - top - 40 + "px";
+});
 </script>
 
 <style scoped>
@@ -621,7 +656,7 @@ const _locations = computed(
   width: 2em;
   height: 2em;
   overflow: hidden;
-  background: var(--light-gray);
+  background: var(--gray);
 }
 
 .image-preview img {

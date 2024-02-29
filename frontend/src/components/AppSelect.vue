@@ -1,11 +1,12 @@
 <template>
-  <div class="container">
-    <Listbox
+  <label class="container" @click.prevent>
+    <div>{{ label }}</div>
+
+    <Combobox
       :model-value="value"
       :multiple="multi"
       @update:model-value="onChange"
     >
-      <ListboxLabel>{{ label || "-" }}</ListboxLabel>
       <Float
         :shift="10"
         :middleware="middleware"
@@ -14,75 +15,86 @@
         adaptive-width
         strategy="fixed"
       >
-        <ListboxButton v-slot="{ open }" as="template">
+        <!-- button -->
+        <div class="row">
+          <div class="label">
+            <span>
+              {{ selectedLabel }}
+            </span>
+            <slot
+              v-if="selectedOption"
+              name="preview"
+              :option="selectedOption"
+            />
+          </div>
+          <ComboboxInput
+            class="input"
+            @change="(event) => (query = event.target.value.toLowerCase())"
+          />
+          <ComboboxButton v-slot="{ open }" as="template">
+            <AppButton
+              ref="button"
+              :icon="open ? faCaretUp : faCaretDown"
+              class="button"
+              @keydown="onButtonKeypress"
+            />
+          </ComboboxButton>
           <AppButton
-            v-tooltip="tooltip"
-            :icon="open ? faCaretUp : faCaretDown"
-            :flip="true"
-            class="box"
-            :style="{ gridColumn: multi ? '' : 'span 2' }"
-            @keydown="onKeypress"
-          >
-            {{ selectedLabel }}
-            <template #preview>
-              <slot
-                v-if="selectedOption"
-                name="preview"
-                :option="selectedOption"
-              />
-            </template>
-          </AppButton>
-        </ListboxButton>
-        <ListboxOptions>
-          <ListboxOption
-            v-for="(option, index) in options"
-            v-slot="{ active, selected }"
-            :key="index"
-            as="template"
-            :value="option"
-          >
-            <li
-              :class="{ active, selected }"
-              @vue:mounted="(node: VNode) => selected && onOpen(node)"
+            v-if="multi"
+            v-tooltip="'Deselect all'"
+            :icon="faXmark"
+            @click="$emit('update:modelValue', [])"
+          />
+        </div>
+
+        <!-- dropdown -->
+        <ComboboxOptions>
+          <template v-for="(option, index) in filtered" :key="index">
+            <!-- regular option -->
+            <ComboboxOption
+              v-if="isOption(option)"
+              v-slot="{ active, selected }"
+              as="template"
+              :value="option"
             >
-              <font-awesome-icon
-                :style="{ opacity: selected ? 1 : 0 }"
-                :icon="faCheck"
-              />
-              <span>{{ option.label }}</span>
-              <slot name="preview" :option="option" />
-            </li>
-          </ListboxOption>
-        </ListboxOptions>
+              <li
+                :class="{ active, selected }"
+                @vue:mounted="(node: VNode) => selected && onDropdownOpen(node)"
+              >
+                <font-awesome-icon
+                  :style="{ opacity: selected ? 1 : 0 }"
+                  :icon="faCheck"
+                />
+                <span>{{ option.label }}</span>
+                <slot name="preview" :option="option" />
+              </li>
+            </ComboboxOption>
+            <!-- group option -->
+            <li v-else class="group">{{ option.group }}</li>
+          </template>
+        </ComboboxOptions>
       </Float>
-    </Listbox>
-    <AppButton
-      v-if="multi"
-      v-tooltip="allSelected ? 'Deselect all' : 'Select all'"
-      :icon="allSelected ? faXmark : faCheckDouble"
-      @click="toggleAll"
-    />
-  </div>
+    </Combobox>
+  </label>
 </template>
 
 <script setup lang="ts" generic="O extends Option">
-import { computed, type VNode } from "vue";
+import { computed, ref, type VNode } from "vue";
 import { clamp } from "lodash";
 import { size } from "@floating-ui/dom";
 import {
   faCaretDown,
   faCaretUp,
   faCheck,
-  faCheckDouble,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { Float } from "@headlessui-float/vue";
 import {
-  Listbox,
-  ListboxButton,
-  ListboxLabel,
-  ListboxOption,
-  ListboxOptions,
+  Combobox,
+  ComboboxButton,
+  ComboboxInput,
+  ComboboxOption,
+  ComboboxOptions,
 } from "@headlessui/vue";
 import AppButton from "@/components/AppButton.vue";
 import { frame } from "@/util/misc";
@@ -93,9 +105,15 @@ export type Option = {
   [key: string]: unknown;
 };
 
+export type Group = {
+  group: string;
+};
+
+export type Entry = Option | Group;
+
 type Props = {
   label: string;
-  options: O[];
+  options: (O | Group)[];
   multi?: boolean;
   modelValue: O["id"] | O["id"][];
   tooltip?: string;
@@ -122,6 +140,10 @@ type Slots = {
 
 defineSlots<Slots>();
 
+const button = ref<InstanceType<typeof AppButton> | null>(null);
+
+const query = ref("");
+
 /** floating-ui middleware */
 const middleware = [
   size({
@@ -139,12 +161,21 @@ function toArray<T>(value: T | T[]): T[] {
   return Array.isArray(value) ? value : [value];
 }
 
+/** type helper func to check if option is real option or group */
+function isOption(option: O | Group | undefined): option is O {
+  return !!option && "id" in option;
+}
+
 /** model value to pass from parent to headlessui */
 const value = computed(() => {
   let list = toArray(props.modelValue);
   return props.multi
-    ? props.options.filter((option) => list.includes(option.id))
-    : props.options.find((option) => list.includes(option.id)) || "";
+    ? props.options
+        .filter(isOption)
+        .filter((option) => list.includes(option.id))
+    : props.options
+        .filter(isOption)
+        .find((option) => list.includes(option.id)) || "";
 });
 
 /** model value to emit from headlessui to parent */
@@ -154,58 +185,63 @@ async function onChange(value: O | O[]) {
   emit("update:modelValue", id);
 }
 
+/** results filtered by query string typed into input */
+const filtered = computed(() =>
+  props.options.filter(
+    (option) =>
+      !isOption(option) ||
+      option.id.toLowerCase().includes(query.value) ||
+      option.label.toLowerCase().includes(query.value),
+  ),
+);
+
 /** full selected option (only relevant in single mode) */
 const selectedOption = computed(() => {
   let list = toArray(props.modelValue);
   if (!props.multi)
-    return props.options.find((option) => option.id === list[0]);
+    return props.options
+      .filter(isOption)
+      .find((option) => option.id === list[0]);
   else return undefined;
 });
 
 /** label to show as selected value in box */
 const selectedLabel = computed<string>(() => {
   let list = toArray(props.modelValue);
-  if (!props.multi)
-    return (
-      props.options.find((option) => option.id === list[0])?.label ||
-      "None selected"
-    );
-  const value = props.options.filter((option) => list.includes(option.id));
+
+  if (!props.multi) {
+    const find = props.options
+      .filter(isOption)
+      .find((option) => option.id === list[0]);
+    return (isOption(find) && find?.label) || "None selected";
+  }
+
+  const value = props.options
+    .filter(isOption)
+    .filter((option) => list.includes(option.id));
   if (value.length === 0) return "None selected";
   if (value.length === 1) return value[0]?.label || "1 Selected";
   if (value.length === props.options.length) return "All selected";
   return value.length + " selected";
 });
 
-/** whether all options are selected */
-const allSelected = computed(
-  () => props.multi && props.options.length === props.modelValue.length,
-);
-
-/** select/deselect all */
-function toggleAll() {
-  emit(
-    "update:modelValue",
-    allSelected.value ? [] : props.options.map((option) => option.id),
-  );
-}
-
 /** add "quick" arrow key select */
-function onKeypress({ key }: KeyboardEvent) {
+function onButtonKeypress({ key }: KeyboardEvent) {
   if (!props.multi && (key === "ArrowLeft" || key === "ArrowRight")) {
-    let index = props.options.findIndex(
-      (option) => option.id === props.modelValue,
-    );
+    let index = props.options
+      .filter(isOption)
+      .findIndex((option) => option.id === props.modelValue);
     if (key === "ArrowLeft") index--;
     if (key === "ArrowRight") index++;
     index = clamp(index, 0, props.options.length - 1);
-    const id = props.options[index]?.id;
+    const option = props.options[index];
+    const id = isOption(option) ? option.id : null;
     if (id) emit("update:modelValue", id);
   }
 }
 
-/** when listbox opened */
-async function onOpen(node: VNode) {
+/** when dropdown opened */
+async function onDropdownOpen(node: VNode) {
   await frame();
   (node.el as Element).scrollIntoView();
 }
@@ -213,22 +249,47 @@ async function onOpen(node: VNode) {
 
 <style scoped>
 .container {
-  display: grid;
-  grid-template-columns: 1fr min-content;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
-.container > label {
-  grid-column: span 2;
+.row {
+  display: grid;
+  grid-template-columns: 1fr min-content min-content;
+  align-items: center;
+  border-radius: var(--rounded);
+  background: var(--light-gray);
 }
 
-.box :deep(span) {
+.label,
+.input {
+  grid-row: 1;
+  grid-column: 1 / 2;
+  padding-left: 10px;
+}
+
+.label {
+  display: flex;
+  z-index: 1;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.label > :first-child {
   flex-grow: 1;
-  text-align: left;
 }
 
-.box :deep(svg) {
-  color: var(--gray);
+.input {
+  align-self: stretch;
+  border: none;
+  background: none;
+  font: inherit;
+}
+
+.row:has(.input:focus) .label {
+  display: none;
 }
 
 ul {
@@ -259,6 +320,21 @@ li span {
 }
 
 .active {
-  background: var(--off-white);
+  background: var(--light-gray);
+}
+
+.group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: var(--bold);
+  cursor: unset;
+}
+
+.group::after {
+  flex-grow: 1;
+  height: 1px;
+  background: var(--gray);
+  content: "";
 }
 </style>

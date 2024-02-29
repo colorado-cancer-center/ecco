@@ -43,6 +43,6 @@ defineSlots<Slots>();
 }
 
 .button :deep(svg) {
-  color: var(--gray);
+  color: var(--dark-gray);
 }
 </style>

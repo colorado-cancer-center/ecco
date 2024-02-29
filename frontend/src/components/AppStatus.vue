@@ -46,12 +46,12 @@ export type Status = keyof typeof codes;
 const codes = {
   info: {
     icon: faInfoCircle,
-    color: "var(--gray)",
+    color: "var(--dark-gray)",
     text: "Info",
   },
   loading: {
     icon: faGear,
-    color: "var(--gray)",
+    color: "var(--dark-gray)",
     text: "Loading",
     class: "fa-spin",
   },

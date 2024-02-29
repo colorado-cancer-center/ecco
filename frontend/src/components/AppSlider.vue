@@ -68,7 +68,7 @@ label {
   height: 5px;
 
   border-radius: 999px;
-  background: var(--light-gray);
+  background: var(--gray);
 }
 
 .range {

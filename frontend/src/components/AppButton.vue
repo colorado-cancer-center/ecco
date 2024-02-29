@@ -5,10 +5,7 @@
     :to="to"
   >
     <font-awesome-icon v-if="icon && !flip" :icon="icon" class="icon" />
-    <span v-if="$slots.default">
-      <slot />
-    </span>
-    <slot v-if="$slots.preview" name="preview" />
+    <slot />
     <font-awesome-icon v-if="icon && flip" :icon="icon" class="icon" />
   </component>
 </template>
@@ -29,7 +26,6 @@ const props = defineProps<Props>();
 
 type Slots = {
   default?: () => unknown;
-  preview?: () => unknown;
 };
 
 defineSlots<Slots>();
@@ -48,7 +44,7 @@ const component = computed(() => (props.to ? AppLink : "button"));
   gap: 10px;
   border: none;
   border-radius: var(--rounded);
-  background: var(--off-white);
+  background: var(--light-gray);
   font: inherit;
   line-height: var(--compact);
   text-decoration: none;
@@ -60,7 +56,7 @@ const component = computed(() => (props.to ? AppLink : "button"));
 }
 
 .button:hover {
-  background: var(--light-gray);
+  background: var(--gray);
 }
 
 .accent {
@@ -69,7 +65,7 @@ const component = computed(() => (props.to ? AppLink : "button"));
 }
 
 .accent:hover {
-  background: var(--gray);
+  background: var(--dark-gray);
 }
 
 .square {
