@@ -356,7 +356,7 @@ import AppCheckbox from "@/components/AppCheckbox.vue";
 import AppLink from "@/components/AppLink.vue";
 import AppMap from "@/components/AppMap.vue";
 import AppNumber from "@/components/AppNumber.vue";
-import AppSelect, { type Option } from "@/components/AppSelect.vue";
+import AppSelect, { type Entry, type Option } from "@/components/AppSelect.vue";
 import AppSlider from "@/components/AppSlider.vue";
 import AppStatus, { type Status } from "@/components/AppStatus.vue";
 import { gradientOptions } from "@/components/gradient";
@@ -369,6 +369,7 @@ import {
   useUrlParam,
 } from "@/util/composables";
 import { formatValue, isPercent } from "@/util/math";
+import locationGroups from "./location-groups.json";
 
 /** element refs */
 const panel = ref<HTMLElement>();
@@ -536,12 +537,20 @@ watch([selectedCategory, measures], () => {
 });
 
 /** location dropdown options */
-const locationOptions = computed<Option[]>(() =>
-  Object.entries(locations.value || {}).map(([key, value]) => ({
-    id: key,
-    label: value.label,
-  })),
-);
+const locationOptions = computed<Entry[]>(() => {
+  const entries: Entry[] = [];
+  for (const [group, options] of Object.entries(locationGroups)) {
+    entries.push({ group });
+    for (const option of options) {
+      entries.push({
+        id: option,
+        label: locations.value?.[option]?.label || "",
+      });
+    }
+  }
+
+  return entries;
+});
 
 /** location data to pass to map, filtered by selected locations */
 const _locations = computed(

@@ -1,0 +1,54 @@
+{
+  "Group A": [
+    "wwc-15-jun-2021",
+    "ccsp-15-jun-2021",
+    "title-x-15-jun-2021",
+    "chc-15-jun-2021",
+    "rhc-15-jun-2021",
+    "ihs-15-jun-2021"
+  ],
+  "Group B": [
+    "genetic-coun-15-jun-2021",
+    "all-treatment-15-jun-2021",
+    "med-onc-15-jun-2021",
+    "surg-onc-15-jun-2021",
+    "rad-onc-15-jun-2021",
+    "ped-onc-15-jun-2021",
+    "trials-15-jun-2021",
+    "all-support-services-15-jun-2021",
+    "pt-rehab-15-jun-2021",
+    "nutrition-15-jun-2021",
+    "support-grp-15-jun-2021",
+    "support-coun-15-jun-2021",
+    "survivorship-15-jun-2021",
+    "lodging-15-jun-2021"
+  ],
+  "Group C": [
+    "financial-coun-15-jun-2021",
+    "palliative-15-jun-2021",
+    "hospice-15-jun-2021",
+    "cancer-ed-29-jul-221",
+    "accessories-aids-29-jul-21",
+    "programs-events-29-jul-21",
+    "fitness-29-jul-21",
+    "home-family-care-29-jul-21",
+    "transportation-29-jul-21",
+    "pediatric-29-jul-21",
+    "radiology",
+    "colon-rectal-surgeon"
+  ],
+  "Group D": [
+    "fqhc",
+    "gastroenterology",
+    "hpsa-correctional-facility",
+    "hpsa-federally-qualified-health-center-look-a-like",
+    "hpsa-indian-health-service-tribal-health-and-urban-indian-health-organizations",
+    "hpsa-other-facility",
+    "hpsa-rural-health-clinic",
+    "lung-cancer-screening",
+    "mammography",
+    "obstetrics-gynecology",
+    "superfund-site",
+    "toxic-release-inventory-facility"
+  ]
+}

@@ -41,33 +41,37 @@
           </ComboboxButton>
           <AppButton
             v-if="multi"
-            v-tooltip="noneSelected ? 'Select all' : 'Deselect all'"
-            :icon="noneSelected ? faCheckDouble : faXmark"
-            @click="toggleAll"
+            v-tooltip="'Deselect all'"
+            :icon="faXmark"
+            @click="$emit('update:modelValue', [])"
           />
         </div>
 
         <!-- dropdown -->
         <ComboboxOptions>
-          <ComboboxOption
-            v-for="(option, index) in filtered"
-            v-slot="{ active, selected }"
-            :key="index"
-            as="template"
-            :value="option"
-          >
-            <li
-              :class="{ active, selected }"
-              @vue:mounted="(node: VNode) => selected && onDropdownOpen(node)"
+          <template v-for="(option, index) in filtered" :key="index">
+            <!-- regular option -->
+            <ComboboxOption
+              v-if="isOption(option)"
+              v-slot="{ active, selected }"
+              as="template"
+              :value="option"
             >
-              <font-awesome-icon
-                :style="{ opacity: selected ? 1 : 0 }"
-                :icon="faCheck"
-              />
-              <span>{{ option.label }}</span>
-              <slot name="preview" :option="option" />
-            </li>
-          </ComboboxOption>
+              <li
+                :class="{ active, selected }"
+                @vue:mounted="(node: VNode) => selected && onDropdownOpen(node)"
+              >
+                <font-awesome-icon
+                  :style="{ opacity: selected ? 1 : 0 }"
+                  :icon="faCheck"
+                />
+                <span>{{ option.label }}</span>
+                <slot name="preview" :option="option" />
+              </li>
+            </ComboboxOption>
+            <!-- group option -->
+            <li v-else class="group">{{ option.group }}</li>
+          </template>
         </ComboboxOptions>
       </Float>
     </Combobox>
@@ -82,7 +86,6 @@ import {
   faCaretDown,
   faCaretUp,
   faCheck,
-  faCheckDouble,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { Float } from "@headlessui-float/vue";
@@ -102,9 +105,15 @@ export type Option = {
   [key: string]: unknown;
 };
 
+export type Group = {
+  group: string;
+};
+
+export type Entry = Option | Group;
+
 type Props = {
   label: string;
-  options: O[];
+  options: (O | Group)[];
   multi?: boolean;
   modelValue: O["id"] | O["id"][];
   tooltip?: string;
@@ -152,12 +161,21 @@ function toArray<T>(value: T | T[]): T[] {
   return Array.isArray(value) ? value : [value];
 }
 
+/** type helper func to check if option is real option or group */
+function isOption(option: O | Group | undefined): option is O {
+  return !!option && "id" in option;
+}
+
 /** model value to pass from parent to headlessui */
 const value = computed(() => {
   let list = toArray(props.modelValue);
   return props.multi
-    ? props.options.filter((option) => list.includes(option.id))
-    : props.options.find((option) => list.includes(option.id)) || "";
+    ? props.options
+        .filter(isOption)
+        .filter((option) => list.includes(option.id))
+    : props.options
+        .filter(isOption)
+        .find((option) => list.includes(option.id)) || "";
 });
 
 /** model value to emit from headlessui to parent */
@@ -171,6 +189,7 @@ async function onChange(value: O | O[]) {
 const filtered = computed(() =>
   props.options.filter(
     (option) =>
+      !isOption(option) ||
       option.id.toLowerCase().includes(query.value) ||
       option.label.toLowerCase().includes(query.value),
   ),
@@ -180,46 +199,43 @@ const filtered = computed(() =>
 const selectedOption = computed(() => {
   let list = toArray(props.modelValue);
   if (!props.multi)
-    return props.options.find((option) => option.id === list[0]);
+    return props.options
+      .filter(isOption)
+      .find((option) => option.id === list[0]);
   else return undefined;
 });
 
 /** label to show as selected value in box */
 const selectedLabel = computed<string>(() => {
   let list = toArray(props.modelValue);
-  if (!props.multi)
-    return (
-      props.options.find((option) => option.id === list[0])?.label ||
-      "None selected"
-    );
-  const value = props.options.filter((option) => list.includes(option.id));
+
+  if (!props.multi) {
+    const find = props.options
+      .filter(isOption)
+      .find((option) => option.id === list[0]);
+    return (isOption(find) && find?.label) || "None selected";
+  }
+
+  const value = props.options
+    .filter(isOption)
+    .filter((option) => list.includes(option.id));
   if (value.length === 0) return "None selected";
   if (value.length === 1) return value[0]?.label || "1 Selected";
   if (value.length === props.options.length) return "All selected";
   return value.length + " selected";
 });
 
-/** whether no options are selected */
-const noneSelected = computed(() => props.multi && !props.modelValue.length);
-
-/** select/deselect all */
-function toggleAll() {
-  emit(
-    "update:modelValue",
-    noneSelected.value ? props.options.map((option) => option.id) : [],
-  );
-}
-
 /** add "quick" arrow key select */
 function onButtonKeypress({ key }: KeyboardEvent) {
   if (!props.multi && (key === "ArrowLeft" || key === "ArrowRight")) {
-    let index = props.options.findIndex(
-      (option) => option.id === props.modelValue,
-    );
+    let index = props.options
+      .filter(isOption)
+      .findIndex((option) => option.id === props.modelValue);
     if (key === "ArrowLeft") index--;
     if (key === "ArrowRight") index++;
     index = clamp(index, 0, props.options.length - 1);
-    const id = props.options[index]?.id;
+    const option = props.options[index];
+    const id = isOption(option) ? option.id : null;
     if (id) emit("update:modelValue", id);
   }
 }
@@ -305,5 +321,20 @@ li span {
 
 .active {
   background: var(--light-gray);
+}
+
+.group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: var(--bold);
+  cursor: unset;
+}
+
+.group::after {
+  flex-grow: 1;
+  height: 1px;
+  background: var(--gray);
+  content: "";
 }
 </style>
