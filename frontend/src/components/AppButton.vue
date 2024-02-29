@@ -1,7 +1,6 @@
 <template>
   <component
     :is="component"
-    ref="button"
     :class="{ button: true, square: !!icon && !$slots.default, accent }"
     :to="to"
   >
@@ -12,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import type { IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import AppLink from "@/components/AppLink.vue";
 
@@ -32,10 +31,6 @@ type Slots = {
 defineSlots<Slots>();
 
 const component = computed(() => (props.to ? AppLink : "button"));
-
-const button = ref<HTMLButtonElement>();
-
-defineExpose({ ref: button });
 </script>
 
 <style scoped>

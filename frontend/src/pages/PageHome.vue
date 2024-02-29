@@ -228,11 +228,15 @@
       </div>
 
       <AppMap
+        ref="map"
         v-model:zoom="zoom"
         v-model:lat="lat"
         v-model:long="long"
         class="map"
-        :style="{ opacity: dataStatus === 'loading' ? 0.25 : 1 }"
+        :style="{
+          opacity: dataStatus === 'loading' ? 0.25 : 1,
+          height: autoMapHeight,
+        }"
         :data="selectedData"
         :locations="_locations"
         :values="values?.values"
@@ -338,6 +342,7 @@
 import { computed, ref, watch, watchEffect } from "vue";
 import { cloneDeep, mapValues, pick } from "lodash";
 import { faArrowRight, faDownload } from "@fortawesome/free-solid-svg-icons";
+import { useElementBounding } from "@vueuse/core";
 import {
   getDownload,
   getFacets,
@@ -556,6 +561,20 @@ const locationOptions = computed<Entry[]>(() => {
 const _locations = computed(
   () => pick(locations.value, selectedLocations.value) as Locations | undefined,
 );
+
+/** auto-adjust map height */
+const map = ref<InstanceType<typeof AppMap>>();
+const bounding = computed(() =>
+  map.value?.ref ? useElementBounding(map.value.ref) : null,
+);
+const autoMapHeight = computed(() => {
+  if (!bounding.value) return;
+  if (mapWidth.value || mapHeight.value) return;
+  const top = bounding.value.top.value || 0;
+  const height = window.innerHeight - top - 20;
+  if (height < 300 || height > window.innerHeight - 40) return undefined;
+  return height + "px";
+});
 </script>
 
 <style scoped>
