@@ -565,13 +565,9 @@ function updateLocations() {
 /** update location layers when props change */
 watch(() => props.locations, updateLocations, { deep: true });
 
-/** auto-fit when map element changes size */
-let first = true;
+/** when map element changes size */
 useResizeObserver(mapElement, () => {
-  /** don't fit on page load (don't override url map view params) */
-  if (first) return (first = false);
   map?.invalidateSize();
-  fit();
 });
 
 /** update map pan/zoom */

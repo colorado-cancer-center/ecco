@@ -575,12 +575,12 @@ const bounding = computed(() =>
   map.value?.ref ? useElementBounding(map.value.ref) : null,
 );
 const autoMapHeight = computed(() => {
+  if (window.innerHeight < 400) return;
   if (!bounding.value) return;
   if (mapWidth.value || mapHeight.value) return;
-  const top = bounding.value.top.value || 0;
-  const height = window.innerHeight - top - 20;
-  if (height < 300 || height > window.innerHeight - 40) return undefined;
-  return height + "px";
+  const top = bounding.value.top.value;
+  if (top < 0) return;
+  return window.innerHeight - top - 40 + "px";
 });
 </script>
 
