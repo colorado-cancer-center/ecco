@@ -355,6 +355,7 @@ import {
   type Locations,
   type Values,
 } from "@/api";
+import locationGroups from "@/api/location-groups.json";
 import AppAccordion from "@/components/AppAccordion.vue";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
@@ -374,7 +375,6 @@ import {
   useUrlParam,
 } from "@/util/composables";
 import { formatValue, isPercent } from "@/util/math";
-import locationGroups from "./location-groups.json";
 
 /** element refs */
 const panel = ref<HTMLElement>();

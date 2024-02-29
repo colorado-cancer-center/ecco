@@ -1,0 +1,54 @@
+{
+  "Cancer Care": [
+    "lung-cancer-screening",
+    "mammography",
+    "colon-rectal-surgeon",
+    "all-treatment-15-jun-2021",
+    "med-onc-15-jun-2021",
+    "surg-onc-15-jun-2021",
+    "rad-onc-15-jun-2021",
+    "ped-onc-15-jun-2021",
+    "trials-15-jun-2021",
+    "ccsp-15-jun-2021",
+    "support-grp-15-jun-2021",
+    "survivorship-15-jun-2021",
+    "palliative-15-jun-2021",
+    "hospice-15-jun-2021",
+    "cancer-ed-29-jul-221",
+    "ped-onc-15-jun-2021",
+    "radiology",
+    "wwc-15-jun-2021"
+  ],
+  "Primary Care": [
+    "fqhc",
+    "gastroenterology",
+    "hpsa-correctional-facility",
+    "hpsa-federally-qualified-health-center-look-a-like",
+    "hpsa-indian-health-service-tribal-health-and-urban-indian-health-organizations",
+    "hpsa-other-facility",
+    "hpsa-rural-health-clinic",
+    "obstetrics-gynecology",
+    "title-x-15-jun-2021",
+    "chc-15-jun-2021",
+    "rhc-15-jun-2021",
+    "ihs-15-jun-2021"
+  ],
+  "Specialty Resources": [
+    "genetic-coun-15-jun-2021",
+    "all-support-services-15-jun-2021",
+    "pt-rehab-15-jun-2021",
+    "nutrition-15-jun-2021",
+    "genetic-coun-15-jun-2021",
+    "lodging-15-jun-2021",
+    "financial-coun-15-jun-2021",
+    "accessories-aids-29-jul-21",
+    "programs-events-29-jul-21",
+    "fitness-29-jul-21",
+    "home-family-care-29-jul-21",
+    "transportation-29-jul-21"
+  ],
+  "Environmental Exposures": [
+    "superfund-site",
+    "toxic-release-inventory-facility"
+  ]
+}
