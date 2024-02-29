@@ -495,6 +495,13 @@ let latest: Symbol;
 watch(
   [selectedLevel, selectedCategory, selectedMeasure, selectedFactors],
   async () => {
+    if (
+      !selectedLevel.value ||
+      !selectedCategory.value ||
+      !selectedMeasure.value
+    )
+      return;
+
     /** assign unique id to query */
     latest = Symbol();
     const current = latest;
