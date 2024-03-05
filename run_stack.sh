@@ -7,7 +7,7 @@ COMPOSE_FILES=( "docker-compose.yml" "docker-compose.override.yml" )
 DEFAULT_ARGS="up --build"
 
 # on prod machine, always target prod
-if [ $( hostname ) = 'co-cancer-scope' ]; then
+if [ $( hostname ) = 'ecco' ]; then
 	CHOSEN_ENV="prod"
 fi
 
