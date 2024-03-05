@@ -18,7 +18,7 @@
         <template v-for="(factor, key) in factors" :key="key">
           <AppSelect
             v-if="selectedFactors[key]"
-            :model-value="selectedFactors[key]?.value || ''"
+            :model-value="selectedFactors[key]"
             :label="factor.label"
             :options="
               Object.entries(factor.values).map(([key, value]) => ({
@@ -27,7 +27,7 @@
               }))
             "
             @update:model-value="
-              (value) => (selectedFactors[key]!.value = [value].flat()[0] || '')
+              (value) => (selectedFactors[key] = [value].flat()[0] || '')
             "
           />
         </template>
@@ -339,7 +339,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, watchEffect } from "vue";
+import { computed, ref, watch, watchEffect, type ShallowRef } from "vue";
 import { cloneDeep, mapValues, pick } from "lodash";
 import { faArrowRight, faDownload } from "@fortawesome/free-solid-svg-icons";
 import { useElementBounding } from "@vueuse/core";
@@ -469,13 +469,13 @@ const factors = computed(() =>
 );
 
 /** selected value state for each factor */
-const selectedFactors = computed(() => {
-  return Object.fromEntries(
-    Object.entries(factors.value).map(([key, value]) => [
-      key,
-      useUrlParam(key, stringParam, value.default),
-    ]),
-  );
+const selectedFactors = ref<{ [key: string]: ShallowRef<string> }>({});
+
+watch(factors, () => {
+  for (const [key, value] of Object.entries(factors.value))
+    selectedFactors.value[key] = useUrlParam(key, stringParam, value.default);
+  for (const key of Object.keys(selectedFactors))
+    if (!(key in factors.value)) delete selectedFactors.value[key];
 });
 
 /** measures from measure category */
@@ -511,7 +511,7 @@ watch(
       selectedCategory.value,
       selectedMeasure.value,
       /** unwrap nested refs */
-      mapValues(selectedFactors.value, (value) => value.value),
+      mapValues(selectedFactors.value, (value) => value),
     );
 
     /** check if current query is latest (prevents race conditions) */
