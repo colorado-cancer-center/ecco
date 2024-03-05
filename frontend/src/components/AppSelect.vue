@@ -33,11 +33,7 @@
             @change="(event) => (query = event.target.value.toLowerCase())"
           />
           <ComboboxButton v-slot="{ open }" as="template">
-            <AppButton
-              :icon="open ? faCaretUp : faCaretDown"
-              class="button"
-              @keydown="onButtonKeypress"
-            />
+            <AppButton :icon="open ? faCaretUp : faCaretDown" class="button" />
           </ComboboxButton>
           <AppButton
             v-if="multi"
@@ -223,21 +219,6 @@ const selectedLabel = computed<string>(() => {
   if (value.length === props.options.length) return "All selected";
   return value.length + " selected";
 });
-
-/** add "quick" arrow key select */
-function onButtonKeypress({ key }: KeyboardEvent) {
-  if (!props.multi && (key === "ArrowLeft" || key === "ArrowRight")) {
-    let index = props.options
-      .filter(isOption)
-      .findIndex((option) => option.id === props.modelValue);
-    if (key === "ArrowLeft") index--;
-    if (key === "ArrowRight") index++;
-    index = clamp(index, 0, props.options.length - 1);
-    const option = props.options[index];
-    const id = isOption(option) ? option.id : null;
-    if (id) emit("update:modelValue", id);
-  }
-}
 
 /** when dropdown opened */
 async function onDropdownOpen(node: VNode) {
