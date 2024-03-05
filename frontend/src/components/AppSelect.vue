@@ -97,7 +97,7 @@ import {
   ComboboxOptions,
 } from "@headlessui/vue";
 import AppButton from "@/components/AppButton.vue";
-import { frame, sleep } from "@/util/misc";
+import { frame } from "@/util/misc";
 
 export type Option = {
   id: string;
@@ -182,7 +182,6 @@ async function onChange(value: O | O[]) {
   let list = toArray(value);
   const id = props.multi ? list.map((v) => v.id) : list[0]?.id || "";
   emit("update:modelValue", id);
-  await sleep();
 }
 
 /** results filtered by query string typed into input */

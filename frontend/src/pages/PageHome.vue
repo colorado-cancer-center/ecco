@@ -549,7 +549,7 @@ watch([selectedCategory, measures], () => {
 });
 
 /** location dropdown options */
-const locationOptions = computed<Entry[]>(() => {
+const locationOptions = computed(() => {
   const entries: Entry[] = [];
   for (const [group, options] of Object.entries(locationGroups)) {
     entries.push({ group });
