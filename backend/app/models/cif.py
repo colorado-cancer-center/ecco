@@ -98,6 +98,10 @@ class SociodemographicsCounty(MeasuresByCounty, table=True):
     class Config:
         label = "Sociodemographics"
 
+class DisparitiesCounty(MeasuresByCounty, table=True):
+    class Config:
+        label = "Disparities"
+
 # tract general measures
 
 class EconomyTract(MeasuresByTract, table=True):
@@ -124,6 +128,10 @@ class SociodemographicsTract(MeasuresByTract, table=True):
     class Config:
         label = "Sociodemographics"
 
+class DisparitiesTract(MeasuresByTract, table=True):
+    class Config:
+        label = "Disparities"
+
 
 # ===========================================================================
 # === model lists, metadata for downstream use
@@ -142,6 +150,7 @@ STATS_MODELS = {
         EnvironmentCounty,
         HousingTransCounty,
         RfAndScreeningCounty,
+        DisparitiesCounty,
         CancerIncidenceCounty,
         CancerMortalityCounty
     ],
@@ -151,7 +160,8 @@ STATS_MODELS = {
         EnvironmentTract,
         FoodDesertTract,
         HousingTransTract,
-        RfAndScreeningTract
+        RfAndScreeningTract,
+        DisparitiesTract
     ]
 }
 
@@ -306,6 +316,20 @@ MEASURE_DESCRIPTIONS = {
         "LILATracts_Vehicle": "Tracts that are Food Deserts",
     },
 
+    "disparities": {
+        "Living Below Poverty (Black)": "Black Population Living Below Poverty",
+        "Uninsured (Black)": "Black Population without Health Insurance",
+        "Uninsured Children": "Children without Health Insurance",
+        "Economic Segregation": "Economic Segregation",
+        "Gender Pay Gap": "Gender Pay Gap",
+        "Living Below Poverty (Hispanic)": "Hispanic Population Living Below Poverty",
+        "Uninsured (Hispanic)": "Hispanic Population without Health Insurance",
+        "Gini Coefficient": "Income Inequality (Gini Coefficient)",
+        "Racial Economic Segregation": "Racial Economic Segregation",
+        "Racial Segregation": "Racial Segregation",
+        "Lack_English_Prof": "Lack Proficiency in English"
+    },
+    
     # on the KY site, there are many more measures than in the data we have
     # available. above, we only include the ones that are present in the data.
 

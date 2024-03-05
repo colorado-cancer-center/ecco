@@ -18,12 +18,14 @@ from .cif import (
     HousingTransCounty,
     RfAndScreeningCounty,
     SociodemographicsCounty,
+    DisparitiesCounty,
     EconomyTract,
     EnvironmentTract,
     FoodDesertTract,
     HousingTransTract,
     RfAndScreeningTract,
     SociodemographicsTract,
+    DisparitiesTract,
 
     # metadata
     STATS_MODELS,
