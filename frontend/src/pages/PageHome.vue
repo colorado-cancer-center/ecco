@@ -473,7 +473,7 @@ const selectedFactors = computed(() => {
   return Object.fromEntries(
     Object.entries(factors.value).map(([key, value]) => [
       key,
-      ref(value.default),
+      useUrlParam(key, stringParam, value.default),
     ]),
   );
 });

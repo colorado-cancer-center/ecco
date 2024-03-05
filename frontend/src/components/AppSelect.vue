@@ -17,7 +17,7 @@
       >
         <!-- button -->
         <div class="row">
-          <div class="label">
+          <div v-if="!query" class="label">
             <span>
               {{ selectedLabel }}
             </span>
@@ -29,11 +29,11 @@
           </div>
           <ComboboxInput
             class="input"
+            @blur="query = ''"
             @change="(event) => (query = event.target.value.toLowerCase())"
           />
           <ComboboxButton v-slot="{ open }" as="template">
             <AppButton
-              ref="button"
               :icon="open ? faCaretUp : faCaretDown"
               class="button"
               @keydown="onButtonKeypress"
@@ -97,7 +97,7 @@ import {
   ComboboxOptions,
 } from "@headlessui/vue";
 import AppButton from "@/components/AppButton.vue";
-import { frame } from "@/util/misc";
+import { frame, sleep } from "@/util/misc";
 
 export type Option = {
   id: string;
@@ -140,8 +140,7 @@ type Slots = {
 
 defineSlots<Slots>();
 
-const button = ref<InstanceType<typeof AppButton> | null>(null);
-
+/** combobox "typeahead" search */
 const query = ref("");
 
 /** floating-ui middleware */
@@ -183,6 +182,7 @@ async function onChange(value: O | O[]) {
   let list = toArray(value);
   const id = props.multi ? list.map((v) => v.id) : list[0]?.id || "";
   emit("update:modelValue", id);
+  await sleep();
 }
 
 /** results filtered by query string typed into input */
@@ -286,10 +286,6 @@ async function onDropdownOpen(node: VNode) {
   border: none;
   background: none;
   font: inherit;
-}
-
-.row:has(.input:focus) .label {
-  display: none;
 }
 
 ul {
