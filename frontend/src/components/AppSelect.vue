@@ -76,7 +76,6 @@
 
 <script setup lang="ts" generic="O extends Option">
 import { computed, ref, type VNode } from "vue";
-import { clamp } from "lodash";
 import { size } from "@floating-ui/dom";
 import {
   faCaretDown,
