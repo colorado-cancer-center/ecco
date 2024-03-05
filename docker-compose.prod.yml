@@ -5,7 +5,7 @@ volumes:
 
 services:
   frontend:
-    image: cocancerscope-frontend
+    image: ecco-frontend
     build: ./frontend
     command: "/bin/bash -c 'yarn build ; cp -R ./dist/* /app/build/'"
     volumes:
