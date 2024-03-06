@@ -22,7 +22,7 @@
     "leaflet-providers": "^2.0.0",
     "lodash": "^4.17.21",
     "radix-vue": "^1.4.9",
-    "vue": "^3.4.14",
+    "vue": "^3.4.21",
     "vue-router": "^4.3.0",
     "vue-tippy": "^6.4.1"
   },
