@@ -45,6 +45,7 @@ const component = computed(() => (props.to ? AppLink : "button"));
   border: none;
   border-radius: var(--rounded);
   background: var(--light-gray);
+  color: var(--black);
   font: inherit;
   line-height: var(--compact);
   text-decoration: none;

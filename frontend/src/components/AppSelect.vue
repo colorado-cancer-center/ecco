@@ -17,7 +17,7 @@
       >
         <!-- button -->
         <div class="row">
-          <div class="label">
+          <div v-if="!query" class="label">
             <span>
               {{ selectedLabel }}
             </span>
@@ -29,15 +29,11 @@
           </div>
           <ComboboxInput
             class="input"
+            @blur="query = ''"
             @change="(event) => (query = event.target.value.toLowerCase())"
           />
           <ComboboxButton v-slot="{ open }" as="template">
-            <AppButton
-              ref="button"
-              :icon="open ? faCaretUp : faCaretDown"
-              class="button"
-              @keydown="onButtonKeypress"
-            />
+            <AppButton :icon="open ? faCaretUp : faCaretDown" class="button" />
           </ComboboxButton>
           <AppButton
             v-if="multi"
@@ -80,7 +76,6 @@
 
 <script setup lang="ts" generic="O extends Option">
 import { computed, ref, type VNode } from "vue";
-import { clamp } from "lodash";
 import { size } from "@floating-ui/dom";
 import {
   faCaretDown,
@@ -140,8 +135,7 @@ type Slots = {
 
 defineSlots<Slots>();
 
-const button = ref<InstanceType<typeof AppButton> | null>(null);
-
+/** combobox "typeahead" search */
 const query = ref("");
 
 /** floating-ui middleware */
@@ -225,21 +219,6 @@ const selectedLabel = computed<string>(() => {
   return value.length + " selected";
 });
 
-/** add "quick" arrow key select */
-function onButtonKeypress({ key }: KeyboardEvent) {
-  if (!props.multi && (key === "ArrowLeft" || key === "ArrowRight")) {
-    let index = props.options
-      .filter(isOption)
-      .findIndex((option) => option.id === props.modelValue);
-    if (key === "ArrowLeft") index--;
-    if (key === "ArrowRight") index++;
-    index = clamp(index, 0, props.options.length - 1);
-    const option = props.options[index];
-    const id = isOption(option) ? option.id : null;
-    if (id) emit("update:modelValue", id);
-  }
-}
-
 /** when dropdown opened */
 async function onDropdownOpen(node: VNode) {
   await frame();
@@ -286,10 +265,6 @@ async function onDropdownOpen(node: VNode) {
   border: none;
   background: none;
   font: inherit;
-}
-
-.row:has(.input:focus) .label {
-  display: none;
 }
 
 ul {

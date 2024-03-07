@@ -18,7 +18,7 @@
         <template v-for="(factor, key) in factors" :key="key">
           <AppSelect
             v-if="selectedFactors[key]"
-            :model-value="selectedFactors[key]?.value || ''"
+            :model-value="selectedFactors[key]!.value"
             :label="factor.label"
             :options="
               Object.entries(factor.values).map(([key, value]) => ({
@@ -339,7 +339,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, watchEffect } from "vue";
+import {
+  computed,
+  onUnmounted,
+  ref,
+  shallowRef,
+  watch,
+  watchEffect,
+  type ShallowRef,
+  type WatchStopHandle,
+} from "vue";
 import { cloneDeep, mapValues, pick } from "lodash";
 import { faArrowRight, faDownload } from "@fortawesome/free-solid-svg-icons";
 import { useElementBounding } from "@vueuse/core";
@@ -468,15 +477,64 @@ const factors = computed(() =>
   cloneDeep(categories.value[selectedCategory.value]?.factors || {}),
 );
 
-/** selected value state for each factor */
-const selectedFactors = computed(() => {
-  return Object.fromEntries(
-    Object.entries(factors.value).map(([key, value]) => [
-      key,
-      ref(value.default),
-    ]),
+/** keep track of latest query */
+let latest: Symbol;
+
+/** load map values data */
+async function loadValues() {
+  if (!selectedLevel.value || !selectedCategory.value || !selectedMeasure.value)
+    return;
+
+  /** assign unique id to query */
+  latest = Symbol();
+  const current = latest;
+
+  const result = await getValues(
+    selectedLevel.value,
+    selectedCategory.value,
+    selectedMeasure.value,
+    /** unwrap nested refs */
+    mapValues(selectedFactors.value, (value) => value.value),
   );
-});
+
+  /** check if current query is latest (prevents race conditions) */
+  if (current === latest) values.value = result;
+  else console.warn("stale");
+}
+
+/** selected value state for each factor */
+const selectedFactors = shallowRef<{ [key: string]: ShallowRef<string> }>({});
+
+/** keep track of dynamically created factor watchers */
+const stoppers: { [key: string]: WatchStopHandle } = {};
+
+/** cleanup dynamically created factor watchers */
+onUnmounted(() => Object.values(stoppers).forEach((stopper) => stopper()));
+
+/** update selected factors when full set of factor options changes */
+watch(
+  factors,
+  () => {
+    /** add selected that are new to options */
+    for (const [key, value] of Object.entries(factors.value)) {
+      const factor = useUrlParam(key, stringParam, value.default);
+      selectedFactors.value[key] = factor;
+      /** dynamically create watcher for factor */
+      stoppers[key] = watch(factor, loadValues);
+    }
+    /** remove selected that are no longer in options */
+    for (const key of Object.keys(selectedFactors))
+      if (!(key in factors.value)) {
+        delete selectedFactors.value[key];
+        /** stop watcher */
+        stoppers[key]?.();
+      }
+
+    /** immediately run (just once, not duplicate "immediate"s in watches above) */
+    loadValues();
+  },
+  { deep: true },
+);
 
 /** measures from measure category */
 const measures = computed(() =>
@@ -488,37 +546,10 @@ const percent = computed(() =>
   isPercent(values.value?.min || 0, values.value?.max || 1),
 );
 
-/** keep track of latest query */
-let latest: Symbol;
-
 /** load map values data */
-watch(
-  [selectedLevel, selectedCategory, selectedMeasure, selectedFactors],
-  async () => {
-    if (
-      !selectedLevel.value ||
-      !selectedCategory.value ||
-      !selectedMeasure.value
-    )
-      return;
-
-    /** assign unique id to query */
-    latest = Symbol();
-    const current = latest;
-
-    const result = await getValues(
-      selectedLevel.value,
-      selectedCategory.value,
-      selectedMeasure.value,
-      /** unwrap nested refs */
-      mapValues(selectedFactors.value, (value) => value.value),
-    );
-
-    /** check if current query is latest (prevents race conditions) */
-    if (current === latest) values.value = result;
-  },
-  { deep: true },
-);
+watch([selectedLevel, selectedCategory, selectedMeasure], loadValues, {
+  immediate: true,
+});
 
 /** turn facet into list of select box options */
 function facetToOptions(facet: Facet): Option[] {
@@ -549,7 +580,7 @@ watch([selectedCategory, measures], () => {
 });
 
 /** location dropdown options */
-const locationOptions = computed<Entry[]>(() => {
+const locationOptions = computed(() => {
   const entries: Entry[] = [];
   for (const [group, options] of Object.entries(locationGroups)) {
     entries.push({ group });
