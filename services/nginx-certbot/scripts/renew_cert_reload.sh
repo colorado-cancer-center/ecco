@@ -9,5 +9,5 @@ DOMAIN_ARGS=$( echo "${DOMAIN_NAMES}" | xargs -n 1 echo --domain | paste -sd ' '
 
 certbot certonly \
     --nginx --non-interactive --agree-tos \
-    --email ${ADMIN_EMAIL} ${DOMAIN_ARGS} && \
+    --email ${ADMIN_EMAIL} ${DOMAIN_ARGS} --expand && \
 nginx -s reload

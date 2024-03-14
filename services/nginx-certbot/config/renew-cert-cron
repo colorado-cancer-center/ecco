@@ -1,4 +1,3 @@
 # set up a job to renew our cert every so often
 # m    h    d    mo  dow cmd
   0    0    1    *   *   certbot renew --post-hook "nginx -s reload"
-  */1  *    *    *   *   echo howdy >> /tmp/crontest.txt
