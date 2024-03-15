@@ -30,7 +30,7 @@
     <p class="actions">
       <AppButton
         :icon="faGithub"
-        to="https://github.com/colorado-cancer-center/COCancerScope/issues/new/choose"
+        to="https://github.com/colorado-cancer-center/ecco/issues/new/choose"
         >GitHub (preferred)</AppButton
       >
       <AppButton :icon="faEnvelope" to="mailto:jan.lowery@cuanschutz.edu"

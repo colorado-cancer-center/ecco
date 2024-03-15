@@ -5,13 +5,13 @@ volumes:
 
 services:
   frontend:
-    image: cocancerscope-frontend
+    image: ecco-frontend
     build: ./frontend
     command: "/bin/bash -c 'yarn build ; cp -R ./dist/* /app/build/'"
     volumes:
       - built_frontend:/app/build/
     environment:
-      - "VITE_API=https://co-cancer-scope.cu-dbmi.dev/api"
+      - "VITE_API=https://ecco.cu-dbmi.dev/api"
 
   nginx-certbot:
     # image: nginx:1.19.6-alpine

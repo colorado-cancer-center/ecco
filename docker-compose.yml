@@ -3,7 +3,7 @@ volumes:
 
 services:
   backend:
-    image: cocancerscope-backend:latest
+    image: ecco-backend:latest
     build: ./backend
     environment:
       - "DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT:-5432}/${POSTGRES_DATABASE}"
@@ -17,7 +17,7 @@ services:
         condition: service_healthy
 
   frontend:
-    image: cocancerscope-frontend
+    image: ecco-frontend
     build: ./frontend
     command: yarn build
     env_file:

@@ -1,4 +1,4 @@
-# COCancerScope: Implementation Details
+# Implementation Details
 
 So far, this repo contains:
 - a PostGIS database to provide the geometry and statistics
