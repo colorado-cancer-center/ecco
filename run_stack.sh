@@ -20,6 +20,7 @@ case "${1:-$CHOSEN_ENV}" in
         ;;
     "dev")
         # remove the arg, allow this to fall through to base case
+        TARGET_ENV="dev"
         shift
         ;;
     *)
