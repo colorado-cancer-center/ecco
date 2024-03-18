@@ -1,8 +1,10 @@
 #!/bin/bash
 
 if [ -d "/db-exports/" ]; then
-    # identify the most recent export
-    TARGET_DUMPFILE=$( ls -t /db-exports/*.dump | head -n1 )
+    # find the most recent database dump /db-exports/*.dump in by using sort;
+    # presumes that dumpfiles are named <label>_<timestamp>.dump
+    TARGET_DUMPFILE=$(ls /db-exports/*.dump | sort -t '_' -k2 -r | head -n 1)
+    
     echo "* Found db export ${TARGET_DUMPFILE}"
 
     # drop and recreate the database
