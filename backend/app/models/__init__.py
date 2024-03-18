@@ -6,11 +6,15 @@ from .geom import (
     Tract,
     USState,
 )
-from .cif import (
-    TestModel,
-    CancerStatsByCounty,
+from .base import (
     MeasuresByCounty,
     MeasuresByTract,
+
+    # metadata
+    STATS_MODELS
+)
+from .cif import (
+    CancerStatsByCounty,
     CancerIncidenceCounty,
     CancerMortalityCounty,
     EconomyCounty,
@@ -28,11 +32,13 @@ from .cif import (
     DisparitiesTract,
 
     # metadata
-    STATS_MODELS,
     CANCER_MODELS,
     MEASURE_DESCRIPTIONS,
     FACTOR_DESCRIPTIONS
 )
 from .scp import (
     COIncidenceData
+)
+from .disparity_index import (
+    CancerDisparitiesIndex
 )

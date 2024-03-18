@@ -2,26 +2,14 @@
 Models derived from cancerinfocus.org ("cif")
 """
 
-from typing import Optional
+from sqlmodel import Field
 
-from sqlmodel import Field, SQLModel
-
+from .base import BaseStatsModel, MeasuresByCounty, MeasuresByTract
 
 # ===========================================================================
 # === stats models from CIF data export
 # ===========================================================================
 
-# ---------------------------------------------------------------------------
-# -- base models that don't actually become tables
-# ---------------------------------------------------------------------------
-
-class BaseStatsModel(SQLModel):
-    id: Optional[int] = Field(default=None, nullable=False, primary_key=True)
-
-class TestModel(SQLModel):
-    id: Optional[int] = Field(default=None, nullable=False, primary_key=True)
-    name: str = Field()
-    
 class CancerStatsByCounty(BaseStatsModel):
     # NOTE: the 'measure' and 'value' columns are named 'Site' and 'AAR' in the
     # original schema, but we rename them here so they can be treated in
@@ -40,17 +28,6 @@ class CancerStatsByCounty(BaseStatsModel):
     Site : str = Field(index=True)
     AAR : float
     AAC : float
-
-class MeasuresByCounty(BaseStatsModel):
-    FIPS : str = Field(index=True)
-    County : str = Field(index=True)
-    State : str = Field(index=True, foreign_key="us_state.name")
-    measure : str = Field(index=True)
-    value : float
-
-class MeasuresByTract(MeasuresByCounty):
-    Tract : Optional[str] = Field(index=True, nullable=True)
-
 
 # ---------------------------------------------------------------------------
 # -- actual tables
