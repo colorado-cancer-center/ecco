@@ -25,12 +25,14 @@ from models import (
     HousingTransCounty,
     RfAndScreeningCounty,
     SociodemographicsCounty,
+    DisparitiesCounty,
     EconomyTract,
     EnvironmentTract,
     FoodDesertTract,
     HousingTransTract,
     RfAndScreeningTract,
-    SociodemographicsTract
+    SociodemographicsTract,
+    DisparitiesTract
 )
 
 SHEETS_TO_TYPES = {
@@ -41,12 +43,14 @@ SHEETS_TO_TYPES = {
     "us_housing_trans_county": HousingTransCounty,
     "us_rf_and_screening_county": RfAndScreeningCounty,
     "us_sociodemographics_county": SociodemographicsCounty,
+    "us_disparity_county": DisparitiesCounty,
     "us_economy_tract": EconomyTract,
     "us_environment_tract": EnvironmentTract,
     "us_food_desert_tract": FoodDesertTract,
     "us_housing_trans_tract": HousingTransTract,
     "us_rf_and_screening_tract": RfAndScreeningTract,
-    "us_sociodemographics_tract": SociodemographicsTract
+    "us_sociodemographics_tract": SociodemographicsTract,
+    "us_disparity_tract": DisparitiesTract,
 }
 
 class ModelForFileNotFoundException(Exception):
