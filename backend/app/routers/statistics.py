@@ -471,10 +471,20 @@ async def download_all(
                         async for chunk in result.body_iterator:
                             str_fp.write(chunk)
 
+                        # get the human-readable name of the model (aka the
+                        # measure category), if available, and default to the
+                        # model's simple name if not
+                        try:
+                            model_name = model.Config.label or simple_model_name
+                        except AttributeError:
+                            model_name = simple_model_name
+
+                        # produce a human-readable name for the measure, if available,
+                        # from the MEASURE_DESCRIPTIONS entry for this model
                         final_name = f"{get_or_key(model_measure_labels, measure)}.csv"
 
                         z.writestr(
-                            os.path.join(type, simple_model_name, final_name),
+                            os.path.join(type, model_name, final_name),
                             str_fp.getvalue()
                         )
 
