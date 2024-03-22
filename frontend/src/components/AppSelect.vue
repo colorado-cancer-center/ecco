@@ -232,8 +232,6 @@ function onKeypress({ key }: KeyboardEvent) {
         if (isOption(props.options[index])) break;
       }
 
-    console.log(index);
-
     emit("update:modelValue", (props.options[index] as O).id);
   }
 }

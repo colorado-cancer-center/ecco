@@ -616,7 +616,6 @@ watch([levels, selectedLevel], () => {
 
 /** auto-select category */
 watch([selectedLevel, categories], () => {
-  console.log("hi", selectedLevel.value, categories.value);
   if (!selectedCategory.value || !categories.value[selectedCategory.value])
     selectedCategory.value = categories.value["sociodemographics"]
       ? "sociodemographics"
