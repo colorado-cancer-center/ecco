@@ -2,6 +2,15 @@
   <section>
     <h2>Sources</h2>
 
+    <AppButton
+      v-tooltip="'Download all sources data in CSV format'"
+      :icon="faTable"
+      :to="getDownloadAll()"
+      :accent="true"
+    >
+      Download All Data
+    </AppButton>
+
     <p>
       Data for ECCO were gathered from several publicly available sources. Due
       to automated data collection efforts, years on sources will change over
@@ -660,5 +669,7 @@
 </template>
 
 <script setup lang="ts">
+import { faTable } from "@fortawesome/free-solid-svg-icons";
+import { getDownloadAll } from "@/api";
 import AppLink from "@/components/AppLink.vue";
 </script>
