@@ -16,7 +16,7 @@ services:
     volumes:
       - './frontend/src:/app/src:delegated'
       - './frontend/public:/app/public:delegated'
-    command: yarn dev --host 0.0.0.0 --port 8001
+    command: bun run dev --host 0.0.0.0 --port 8001
 
   db:
     ports:

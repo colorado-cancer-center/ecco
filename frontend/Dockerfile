@@ -1,9 +1,9 @@
-FROM node:18
+FROM oven/bun:1 as base
 
 WORKDIR /app
 
-COPY package.json yarn.lock  .
+COPY package.json bun.lockb  .
 
-RUN yarn install --production=false
+RUN bun install
 
 COPY . .
