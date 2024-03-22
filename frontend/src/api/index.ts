@@ -7,7 +7,7 @@ import cancerInFocusLocations from "./cancer-in-focus-locations.json";
 /** api root (no trailing slash) */
 const api = import.meta.env.VITE_API;
 
-console.info("API:", api);
+console.debug("API:", api);
 
 /** request cache */
 const cache = new Map();
@@ -16,9 +16,7 @@ const cache = new Map();
 export async function request<T>(url: string) {
   /** construct request */
   const request = new Request(url);
-  console.groupCollapsed(`📞 Request ${url}`);
-  console.info(request);
-  console.groupEnd();
+  console.debug(`📞 Request ${url}`, { request });
   /** unique request id for caching */
   const id = JSON.stringify(request, ["url", "method", "headers"]);
   /** get response from cache or make new request */
@@ -27,10 +25,7 @@ export async function request<T>(url: string) {
   if (!response.ok) throw Error("Response not OK");
   /** parse response */
   const parsed = await response.clone().json();
-  console.groupCollapsed(`📣 Response ${url}`);
-  console.info(response);
-  console.info(parsed);
-  console.groupEnd();
+  console.debug(`📣 Response ${url}`, { response, parsed });
   /** set cache for next time */
   if (request.method === "GET") cache.set(id, response);
   return parsed as T;

@@ -225,9 +225,19 @@
             </div>
           </label>
         </AppAccordion>
+
+        <AppButton
+          v-tooltip="'Reset selected options and map to default'"
+          :icon="faArrowsRotate"
+          :flip="true"
+          :accent="true"
+          @click="reset"
+          >Reset</AppButton
+        >
       </div>
 
       <AppMap
+        v-if="renderMap"
         ref="map"
         v-model:zoom="zoom"
         v-model:lat="lat"
@@ -350,7 +360,11 @@ import {
   type WatchStopHandle,
 } from "vue";
 import { cloneDeep, mapValues, pick } from "lodash";
-import { faArrowRight, faDownload } from "@fortawesome/free-solid-svg-icons";
+import {
+  faArrowRight,
+  faArrowsRotate,
+  faDownload,
+} from "@fortawesome/free-solid-svg-icons";
 import { useElementBounding } from "@vueuse/core";
 import {
   getDownload,
@@ -384,6 +398,7 @@ import {
   useUrlParam,
 } from "@/util/composables";
 import { formatValue, isPercent } from "@/util/math";
+import { sleep } from "@/util/misc";
 
 /** element refs */
 const panel = ref<HTMLElement>();
@@ -426,6 +441,42 @@ const niceSteps = ref(false);
 const scalePower = ref(1);
 const mapWidth = ref(0);
 const mapHeight = ref(0);
+
+/** flag to force rerender of map */
+const renderMap = ref(true);
+
+/** reset controls and map to defaults */
+async function reset() {
+  /**
+   * force full re-render of map. don't do this via key method to make sure
+   * entire dom completely unmounted and recreated from scratch (no diffing by
+   * vue)
+   */
+  renderMap.value = false;
+  await sleep(100);
+  renderMap.value = true;
+
+  // selectedLevel.value = "";
+  // selectedCategory.value = "";
+  // selectedMeasure.value = "";
+  zoom.value = 0;
+  lat.value = 0;
+  long.value = 0;
+  showLegends.value = true;
+  showStats.value = false;
+  selectedBase.value = baseOptions[0]?.id || "";
+  selectedGradient.value = gradientOptions[3]?.id || "";
+  selectedLocations.value = [];
+  baseOpacity.value = 1;
+  dataOpacity.value = 0.75;
+  locationOpacity.value = 1;
+  flipGradient.value = false;
+  scaleSteps.value = 6;
+  niceSteps.value = false;
+  scalePower.value = 1;
+  mapWidth.value = 0;
+  mapHeight.value = 0;
+}
 
 /** get "core" data once on page load */
 async function loadDefs() {
@@ -523,7 +574,7 @@ watch(
       stoppers[key] = watch(factor, loadValues);
     }
     /** remove selected that are no longer in options */
-    for (const key of Object.keys(selectedFactors))
+    for (const key of Object.keys(selectedFactors.value))
       if (!(key in factors.value)) {
         delete selectedFactors.value[key];
         /** stop watcher */
@@ -557,7 +608,7 @@ function facetToOptions(facet: Facet): Option[] {
 }
 
 /** auto-select level option */
-watch([levels], () => {
+watch([levels, selectedLevel], () => {
   /** if not already selected, or selection no longer valid */
   if (!selectedLevel.value || !levels.value[selectedLevel.value])
     selectedLevel.value = Object.keys(levels.value)[0] || "";

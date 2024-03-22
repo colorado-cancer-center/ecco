@@ -13,15 +13,14 @@ Notable technologies/packages/etc. used:
 
 ## Requirements
 
-- Node `v18` or later
-- Yarn `v1` (classic)
+- Bun (v1 or later)
 
 ## Commands
 
-| Command        | Description                                       |
-| -------------- | ------------------------------------------------- |
-| `yarn install` | Install packages                                  |
-| `yarn dev`     | Start local dev server with hot-reloading         |
-| `yarn build`   | Build production version of app                   |
-| `yarn preview` | Serve built version of app (must run build first) |
-| `yarn lint`    | Fix linting and formatting                        |
+| Command           | Description                                       |
+| ----------------- | ------------------------------------------------- |
+| `bun install`     | Install packages                                  |
+| `bun run dev`     | Start local dev server with hot-reloading         |
+| `bun run build`   | Build production version of app                   |
+| `bun run preview` | Serve built version of app (must run build first) |
+| `bun run lint`    | Fix linting and formatting                        |

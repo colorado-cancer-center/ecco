@@ -1,8 +1,9 @@
 <template>
   <label class="container" @click.prevent>
-    <div>{{ label }}</div>
+    <div class="label">{{ label }}</div>
 
-    <Combobox
+    <Listbox
+      v-slot="{ open }"
       :model-value="value"
       :multiple="multi"
       @update:model-value="onChange"
@@ -16,8 +17,15 @@
         strategy="fixed"
       >
         <!-- button -->
-        <div class="row">
-          <div v-if="!query" class="label">
+        <ListboxButton as="template">
+          <AppButton
+            v-tooltip="tooltip"
+            :icon="open ? faCaretUp : faCaretDown"
+            :flip="true"
+            class="button"
+            :style="{ gridColumn: multi ? '' : 'span 2' }"
+            @keydown="onKeypress"
+          >
             <span>
               {{ selectedLabel }}
             </span>
@@ -26,28 +34,14 @@
               name="preview"
               :option="selectedOption"
             />
-          </div>
-          <ComboboxInput
-            class="input"
-            @blur="query = ''"
-            @change="(event) => (query = event.target.value.toLowerCase())"
-          />
-          <ComboboxButton v-slot="{ open }" as="template">
-            <AppButton :icon="open ? faCaretUp : faCaretDown" class="button" />
-          </ComboboxButton>
-          <AppButton
-            v-if="multi"
-            v-tooltip="'Deselect all'"
-            :icon="faXmark"
-            @click="$emit('update:modelValue', [])"
-          />
-        </div>
+          </AppButton>
+        </ListboxButton>
 
         <!-- dropdown -->
-        <ComboboxOptions>
-          <template v-for="(option, index) in filtered" :key="index">
+        <ListboxOptions>
+          <template v-for="(option, index) in options" :key="index">
             <!-- regular option -->
-            <ComboboxOption
+            <ListboxOption
               v-if="isOption(option)"
               v-slot="{ active, selected }"
               as="template"
@@ -64,18 +58,25 @@
                 <span>{{ option.label }}</span>
                 <slot name="preview" :option="option" />
               </li>
-            </ComboboxOption>
+            </ListboxOption>
             <!-- group option -->
             <li v-else class="group">{{ option.group }}</li>
           </template>
-        </ComboboxOptions>
+        </ListboxOptions>
       </Float>
-    </Combobox>
+    </Listbox>
+
+    <AppButton
+      v-if="multi"
+      v-tooltip="'Deselect all'"
+      :icon="faXmark"
+      @click="$emit('update:modelValue', [])"
+    />
   </label>
 </template>
 
 <script setup lang="ts" generic="O extends Option">
-import { computed, ref, type VNode } from "vue";
+import { computed, type VNode } from "vue";
 import { size } from "@floating-ui/dom";
 import {
   faCaretDown,
@@ -85,11 +86,10 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { Float } from "@headlessui-float/vue";
 import {
-  Combobox,
-  ComboboxButton,
-  ComboboxInput,
-  ComboboxOption,
-  ComboboxOptions,
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
 } from "@headlessui/vue";
 import AppButton from "@/components/AppButton.vue";
 import { frame } from "@/util/misc";
@@ -135,9 +135,6 @@ type Slots = {
 
 defineSlots<Slots>();
 
-/** combobox "typeahead" search */
-const query = ref("");
-
 /** floating-ui middleware */
 const middleware = [
   size({
@@ -179,16 +176,6 @@ async function onChange(value: O | O[]) {
   emit("update:modelValue", id);
 }
 
-/** results filtered by query string typed into input */
-const filtered = computed(() =>
-  props.options.filter(
-    (option) =>
-      !isOption(option) ||
-      option.id.toLowerCase().includes(query.value) ||
-      option.label.toLowerCase().includes(query.value),
-  ),
-);
-
 /** full selected option (only relevant in single mode) */
 const selectedOption = computed(() => {
   let list = toArray(props.modelValue);
@@ -224,47 +211,46 @@ async function onDropdownOpen(node: VNode) {
   await frame();
   (node.el as Element).scrollIntoView();
 }
+
+/** add "quick" arrow key select */
+function onKeypress({ key }: KeyboardEvent) {
+  if (!props.multi && (key === "ArrowLeft" || key === "ArrowRight")) {
+    let index = props.options.findIndex((option) =>
+      isOption(option) ? option.id === props.modelValue : false,
+    );
+    if (index === -1) return;
+
+    if (key === "ArrowLeft")
+      while (index > 0) {
+        index--;
+        if (isOption(props.options[index])) break;
+      }
+
+    if (key === "ArrowRight")
+      while (index < props.options.length - 1) {
+        index++;
+        if (isOption(props.options[index])) break;
+      }
+
+    emit("update:modelValue", (props.options[index] as O).id);
+  }
+}
 </script>
 
 <style scoped>
 .container {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.row {
   display: grid;
-  grid-template-columns: 1fr min-content min-content;
-  align-items: center;
-  border-radius: var(--rounded);
-  background: var(--light-gray);
-}
-
-.label,
-.input {
-  grid-row: 1;
-  grid-column: 1 / 2;
-  padding-left: 10px;
+  grid-template-columns: 1fr min-content;
+  gap: 10px;
 }
 
 .label {
-  display: flex;
-  z-index: 1;
-  align-items: center;
-  gap: 10px;
-  pointer-events: none;
+  grid-column: span 2;
 }
 
-.label > :first-child {
+.button :deep(span) {
   flex-grow: 1;
-}
-
-.input {
-  align-self: stretch;
-  border: none;
-  background: none;
-  font: inherit;
+  text-align: left;
 }
 
 ul {

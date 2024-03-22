@@ -7,7 +7,7 @@ services:
   frontend:
     image: ecco-frontend
     build: ./frontend
-    command: "/bin/bash -c 'yarn build ; cp -R ./dist/* /app/build/'"
+    command: "/bin/bash -c 'bun run build ; cp -R ./dist/* /app/build/'"
     volumes:
       - built_frontend:/app/build/
     environment:

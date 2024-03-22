@@ -8,6 +8,14 @@ export const routes = [
     name: "Home",
     path: "/",
     component: PageHome,
+    beforeEnter: () => {
+      const url = window.sessionStorage.redirect as string;
+      if (url) {
+        console.debug("Redirecting to:", url);
+        window.sessionStorage.removeItem("redirect");
+        return url;
+      }
+    },
   },
   {
     name: "About",

@@ -19,7 +19,7 @@ services:
   frontend:
     image: ecco-frontend
     build: ./frontend
-    command: yarn build
+    command: bun run build
     env_file:
       - ./frontend/.env
 
