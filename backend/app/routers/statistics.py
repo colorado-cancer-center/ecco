@@ -18,7 +18,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlmodel import paginate
 
-from tools.strings import slugify, slug_modelname_sans_type
+from tools.strings import slugify, slug_modelname_sans_type, sanitize
 from tools.accessors import get_or_key, get_keys
 from db import get_session
 
@@ -482,11 +482,19 @@ async def download_all(
                         # produce a human-readable name for the measure, if available,
                         # from the MEASURE_DESCRIPTIONS entry for this model
                         final_name = f"{get_or_key(model_measure_labels, measure)}.csv"
-
-                        z.writestr(
-                            os.path.join(type, model_name, final_name),
-                            str_fp.getvalue()
-                        )
+                        
+                        # produce a complete path consisting of the type, the
+                        # name of the model (aka measure category), and the
+                        # measure name.
+                        # sanitize() removes only characters known to be
+                        # problematic, so we may need to tweak it later if we
+                        # run into issues.
+                        zip_path = os.path.join(*(
+                            sanitize(x)
+                            for x in (type, model_name, final_name)
+                        ))
+                        
+                        z.writestr(zip_path, str_fp.getvalue())
 
         # stream the finished zip back to the user           
         response = StreamingResponse(iter([zip_fp.getvalue()]), media_type="application/zip")
