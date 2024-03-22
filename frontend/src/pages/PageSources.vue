@@ -2,15 +2,6 @@
   <section>
     <h2>Sources</h2>
 
-    <AppButton
-      v-tooltip="'Download all sources data in CSV format'"
-      :icon="faTable"
-      :to="getDownloadAll()"
-      :accent="true"
-    >
-      Download All Data
-    </AppButton>
-
     <p>
       Data for ECCO were gathered from several publicly available sources. Due
       to automated data collection efforts, years on sources will change over
@@ -20,6 +11,17 @@
         >Cancer InFocus: Catchment Areas</AppLink
       >. The complete years of data reflected in ECCO vary by source. Data will
       be updated as the most recent data becomes available.
+    </p>
+
+    <p class="center">
+      <AppButton
+        v-tooltip="'Download all sources data in CSV format'"
+        :icon="faTable"
+        :to="getDownloadAll()"
+        :accent="true"
+      >
+        Download All Data
+      </AppButton>
     </p>
   </section>
 
