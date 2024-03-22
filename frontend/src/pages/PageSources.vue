@@ -12,6 +12,17 @@
       >. The complete years of data reflected in ECCO vary by source. Data will
       be updated as the most recent data becomes available.
     </p>
+
+    <p class="center">
+      <AppButton
+        v-tooltip="'Download all sources data in CSV format'"
+        :icon="faTable"
+        :to="getDownloadAll()"
+        :accent="true"
+      >
+        Download All Data
+      </AppButton>
+    </p>
   </section>
 
   <section>
@@ -660,5 +671,8 @@
 </template>
 
 <script setup lang="ts">
+import { faTable } from "@fortawesome/free-solid-svg-icons";
+import { getDownloadAll } from "@/api";
+import AppButton from "@/components/AppButton.vue";
 import AppLink from "@/components/AppLink.vue";
 </script>

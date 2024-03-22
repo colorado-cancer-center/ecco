@@ -198,6 +198,11 @@ export function getDownload(level: string, category: string, measure?: string) {
   }`;
 }
 
+/** get download all link */
+export function getDownloadAll() {
+  return `${api}/stats/download-all`;
+}
+
 /** location geojson properties fields */
 type LocationProps = {
   name?: string;

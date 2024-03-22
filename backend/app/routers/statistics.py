@@ -3,12 +3,14 @@ API endpoints that return statistics, e.g. cancer incidence/mortality,
 or sociodemographic measures.
 """
 
+import os
 import csv
-from io import StringIO
+from io import StringIO, BytesIO
+import zipfile
 
 from typing import Optional, Annotated
 from fastapi import Depends, Query, HTTPException, APIRouter
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
 from pydantic import BaseModel
 from sqlalchemy import func
 from sqlmodel import select
@@ -16,7 +18,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlmodel import paginate
 
-from tools.strings import slugify, slug_modelname_sans_type
+from tools.strings import slugify, slug_modelname_sans_type, sanitize
+from tools.accessors import get_or_key, get_keys
 from db import get_session
 
 from settings import LIMIT_TO_STATE
@@ -144,8 +147,6 @@ async def get_measures(session: AsyncSession = Depends(get_session)):
 # --- model-specific routes
 # ----------------------------------------------------------------
 
-# generates a set of stats endpoints per model from the STATS_MODELS dict
-
 def parse_filter_str(filters):
     """
     Takes a string of the form "<factor1>:<value1>;<factor2>:<value2>;..." and
@@ -164,6 +165,10 @@ def parse_filter_str(filters):
 
 class FactorsFilter(BaseModel):
     factors : dict[str,str]
+
+# collects a set of routes for downloading each model as a CSV
+# since we're going to compile them all into a zip
+download_routes = []
 
 # the loop below creates routes dynamically from the models specified in the
 # STATS_MODELS dict; we get one set of routes per model in that dict
@@ -342,15 +347,12 @@ for type, family in STATS_MODELS.items():
                 # (they'll be added as columns to the output)
                 factor_labels = FACTOR_DESCRIPTIONS.get(simple_model_name, None)
 
-                def label_for_measure(measure):
-                    return model_measure_labels.get(measure, measure) or measure
-
                 def model_to_fields(x, factor_labels):
                     fields = [
                         x["GEOID"],
                         x["County"],
                         x["State"],
-                        label_for_measure(x["measure"]),
+                        get_or_key(model_measure_labels, x["measure"]),
                         x["value"],
                     ]
 
@@ -399,10 +401,103 @@ for type, family in STATS_MODELS.items():
                     )
 
                     response = StreamingResponse(iter([fp.getvalue()]), media_type="text/csv")
-                    response.headers["Content-Disposition"] = f"attachment; filename=COE_{slugify(measure or simple_model_name)}_{type}.csv"
+                    response.headers["Content-Disposition"] = f"attachment; filename=ECCO_{slugify(measure or simple_model_name)}_{type}.csv"
 
                     return response
+            
+            # append the endpoint to the download_routes dict; we'll
+            # iterate over this later to produce a set of all possible
+            # downloadable CSVs
+            download_routes.append({
+                'type': type,
+                'model': model,
+                'route': download_dataset
+            })
             
         # finally, execute the generate_routes() method closed over the
         # 'type', 'model', and 'simple_model_name' vars
         generate_routes()
+
+
+# ============================================================================
+# === aggregate download route(s)
+# ============================================================================
+
+# ----------------------------------------------------------------
+# --- a CSV-formatted version of the model for downloading
+# ----------------------------------------------------------------
+@router.get(
+    f"/download-all",
+    response_class=StreamingResponse,
+    description=f"""
+    Produces a CSV of each stats model, then adds them all to a zip file and
+    returns the zip file for download.
+    """
+)
+async def download_all(
+    session: AsyncSession = Depends(get_session)
+):
+    with BytesIO() as zip_fp:
+        with zipfile.ZipFile(zip_fp, "w") as z:
+            # iterate over the download_routes dict and add each CSV to the zip
+            for route_info in download_routes:
+                type, model, route = get_keys(route_info, "type", "model", "route")
+                simple_model_name = slug_modelname_sans_type(model, type)
+
+                # get human labels for measures within this model, if available
+                model_measure_labels = MEASURE_DESCRIPTIONS.get(simple_model_name, {})
+
+                # retrieve the measures for the model, depending on what type of model it is
+                if model in CANCER_MODELS:
+                    query = select(model.Site).distinct().order_by(model.Site)
+                else:
+                    query = select(model.measure).distinct().order_by(model.measure)
+
+                measures_result = await session.execute(query)
+                measures = measures_result.scalars().all()
+
+                # iterate over the measures for each model
+                for measure in measures:
+                    # query the download csv endpoint
+                    result = await route(measure=measure, session=session)
+
+                    # if you want to parse out the filename, you'd do it like so:
+                    # filename = result.headers["Content-Disposition"].split("filename=", maxsplit=1)[1]
+                    # (but at the moment we're overriding the filename with what
+                    # we know it should be.)
+
+                    # read the response into a buffer, then write it into the zip
+                    with StringIO() as str_fp:
+                        async for chunk in result.body_iterator:
+                            str_fp.write(chunk)
+
+                        # get the human-readable name of the model (aka the
+                        # measure category), if available, and default to the
+                        # model's simple name if not
+                        try:
+                            model_name = model.Config.label or simple_model_name
+                        except AttributeError:
+                            model_name = simple_model_name
+
+                        # produce a human-readable name for the measure, if available,
+                        # from the MEASURE_DESCRIPTIONS entry for this model
+                        final_name = f"{get_or_key(model_measure_labels, measure)}.csv"
+                        
+                        # produce a complete path consisting of the type, the
+                        # name of the model (aka measure category), and the
+                        # measure name.
+                        # sanitize() removes only characters known to be
+                        # problematic, so we may need to tweak it later if we
+                        # run into issues.
+                        zip_path = os.path.join(*(
+                            sanitize(x)
+                            for x in (type, model_name, final_name)
+                        ))
+                        
+                        z.writestr(zip_path, str_fp.getvalue())
+
+        # stream the finished zip back to the user           
+        response = StreamingResponse(iter([zip_fp.getvalue()]), media_type="application/zip")
+        response.headers["Content-Disposition"] = f"attachment; filename=ECCO_All_Measures.zip"
+
+        return response
