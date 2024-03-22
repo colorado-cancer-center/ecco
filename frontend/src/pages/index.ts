@@ -11,7 +11,7 @@ export const routes = [
     beforeEnter: () => {
       const url = window.sessionStorage.redirect as string;
       if (url) {
-        console.info("Redirecting to:", url);
+        console.debug("Redirecting to:", url);
         window.sessionStorage.removeItem("redirect");
         return url;
       }

@@ -523,7 +523,7 @@ watch(
       stoppers[key] = watch(factor, loadValues);
     }
     /** remove selected that are no longer in options */
-    for (const key of Object.keys(selectedFactors))
+    for (const key of Object.keys(selectedFactors.value))
       if (!(key in factors.value)) {
         delete selectedFactors.value[key];
         /** stop watcher */
