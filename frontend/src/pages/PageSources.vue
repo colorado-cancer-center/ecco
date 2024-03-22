@@ -671,5 +671,6 @@
 <script setup lang="ts">
 import { faTable } from "@fortawesome/free-solid-svg-icons";
 import { getDownloadAll } from "@/api";
+import AppButton from "@/components/AppButton.vue";
 import AppLink from "@/components/AppLink.vue";
 </script>
