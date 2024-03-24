@@ -87,182 +87,186 @@
       available ACS data are the 2017-2021 5-year estimates:
     </p>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Indicator</th>
-          <th>ACS Table</th>
-          <th>Population Used</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Total Population</td>
-          <td>B01001</td>
-          <td>Total population</td>
-        </tr>
-        <tr>
-          <td>Under 18 Years Old</td>
-          <td>B01001</td>
-          <td>Total population</td>
-        </tr>
-        <tr>
-          <td>18 to 64 Years Old</td>
-          <td>B01001</td>
-          <td>Total population</td>
-        </tr>
-        <tr>
-          <td>Over 64 Years Old</td>
-          <td>B01001</td>
-          <td>Total population</td>
-        </tr>
-        <tr>
-          <td>White (non-Hispanic)</td>
-          <td>B01001H</td>
-          <td>White alone, not Hispanic or Latino population</td>
-        </tr>
-        <tr>
-          <td>Black (non-Hispanic)</td>
-          <td>B01001B</td>
-          <td>People who are Black or African American alone</td>
-        </tr>
-        <tr>
-          <td>Hispanic</td>
-          <td>B01001I</td>
-          <td>People who are Hispanic or Latino</td>
-        </tr>
-        <tr>
-          <td>Asian (non-Hispanic)</td>
-          <td>B01001D</td>
-          <td>People who are Asian alone</td>
-        </tr>
-        <tr>
-          <td>Other Non-Hispanic Races</td>
-          <td>B03002</td>
-          <td>Total population (calculated by subtracting other indicators)</td>
-        </tr>
-        <tr>
-          <td>Graduated High School</td>
-          <td>B15003</td>
-          <td>Population 25 years and over</td>
-        </tr>
-        <tr>
-          <td>Graduated College</td>
-          <td>B15003</td>
-          <td>Population 25 years and over</td>
-        </tr>
-        <tr>
-          <td>Completed a Graduate Degree</td>
-          <td>B15003</td>
-          <td>Population 25 years and over</td>
-        </tr>
-        <tr>
-          <td>Annual Labor Force Participation Rate</td>
-          <td>B23025</td>
-          <td>Population 16 years and over</td>
-        </tr>
-        <tr>
-          <td>Annual Unemployment Rate</td>
-          <td>B23025</td>
-          <td>Population 16 years and over</td>
-        </tr>
-        <tr>
-          <td>Enrolled in Medicaid</td>
-          <td>C27007</td>
-          <td>Civilian noninstitutionalized population</td>
-        </tr>
-        <tr>
-          <td>Household Income ($)</td>
-          <td>B19013</td>
-          <td>Households</td>
-        </tr>
-        <tr>
-          <td>Insured</td>
-          <td>B27001</td>
-          <td>Civilian noninstitutionalized population</td>
-        </tr>
-        <tr>
-          <td>Living Below Poverty</td>
-          <td>B17026</td>
-          <td>Families</td>
-        </tr>
-        <tr>
-          <td>Received TANF or SNAP Public Assistance</td>
-          <td>B19058</td>
-          <td>Households</td>
-        </tr>
-        <tr>
-          <td>Uninsured</td>
-          <td>B27001</td>
-          <td>Civilian noninstitutionalized population</td>
-        </tr>
-        <tr>
-          <td>Crowded Homes</td>
-          <td>DP04</td>
-          <td>Housing units</td>
-        </tr>
-        <tr>
-          <td>High Rent Burden</td>
-          <td>B25070</td>
-          <td>Renter-occupied housing units</td>
-        </tr>
-        <tr>
-          <td>Homes without Broadband Internet</td>
-          <td>DP02</td>
-          <td>Households</td>
-        </tr>
-        <tr>
-          <td>Homes without Complete Plumbing</td>
-          <td>DP04</td>
-          <td>Housing units</td>
-        </tr>
-        <tr>
-          <td>Housing in Mobile Homes</td>
-          <td>DP04</td>
-          <td>Housing units</td>
-        </tr>
-        <tr>
-          <td>Housing in Multi-Unit Structures</td>
-          <td>DP04</td>
-          <td>Housing units</td>
-        </tr>
-        <tr>
-          <td>Median Gross Rent ($)</td>
-          <td>DP04</td>
-          <td>Housing units</td>
-        </tr>
-        <tr>
-          <td>Median Home Value ($)</td>
-          <td>DP04</td>
-          <td>Housing units</td>
-        </tr>
-        <tr>
-          <td>Median Monthly Mortgage ($)</td>
-          <td>DP04</td>
-          <td>Housing units</td>
-        </tr>
-        <tr>
-          <td>No Household Vehicle Access</td>
-          <td>B08141</td>
-          <td>Workers 16 years and over in households</td>
-        </tr>
-        <tr>
-          <td>Owner-occupied Housing Units</td>
-          <td>DP04</td>
-          <td>Housing units</td>
-        </tr>
-        <tr>
-          <td>Single Parent Homes</td>
-          <td>B11012</td>
-          <td>Households</td>
-        </tr>
-        <tr>
-          <td>Vacant Housing</td>
-          <td>B25002</td>
-          <td>Housing units</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Indicator</th>
+            <th>ACS Table</th>
+            <th>Population Used</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Total Population</td>
+            <td>B01001</td>
+            <td>Total population</td>
+          </tr>
+          <tr>
+            <td>Under 18 Years Old</td>
+            <td>B01001</td>
+            <td>Total population</td>
+          </tr>
+          <tr>
+            <td>18 to 64 Years Old</td>
+            <td>B01001</td>
+            <td>Total population</td>
+          </tr>
+          <tr>
+            <td>Over 64 Years Old</td>
+            <td>B01001</td>
+            <td>Total population</td>
+          </tr>
+          <tr>
+            <td>White (non-Hispanic)</td>
+            <td>B01001H</td>
+            <td>White alone, not Hispanic or Latino population</td>
+          </tr>
+          <tr>
+            <td>Black (non-Hispanic)</td>
+            <td>B01001B</td>
+            <td>People who are Black or African American alone</td>
+          </tr>
+          <tr>
+            <td>Hispanic</td>
+            <td>B01001I</td>
+            <td>People who are Hispanic or Latino</td>
+          </tr>
+          <tr>
+            <td>Asian (non-Hispanic)</td>
+            <td>B01001D</td>
+            <td>People who are Asian alone</td>
+          </tr>
+          <tr>
+            <td>Other Non-Hispanic Races</td>
+            <td>B03002</td>
+            <td>
+              Total population (calculated by subtracting other indicators)
+            </td>
+          </tr>
+          <tr>
+            <td>Graduated High School</td>
+            <td>B15003</td>
+            <td>Population 25 years and over</td>
+          </tr>
+          <tr>
+            <td>Graduated College</td>
+            <td>B15003</td>
+            <td>Population 25 years and over</td>
+          </tr>
+          <tr>
+            <td>Completed a Graduate Degree</td>
+            <td>B15003</td>
+            <td>Population 25 years and over</td>
+          </tr>
+          <tr>
+            <td>Annual Labor Force Participation Rate</td>
+            <td>B23025</td>
+            <td>Population 16 years and over</td>
+          </tr>
+          <tr>
+            <td>Annual Unemployment Rate</td>
+            <td>B23025</td>
+            <td>Population 16 years and over</td>
+          </tr>
+          <tr>
+            <td>Enrolled in Medicaid</td>
+            <td>C27007</td>
+            <td>Civilian noninstitutionalized population</td>
+          </tr>
+          <tr>
+            <td>Household Income ($)</td>
+            <td>B19013</td>
+            <td>Households</td>
+          </tr>
+          <tr>
+            <td>Insured</td>
+            <td>B27001</td>
+            <td>Civilian noninstitutionalized population</td>
+          </tr>
+          <tr>
+            <td>Living Below Poverty</td>
+            <td>B17026</td>
+            <td>Families</td>
+          </tr>
+          <tr>
+            <td>Received TANF or SNAP Public Assistance</td>
+            <td>B19058</td>
+            <td>Households</td>
+          </tr>
+          <tr>
+            <td>Uninsured</td>
+            <td>B27001</td>
+            <td>Civilian noninstitutionalized population</td>
+          </tr>
+          <tr>
+            <td>Crowded Homes</td>
+            <td>DP04</td>
+            <td>Housing units</td>
+          </tr>
+          <tr>
+            <td>High Rent Burden</td>
+            <td>B25070</td>
+            <td>Renter-occupied housing units</td>
+          </tr>
+          <tr>
+            <td>Homes without Broadband Internet</td>
+            <td>DP02</td>
+            <td>Households</td>
+          </tr>
+          <tr>
+            <td>Homes without Complete Plumbing</td>
+            <td>DP04</td>
+            <td>Housing units</td>
+          </tr>
+          <tr>
+            <td>Housing in Mobile Homes</td>
+            <td>DP04</td>
+            <td>Housing units</td>
+          </tr>
+          <tr>
+            <td>Housing in Multi-Unit Structures</td>
+            <td>DP04</td>
+            <td>Housing units</td>
+          </tr>
+          <tr>
+            <td>Median Gross Rent ($)</td>
+            <td>DP04</td>
+            <td>Housing units</td>
+          </tr>
+          <tr>
+            <td>Median Home Value ($)</td>
+            <td>DP04</td>
+            <td>Housing units</td>
+          </tr>
+          <tr>
+            <td>Median Monthly Mortgage ($)</td>
+            <td>DP04</td>
+            <td>Housing units</td>
+          </tr>
+          <tr>
+            <td>No Household Vehicle Access</td>
+            <td>B08141</td>
+            <td>Workers 16 years and over in households</td>
+          </tr>
+          <tr>
+            <td>Owner-occupied Housing Units</td>
+            <td>DP04</td>
+            <td>Housing units</td>
+          </tr>
+          <tr>
+            <td>Single Parent Homes</td>
+            <td>B11012</td>
+            <td>Households</td>
+          </tr>
+          <tr>
+            <td>Vacant Housing</td>
+            <td>B25002</td>
+            <td>Housing units</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <h4>
       <AppLink to="https://www.bls.gov/data/"
@@ -308,146 +312,148 @@
       off of data from the Behavioral Risk Factor Surveillance System:
     </p>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Indicator</th>
-          <th>Most Recent Survey Variable Name</th>
-          <th>Most Recent Year Used</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>
-            Met Breast Screening Recommendations (Had Mammogram in Last 2 Years,
-            Age 50-74)
-          </td>
-          <td>_MAM5023</td>
-          <td>2020</td>
-        </tr>
-        <tr>
-          <td>
-            Met Cervical Screening Recommendations (Had Pap Test in Last 3
-            Years, Age 21-65)
-          </td>
-          <td>_RFPAP35</td>
-          <td>2020</td>
-        </tr>
-        <tr>
-          <td>
-            Met Colorectal Screening Recommendations (Met the USPSTF
-            recommendations, Age 50-75)
-          </td>
-          <td>_CRCREC1</td>
-          <td>2020</td>
-        </tr>
-        <tr>
-          <td>Currently Smoke (adults)</td>
-          <td>_RFSMOK3</td>
-          <td>2020</td>
-        </tr>
-        <tr>
-          <td>Obese (BMI over 30)</td>
-          <td>_BMI5CAT</td>
-          <td>2020</td>
-        </tr>
-        <tr>
-          <td>Physically Inactive</td>
-          <td>_TOTINDA</td>
-          <td>2020</td>
-        </tr>
-        <tr>
-          <td>Binge Drink</td>
-          <td>_RFBING5</td>
-          <td>2020</td>
-        </tr>
-        <tr>
-          <td>Sleep &lt; 7 Hours a Night</td>
-          <td>SLEPTIM1</td>
-          <td>2020</td>
-        </tr>
-        <tr>
-          <td>History of Cancer Diagnosis</td>
-          <td>CHCOCNCR</td>
-          <td>2020</td>
-        </tr>
-        <tr>
-          <td>Report Fair or Poor Overall Health</td>
-          <td>_RFHLTH</td>
-          <td>2020</td>
-        </tr>
-        <tr>
-          <td>Report Frequent Physical Health Distress</td>
-          <td>_PHYS14D</td>
-          <td>2020</td>
-        </tr>
-        <tr>
-          <td>Report Frequent Mental Health Distress</td>
-          <td>_MENT14D</td>
-          <td>2020</td>
-        </tr>
-        <tr>
-          <td>Have Depression</td>
-          <td>ADDEPEV3</td>
-          <td>2020</td>
-        </tr>
-        <tr>
-          <td>Diagnosed with Diabetes</td>
-          <td>DIABETE4</td>
-          <td>2020</td>
-        </tr>
-        <tr>
-          <td>Have High Blood Pressure</td>
-          <td>_RFHYPE5</td>
-          <td>2019</td>
-        </tr>
-        <tr>
-          <td>On Blood Pressure Medicine</td>
-          <td>BPMEDS</td>
-          <td>2019</td>
-        </tr>
-        <tr>
-          <td>Have Coronary Heart Disease</td>
-          <td>CVDCRHD4</td>
-          <td>2020</td>
-        </tr>
-        <tr>
-          <td>Had a Stroke</td>
-          <td>CVDSTRK3</td>
-          <td>2020</td>
-        </tr>
-        <tr>
-          <td>Have Chronic Kidney Disease</td>
-          <td>CHCKDNY2</td>
-          <td>2020</td>
-        </tr>
-        <tr>
-          <td>Diagnosed with Asthma</td>
-          <td>_LTASTH1</td>
-          <td>2020</td>
-        </tr>
-        <tr>
-          <td>Have COPD</td>
-          <td>CHCCOPD2</td>
-          <td>2020</td>
-        </tr>
-        <tr>
-          <td>All Adult Teeth Lost</td>
-          <td>_ALTETH3</td>
-          <td>2020</td>
-        </tr>
-        <tr>
-          <td>Had a Medical Checkup in the Last Year</td>
-          <td>CHECKUP1</td>
-          <td>2020</td>
-        </tr>
-        <tr>
-          <td>Had a Dental Visit in the Last Year</td>
-          <td>_DENVST3</td>
-          <td>2020</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Indicator</th>
+            <th>Most Recent Survey Variable Name</th>
+            <th>Most Recent Year Used</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              Met Breast Screening Recommendations (Had Mammogram in Last 2
+              Years, Age 50-74)
+            </td>
+            <td>_MAM5023</td>
+            <td>2020</td>
+          </tr>
+          <tr>
+            <td>
+              Met Cervical Screening Recommendations (Had Pap Test in Last 3
+              Years, Age 21-65)
+            </td>
+            <td>_RFPAP35</td>
+            <td>2020</td>
+          </tr>
+          <tr>
+            <td>
+              Met Colorectal Screening Recommendations (Met the USPSTF
+              recommendations, Age 50-75)
+            </td>
+            <td>_CRCREC1</td>
+            <td>2020</td>
+          </tr>
+          <tr>
+            <td>Currently Smoke (adults)</td>
+            <td>_RFSMOK3</td>
+            <td>2020</td>
+          </tr>
+          <tr>
+            <td>Obese (BMI over 30)</td>
+            <td>_BMI5CAT</td>
+            <td>2020</td>
+          </tr>
+          <tr>
+            <td>Physically Inactive</td>
+            <td>_TOTINDA</td>
+            <td>2020</td>
+          </tr>
+          <tr>
+            <td>Binge Drink</td>
+            <td>_RFBING5</td>
+            <td>2020</td>
+          </tr>
+          <tr>
+            <td>Sleep &lt; 7 Hours a Night</td>
+            <td>SLEPTIM1</td>
+            <td>2020</td>
+          </tr>
+          <tr>
+            <td>History of Cancer Diagnosis</td>
+            <td>CHCOCNCR</td>
+            <td>2020</td>
+          </tr>
+          <tr>
+            <td>Report Fair or Poor Overall Health</td>
+            <td>_RFHLTH</td>
+            <td>2020</td>
+          </tr>
+          <tr>
+            <td>Report Frequent Physical Health Distress</td>
+            <td>_PHYS14D</td>
+            <td>2020</td>
+          </tr>
+          <tr>
+            <td>Report Frequent Mental Health Distress</td>
+            <td>_MENT14D</td>
+            <td>2020</td>
+          </tr>
+          <tr>
+            <td>Have Depression</td>
+            <td>ADDEPEV3</td>
+            <td>2020</td>
+          </tr>
+          <tr>
+            <td>Diagnosed with Diabetes</td>
+            <td>DIABETE4</td>
+            <td>2020</td>
+          </tr>
+          <tr>
+            <td>Have High Blood Pressure</td>
+            <td>_RFHYPE5</td>
+            <td>2019</td>
+          </tr>
+          <tr>
+            <td>On Blood Pressure Medicine</td>
+            <td>BPMEDS</td>
+            <td>2019</td>
+          </tr>
+          <tr>
+            <td>Have Coronary Heart Disease</td>
+            <td>CVDCRHD4</td>
+            <td>2020</td>
+          </tr>
+          <tr>
+            <td>Had a Stroke</td>
+            <td>CVDSTRK3</td>
+            <td>2020</td>
+          </tr>
+          <tr>
+            <td>Have Chronic Kidney Disease</td>
+            <td>CHCKDNY2</td>
+            <td>2020</td>
+          </tr>
+          <tr>
+            <td>Diagnosed with Asthma</td>
+            <td>_LTASTH1</td>
+            <td>2020</td>
+          </tr>
+          <tr>
+            <td>Have COPD</td>
+            <td>CHCCOPD2</td>
+            <td>2020</td>
+          </tr>
+          <tr>
+            <td>All Adult Teeth Lost</td>
+            <td>_ALTETH3</td>
+            <td>2020</td>
+          </tr>
+          <tr>
+            <td>Had a Medical Checkup in the Last Year</td>
+            <td>CHECKUP1</td>
+            <td>2020</td>
+          </tr>
+          <tr>
+            <td>Had a Dental Visit in the Last Year</td>
+            <td>_DENVST3</td>
+            <td>2020</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </section>
 
   <section>
