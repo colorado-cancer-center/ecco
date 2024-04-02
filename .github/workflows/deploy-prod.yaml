@@ -1,0 +1,32 @@
+name: Deploy ECCO to VM
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy_prod:
+    runs-on: 'ubuntu-latest'
+
+    steps:
+      - uses: 'actions/checkout@v4'
+
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: '${{ secrets.JSON_GCLOUD_SERVICE_ACCOUNT_JSON }}'
+
+      - id: 'compute-ssh'
+        uses: 'google-github-actions/ssh-compute@v1'
+        with:
+          instance_name: 'ecco'
+          zone: 'us-central1-a'
+          user: 'ecco-deployer'
+          ssh_private_key: '${{ secrets.GCP_SSH_PRIVATE_KEY }}'
+          # command: 'cd /var/projects/ecco && git pull && ./run_stack.sh prod'
+          command: 'touch ~/i_was_here'
+  
+      - id: 'test'
+        run: |-
+          echo '${{ steps.compute-ssh.outputs.stdout }}'
+          echo '${{ steps.compute-ssh.outputs.stderr }}'
