@@ -174,6 +174,9 @@ export async function getValues(
 
   const values = Object.values(data.values).map(({ value }) => value);
 
+  /** if no values, make sure nothing else returned either */
+  if (!values.length) return;
+
   /** calculate stats */
   return {
     min: d3.min(values),

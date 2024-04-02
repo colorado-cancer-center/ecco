@@ -62,7 +62,7 @@
             <span>&ndash;</span>
             <span>{{ formatValue(step.upper, percent) }}</span>
           </template>
-          <template v-if="noData">
+          <template v-if="noData || !scale.steps.length">
             <svg viewBox="0 0 1 1">
               <rect x="0" y="0" width="1" height="1" :fill="noDataColor" />
             </svg>
@@ -185,6 +185,7 @@ import {
 import { useElementSize, useFullscreen, useResizeObserver } from "@vueuse/core";
 import type { Data, Locations, Values } from "@/api";
 import AppButton from "@/components/AppButton.vue";
+import AppLink from "@/components/AppLink.vue";
 import { getGradient } from "@/components/gradient";
 import { markerOptions } from "@/components/markers";
 import { useScrollable } from "@/util/composables";
@@ -192,7 +193,6 @@ import { downloadPng } from "@/util/download";
 import { formatValue, isPercent, normalizedApply } from "@/util/math";
 import { getBbox, sleep } from "@/util/misc";
 import "leaflet/dist/leaflet.css";
-import AppLink from "@/components/AppLink.vue";
 
 /** "no data" color */
 let noDataColor = "#a0a0a0";
@@ -207,7 +207,7 @@ type Props = {
   data?: Data;
   locations?: Locations;
   /** map of feature id to value */
-  values?: Values["values"];
+  values?: NonNullable<Values>["values"];
   /** value domain */
   min?: number;
   max?: number;
@@ -243,9 +243,9 @@ const props = withDefaults(defineProps<Props>(), {
   data: () => ({ type: "FeatureCollection", features: [] }),
   locations: () => ({}),
   values: () => ({}),
-  min: 0,
-  max: 1,
-  noData: 0,
+  min: undefined,
+  max: undefined,
+  noData: undefined,
 });
 
 type Emits = {
@@ -346,6 +346,10 @@ function bindPopup(layer: L.Layer) {
 }
 
 const scale = computed(() => {
+  /** if no values data, return empty scale */
+  if (props.min === undefined || props.max === undefined)
+    return { steps: [], getColor: () => noDataColor };
+
   /** get range of data (accounting for "no data" values) */
   const min = props.noData ? Math.max(props.min, props.noData) : props.min;
   const max = props.max;
@@ -619,7 +623,11 @@ watch(
 );
 
 /** is measure a percent */
-const percent = computed(() => isPercent(props.min, props.max));
+const percent = computed(() =>
+  props.min === undefined || props.max === undefined
+    ? false
+    : isPercent(props.min, props.max),
+);
 
 /** whether element has scrollbars */
 const scrollable = useScrollable(scrollElement);

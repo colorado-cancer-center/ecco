@@ -263,7 +263,7 @@
         :nice-steps="niceSteps"
         :scale-power="scalePower"
         :no-data="
-          !categories[selectedCategory]?.label.includes('age-adj')
+          !categories[selectedCategory]?.label.includes('age-adj') || !values
             ? undefined
             : 3
         "
