@@ -174,7 +174,7 @@ import * as d3 from "d3";
 import domtoimage from "dom-to-image";
 import type { GeoJsonProperties } from "geojson";
 import L, { type MapOptions } from "leaflet";
-import { debounce, mapValues } from "lodash";
+import { debounce, isEmpty, mapValues } from "lodash";
 import {
   faCropSimple,
   faDownload,
@@ -347,7 +347,11 @@ function bindPopup(layer: L.Layer) {
 
 const scale = computed(() => {
   /** if no values data, return empty scale */
-  if (props.min === undefined || props.max === undefined)
+  if (
+    isEmpty(props.values) ||
+    props.min === undefined ||
+    props.max === undefined
+  )
     return { steps: [], getColor: () => noDataColor };
 
   /** get range of data (accounting for "no data" values) */
