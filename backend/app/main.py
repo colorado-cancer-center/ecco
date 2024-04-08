@@ -2,6 +2,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import  add_pagination
 
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.memcached import MemcachedBackend
+import aiomcache
+
 from routers import geometry, statistics
 
 from settings import IS_DEV
@@ -30,6 +34,12 @@ app.add_middleware(
 
 # enables pagination plugin
 add_pagination(app)
+
+# enable caching via fastapi-cache
+@app.on_event("startup")
+async def startup():
+    mc = aiomcache.Client("memcached", 11211)
+    FastAPICache.init(MemcachedBackend(mc), prefix="fastapi-cache")
 
 # adds in routers that host geometry, statistics endpoints
 app.include_router(geometry.router)
