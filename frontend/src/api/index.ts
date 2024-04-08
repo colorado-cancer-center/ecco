@@ -89,13 +89,12 @@ type _Facets = {
         measures: {
           [key: string]: {
             label: string;
-          };
-        };
-        factors?: {
-          [key: string]: {
-            default: string;
-            label: string;
-            values: { [key: string]: string };
+            factors?: {
+              [key: string]: {
+                label: string;
+                values: { [key: string]: string };
+              };
+            };
           };
         };
       };
@@ -111,7 +110,6 @@ export type Facet = {
     list?: Facet;
     factors?: {
       [key: string]: {
-        default: string;
         label: string;
         values: { [key: string]: string };
       };
@@ -128,16 +126,16 @@ export async function getFacets() {
     /** geographic level */
     id: key,
     label,
-    list: mapValues(categories, ({ label, measures, factors }, key) => ({
+    list: mapValues(categories, ({ label, measures }, key) => ({
       /** measure category */
       id: key,
       label,
-      list: mapValues(measures, ({ label }, key) => ({
+      list: mapValues(measures, ({ label, factors }, key) => ({
         /** measure */
         id: key,
         label,
+        factors,
       })),
-      factors,
     })),
   })) satisfies Facet;
 }

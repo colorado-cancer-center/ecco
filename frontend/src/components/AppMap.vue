@@ -66,7 +66,7 @@
             <svg viewBox="0 0 1 1">
               <rect x="0" y="0" width="1" height="1" :fill="noDataColor" />
             </svg>
-            <span style="grid-column: 2 / -1">No data</span>
+            <span style="grid-column: 2 / -1; text-align: left">No data</span>
           </template>
         </div>
       </div>
@@ -707,9 +707,11 @@ const { toggle: fullscreen } = useFullscreen(mapElement);
   display: grid;
   grid-template-columns: 1.5em max-content max-content max-content;
   grid-auto-rows: 1.5em;
-  place-items: center;
+  align-items: center;
+  justify-items: stretch;
   width: fit-content;
   gap: 0 10px;
+  text-align: center;
 }
 
 .steps svg {
