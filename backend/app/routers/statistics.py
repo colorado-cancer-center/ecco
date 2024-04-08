@@ -58,7 +58,6 @@ class FIPSMeasureResponse(BaseModel):
 
 class FactorMetaResponse(BaseModel):
     label : str
-    default : str | None
     values : dict[str, str]
 
 class MeasuresMetaResponse(BaseModel):
@@ -140,7 +139,6 @@ async def get_measures(session: AsyncSession = Depends(get_session)):
                 return {
                     f: {
                         "label": str(fv["label"] or f),
-                        "default": fv.get("default"),
                         "values": {
                             x: fv.get("values", {}).get(x, x) or x
                             for x in factor_results[f].scalars().all()
