@@ -55,18 +55,18 @@ class FIPSMeasureResponse(BaseModel):
 # provides high-level information about the available categories and measures
 # by iterating over the STATS_MODELS dict
 
-class MeasuresMetaResponse(BaseModel):
-    label: str
-
 class FactorMetaResponse(BaseModel):
     label : str
     default : str | None
     values : dict[str, str]
 
+class MeasuresMetaResponse(BaseModel):
+    label: str
+    factors: Optional[dict[str, FactorMetaResponse]]
+
 class CategoryMetaResponse(BaseModel):
     label: str
     measures: dict[str, MeasuresMetaResponse]
-    factors: Optional[dict[str, FactorMetaResponse]]
 
 class StatsMetaResponse(BaseModel):
     label: str
@@ -101,42 +101,60 @@ async def get_measures(session: AsyncSession = Depends(get_session)):
             else:
                 query = select(model.measure).distinct().order_by(model.measure)
 
-            # also put together queries for the values of factors
-            factor_queries = {
-                factor: {
-                    'query': select(getattr(model, factor).distinct()),
-                    'result': None
-                }
-                for factor in factor_descs
-            }
-            
             # if LIMIT_TO_STATE is not None:
             #     query = query.where(model.State == LIMIT_TO_STATE)
 
-            # perform all our queries
+            # query for measure categories within this measure
             result = await session.execute(query)
 
-            for factor, v in factor_queries.items():
-                factor_queries[factor]['result'] = await session.execute(v["query"])
+            async def get_factors_with_values(model, measure):
+                """
+                Given a model (i.e. measure category) and a measure
+                (i.e, a specific value of the 'measure' field within the model),
+                produces a dict of factors and their distinct values for that
+                measure.
+                """
+
+                # run queries for the values of each factor for this model
+                factor_results = {}
+                for factor in factor_descs:
+                    # gets all distinct values for the factor, ordered
+                    # alphabetically
+                    factor_query = (
+                        select(getattr(model, factor).distinct())
+                            .order_by(getattr(model, factor))
+                    )
+
+                    # further filters down to the measure category, with different
+                    # handling for cancer models since they store the measure in
+                    # the "Site" column
+                    if model not in CANCER_MODELS:
+                        factor_query = factor_query.where(model.measure == measure)
+                    else:
+                        factor_query = factor_query.where(model.Site == measure)
+
+                    factor_results[factor] = await session.execute(factor_query)
+
+                return {
+                    f: {
+                        "label": str(fv["label"] or f),
+                        "default": fv.get("default"),
+                        "values": {
+                            x: fv.get("values", {}).get(x, x) or x
+                            for x in factor_results[f].scalars().all()
+                        }
+                    }
+                    for f, fv in factor_descs.items()
+                }
 
             all_measures[type]["categories"][simple_model_name] = {
                 "label": model.Config.label or simple_model_name,
                 "measures": {
                     x: {
                         "label": measure_descs.get(x, x) or x,
+                        "factors": await get_factors_with_values(model, x)
                     }
                     for x in result.scalars().all()
-                },
-                "factors": {
-                    f: {
-                        "label": str(fv["label"] or f),
-                        "default": fv.get("default"),
-                        "values": {
-                            x: fv.get("values", {}).get(x, x) or x
-                            for x in factor_queries[f]["result"].scalars().all()
-                        }
-                    }
-                    for f, fv in factor_descs.items()
                 }
             }
 
