@@ -15,23 +15,6 @@
           :options="facetToOptions(categories)"
         />
 
-        <template v-for="(factor, key) in factors" :key="key">
-          <AppSelect
-            v-if="selectedFactors[key]"
-            :model-value="selectedFactors[key]!.value"
-            :label="factor.label"
-            :options="
-              Object.entries(factor.values).map(([key, value]) => ({
-                id: key,
-                label: value,
-              }))
-            "
-            @update:model-value="
-              (value) => (selectedFactors[key]!.value = [value].flat()[0] || '')
-            "
-          />
-        </template>
-
         <AppButton
           v-tooltip="'Download selected category data in CSV format'"
           :icon="faDownload"
@@ -55,6 +38,23 @@
         >
           Download Measure
         </AppButton>
+
+        <template v-for="(factor, key) in factors" :key="key">
+          <AppSelect
+            v-if="selectedFactors[key]"
+            :model-value="selectedFactors[key]!.value"
+            :label="factor.label"
+            :options="
+              Object.entries(factor.values).map(([key, value]) => ({
+                id: key,
+                label: value,
+              }))
+            "
+            @update:model-value="
+              (value) => (selectedFactors[key]!.value = [value].flat()[0] || '')
+            "
+          />
+        </template>
 
         <hr />
 
@@ -263,7 +263,7 @@
         :nice-steps="niceSteps"
         :scale-power="scalePower"
         :no-data="
-          !categories[selectedCategory]?.label.includes('age-adj')
+          !categories[selectedCategory]?.label.includes('age-adj') || !values
             ? undefined
             : 3
         "
@@ -523,11 +523,6 @@ const categories = computed(() =>
   cloneDeep(levels.value[selectedLevel.value]?.list || {}),
 );
 
-/** stratification factors (e.g. race/ethnicity, sex, etc) */
-const factors = computed(() =>
-  cloneDeep(categories.value[selectedCategory.value]?.factors || {}),
-);
-
 /** keep track of latest query */
 let latest: Symbol;
 
@@ -550,8 +545,18 @@ async function loadValues() {
 
   /** check if current query is latest (prevents race conditions) */
   if (current === latest) values.value = result;
-  else console.warn("stale");
+  else console.debug("stale");
 }
+
+/** measures from measure category */
+const measures = computed(() =>
+  cloneDeep(categories.value[selectedCategory.value]?.list || {}),
+);
+
+/** stratification factors (e.g. race/ethnicity, sex, etc) */
+const factors = computed(() =>
+  cloneDeep(measures.value[selectedMeasure.value]?.factors || {}),
+);
 
 /** selected value state for each factor */
 const selectedFactors = shallowRef<{ [key: string]: ShallowRef<string> }>({});
@@ -568,7 +573,11 @@ watch(
   () => {
     /** add selected that are new to options */
     for (const [key, value] of Object.entries(factors.value)) {
-      const factor = useUrlParam(key, stringParam, value.default);
+      const factor = useUrlParam(
+        key,
+        stringParam,
+        value.values["All"] || Object.keys(value.values)[0]!,
+      );
       selectedFactors.value[key] = factor;
       /** dynamically create watcher for factor */
       stoppers[key] = watch(factor, loadValues);
@@ -585,11 +594,6 @@ watch(
     loadValues();
   },
   { deep: true },
-);
-
-/** measures from measure category */
-const measures = computed(() =>
-  cloneDeep(categories.value[selectedCategory.value]?.list || {}),
 );
 
 /** is measure a percent */

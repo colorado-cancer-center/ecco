@@ -13,8 +13,14 @@ services:
     volumes:
       - ./data:/data
     depends_on:
+      memcached:
+        condition: service_started
       db:
         condition: service_healthy
+
+  # used by the backend to cache responses so they don't have to be recomputed
+  memcached:
+    image: memcached:1.6
 
   frontend:
     image: ecco-frontend
