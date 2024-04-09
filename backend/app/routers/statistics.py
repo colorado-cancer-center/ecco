@@ -286,11 +286,29 @@ for type, family in STATS_MODELS.items():
             ):
                 print(f"Processing {model.__name__} for measure {measure}")
 
+                # ----------------------------------------------------------------
+                # step 1. build initial queries for rows and statistics
+                # ----------------------------------------------------------------
+
                 if model not in CANCER_MODELS:
                     query = select((model.FIPS, model.value)).where(model.measure == measure)
                 else:
                     query = select((model.FIPS, model.AAR.label("value"), model.AAC.label("aac"))).where(model.Site == measure)
                 
+                if LIMIT_TO_STATE is not None:
+                    query = query.where(model.State == LIMIT_TO_STATE)
+
+                # compute mins and maxes so we can build a color scale
+                # # if it's a cancer endpint, we need to use the "Site" column instead of "measure", and "AAR" instead of "value
+                if model not in CANCER_MODELS:
+                    stats_query = select(func.min(model.value), func.max(model.value)).where(model.measure == measure)
+                else:
+                    stats_query = select(func.min(model.AAR), func.max(model.AAR)).where(model.Site == measure)
+                
+                # ----------------------------------------------------------------
+                # step 2. apply factors to the queries
+                # ----------------------------------------------------------------
+
                 # apply factor fields to the query, if the model has factors defined
                 factor_labels = FACTOR_DESCRIPTIONS.get(simple_model_name, None)
 
@@ -309,6 +327,14 @@ for type, family in STATS_MODELS.items():
                                 filter_factors.get(f, fv.get("default", None))
                             )
                         )
+                        # do the same for the stats query
+                        # FIXME: ideally we wouldn't repeat the above where clause
+                        stats_query = stats_query.where(
+                            getattr(model, f) == (
+                                filter_factors.get(f, fv.get("default", None))
+                            )
+                        )
+
                 elif filters is not None:
                     # FIXME: should we throw an error, as we do here, or should we just ignore unused params?
                     raise HTTPException(
@@ -316,16 +342,10 @@ for type, family in STATS_MODELS.items():
                         detail=f"The 'filters' argument was specified, but the model '{simple_model_name}' has no defined factors"
                     )
 
-                if LIMIT_TO_STATE is not None:
-                    query = query.where(model.State == LIMIT_TO_STATE)
+                # ----------------------------------------------------------------
+                # step 3. execute queries, return response
+                # ----------------------------------------------------------------
 
-                # compute mins and maxes so we can build a color scale
-                # # if it's a cancer endpint, we need to use the "Site" column instead of "measure", and "AAR" instead of "value
-                if model not in CANCER_MODELS:
-                    stats_query = select(func.min(model.value), func.max(model.value)).where(model.measure == measure)
-                else:
-                    stats_query = select(func.min(model.AAR), func.max(model.AAR)).where(model.Site == measure)
-                
                 stats_result = await session.execute(stats_query)
                 stats = stats_result.all()[0]
 
