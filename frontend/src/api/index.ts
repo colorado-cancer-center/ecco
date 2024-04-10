@@ -172,17 +172,19 @@ export async function getValues(
 
   const values = Object.values(data.values).map(({ value }) => value);
 
-  /** if no values, make sure nothing else returned either */
-  if (!values.length) return;
-
   /** calculate stats */
-  return {
+  const stats = {
     min: d3.min(values),
     max: d3.max(values),
     mean: d3.mean(values),
     median: d3.median(values),
     values: data.values,
   };
+
+  /** if missing data, return empty */
+  if (!values.length || stats.min === stats.max) return;
+
+  return stats;
 }
 
 export type Values = Awaited<ReturnType<typeof getValues>>;

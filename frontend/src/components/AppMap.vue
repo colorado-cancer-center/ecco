@@ -346,11 +346,12 @@ function bindPopup(layer: L.Layer) {
 }
 
 const scale = computed(() => {
-  /** if no values data, return empty scale */
+  /** if missing data, return empty scale */
   if (
     isEmpty(props.values) ||
     props.min === undefined ||
-    props.max === undefined
+    props.max === undefined ||
+    props.min === props.max
   )
     return { steps: [], getColor: () => noDataColor };
 
