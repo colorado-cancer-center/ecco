@@ -49,7 +49,7 @@ TREND_MAP = {
 }
 # for when the trend value is not mappable; we should choose something the
 # frontend will display as 'no data'
-TREND_MAP_NONE = None
+TREND_MAP_NONE = 0
 
 class SCPDeathsTrendCounty(SCPCountyModel, table=True):
     __tablename__ = SCPDeathsCounty.__tablename__
