@@ -425,7 +425,7 @@ MEASURE_DESCRIPTIONS = {
 #   }, ...
 #  }, ...
 # }
-FACTOR_DESCRIPTIONS = {
+CIF_FACTOR_DESCRIPTIONS = {
     "cancerincidence": {
         "RE": {
             "label": "Race/Ethnicity",

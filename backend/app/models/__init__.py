@@ -11,7 +11,9 @@ from .base import (
     MeasuresByTract,
 
     # metadata
-    STATS_MODELS
+    STATS_MODELS,
+    MEASURE_DESCRIPTIONS,
+    FACTOR_DESCRIPTIONS
 )
 from .cif import (
     CancerStatsByCounty,
@@ -32,12 +34,11 @@ from .cif import (
     DisparitiesTract,
 
     # metadata
-    CANCER_MODELS,
-    MEASURE_DESCRIPTIONS,
-    FACTOR_DESCRIPTIONS
+    CANCER_MODELS
 )
 from .scp import (
-    COIncidenceData
+    SCPDeathsCounty,
+    SCPIncidenceCounty
 )
 from .disparity_index import (
     CancerDisparitiesIndex

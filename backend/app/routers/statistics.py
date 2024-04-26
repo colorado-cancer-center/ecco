@@ -12,7 +12,7 @@ from typing import Optional, Annotated
 from fastapi import Depends, Query, HTTPException, APIRouter
 from fastapi.responses import StreamingResponse, FileResponse
 from pydantic import BaseModel
-from sqlalchemy import func
+from sqlalchemy import func, case
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi_pagination import Page
@@ -31,6 +31,7 @@ from models import (
     MEASURE_DESCRIPTIONS,
     FACTOR_DESCRIPTIONS
 )
+from models.scp import SCP_TRENDS_MODELS, TREND_MAP, TREND_MAP_NONE
 
 
 router = APIRouter(prefix="/stats")
@@ -45,7 +46,7 @@ router = APIRouter(prefix="/stats")
 # ----------------------------------------------------------------
 
 class FIPSValue(BaseModel):
-    value: float
+    value: Optional[float]
     aac: Optional[float]
 
 class FIPSMeasureResponse(BaseModel):
@@ -129,10 +130,10 @@ async def get_measures(session: AsyncSession = Depends(get_session)):
                     # further filters down to the measure category, with different
                     # handling for cancer models since they store the measure in
                     # the "Site" column
-                    if model not in CANCER_MODELS:
-                        factor_query = factor_query.where(model.measure == measure)
-                    else:
+                    if model in CANCER_MODELS:
                         factor_query = factor_query.where(model.Site == measure)
+                    else:
+                        factor_query = factor_query.where(model.measure == measure)
 
                     factor_results[factor] = await session.execute(factor_query)
 
@@ -290,20 +291,34 @@ for type, family in STATS_MODELS.items():
                 # step 1. build initial queries for rows and statistics
                 # ----------------------------------------------------------------
 
-                if model not in CANCER_MODELS:
-                    query = select((model.FIPS, model.value)).where(model.measure == measure)
-                else:
+                if model in CANCER_MODELS:
                     query = select((model.FIPS, model.AAR.label("value"), model.AAC.label("aac"))).where(model.Site == measure)
-                
+                elif model in SCP_TRENDS_MODELS:
+                    # FIXME: ideally this should be a computed field on the model
+                    # but sqlmodel doesn't support computed fields yet
+                    query = select(
+                        (
+                            model.FIPS,
+                            case(
+                                (model.trend == 'falling', TREND_MAP['falling']),
+                                (model.trend == 'stable', TREND_MAP['stable']),
+                                (model.trend == 'rising', TREND_MAP['rising']),
+                                else_=TREND_MAP_NONE
+                            ).label("value")
+                        )
+                    ).where(model.measure == measure)
+                else:
+                    query = select((model.FIPS, model.value)).where(model.measure == measure)
+
                 if LIMIT_TO_STATE is not None:
                     query = query.where(model.State == LIMIT_TO_STATE)
 
                 # compute mins and maxes so we can build a color scale
                 # # if it's a cancer endpint, we need to use the "Site" column instead of "measure", and "AAR" instead of "value
-                if model not in CANCER_MODELS:
-                    stats_query = select(func.min(model.value), func.max(model.value)).where(model.measure == measure)
-                else:
+                if model in CANCER_MODELS:
                     stats_query = select(func.min(model.AAR), func.max(model.AAR)).where(model.Site == measure)
+                else:
+                    stats_query = select(func.min(model.value), func.max(model.value)).where(model.measure == measure)
                 
                 # ----------------------------------------------------------------
                 # step 2. apply factors to the queries
@@ -352,12 +367,12 @@ for type, family in STATS_MODELS.items():
                 result = await session.execute(query)
                 objects = result.all()
 
-                # for non-cancer models, return a dict of FIPS and values
                 # for cancer models, return a dict of FIPS and a sub-dict of AAR and AAC values
-                if model not in CANCER_MODELS:
-                    values = {x["FIPS"]: {"value": x["value"]} for x in objects}
-                else:
+                # for non-cancer models, return a dict of FIPS and values
+                if model in CANCER_MODELS:
                     values = {x["FIPS"]: {"value": x["value"], "aac": x["aac"]} for x in objects}
+                else:
+                    values = {x["FIPS"]: {"value": x["value"]} for x in objects}
 
                 return FIPSMeasureResponse(
                     min=stats[0],
@@ -399,7 +414,15 @@ for type, family in STATS_MODELS.items():
 
                     return fields
 
-                if model not in CANCER_MODELS:
+                if model in CANCER_MODELS:
+                    query = select(
+                        (model.FIPS.label("GEOID"), model.County, model.State, model.Site.label("measure"), model.AAR.label("value"), model.RE, model.Sex)
+                    )
+                    
+                    if measure is not None:
+                        query = query.where(model.Site == measure)
+
+                else:
                     query = select(
                         (model.FIPS.label("GEOID"), model.County, model.State, model.measure, model.value)
                     )
@@ -407,13 +430,6 @@ for type, family in STATS_MODELS.items():
                     if measure is not None:
                         query = query.where(model.measure == measure)
 
-                else:
-                    query = select(
-                        (model.FIPS.label("GEOID"), model.County, model.State, model.Site.label("measure"), model.AAR.label("value"), model.RE, model.Sex)
-                    )
-                    
-                    if measure is not None:
-                        query = query.where(model.Site == measure)
                 
                 if LIMIT_TO_STATE is not None:
                     query = query.where(model.State == LIMIT_TO_STATE)
