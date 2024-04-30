@@ -1,6 +1,6 @@
 import * as d3 from "d3";
 import type { FeatureCollection, Geometry } from "geojson";
-import { mapValues, omit, omitBy } from "lodash";
+import { mapValues, omitBy } from "lodash";
 import cancerCenterLocations from "./cancer-center-locations.json";
 import cancerInFocusLocations from "./cancer-in-focus-locations.json";
 
