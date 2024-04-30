@@ -98,7 +98,7 @@ async def get_measures(session: AsyncSession = Depends(get_session)):
             measure_descs = MEASURE_DESCRIPTIONS.get(simple_model_name, {})
             factor_descs = FACTOR_DESCRIPTIONS.get(simple_model_name, {})
 
-            if model in CANCER_MODELS:
+            if model in CANCER_MODELS or model in SCP_TRENDS_MODELS:
                 query = select(model.Site).distinct().order_by(model.Site)
             else:
                 query = select(model.measure).distinct().order_by(model.measure)
@@ -130,7 +130,7 @@ async def get_measures(session: AsyncSession = Depends(get_session)):
                     # further filters down to the measure category, with different
                     # handling for cancer models since they store the measure in
                     # the "Site" column
-                    if model in CANCER_MODELS:
+                    if model in CANCER_MODELS or model in SCP_TRENDS_MODELS:
                         factor_query = factor_query.where(model.Site == measure)
                     else:
                         factor_query = factor_query.where(model.measure == measure)
@@ -219,7 +219,7 @@ for type, family in STATS_MODELS.items():
             async def get_dataset_measures(session: AsyncSession = Depends(get_session)):
                 # check if model is a cancer model
                 # if so, we need to use the "Site" column instead of "measure"
-                if model in CANCER_MODELS:
+                if model in CANCER_MODELS or model in SCP_TRENDS_MODELS:
                     query = select(model.Site).distinct().order_by(model.Site)
                 else:
                     query = select(model.measure).distinct().order_by(model.measure)
@@ -291,11 +291,11 @@ for type, family in STATS_MODELS.items():
                 # step 1. build initial queries for rows and statistics
                 # ----------------------------------------------------------------
 
-                if model in CANCER_MODELS:
-                    query = select((model.FIPS, model.AAR.label("value"), model.AAC.label("aac"))).where(model.Site == measure)
-                elif model in SCP_TRENDS_MODELS:
+                if model in SCP_TRENDS_MODELS:
                     # FIXME: ideally this should be a computed field on the model
-                    # but sqlmodel doesn't support computed fields yet
+                    # but sqlmodel doesn't support computed fields yet.
+                    # note that the SCP 'trends' model is effectively a cancer
+                    # model, so instead of "measure" it has "Site".
                     query = select(
                         (
                             model.FIPS,
@@ -306,7 +306,9 @@ for type, family in STATS_MODELS.items():
                                 else_=TREND_MAP_NONE
                             ).label("value")
                         )
-                    ).where(model.measure == measure)
+                    ).where(model.Site == measure)
+                elif model in CANCER_MODELS:
+                    query = select((model.FIPS, model.AAR.label("value"), model.AAC.label("aac"))).where(model.Site == measure)
                 else:
                     query = select((model.FIPS, model.value)).where(model.measure == measure)
 
@@ -315,7 +317,7 @@ for type, family in STATS_MODELS.items():
 
                 # compute mins and maxes so we can build a color scale
                 # # if it's a cancer endpint, we need to use the "Site" column instead of "measure", and "AAR" instead of "value
-                if model in CANCER_MODELS:
+                if model in CANCER_MODELS or model in SCP_TRENDS_MODELS:
                     stats_query = select(func.min(model.AAR), func.max(model.AAR)).where(model.Site == measure)
                 else:
                     stats_query = select(func.min(model.value), func.max(model.value)).where(model.measure == measure)
@@ -413,6 +415,11 @@ for type, family in STATS_MODELS.items():
                         fields += [x[f] for f in factor_labels.keys()]
 
                     return fields
+
+                if model in CANCER_MODELS or model in SCP_TRENDS_MODELS:
+                    value_col = (
+                        model.AAR.label("value") if model in CANCER_MODELS else model.trend.label("value")
+                    )
 
                     # exports the 'Site' column as 'measure' for consistency with
                     # other models. also includes all the factors defined on the
