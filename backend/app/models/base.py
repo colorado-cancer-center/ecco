@@ -42,6 +42,14 @@ class CancerStatsByCounty(BaseStatsModel):
     # average annual count (typically age-adjusted per 100k)
     AAC : float
 
+    def get_factors(self):
+        """
+        Returns a set of factors to include in, e.g., downloaded CSVs.
+
+        This is a placeholder method that should be overridden by child models.
+        """
+        return ()
+
 class MeasuresByTract(MeasuresByCounty):
     Tract : Optional[str] = Field(index=True, nullable=True)
 

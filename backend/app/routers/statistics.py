@@ -414,9 +414,11 @@ for type, family in STATS_MODELS.items():
 
                     return fields
 
-                if model in CANCER_MODELS:
+                    # exports the 'Site' column as 'measure' for consistency with
+                    # other models. also includes all the factors defined on the
+                    # current model as additional columns.
                     query = select(
-                        (model.FIPS.label("GEOID"), model.County, model.State, model.Site.label("measure"), model.AAR.label("value"), model.RE, model.Sex)
+                        (model.FIPS.label("GEOID"), model.County, model.State, model.Site.label("measure"), value_col, *model.get_factors())
                     )
                     
                     if measure is not None:

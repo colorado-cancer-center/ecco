@@ -18,6 +18,10 @@ class CIFCancerStatsByCounty(CancerStatsByCounty):
     RE : str = Field(index=True, nullable=True)
     Sex : str = Field(index=True, nullable=True)
 
+    def get_factors(self):
+        return (self.RE, self.Sex)
+
+
 # ---------------------------------------------------------------------------
 # -- actual tables
 # ---------------------------------------------------------------------------
