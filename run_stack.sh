@@ -24,6 +24,7 @@ case "${1:-$CHOSEN_ENV}" in
         shift
         ;;
     *)
+        TARGET_ENV="${CHOSEN_ENV}"
         echo "${1} not recognized as a target env, ignoring"
         ;;
 esac
