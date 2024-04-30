@@ -1,35 +1,45 @@
 """
 Models derived from scraped data from statecancerprofiles.cancer.gov.
+
+Note that these models supersede the CIF cancer incidence and death models,
+which originally come from SCP anyway.
 """
 
 from typing import Optional
 
 from sqlmodel import Field, SQLModel
 
-from .base import MeasuresByCounty
+from .base import CancerStatsByCounty
 
 
 # ===========================================================================
 # === data models
 # ===========================================================================
 
-class SCPCountyModel(MeasuresByCounty):
+class SCPCountyModel(CancerStatsByCounty):
     # pulled out for use as factors
     sex : str = Field(nullable=True, index=True)
     stage : str = Field(nullable=True, index=True)
     race : str = Field(nullable=True, index=True)
     age : str = Field(nullable=True, index=True)
 
+    # since it's based on CancerStatsByCounty, we get the
+    # 'Site', 'AAR', and 'AAC' fields from our parent
+    # AAR is used in place of 'value' in most places, and
+    # AAC is provided as additional data for cancer models
+
     # pulled out to use in the 'trends' views
     trend : str = Field(nullable=True)
 
 class SCPDeathsCounty(SCPCountyModel, table=True):
     class Config:
-        label = "State Cancer Profiles: Deaths"
+        # label = "State Cancer Profiles: Deaths"
+        label = "Cancer Mortality (age-adj per 100k)"
 
 class SCPIncidenceCounty(SCPCountyModel, table=True):
     class Config:
-        label = "State Cancer Profiles: Incidence"
+        # label = "State Cancer Profiles: Incidence"
+        label = "Cancer Incidence (age-adj per 100k)"
 
 
 # ===========================================================================
@@ -84,6 +94,8 @@ SCP_MODELS = {
     "tract": []
 }
 
+SCP_CANCER_MODELS = { SCPDeathsCounty, SCPIncidenceCounty }
+
 # models for which the API uses 'trend_value' property as the 'value' field
 SCP_TRENDS_MODELS = {
     SCPDeathsTrendCounty,
@@ -112,9 +124,9 @@ SCP_MEASURE_DESCRIPTIONS = {}
 SCP_SHARED_FACTORS = {
     "sex": {
         "label": "Sex",
-        "default": "Both Sexes",
+        "default": "All",
         "values": {
-            "Both Sexes": "Both Sexes",
+            "All": "All",
             "Female": "Female",
             "Male": "Male"
         }

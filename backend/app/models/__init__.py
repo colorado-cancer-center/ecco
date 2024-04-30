@@ -9,14 +9,15 @@ from .geom import (
 from .base import (
     MeasuresByCounty,
     MeasuresByTract,
+    CancerStatsByCounty,
 
     # metadata
     STATS_MODELS,
+    CANCER_MODELS,
     MEASURE_DESCRIPTIONS,
     FACTOR_DESCRIPTIONS
 )
 from .cif import (
-    CancerStatsByCounty,
     CancerIncidenceCounty,
     CancerMortalityCounty,
     EconomyCounty,
@@ -32,9 +33,6 @@ from .cif import (
     RfAndScreeningTract,
     SociodemographicsTract,
     DisparitiesTract,
-
-    # metadata
-    CANCER_MODELS
 )
 from .scp import (
     SCPDeathsCounty,

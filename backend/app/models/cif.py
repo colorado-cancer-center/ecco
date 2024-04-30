@@ -4,30 +4,19 @@ Models derived from cancerinfocus.org ("cif")
 
 from sqlmodel import Field
 
-from .base import BaseStatsModel, MeasuresByCounty, MeasuresByTract
+from .base import BaseStatsModel, MeasuresByCounty, CancerStatsByCounty, MeasuresByTract
 
 # ===========================================================================
 # === stats models from CIF data export
 # ===========================================================================
 
-class CancerStatsByCounty(BaseStatsModel):
-    # NOTE: the 'measure' and 'value' columns are named 'Site' and 'AAR' in the
-    # original schema, but we rename them here so they can be treated in
-    # the same way as the other stats.
-
-    FIPS : str = Field(index=True)
-    County : str = Field(index=True)
-    State : str = Field(index=True, foreign_key="us_state.name")
+class CIFCancerStatsByCounty(CancerStatsByCounty):
     # 'Type' is always Incidence for CancerIncidenceCounty, Mortality for CancerMortalityCounty
     # so it's not terribly useful...
     Type : str = Field(index=True)
     # demographic data, added sometime in february 2024(?)
     RE : str = Field(index=True, nullable=True)
     Sex : str = Field(index=True, nullable=True)
-    # the type of cancer
-    Site : str = Field(index=True)
-    AAR : float
-    AAC : float
 
 # ---------------------------------------------------------------------------
 # -- actual tables
@@ -35,7 +24,7 @@ class CancerStatsByCounty(BaseStatsModel):
 
 # county cancer measures
 
-class CancerIncidenceCounty(CancerStatsByCounty, table=True):
+class CancerIncidenceCounty(CIFCancerStatsByCounty, table=True):
     class Config:
         label = "Cancer Incidence (age-adj per 100k)"
 
@@ -45,7 +34,7 @@ class CancerIncidenceCounty(CancerStatsByCounty, table=True):
     # measure : str = synonym("Site")
     # value : float = synonym("AAR")
 
-class CancerMortalityCounty(CancerStatsByCounty, table=True):
+class CancerMortalityCounty(CIFCancerStatsByCounty, table=True):
     class Config:
         label = "Cancer Mortality (age-adj per 100k)"
 
@@ -115,10 +104,7 @@ class DisparitiesTract(MeasuresByTract, table=True):
 # === (e.g. creating routes automatically, adding human-readable labels)
 # ===========================================================================
 
-# to match the input schema, cancer models have columns named "Site" and "AAR"
-# instead of "measure" and "value". to keep track of this fact, we enumerate
-# the cancer models separately from the other stats models.
-CANCER_MODELS = { CancerIncidenceCounty, CancerMortalityCounty }
+CIF_CANCER_MODELS = { CancerIncidenceCounty, CancerMortalityCounty }
 
 STATS_MODELS = {
     "county": [
@@ -128,8 +114,8 @@ STATS_MODELS = {
         HousingTransCounty,
         RfAndScreeningCounty,
         DisparitiesCounty,
-        CancerIncidenceCounty,
-        CancerMortalityCounty
+        # CancerIncidenceCounty,
+        # CancerMortalityCounty
     ],
     "tract": [
         SociodemographicsTract,

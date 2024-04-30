@@ -23,16 +23,30 @@ from models.scp import (
 # the FIPS code for Colorado
 STATE_CO_FIPS = 8
 
+# optional suffix for SCP data that's filtered to,
+# .e.g, a state FIPS
+# STATE_FIPS_SUFFIX = "_state08"
+STATE_FIPS_SUFFIX = ""
+
 # filenames under the SCP folder to process
 INPUT_FILES = [
-    'state_cancer_profiles_death.csv',
-    'state_cancer_profiles_incidence.csv',
+    f'state_cancer_profiles_death{STATE_FIPS_SUFFIX}.csv',
+    f'state_cancer_profiles_incidence{STATE_FIPS_SUFFIX}.csv',
 ]
 
 # mapping from input filenames to model classes
-FILENAMES_TO_MODELS = {
-    "state_cancer_profiles_death.csv": SCPDeathsCounty,
-    "state_cancer_profiles_incidence.csv": SCPIncidenceCounty
+# and model-specific metadata
+FILENAMES_TO_MODELS_AND_META = {
+    f"state_cancer_profiles_death{STATE_FIPS_SUFFIX}.csv": {
+        "model": SCPDeathsCounty,
+        "aac_col": "average_annual_count",
+        "aar_col": "age_adjusted_death_raterate_note___deaths_per_100_000"
+    },
+    f"state_cancer_profiles_incidence{STATE_FIPS_SUFFIX}.csv": {
+        "model": SCPIncidenceCounty,
+        "aac_col": "average_annual_count",
+        "aar_col": "age_adjusted_incidence_raterate_note___cases_per_100_000"
+    }
 }
 
 class ModelNotProvidedException(Exception):
@@ -54,7 +68,7 @@ def co_county_rows(csv_file:Path):
                 continue
             yield row
 
-async def import_scp_dataset(model, csv_path:Path, delete_before_import:bool=True):
+async def import_scp_dataset(model, csv_path:Path, aac_col: str, aar_col:str, delete_before_import:bool=True):
     """
     Imports SCP data into the database.
 
@@ -89,11 +103,14 @@ async def import_scp_dataset(model, csv_path:Path, delete_before_import:bool=Tru
                 "FIPS" : row["fips"],
                 "County" : row["county"].replace(", Colorado", "").replace(" (8)", ""),
                 "State" : "Colorado",
-                "measure" : row["cancer"],
-                "value": row["average_annual_count"],
+
+                # cancer-specific values
+                "Site" : row["cancer"],
+                "AAR": row[aar_col],
+                "AAC": row[aac_col],
 
                 # factor columns
-                "sex": row["sex"],
+                "sex": row["sex"].replace("Both Sexes", "All"),
                 "stage": row["stage"],
                 "race": row["race"],
                 "age": row["age"],
@@ -111,12 +128,15 @@ async def import_scp_dataset(model, csv_path:Path, delete_before_import:bool=Tru
 async def import_all_files(folder):
     for input_file in INPUT_FILES:
         try:
-            model = FILENAMES_TO_MODELS[input_file]
+            meta = FILENAMES_TO_MODELS_AND_META[input_file]
         except KeyError:
             raise ModelNotProvidedException(f"No model matching input file '{input_file}'")
     
         csv_path = Path(folder, input_file).resolve()
-        await import_scp_dataset(model=model, csv_path=csv_path)
+        await import_scp_dataset(
+            model=meta['model'], csv_path=csv_path,
+            aac_col=meta['aac_col'], aar_col=meta['aar_col']
+        )
 
 @click.command()
 @click.argument('scp-csv-folder', type=str)
