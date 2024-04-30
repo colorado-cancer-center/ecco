@@ -1,6 +1,8 @@
 #!/bin/bash
 
-if [ -d "/db-exports/" ]; then
+if [ "${SKIP_DB_LOAD}" = "1" ]; then
+    echo "* Skipping db import, since SKIP_DB_LOAD=${SKIP_DB_LOAD}"
+elif [ -d "/db-exports/" ]; then
     # find the most recent database dump /db-exports/*.dump in by using sort;
     # presumes that dumpfiles are named <label>_<timestamp>.dump
     TARGET_DUMPFILE=$(ls /db-exports/*.dump | sort -t '_' -k2 -r | head -n 1)
