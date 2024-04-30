@@ -568,6 +568,7 @@ let latest: Symbol;
 
 /** load map values data */
 async function loadValues() {
+  console.log("need to remove duplicate calls to this from each factor watcher");
   if (!selectedLevel.value || !selectedCategory.value || !selectedMeasure.value)
     return;
 
@@ -621,14 +622,20 @@ watch(
       );
       selectedFactors.value[key] = factor;
       /** dynamically create watcher for factor */
-      stoppers[key] = watch(factor, () => {
-        /** if selected factor value doesn't exist anymore, fallback */
-        if (!(factor.value in value.values))
-          factor.value = value.values["All"]
-            ? "All"
-            : Object.keys(value.values)[0] || "";
-        loadValues();
-      });
+      stoppers[key] = watch(
+        factor,
+        () => {
+          /** get non-stale factor options */
+          const options = factors.value[key]?.values || {};
+          /** if selected factor value doesn't exist anymore, fallback */
+          if (!(factor.value in options))
+            factor.value = options["All"]
+              ? "All"
+              : Object.keys(options)[0] || "";
+          loadValues();
+        },
+        { immediate: true },
+      );
     }
     /** remove selected that are no longer in options */
     for (const key of Object.keys(selectedFactors.value))
@@ -637,9 +644,6 @@ watch(
         /** stop watcher */
         stoppers[key]?.();
       }
-
-    /** immediately run (just once, not duplicate "immediate"s in watches above) */
-    loadValues();
   },
   { deep: true },
 );
