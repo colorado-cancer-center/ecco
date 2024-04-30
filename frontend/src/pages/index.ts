@@ -35,6 +35,7 @@ export const history = createWebHistory();
 export const router = createRouter({ history, routes });
 
 router.afterEach(async (to) => {
+  /** scroll to hash target */
   if (to.hash)
     (await waitFor(to.hash))?.scrollIntoView({
       block: "start",
