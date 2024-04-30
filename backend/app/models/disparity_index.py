@@ -24,7 +24,7 @@ class CancerDisparitiesIndex(MeasuresByCounty, table=True):
 # === (e.g. creating routes automatically, adding human-readable labels)
 # ===========================================================================
 
-DISPARITY_MODELS = {
+DISPARITY_INDEX_MODELS = {
     "county": [
         CancerDisparitiesIndex
     ],
