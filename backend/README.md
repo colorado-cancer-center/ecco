@@ -7,6 +7,33 @@ schema and interacting with the database. We use
 [Alembic](https://alembic.sqlalchemy.org/en/latest/) for managing schema
 migrations.
 
+
+## Populating an Empty Database
+
+Typically ECCO is distributed with a database dump, but if you want
+to start over from scratch you can first dump the database by running:
+
+```shell
+./run_stack.sh down -v # brings the stack down and purges all volumes
+./run_stack.sh         # brings the stack back up so we can import new data
+```
+
+Then run the following series of commands within the `backend` container:
+
+```shell
+./commands/add_us_states.py 
+./commands/import_cif_data.py <CIF data folder>
+./commands/import_scp_data.py <SCP data folder>
+./commands/import_cancer_disparities.py <Disparities Excel Sheet>
+```
+
+The geometry tables `County` and `Tract` are populated
+via `start_app.sh` every time the `backend` container starts.
+
+(NOTE: Manually importing the data as described above will be replaced with a
+proper data import pipeline in the near future.)
+
+
 ## Performing Schema Migrations
 
 First, you should be in the `./backend/app` folder, and ideally inside the
