@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+"""
+Imports CancerInFocus (CIF) data from the set of CSVs CIF makes available into the database.
+"""
+
 import csv
 import sys
 sys.path.append("/app")
@@ -119,8 +123,8 @@ async def import_file(file, session, model=None, delete_before_import=True, dont
         session.add_all(obj_list)
 
 
-async def import_us_data(data_folder, dont_limit_states=False, warn_on_missing_model=False):
-    """Imports all *_long_*.csv files from the KYS data folder into the database."""
+async def import_cif_data(data_folder, dont_limit_states=False, warn_on_missing_model=False):
+    """Imports all *_long_*.csv files from the CIF data folder into the database."""
 
     # get a list of all files in data_folder with filename matching *_long_*.csv
     import glob
@@ -166,7 +170,7 @@ async def import_us_data(data_folder, dont_limit_states=False, warn_on_missing_m
     help="If specified, will only print a warning (rather than exit) if a model isn't found for a given input file"
 )
 def main(data_folder, dont_limit_states=False, warn_on_missing_model=False):
-    asyncio.run(import_us_data(data_folder, dont_limit_states, warn_on_missing_model))
+    asyncio.run(import_cif_data(data_folder, dont_limit_states, warn_on_missing_model))
 
 if __name__ == '__main__':
     main()
