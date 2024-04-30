@@ -1,4 +1,16 @@
 <template>
+  <AppAlert>
+    <p>
+      This site is still in <strong>beta</strong>. Please
+      <AppLink to="/about#contact">let us know how we can improve it!</AppLink>
+    </p>
+    <p>
+      We encourage using this for non-critical applications of research,
+      outreach, and similar purposes. It should not be used to support clinical
+      decisions.
+    </p>
+  </AppAlert>
+
   <section class="full">
     <div v-if="defsStatus === 'success'" class="layout">
       <!-- https://bugs.chromium.org/p/chromium/issues/detail?id=1484663 -->
@@ -268,7 +280,7 @@
         :nice-steps="niceSteps"
         :scale-power="scalePower"
         :explicit-scale="
-          selectedCategory.includes('scp')
+          selectedCategory.includes('trend')
             ? { 1: 'Falling', 2: 'Stable', 3: 'Rising' }
             : undefined
         "
@@ -383,6 +395,7 @@ import {
 } from "@/api";
 import locationGroups from "@/api/location-groups.json";
 import AppAccordion from "@/components/AppAccordion.vue";
+import AppAlert from "@/components/AppAlert.vue";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
 import AppLink from "@/components/AppLink.vue";
