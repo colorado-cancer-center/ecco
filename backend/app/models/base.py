@@ -42,7 +42,8 @@ class CancerStatsByCounty(BaseStatsModel):
     # average annual count (typically age-adjusted per 100k)
     AAC : float
 
-    def get_factors(self):
+    @classmethod
+    def get_factors(cls):
         """
         Returns a set of factors to include in, e.g., downloaded CSVs.
 

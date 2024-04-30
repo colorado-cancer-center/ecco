@@ -31,8 +31,9 @@ class SCPCountyModel(CancerStatsByCounty):
     # pulled out to use in the 'trends' views
     trend : str = Field(nullable=True)
 
-    def get_factors(self):
-        return (self.sex, self.stage, self.race, self.age)
+    @classmethod
+    def get_factors(cls):
+        return (cls.sex, cls.stage, cls.race, cls.age)
 
 class SCPDeathsCounty(SCPCountyModel, table=True):
     class Config:
