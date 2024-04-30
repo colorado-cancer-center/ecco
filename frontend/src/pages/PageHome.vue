@@ -56,6 +56,11 @@
           />
         </template>
 
+        <AppLink :to="learnMoreLink" :new-tab="true">
+          <font-awesome-icon :icon="faQuestionCircle" class="icon" />
+          Learn more about selected data
+        </AppLink>
+
         <hr />
 
         <AppSelect
@@ -262,14 +267,15 @@
         :scale-steps="scaleSteps"
         :nice-steps="niceSteps"
         :scale-power="scalePower"
-        :no-data="
-          !categories[selectedCategory]?.label.includes('age-adj') || !values
-            ? undefined
-            : 3
+        :explicit-scale="
+          selectedCategory.includes('scp')
+            ? { 1: 'Falling', 2: 'Stable', 3: 'Rising' }
+            : undefined
         "
         :width="mapWidth"
         :height="mapHeight"
         :filename="[selectedMeasure, selectedLevel]"
+        @no-data="(value) => (noData = value)"
       >
         <template #top-left>
           <div>
@@ -313,14 +319,10 @@
           </template>
         </template>
 
-        <template
-          v-if="categories[selectedCategory]?.label.includes('age-adj')"
-          #top-right
-        >
+        <template v-if="noData" #top-right>
           <small>
             "No data" may indicate unavailable data, zero, or a low value
             suppressed for privacy reasons.
-            <AppLink to="sources">Learn more</AppLink>.
           </small>
         </template>
       </AppMap>
@@ -342,7 +344,7 @@
 
     <div class="center">
       <AppButton to="/about" :icon="faArrowRight" :flip="true" :accent="true"
-        >Learn More</AppButton
+        >Learn more</AppButton
       >
     </div>
   </section>
@@ -360,6 +362,7 @@ import {
   type WatchStopHandle,
 } from "vue";
 import { cloneDeep, mapValues, pick } from "lodash";
+import { faQuestionCircle } from "@fortawesome/free-regular-svg-icons";
 import {
   faArrowRight,
   faArrowsRotate,
@@ -399,6 +402,27 @@ import {
 } from "@/util/composables";
 import { formatValue, isPercent } from "@/util/math";
 import { sleep } from "@/util/misc";
+
+/** get "learn more" link based on selections */
+const learnMoreLink = computed(() => {
+  switch (selectedCategory.value) {
+    case "cancerincidence":
+    case "cancermortality":
+      return "/sources#cancer-incidence-and-mortality";
+    case "sociodemographics":
+    case "economy":
+    case "housingtrans":
+      return "/sources#sociodemographics-economics-insurance-and-housing-transportation";
+    case "rfandscreening":
+      return "/sources#screening-risk-factors-and-other-health-factors";
+    case "environment":
+      return "/sources#environment";
+    case "cancerdisparitiesindex":
+      return "/sources#cancer-disparities-index";
+  }
+
+  return "/sources";
+});
 
 /** element refs */
 const panel = ref<HTMLElement>();
@@ -441,6 +465,9 @@ const niceSteps = ref(false);
 const scalePower = ref(1);
 const mapWidth = ref(0);
 const mapHeight = ref(0);
+
+/** whether map has any "no data" regions */
+const noData = ref(false);
 
 /** flag to force rerender of map */
 const renderMap = ref(true);
@@ -576,11 +603,19 @@ watch(
       const factor = useUrlParam(
         key,
         stringParam,
-        value.values["All"] || Object.keys(value.values)[0]!,
+        /** default selected */
+        value.values["All"] ? "All" : Object.keys(value.values)[0] || "",
       );
       selectedFactors.value[key] = factor;
       /** dynamically create watcher for factor */
-      stoppers[key] = watch(factor, loadValues);
+      stoppers[key] = watch(factor, () => {
+        /** if selected factor value doesn't exist anymore, fallback */
+        if (!(factor.value in value.values))
+          factor.value = value.values["All"]
+            ? "All"
+            : Object.keys(value.values)[0] || "";
+        loadValues();
+      });
     }
     /** remove selected that are no longer in options */
     for (const key of Object.keys(selectedFactors.value))

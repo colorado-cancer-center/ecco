@@ -1,6 +1,6 @@
 <template>
   <section>
-    <h2>Sources</h2>
+    <AppHeading level="2">Sources</AppHeading>
 
     <p>
       Data for ECCO were gathered from several publicly available sources. Due
@@ -26,13 +26,13 @@
   </section>
 
   <section>
-    <h3>Cancer Incidence and Mortality</h3>
+    <AppHeading level="3">Cancer Incidence and Mortality</AppHeading>
 
-    <h4>
+    <AppHeading level="4">
       <AppLink to="https://statecancerprofiles.cancer.gov/index.html"
         >State Cancer Profiles (SCP)</AppLink
       >
-    </h4>
+    </AppHeading>
 
     <p>
       SCP is an interactive map engine produced in collaboration between the
@@ -63,17 +63,24 @@
   </section>
 
   <section>
-    <h3>
-      Sociodemographics, Economics &amp; Insurnace, and Housing &amp;
+    <AppHeading level="3">
+      Sociodemographics, Economics &amp; Insurance, and Housing &amp;
       Transportation
-    </h3>
+    </AppHeading>
 
-    <h4>
+    <p>
+      See also:
+      <AppLink to="#social-determinants-of-health"
+        >Social Determinants of Health</AppLink
+      >
+    </p>
+
+    <AppHeading level="4">
       <AppLink to="https://data.census.gov/cedsci/"
         >American Community Survey (ACS), 5-Year Estimates, U.S. Census
         Bureau</AppLink
       >
-    </h4>
+    </AppHeading>
 
     <p>
       ACS is a nationally representative sample of households that are randomly
@@ -268,11 +275,11 @@
       </table>
     </div>
 
-    <h4>
+    <AppHeading level="4">
       <AppLink to="https://www.bls.gov/data/"
         >U.S. Bureau of Labor Statistics (BLS)</AppLink
       >
-    </h4>
+    </AppHeading>
 
     <p>
       The BLS measures labor market activity, working conditions, price changes,
@@ -285,11 +292,13 @@
   </section>
 
   <section>
-    <h3>Screening &amp; Risk Factors and Other Health Factors</h3>
+    <AppHeading level="3"
+      >Screening &amp; Risk Factors and Other Health Factors</AppHeading
+    >
 
-    <h4>
+    <AppHeading level="4">
       <AppLink to="https://www.cdc.gov/places/">PLACES</AppLink>
-    </h4>
+    </AppHeading>
 
     <p>
       PLACES is a collaboration between CDC, the Robert Wood Johnson Foundation,
@@ -457,15 +466,22 @@
   </section>
 
   <section>
-    <h3>Environment</h3>
+    <AppHeading level="3">Environment</AppHeading>
 
-    <h4>
+    <p>
+      See also:
+      <AppLink to="#social-determinants-of-health"
+        >Social Determinants of Health</AppLink
+      >
+    </p>
+
+    <AppHeading level="4">
       <AppLink
         to="https://www.ers.usda.gov/data-products/food-access-research-atlas/"
         >Economic Research Service, U.S. Department of Agriculture (USDA
         ERS)</AppLink
       >
-    </h4>
+    </AppHeading>
 
     <p>
       The mission of USDA’s Economic Research Service is to anticipate trends
@@ -481,12 +497,12 @@
       most recently available data is from 2015.
     </p>
 
-    <h4>
+    <AppHeading level="4">
       <AppLink
         to="https://www.fcc.gov/general/broadband-deployment-data-fcc-form-477"
         >Federal Communications Commission (FCC)</AppLink
       >
-    </h4>
+    </AppHeading>
 
     <p>
       The FCC regulates interstate and international communications by radio,
@@ -503,12 +519,12 @@
       FCC data is not included in the ECCO mapping applications.
     </p>
 
-    <h4>
+    <AppHeading level="4">
       <AppLink to="https://www.epa.gov/ejscreen"
         >Environmental Protection Agency (EPA) Environmental Justice Screening
         (EJScreen)</AppLink
       >
-    </h4>
+    </AppHeading>
 
     <p>
       EJScreen is an EPA's environmental justice mapping and screening tool that
@@ -521,12 +537,12 @@
       the Census tract level from the 2022 EJScreen dataset.
     </p>
 
-    <h4>
+    <AppHeading level="4">
       <AppLink
         to="https://www.epa.gov/ground-water-and-drinking-water/safe-drinking-water-information-system-sdwis-federal-reporting"
         >EPA Safe Drinking Water Information System (SDWIS)</AppLink
       >
-    </h4>
+    </AppHeading>
 
     <p>
       The EPA's SDWIS databases store information about drinking water. The
@@ -543,11 +559,11 @@
   </section>
 
   <section>
-    <h3>Facilities &amp; Providers</h3>
+    <AppHeading level="3">Facilities &amp; Providers</AppHeading>
 
-    <h4>
+    <AppHeading level="4">
       <AppLink to="https://enviro.epa.gov/">EPA Envirofacts</AppLink>
-    </h4>
+    </AppHeading>
 
     <p>
       The Envirofacts Multisystem Search integrates information from a variety
@@ -568,12 +584,12 @@
       available Toxic Release Inventory data is from 2021.
     </p>
 
-    <h4>
+    <AppHeading level="4">
       <AppLink to="https://data.hrsa.gov/data/about"
         >Health Resources &amp; Services Administration (HRSA), Department of
         Health &amp; Human Services</AppLink
       >
-    </h4>
+    </AppHeading>
 
     <p>
       HRSA programs provide health care to people who are geographically
@@ -594,13 +610,13 @@
       currently recognized by HRSA.
     </p>
 
-    <h4>
+    <AppHeading level="4">
       <AppLink
         to="https://www.acr.org/Clinical-Resources/Lung-Cancer-Screening-Resources/LCS-Locator-Tool"
         >Lung Cancer Screening Registry (LCSR), American College of
         Radiology</AppLink
       >
-    </h4>
+    </AppHeading>
 
     <p>
       The ACR Lung Cancer Screening Registry (LCSR) is designed to
@@ -629,11 +645,11 @@
       >
     </p>
 
-    <h4>
+    <AppHeading level="4">
       <AppLink to="https://nppes.cms.hhs.gov/#/"
         >National Plan &amp; Provider Enumeration System (NPPES)</AppLink
       >
-    </h4>
+    </AppHeading>
 
     <p>
       Centers for Medicare &amp; Medicaid Services CMS has developed the NPPES
@@ -649,12 +665,12 @@
       all practicing providers.
     </p>
 
-    <h4>
+    <AppHeading level="4">
       <AppLink
         to="https://www.fda.gov/radiation-emitting-products/consumer-information-mqsa/search-certified-facility"
         >United States Food and Drug Administration (FDA)</AppLink
       >
-    </h4>
+    </AppHeading>
 
     <p>
       The Mammography Quality Standards Act requires mammography facilities
@@ -674,11 +690,61 @@
       reflect real-time presence of mammography facilities.
     </p>
   </section>
+
+  <section>
+    <AppHeading level="3">Cancer Disparities Index</AppHeading>
+
+    <p>
+      Burden data were used to rank every county using the cancer disparities
+      index. Rankings are based on incidence, late-stage incidence, and
+      mortality data provided by the Colorado Central Cancer Registry and Vital
+      Statistics from CDPHE. Data are unavailable for some counties due to
+      confidentiality or statistics reliability concerns.
+    </p>
+
+    <p>
+      To develop the index, a Principal Components Analysis (PCA) was applied to
+      the most recent burden data. PCA is a process used to detect the strongest
+      patterns in a data set and to emphasize variation. Unlike other
+      statistical methods, PCA makes very few assumptions about data. It is
+      commonly used for data exploration and health index creation. PCA
+      determines which variables summarize the overall data best and packages
+      these variables that are most alike into new variables or “components”.
+      Each of these new variables are given a weight based on how much of the
+      overall data variation they explain and an index score is calculated. A
+      higher disease disparity index (i.e., higher rank) will have a higher
+      corresponding index score applied to the application.
+    </p>
+  </section>
+
+  <section>
+    <AppHeading level="3">Social Determinants of Health</AppHeading>
+
+    <p>
+      Social determinants of health (SDOH) are the conditions in the
+      environments where people are born, live, learn, work, play, worship, and
+      age that affect a wide range of health, functioning, and quality of life
+      outcomes and risks. SDOH can be grouped into 5 domains: economic
+      stability; education access and quality; health care access and quality;
+      neighborhood and built environment; and social and community context. It
+      has been shown that social determinants of health can affect lifestyle and
+      therefore chronic diseases, including cancer.
+    </p>
+
+    <p>
+      <AppLink
+        to="https://health.gov/healthypeople/priority-areas/social-determinants-health"
+      >
+        See Healthy People 2030 for more information.
+      </AppLink>
+    </p>
+  </section>
 </template>
 
 <script setup lang="ts">
 import { faTable } from "@fortawesome/free-solid-svg-icons";
 import { getDownloadAll } from "@/api";
 import AppButton from "@/components/AppButton.vue";
+import AppHeading from "@/components/AppHeading.vue";
 import AppLink from "@/components/AppLink.vue";
 </script>

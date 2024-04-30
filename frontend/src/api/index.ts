@@ -1,6 +1,6 @@
 import * as d3 from "d3";
 import type { FeatureCollection, Geometry } from "geojson";
-import { mapValues } from "lodash";
+import { mapValues, omit, omitBy } from "lodash";
 import cancerCenterLocations from "./cancer-center-locations.json";
 import cancerInFocusLocations from "./cancer-in-focus-locations.json";
 
@@ -170,6 +170,10 @@ export async function getValues(
     `${api}/stats/${level}/${category}/fips-value?` + params,
   );
 
+  /** suppress age adjusted data for privacy */
+  if (["cancerincidence", "cancermortality"].includes(category))
+    data.values = omitBy(data.values, (value) => value.value < 3);
+
   const values = Object.values(data.values).map(({ value }) => value);
 
   /** calculate stats */
@@ -182,7 +186,7 @@ export async function getValues(
   };
 
   /** if missing data, return empty */
-  if (!values.length || stats.min === stats.max) return;
+  if (!values.length) return;
 
   return stats;
 }

@@ -1,8 +1,8 @@
 <template>
   <section>
-    <h2>About</h2>
+    <AppHeading level="2">About</AppHeading>
 
-    <h3>The map</h3>
+    <AppHeading level="3">The map</AppHeading>
 
     <p>
       Create your own map to visualize your data and region of interest. First
@@ -20,7 +20,7 @@
       of the map as an image.
     </p>
 
-    <h3>Contact</h3>
+    <AppHeading level="3">Contact</AppHeading>
 
     <p>
       To suggest a new data source, report an issue, or for general questions or
@@ -44,4 +44,5 @@
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
 import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import AppButton from "@/components/AppButton.vue";
+import AppHeading from "@/components/AppHeading.vue";
 </script>
