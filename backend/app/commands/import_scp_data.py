@@ -25,8 +25,8 @@ STATE_CO_FIPS = 8
 
 # optional suffix for SCP data that's filtered to,
 # .e.g, a state FIPS
-# STATE_FIPS_SUFFIX = "_state08"
-STATE_FIPS_SUFFIX = ""
+STATE_FIPS_SUFFIX = "_state08"
+# STATE_FIPS_SUFFIX = ""
 
 # filenames under the SCP folder to process
 INPUT_FILES = [
