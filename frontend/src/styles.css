@@ -1,17 +1,13 @@
 :root {
-  /* recommendations: */
-  /* https://tailwindcss.com/docs/customizing-colors */
-  /* https://coolors.co/palettes/trending */
-  /* https://www.materialpalette.com/colors */
-
   /* colors */
+  --theme-light: #f8f3e3;
   --theme: #cfb87c;
   --theme-dark: #a87800;
   --white: #ffffff;
   --off-white: #fafafa;
   --light-gray: #e6e6e6;
-  --gray: #cccccc;
-  --dark-gray: #4d4d4d;
+  --gray: #bcbcbc;
+  --dark-gray: #434343;
   --off-black: #1a1a1a;
   --black: #000000;
 

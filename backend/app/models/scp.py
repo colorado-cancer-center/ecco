@@ -31,6 +31,10 @@ class SCPCountyModel(CancerStatsByCounty):
     # pulled out to use in the 'trends' views
     trend : str = Field(nullable=True)
 
+    @classmethod
+    def get_factors(cls):
+        return (cls.sex, cls.stage, cls.race, cls.age)
+
 class SCPDeathsCounty(SCPCountyModel, table=True):
     class Config:
         # label = "State Cancer Profiles: Deaths"
@@ -51,7 +55,7 @@ class SCPIncidenceCounty(SCPCountyModel, table=True):
 # 'value' field for compatibility with the existing schema
 
 # the values of the 'trend' field are mapped to these numerical values
-# since the frontend is only prepared to visualize 
+# since the API schema only exposes values as numbers currently
 TREND_MAP = {
     "falling": 1,
     "stable": 2,
@@ -68,7 +72,7 @@ class SCPDeathsTrendCounty(SCPCountyModel, table=True):
     class Config:
         skip_autogenerate = True
         arbitrary_types_allowed = True
-        label = "State Cancer Profiles: Deaths (Trend)"
+        label = "Cancer Mortality: Trends"
 
 class SCPIncidenceTrendCounty(SCPCountyModel, table=True):
     __tablename__ = SCPIncidenceCounty.__tablename__
@@ -77,7 +81,7 @@ class SCPIncidenceTrendCounty(SCPCountyModel, table=True):
     class Config:
         skip_autogenerate = True
         arbitrary_types_allowed = True
-        label = "State Cancer Profiles: Incidence (Trend)"
+        label = "Cancer Incidence: Trends"
 
 
 # ===========================================================================
@@ -88,18 +92,20 @@ SCP_MODELS = {
     "county": [
         SCPDeathsCounty,
         SCPIncidenceCounty,
-        # SCPDeathsTrendCounty,
-        # SCPIncidenceTrendCounty
+        SCPDeathsTrendCounty,
+        SCPIncidenceTrendCounty
     ],
     "tract": []
 }
 
-SCP_CANCER_MODELS = { SCPDeathsCounty, SCPIncidenceCounty }
+SCP_CANCER_MODELS = {
+    SCPDeathsCounty, SCPIncidenceCounty
+}
 
 # models for which the API uses 'trend_value' property as the 'value' field
 SCP_TRENDS_MODELS = {
     SCPDeathsTrendCounty,
-    SCPIncidenceTrendCounty
+    SCPIncidenceTrendCounty,
 }
 
 

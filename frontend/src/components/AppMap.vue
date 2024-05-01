@@ -58,15 +58,20 @@
             <svg viewBox="0 0 1 1">
               <rect x="0" y="0" width="1" height="1" :fill="step.color" />
             </svg>
-            <span>{{ formatValue(step.lower, percent) }}</span>
-            <span>&ndash;</span>
-            <span>{{ formatValue(step.upper, percent) }}</span>
+            <template v-if="'lower' in step && 'upper' in step">
+              <span>{{ formatValue(step.lower, percent) }}</span>
+              <span>&ndash;</span>
+              <span>{{ formatValue(step.upper, percent) }}</span>
+            </template>
+            <template v-if="'value' in step">
+              <span style="grid-column: 2 / -1">{{ step.label }}</span>
+            </template>
           </template>
-          <template v-if="noData || !scale.steps.length">
+          <template v-if="noData">
             <svg viewBox="0 0 1 1">
               <rect x="0" y="0" width="1" height="1" :fill="noDataColor" />
             </svg>
-            <span style="grid-column: 2 / -1; text-align: left">No data</span>
+            <span style="grid-column: 2 / -1">No data</span>
           </template>
         </div>
       </div>
@@ -117,7 +122,7 @@
           }}</span>
         </template>
 
-        <!-- age adjusted count -->
+        <!-- average annual count -->
         <template v-if="typeof values[popupFeature.id]?.aac === 'number'">
           <span>Avg. Annual Count</span>
           <span>{{
@@ -230,8 +235,8 @@ type Props = {
   scaleSteps: number;
   niceSteps: boolean;
   scalePower: number;
-  /** number below which is treated as special "no-data" band */
-  noData?: number;
+  /** explicit scale mapping */
+  explicitScale?: Record<number, string>;
   /** forced dimensions */
   width: number;
   height: number;
@@ -245,13 +250,14 @@ const props = withDefaults(defineProps<Props>(), {
   values: () => ({}),
   min: undefined,
   max: undefined,
-  noData: undefined,
+  explicitScale: undefined,
 });
 
 type Emits = {
   "update:zoom": [Props["zoom"]];
   "update:lat": [Props["lat"]];
   "update:long": [Props["long"]];
+  noData: [boolean];
 };
 
 const emit = defineEmits<Emits>();
@@ -345,73 +351,110 @@ function bindPopup(layer: L.Layer) {
   });
 }
 
-const scale = computed(() => {
-  /** if missing data, return empty scale */
-  if (
-    isEmpty(props.values) ||
-    props.min === undefined ||
-    props.max === undefined ||
-    props.min === props.max
-  )
-    return { steps: [], getColor: () => noDataColor };
-
-  /** get range of data (accounting for "no data" values) */
-  const min = props.noData ? Math.max(props.min, props.noData) : props.min;
-  const max = props.max;
-
-  /** "nice", approximate number of steps */
-  const nice = d3.ticks(min, max, props.scaleSteps);
-
-  /** make sure steps always covers/contains range of values (min/max) */
-  const step = d3.tickStep(min, max, props.scaleSteps);
-  if (nice.at(0)! > min) nice.unshift(nice.at(0)! - step);
-  if (nice.at(-1)! < max) nice.push(nice.at(-1)! + step);
-
-  /** exact number of steps */
-  const exact = d3
-    .range(min, max, (max - min) / props.scaleSteps)
-    .concat([max]);
-
-  /** spaced list of points between min and max */
-  let intervals = props.niceSteps ? nice : exact;
-
-  /** make sure enough intervals */
-  if (intervals.length < 3) intervals = [min, (min + max) / 2, max];
-
-  /** range of intervals */
-  const [lower = 0, upper = 1] = d3.extent(intervals);
-
-  /** apply power */
-  intervals = intervals.map((value) =>
-    normalizedApply(value, lower, upper, (value) =>
-      Math.pow(value, props.scalePower),
+/** whether map has any "no data" regions */
+const noData = computed(
+  () =>
+    !props.data.features.every(
+      (feature) => (feature.properties.id || "") in props.values,
     ),
-  );
+);
 
+/** tell parent about no data */
+watch(noData, () => emit("noData", noData.value), { immediate: true });
+
+/** scale object */
+const scale = computed(() => {
   /** get gradient interpolator function from shorthand id/name */
   const gradient = getGradient(props.gradient);
 
-  /** derive props for each step between points */
-  const steps = d3.pairs(intervals).map(([lower, upper], index, array) => ({
-    lower,
-    upper,
-    color: gradient(index / (array.length - 1)),
-  }));
+  /** map specific values to specific colors */
+  if (props.explicitScale) {
+    /** explicit steps */
+    const steps = d3
+      /** https://stackoverflow.com/questions/52856496/typescript-object-keys-return-string */
+      .sort(Object.keys(props.explicitScale).map(Number))
+      .map((value, index, array) => {
+        const percent = index / (array.length - 1);
+        return {
+          value,
+          label: props.explicitScale?.[value],
+          color: gradient(props.flipGradient ? 1 - percent : percent),
+        };
+      });
 
-  /** reverse color values */
-  const colors = steps.map((step) => step.color);
-  if (props.flipGradient) {
-    colors.reverse();
-    steps.forEach((step, index) => (step.color = colors[index] || ""));
+    /** explicit color */
+    const getColor = (value: keyof typeof props.explicitScale) =>
+      steps.find((step) => step.value === value)?.color || noDataColor;
+
+    return { steps, getColor };
+  } else {
+    /** if missing data, return empty scale */
+    if (
+      isEmpty(props.values) ||
+      props.min === undefined ||
+      props.max === undefined ||
+      props.min === props.max
+    )
+      return { steps: [], getColor: () => noDataColor };
+
+    /** get range of data (accounting for "no data" values) */
+    const min = props.min;
+    const max = props.max;
+
+    /** scale bands */
+    let bands = [min, max];
+
+    /** "nice", approximate number of steps */
+    const nice = d3.ticks(min, max, props.scaleSteps);
+
+    /** make sure steps always covers/contains range of values (min/max) */
+    const step = d3.tickStep(min, max, props.scaleSteps);
+    if (nice.at(0)! > min) nice.unshift(nice.at(0)! - step);
+    if (nice.at(-1)! < max) nice.push(nice.at(-1)! + step);
+
+    /** exact number of steps */
+    const exact = d3
+      .range(min, max, (max - min) / props.scaleSteps)
+      .concat([max]);
+
+    /** spaced list of points between min and max */
+    bands = props.niceSteps ? nice : exact;
+
+    /** make sure enough bands */
+    if (bands.length < 3) bands = [min, (min + max) / 2, max];
+
+    /** range of bands */
+    const [lower = 0, upper = 1] = d3.extent(bands);
+
+    /** apply power */
+    bands = bands.map((value) =>
+      normalizedApply(value, lower, upper, (value) =>
+        Math.pow(value, props.scalePower),
+      ),
+    );
+
+    /** derive props for each step between points */
+    const steps = d3.pairs(bands).map(([lower, upper], index, array) => ({
+      lower,
+      upper,
+      color: gradient(index / (array.length - 1)),
+    }));
+
+    /** reverse color values */
+    const colors = steps.map((step) => step.color);
+    if (props.flipGradient) {
+      colors.reverse();
+      steps.forEach((step, index) => (step.color = colors[index] || ""));
+    }
+
+    /** scale interpolator */
+    const getColor = (value: number) =>
+      value < min || value > max
+        ? noDataColor
+        : d3.scaleQuantile<string>().domain(bands).range(colors)(value);
+
+    return { steps, getColor };
   }
-
-  /** scale interpolator */
-  const getColor = (value: number) =>
-    props.noData && value <= props.noData
-      ? noDataColor
-      : d3.scaleQuantile<string>().domain(intervals).range(colors)(value);
-
-  return { steps, getColor };
 });
 
 /** fit view to data layer content */
@@ -712,7 +755,7 @@ const { toggle: fullscreen } = useFullscreen(mapElement);
   justify-items: stretch;
   width: fit-content;
   gap: 0 10px;
-  text-align: center;
+  /* text-align: center; */
 }
 
 .steps svg {

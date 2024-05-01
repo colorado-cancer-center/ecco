@@ -2,7 +2,8 @@
   <component
     :is="component"
     :[toAttr]="to"
-    :target="isExternal ? '_blank' : ''"
+    :target="newTab ?? isExternal ? '_blank' : ''"
+    class="link"
   >
     <slot />
   </component>
@@ -13,6 +14,7 @@ import { computed } from "vue";
 
 type Props = {
   to: string;
+  newTab?: boolean;
 };
 
 const props = defineProps<Props>();
@@ -31,3 +33,12 @@ const toAttr = computed(() => (isExternal.value ? "href" : "to"));
 
 const component = computed(() => (isExternal.value ? "a" : "router-link"));
 </script>
+
+<style scoped>
+.link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+</style>

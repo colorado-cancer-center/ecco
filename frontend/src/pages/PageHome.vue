@@ -1,4 +1,16 @@
 <template>
+  <AppAlert>
+    <p>
+      This site is still in <strong>beta</strong>. Please
+      <AppLink to="/about#contact">let us know how we can improve it!</AppLink>
+    </p>
+    <p>
+      We encourage using this for non-critical applications of research,
+      outreach, and similar purposes. It should not be used to support clinical
+      decisions.
+    </p>
+  </AppAlert>
+
   <section class="full">
     <div v-if="defsStatus === 'success'" class="layout">
       <!-- https://bugs.chromium.org/p/chromium/issues/detail?id=1484663 -->
@@ -55,6 +67,11 @@
             "
           />
         </template>
+
+        <AppLink :to="learnMoreLink" :new-tab="true">
+          <font-awesome-icon :icon="faQuestionCircle" class="icon" />
+          Learn more about selected data
+        </AppLink>
 
         <hr />
 
@@ -262,14 +279,15 @@
         :scale-steps="scaleSteps"
         :nice-steps="niceSteps"
         :scale-power="scalePower"
-        :no-data="
-          !categories[selectedCategory]?.label.includes('age-adj') || !values
-            ? undefined
-            : 3
+        :explicit-scale="
+          selectedCategory.includes('trend')
+            ? { 1: 'Falling', 2: 'Stable', 3: 'Rising' }
+            : undefined
         "
         :width="mapWidth"
         :height="mapHeight"
         :filename="[selectedMeasure, selectedLevel]"
+        @no-data="(value) => (noData = value)"
       >
         <template #top-left>
           <div>
@@ -313,14 +331,10 @@
           </template>
         </template>
 
-        <template
-          v-if="categories[selectedCategory]?.label.includes('age-adj')"
-          #top-right
-        >
+        <template v-if="noData" #top-right>
           <small>
             "No data" may indicate unavailable data, zero, or a low value
             suppressed for privacy reasons.
-            <AppLink to="sources">Learn more</AppLink>.
           </small>
         </template>
       </AppMap>
@@ -342,7 +356,7 @@
 
     <div class="center">
       <AppButton to="/about" :icon="faArrowRight" :flip="true" :accent="true"
-        >Learn More</AppButton
+        >Learn more</AppButton
       >
     </div>
   </section>
@@ -360,6 +374,7 @@ import {
   type WatchStopHandle,
 } from "vue";
 import { cloneDeep, mapValues, pick } from "lodash";
+import { faQuestionCircle } from "@fortawesome/free-regular-svg-icons";
 import {
   faArrowRight,
   faArrowsRotate,
@@ -380,6 +395,7 @@ import {
 } from "@/api";
 import locationGroups from "@/api/location-groups.json";
 import AppAccordion from "@/components/AppAccordion.vue";
+import AppAlert from "@/components/AppAlert.vue";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
 import AppLink from "@/components/AppLink.vue";
@@ -399,6 +415,27 @@ import {
 } from "@/util/composables";
 import { formatValue, isPercent } from "@/util/math";
 import { sleep } from "@/util/misc";
+
+/** get "learn more" link based on selections */
+const learnMoreLink = computed(() => {
+  switch (selectedCategory.value) {
+    case "cancerincidence":
+    case "cancermortality":
+      return "/sources#cancer-incidence-and-mortality";
+    case "sociodemographics":
+    case "economy":
+    case "housingtrans":
+      return "/sources#sociodemographics-economics-insurance-and-housing-transportation";
+    case "rfandscreening":
+      return "/sources#screening-risk-factors-and-other-health-factors";
+    case "environment":
+      return "/sources#environment";
+    case "cancerdisparitiesindex":
+      return "/sources#cancer-disparities-index";
+  }
+
+  return "/sources";
+});
 
 /** element refs */
 const panel = ref<HTMLElement>();
@@ -441,6 +478,9 @@ const niceSteps = ref(false);
 const scalePower = ref(1);
 const mapWidth = ref(0);
 const mapHeight = ref(0);
+
+/** whether map has any "no data" regions */
+const noData = ref(false);
 
 /** flag to force rerender of map */
 const renderMap = ref(true);
@@ -562,35 +602,69 @@ const factors = computed(() =>
 const selectedFactors = shallowRef<{ [key: string]: ShallowRef<string> }>({});
 
 /** keep track of dynamically created factor watchers */
-const stoppers: { [key: string]: WatchStopHandle } = {};
+let stoppers: WatchStopHandle[] = [];
 
-/** cleanup dynamically created factor watchers */
-onUnmounted(() => Object.values(stoppers).forEach((stopper) => stopper()));
+/** clear all factor watchers */
+const clearFactorWatchers = () => {
+  stoppers.forEach((stopper) => stopper());
+  stoppers = [];
+};
+
+/** cleanup factor watchers */
+onUnmounted(clearFactorWatchers);
 
 /** update selected factors when full set of factor options changes */
 watch(
   factors,
   () => {
-    /** add selected that are new to options */
+    /** all previous watchers irrelevant now */
+    clearFactorWatchers();
+
+    /** for each factor */
     for (const [key, value] of Object.entries(factors.value)) {
+      /** ref 2-way synced with url */
       const factor = useUrlParam(
         key,
         stringParam,
-        value.values["All"] || Object.keys(value.values)[0]!,
+        /** default selected */
+        value.values["All"] ? "All" : Object.keys(value.values)[0] || "",
       );
+      /** hook up url reactive with selected factor */
       selectedFactors.value[key] = factor;
-      /** dynamically create watcher for factor */
-      stoppers[key] = watch(factor, loadValues);
-    }
-    /** remove selected that are no longer in options */
-    for (const key of Object.keys(selectedFactors.value))
-      if (!(key in factors.value)) {
-        delete selectedFactors.value[key];
-        /** stop watcher */
-        stoppers[key]?.();
-      }
 
-    /** immediately run (just once, not duplicate "immediate"s in watches above) */
+      /** dynamically create watchers for factor */
+
+      stoppers.push(
+        /** when factor value changes */
+        watch(
+          factor,
+          () => {
+            /** get non-stale factor options */
+            const options = factors.value[key]?.values || {};
+            /** if value isn't valid anymore */
+            if (!(factor.value in options))
+              /** fall back */
+              factor.value = options["All"]
+                ? "All"
+                : Object.keys(options)[0] || "";
+          },
+          { immediate: true },
+        ),
+      );
+
+      stoppers.push(
+        /**
+         * when factor value changes, reload data. keep after above so value
+         * query reflects fallback.
+         */
+        watch(factor, loadValues),
+      );
+    }
+
+    /**
+     * immediately query data (just once, not duplicate "immediate"s in watchers
+     * above)
+     */
     loadValues();
   },
   { deep: true },

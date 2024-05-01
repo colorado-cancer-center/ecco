@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import PageSources from "@/pages/PageSources.vue";
+import { waitFor } from "@/util/misc";
 import PageAbout from "./PageAbout.vue";
 import PageHome from "./PageHome.vue";
 
@@ -32,3 +33,12 @@ export const routes = [
 export const history = createWebHistory();
 
 export const router = createRouter({ history, routes });
+
+router.afterEach(async (to) => {
+  /** scroll to hash target */
+  if (to.hash)
+    (await waitFor(to.hash))?.scrollIntoView({
+      block: "start",
+      behavior: "smooth",
+    });
+});
