@@ -568,7 +568,6 @@ let latest: Symbol;
 
 /** load map values data */
 async function loadValues() {
-  console.log("need to remove duplicate calls to this from each factor watcher");
   if (!selectedLevel.value || !selectedCategory.value || !selectedMeasure.value)
     return;
 
@@ -603,47 +602,67 @@ const factors = computed(() =>
 const selectedFactors = shallowRef<{ [key: string]: ShallowRef<string> }>({});
 
 /** keep track of dynamically created factor watchers */
-const stoppers: { [key: string]: WatchStopHandle } = {};
+let stoppers: WatchStopHandle[] = [];
 
-/** cleanup dynamically created factor watchers */
-onUnmounted(() => Object.values(stoppers).forEach((stopper) => stopper()));
+/** clear all factor watchers */
+const clearFactorWatchers = () => {
+  stoppers.forEach((stopper) => stopper());
+  stoppers = [];
+};
+
+/** cleanup factor watchers */
+onUnmounted(clearFactorWatchers);
 
 /** update selected factors when full set of factor options changes */
 watch(
   factors,
   () => {
+    /** all previous watchers irrelevant now */
+    clearFactorWatchers();
+
     /** add selected that are new to options */
     for (const [key, value] of Object.entries(factors.value)) {
+      /** ref 2-way synced with url */
       const factor = useUrlParam(
         key,
         stringParam,
         /** default selected */
         value.values["All"] ? "All" : Object.keys(value.values)[0] || "",
       );
+      /** hook up url reactive with selected factor */
       selectedFactors.value[key] = factor;
-      /** dynamically create watcher for factor */
-      stoppers[key] = watch(
-        factor,
-        () => {
-          /** get non-stale factor options */
-          const options = factors.value[key]?.values || {};
-          /** if selected factor value doesn't exist anymore, fallback */
-          if (!(factor.value in options))
-            factor.value = options["All"]
-              ? "All"
-              : Object.keys(options)[0] || "";
-          loadValues();
-        },
-        { immediate: true },
+
+      /** dynamically create watchers for factor */
+
+      stoppers.push(
+        /** when factor value changes */
+        watch(
+          factor,
+          () => {
+            /** get non-stale factor options */
+            const options = factors.value[key]?.values || {};
+            /** if value isn't valid anymore */
+            if (!(factor.value in options))
+              /** fall back */
+              factor.value = options["All"]
+                ? "All"
+                : Object.keys(options)[0] || "";
+          },
+          { immediate: true },
+        ),
+      );
+
+      stoppers.push(
+        /**
+         * when factor value changes, reload data. keep after above so value
+         * query reflects fallback.
+         */
+        watch(factor, loadValues),
       );
     }
-    /** remove selected that are no longer in options */
-    for (const key of Object.keys(selectedFactors.value))
-      if (!(key in factors.value)) {
-        delete selectedFactors.value[key];
-        /** stop watcher */
-        stoppers[key]?.();
-      }
+
+    /** immediately run (just once, not duplicate "immediate"s in watches above) */
+    loadValues();
   },
   { deep: true },
 );
