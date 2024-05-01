@@ -279,11 +279,7 @@
         :scale-steps="scaleSteps"
         :nice-steps="niceSteps"
         :scale-power="scalePower"
-        :explicit-scale="
-          selectedCategory.includes('trend')
-            ? { 1: 'Falling', 2: 'Stable', 3: 'Rising' }
-            : undefined
-        "
+        :explicit-scale="values?.explicitScale"
         :width="mapWidth"
         :height="mapHeight"
         :filename="[selectedMeasure, selectedLevel]"
@@ -354,9 +350,16 @@
       prevention, screening, treatment, survivorship, and more.
     </p>
 
-    <div class="center">
+    <div class="buttons">
       <AppButton to="/about" :icon="faArrowRight" :flip="true" :accent="true"
         >Learn more</AppButton
+      >
+      <AppButton
+        to="/about#acknowledge"
+        :icon="faArrowRight"
+        :flip="true"
+        :accent="true"
+        >Acknowledge Us</AppButton
       >
     </div>
   </section>

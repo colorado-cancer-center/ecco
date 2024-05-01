@@ -10,7 +10,8 @@ export function formatValue(
   else
     return value.toLocaleString(undefined, {
       notation: compact ? "compact" : undefined,
-      maximumFractionDigits: Math.abs(value) < 1 ? 2 : undefined,
+      maximumFractionDigits: 2,
+      minimumFractionDigits: value % 1 < 0.0001 ? 1 : undefined,
     });
 }
 
