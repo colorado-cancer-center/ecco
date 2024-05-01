@@ -620,7 +620,7 @@ watch(
     /** all previous watchers irrelevant now */
     clearFactorWatchers();
 
-    /** add selected that are new to options */
+    /** for each factor */
     for (const [key, value] of Object.entries(factors.value)) {
       /** ref 2-way synced with url */
       const factor = useUrlParam(
@@ -661,7 +661,10 @@ watch(
       );
     }
 
-    /** immediately run (just once, not duplicate "immediate"s in watches above) */
+    /**
+     * immediately query data (just once, not duplicate "immediate"s in watchers
+     * above)
+     */
     loadValues();
   },
   { deep: true },
