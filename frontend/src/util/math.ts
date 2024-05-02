@@ -11,7 +11,6 @@ export function formatValue(
     return value.toLocaleString(undefined, {
       notation: compact ? "compact" : undefined,
       maximumFractionDigits: 2,
-      minimumFractionDigits: value % 1 < 0.0001 ? 1 : undefined,
     });
 }
 
