@@ -1,6 +1,7 @@
 import * as d3 from "d3";
 import type { FeatureCollection, Geometry } from "geojson";
 import { mapValues, omitBy } from "lodash";
+import type { ExplicitScale } from "@/components/AppMap.vue";
 import cancerCenterLocations from "./cancer-center-locations.json";
 import cancerInFocusLocations from "./cancer-in-focus-locations.json";
 
@@ -45,7 +46,7 @@ type _Data = {
 }[];
 
 /** data geojson properties fields */
-type DataProps = {
+export type DataProps = {
   id: string | number | undefined;
   name: string;
   full?: string | undefined;
@@ -188,7 +189,12 @@ export async function getValues(
   /** if missing data, return empty */
   if (!values.length) return;
 
-  return stats;
+  /** define explicit scale for certain data */
+  let explicitScale: ExplicitScale;
+  if (category.includes("trend"))
+    explicitScale = { 1: "Falling", 2: "Stable", 3: "Rising" };
+
+  return { ...stats, explicitScale };
 }
 
 export type Values = Awaited<ReturnType<typeof getValues>>;
@@ -206,7 +212,7 @@ export function getDownloadAll() {
 }
 
 /** location geojson properties fields */
-type LocationProps = {
+export type LocationProps = {
   name?: string;
   org?: string;
   link?: string;

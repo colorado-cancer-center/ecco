@@ -100,66 +100,66 @@
     </Teleport>
 
     <!-- county/tract popup -->
-    <Teleport v-if="popup && popupFeature" :to="popup">
+    <Teleport v-if="popup && featureInfo" :to="popup">
       <!-- name -->
-      <template v-if="popupFeature.name">
-        <strong>{{ popupFeature.name }}</strong>
+      <template v-if="featureInfo.name">
+        <strong>{{ featureInfo.name }}</strong>
       </template>
 
       <!-- id -->
-      <template v-if="popupFeature.fips">
-        <strong>Census Tract<br />{{ popupFeature.fips }}</strong>
+      <template v-if="featureInfo.fips">
+        <strong>Census Tract<br />{{ featureInfo.fips }}</strong>
       </template>
 
       <div class="mini-table">
         <!-- primary "value" for feature -->
-        <template v-if="values[popupFeature.id]">
+        <template v-if="featureInfo.value !== undefined">
+          <span>
+            {{ featureInfo.aac ? "Rate" : "Value" }}
+          </span>
           <span>{{
-            typeof values[popupFeature.id]?.aac === "number" ? "Rate" : "Value"
-          }}</span>
-          <span>{{
-            formatValue(values[popupFeature.id]?.value || 0, percent, false)
+            typeof featureInfo.value === "number"
+              ? formatValue(featureInfo.value, percent, false)
+              : featureInfo.value
           }}</span>
         </template>
 
         <!-- average annual count -->
-        <template v-if="typeof values[popupFeature.id]?.aac === 'number'">
+        <template v-if="featureInfo.aac !== undefined">
           <span>Avg. Annual Count</span>
-          <span>{{
-            formatValue(values[popupFeature.id]?.aac || 0, false, false)
-          }}</span>
+          <span>{{ formatValue(featureInfo.aac, false, false) }}</span>
         </template>
 
         <!-- organization -->
-        <template v-if="popupFeature.org">
+        <template v-if="featureInfo.org">
           <span>Org</span>
-          <span>{{ popupFeature.org }}</span>
+          <span>{{ featureInfo.org }}</span>
         </template>
 
         <!-- link -->
-        <template v-if="popupFeature.link">
+        <template v-if="featureInfo.link">
           <span>Link</span>
-          <AppLink :to="popupFeature.link" class="truncate">
-            {{ popupFeature.link.replace(/(https?:\/\/)?(www\.)?/, "") }}
+          <AppLink :to="featureInfo.link" class="truncate">
+            {{ featureInfo.link.replace(/(https?:\/\/)?(www\.)?/, "") }}
           </AppLink>
         </template>
 
         <!-- address -->
-        <template v-if="popupFeature.address">
+        <template v-if="featureInfo.address">
           <span>Address</span>
-          <span>{{ popupFeature.address }}</span>
+          <span>{{ featureInfo.address }}</span>
         </template>
 
         <!-- phone -->
-        <template v-if="popupFeature.phone">
+        <template v-if="featureInfo.phone">
           <span>Phone</span>
-          <span>{{ popupFeature.phone }}</span>
+          <span>{{ featureInfo.phone }}</span>
         </template>
 
         <!-- notes -->
-        <template v-if="popupFeature.notes">
+        <template v-if="featureInfo.notes">
           <span>Notes</span>
-          <span>{{ popupFeature.notes }}</span>
+          <span>{{ featureInfo.notes }}</span>
         </template>
       </div>
     </Teleport>
@@ -177,9 +177,8 @@ import {
 } from "vue";
 import * as d3 from "d3";
 import domtoimage from "dom-to-image";
-import type { GeoJsonProperties } from "geojson";
 import L, { type MapOptions } from "leaflet";
-import { debounce, isEmpty, mapValues } from "lodash";
+import { cloneDeep, debounce, isEmpty, mapValues } from "lodash";
 import {
   faCropSimple,
   faDownload,
@@ -188,7 +187,7 @@ import {
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import { useElementSize, useFullscreen, useResizeObserver } from "@vueuse/core";
-import type { Data, Locations, Values } from "@/api";
+import type { Data, DataProps, LocationProps, Locations, Values } from "@/api";
 import AppButton from "@/components/AppButton.vue";
 import AppLink from "@/components/AppLink.vue";
 import { getGradient } from "@/components/gradient";
@@ -198,6 +197,8 @@ import { downloadPng } from "@/util/download";
 import { formatValue, isPercent, normalizedApply } from "@/util/math";
 import { getBbox, sleep } from "@/util/misc";
 import "leaflet/dist/leaflet.css";
+
+export type ExplicitScale = Props["explicitScale"];
 
 /** "no data" color */
 let noDataColor = "#a0a0a0";
@@ -280,8 +281,12 @@ const bottomRightLegend = ref<HTMLElement>();
 /** element to teleport popup template content to */
 const popup = ref<HTMLElement>();
 
-/** properties of selected feature for popup */
-const popupFeature = ref<GeoJsonProperties>();
+type Info = Partial<
+  DataProps & LocationProps & { value: number | string; aac: number }
+>;
+
+/** info about selected feature for popup */
+const featureInfo = ref<Info>();
 
 /** https://leafletjs.com/reference.html#map-option */
 const mapOptions: MapOptions = {
@@ -331,15 +336,31 @@ function getLayers<T extends L.Layer = L.Layer>(
 function bindPopup(layer: L.Layer) {
   layer.bindPopup(() => "");
   layer.on("popupopen", async (event) => {
-    const wrapper = event.popup
-      .getElement()
-      ?.querySelector<HTMLElement>(".leaflet-popup-content-wrapper");
-    if (!wrapper) return;
-    wrapper.innerHTML = "";
-    popup.value = wrapper || undefined;
+    popup.value =
+      event.popup
+        .getElement()
+        ?.querySelector<HTMLElement>(".leaflet-popup-content-wrapper") ||
+      undefined;
+    if (!popup.value) return;
+    popup.value.innerHTML = "";
     /** wait for popup to teleport */
     await nextTick();
-    popupFeature.value = event.sourceTarget.feature.properties;
+
+    /**
+     * set info for selected feature. clone to avoid weird proxy linking
+     * effects.
+     */
+    const info: Info = cloneDeep(event.sourceTarget.feature.properties);
+    const value = props.values[info.id || ""];
+    if (value) {
+      if (props.explicitScale) info.value = props.explicitScale[value.value];
+      else {
+        info.value = value.value;
+        info.aac = value.aac ?? undefined;
+      }
+    }
+    featureInfo.value = info;
+
     /** wait for popup to populate to full size before updating position */
     await nextTick();
     event.popup.update();
@@ -347,9 +368,12 @@ function bindPopup(layer: L.Layer) {
   layer.on("popupclose", () => {
     /** unset popup */
     popup.value = undefined;
-    popupFeature.value = undefined;
+    featureInfo.value = undefined;
   });
 }
+
+/** close popups (which could contain stale data) any time props change */
+watch(props, () => map?.closePopup(), { deep: true });
 
 /** whether map has any "no data" regions */
 const noData = computed(
@@ -383,7 +407,7 @@ const scale = computed(() => {
       });
 
     /** explicit color */
-    const getColor = (value: keyof typeof props.explicitScale) =>
+    const getColor = (value?: keyof typeof props.explicitScale) =>
       steps.find((step) => step.value === value)?.color || noDataColor;
 
     return { steps, getColor };
@@ -448,8 +472,8 @@ const scale = computed(() => {
     }
 
     /** scale interpolator */
-    const getColor = (value: number) =>
-      value < min || value > max
+    const getColor = (value?: number) =>
+      value === undefined
         ? noDataColor
         : d3.scaleQuantile<string>().domain(bands).range(colors)(value);
 
@@ -635,7 +659,7 @@ function updateColors() {
   getLayers<L.GeoJSON>("data", L.GeoJSON).forEach((layer) =>
     layer.setStyle((feature) => ({
       fillColor: scale.value.getColor(
-        props.values?.[feature?.properties.id]?.value || 0,
+        props.values?.[feature?.properties.id]?.value,
       ),
     })),
   );

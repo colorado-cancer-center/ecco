@@ -151,8 +151,17 @@ small {
 }
 
 p {
-  line-height: var(--spacing);
   text-align: justify;
+}
+
+p,
+ul,
+ol,
+table,
+blockquote,
+pre {
+  margin: 0.75lh 0;
+  line-height: var(--spacing);
 }
 
 strong {
@@ -186,11 +195,21 @@ td {
   text-align: left;
 }
 
+tr:last-child td {
+  border: none;
+}
+
+blockquote {
+  padding: 10px 30px;
+  border-left: solid 2px var(--light-gray);
+  font-style: italic;
+}
+
 .center {
   text-align: center;
 }
 
-.actions {
+.buttons {
   display: flex;
   flex-wrap: wrap;
   align-items: center;

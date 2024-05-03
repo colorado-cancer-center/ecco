@@ -20,6 +20,35 @@
       of the map as an image.
     </p>
 
+    <AppHeading level="3">Acknowledge</AppHeading>
+
+    <p>
+      If you find this site useful in your academic or research work, we ask
+      that you acknowledge it as a source in your publications, presentations,
+      or other materials. Suggested acknowledgement:
+    </p>
+
+    <blockquote>
+      Cancer statistics and information were obtained from ECCO ({{ url }}),
+      accessed on [DATE], and supported by the University of Colorado Cancer
+      Center Support Grant (P30CA046934).
+    </blockquote>
+
+    <p>
+      By acknowledging our site, you help support our ongoing efforts to provide
+      accurate and up-to-date cancer statistics to the public, researchers, and
+      healthcare professionals. Your acknowledgement also helps others locate
+      the source of the information, promoting transparency and facilitating
+      further research.
+    </p>
+
+    <p>
+      If you have any questions or require additional information for your
+      acknowledgement, please feel free to
+      <AppLink to="#contact">contact us</AppLink>. Thank you for your
+      cooperation and for using our site.
+    </p>
+
     <AppHeading level="3">Contact</AppHeading>
 
     <p>
@@ -27,7 +56,7 @@
       help, please contact us:
     </p>
 
-    <p class="actions">
+    <div class="buttons">
       <AppButton
         :icon="faGithub"
         to="https://github.com/colorado-cancer-center/ecco/issues/new/choose"
@@ -36,7 +65,7 @@
       <AppButton :icon="faEnvelope" to="mailto:jan.lowery@cuanschutz.edu"
         >Email</AppButton
       >
-    </p>
+    </div>
   </section>
 </template>
 
@@ -45,4 +74,7 @@ import { faGithub } from "@fortawesome/free-brands-svg-icons";
 import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import AppButton from "@/components/AppButton.vue";
 import AppHeading from "@/components/AppHeading.vue";
+import AppLink from "@/components/AppLink.vue";
+
+const { VITE_URL: url } = import.meta.env;
 </script>
