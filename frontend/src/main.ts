@@ -16,7 +16,8 @@ createApp(App)
     VueGtag,
     {
       config: { id: "G-XESEVBEL2X" },
-      enabled: window.location.hostname === "ecco.cu-dbmi.dev",
+      enabled:
+        window.location.hostname === new URL(import.meta.env.VITE_URL).hostname,
     },
     router,
   )
