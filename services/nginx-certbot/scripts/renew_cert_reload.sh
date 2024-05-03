@@ -11,3 +11,6 @@ certbot certonly \
     --nginx --non-interactive --agree-tos \
     --email ${ADMIN_EMAIL} ${DOMAIN_ARGS} --expand && \
 nginx -s reload
+
+# to manually do a DNS-01 challenge
+# certbot certonly --force-renewal --manual --preferred-challenges dns --email ${ADMIN_EMAIL} ${DOMAIN_ARGS} --expand
