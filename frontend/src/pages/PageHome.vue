@@ -89,9 +89,9 @@
           />
 
           <AppCheckbox
-            v-model="showStats"
-            v-tooltip="'Show/hide extra stats in legends'"
-            label="Show stats"
+            v-model="showExtras"
+            v-tooltip="'Show/hide extra info in legends'"
+            label="Extra info"
           />
         </div>
 
@@ -150,11 +150,38 @@
             </template>
           </AppSelect>
 
-          <div class="multi-control">
-            <AppNumber
-              v-model="scalePower"
-              v-tooltip="
-                `
+          <!-- hide controls that are irrelevant with explicit scale -->
+          <template v-if="!values?.explicitScale">
+            <AppCheckbox
+              v-model="manualMinMax"
+              v-tooltip="'Manually set scale min/max'"
+              label="Manual min/max"
+            />
+
+            <div v-if="manualMinMax" class="multi-control">
+              <AppNumber
+                v-model="manualMin"
+                v-tooltip="'Manual scale min'"
+                :min="-Infinity"
+                :max="Infinity"
+                :step="0.01"
+                label="Min"
+              />
+              <AppNumber
+                v-model="manualMax"
+                v-tooltip="'Manual scale max'"
+                :min="-Infinity"
+                :max="Infinity"
+                :step="0.01"
+                label="Max"
+              />
+            </div>
+
+            <div class="multi-control">
+              <AppNumber
+                v-model="scalePower"
+                v-tooltip="
+                  `
                 Power to raise step ranges by. Only affects which colors are assigned to which values.
                 <br />
                 <br />
@@ -164,34 +191,35 @@
                 <br />
                 < 1 exaggerates differences at high values
                 `
-              "
-              :min="scalePower < 1 ? 0.05 : 0"
-              :max="10"
-              :step="scalePower < 1 ? 0.05 : 0.5"
-              label="Scale power"
-            />
+                "
+                :min="scalePower < 1 ? 0.05 : 0"
+                :max="10"
+                :step="scalePower < 1 ? 0.05 : 0.5"
+                label="Scale power"
+              />
 
-            <AppNumber
-              v-model="scaleSteps"
-              v-tooltip="
-                'Number of bins to divide data into for coloring. If &quot;nice steps&quot; on, only approximate.'
-              "
-              :min="2"
-              :max="10"
-              :step="1"
-              label="Scale steps"
-            />
-          </div>
+              <AppNumber
+                v-model="scaleSteps"
+                v-tooltip="
+                  'Number of bins to divide data into for coloring. If &quot;nice steps&quot; on, only approximate.'
+                "
+                :min="2"
+                :max="10"
+                :step="1"
+                label="Scale steps"
+              />
+            </div>
 
-          <div class="multi-control">
-            <AppCheckbox
-              v-model="niceSteps"
-              v-tooltip="
-                'Adjust number of scale steps to get nice, round intervals (when power 1)'
-              "
-              label="Nice steps"
-            />
-          </div>
+            <div class="multi-control">
+              <AppCheckbox
+                v-model="niceSteps"
+                v-tooltip="
+                  'Adjust number of scale steps to get nice, round intervals (when power 1)'
+                "
+                label="Nice steps"
+              />
+            </div>
+          </template>
 
           <div class="multi-control">
             <AppSlider
@@ -264,8 +292,8 @@
         :data="selectedData"
         :locations="_locations"
         :values="values?.values"
-        :min="values?.min"
-        :max="values?.max"
+        :min="manualMinMax ? manualMin : values?.min"
+        :max="manualMinMax ? manualMax : values?.max"
         :show-legends="showLegends"
         :base-opacity="baseOpacity"
         :data-opacity="dataOpacity"
@@ -286,49 +314,57 @@
           <div>
             <strong>{{ measures[selectedMeasure]?.label }}</strong>
             <br />
-            <small> {{ categories[selectedCategory]?.label }} </small>
+            {{ categories[selectedCategory]?.label }}
             <br />
-            <small>by {{ levels[selectedLevel]?.label }}</small>
+            by {{ levels[selectedLevel]?.label }}
+            <br />
           </div>
 
-          <template v-if="showStats">
-            <div class="mini-table">
-              <template v-if="typeof values?.min === 'number'">
-                <span>Min</span>
-                <span v-tooltip="formatValue(values?.min, percent, false)">
-                  {{ formatValue(values?.min, percent) }}
-                </span>
-              </template>
+          <div v-if="showExtras" class="mini-table">
+            <!-- selected factors -->
+            <template v-for="(factor, key) in factors" :key="key">
+              <span>{{ factor.label }}</span>
+              <span>{{
+                factor.values[selectedFactors[key]?.value || ""]
+              }}</span>
+            </template>
 
-              <template v-if="typeof values?.max === 'number'">
-                <span>Max</span>
-                <span v-tooltip="formatValue(values?.max, percent, false)">
-                  {{ formatValue(values?.max, percent) }}
-                </span>
-              </template>
+            <!-- stats -->
+            <template v-if="values?.min !== undefined">
+              <span>Min</span>
+              <span v-tooltip="formatValue(values?.min, percent, false)">
+                {{ formatValue(values?.min, percent) }}
+              </span>
+            </template>
 
-              <template v-if="typeof values?.mean === 'number'">
-                <span>Mean</span>
-                <span v-tooltip="formatValue(values?.mean, percent, false)">
-                  {{ formatValue(values?.mean, percent) }}
-                </span>
-              </template>
+            <template v-if="values?.max !== undefined">
+              <span>Max</span>
+              <span v-tooltip="formatValue(values?.max, percent, false)">
+                {{ formatValue(values?.max, percent) }}
+              </span>
+            </template>
 
-              <template v-if="typeof values?.median === 'number'">
-                <span>Median</span>
-                <span v-tooltip="formatValue(values?.median, percent, false)">
-                  {{ formatValue(values?.median, percent) }}
-                </span>
-              </template>
-            </div>
-          </template>
+            <template v-if="values?.mean !== undefined">
+              <span>Mean</span>
+              <span v-tooltip="formatValue(values?.mean, percent, false)">
+                {{ formatValue(values?.mean, percent) }}
+              </span>
+            </template>
+
+            <template v-if="values?.median !== undefined">
+              <span>Median</span>
+              <span v-tooltip="formatValue(values?.median, percent, false)">
+                {{ formatValue(values?.median, percent) }}
+              </span>
+            </template>
+          </div>
         </template>
 
         <template v-if="noData" #top-right>
-          <small>
+          <span>
             "No data" may indicate unavailable data, zero, or a low value
             suppressed for privacy reasons.
-          </small>
+          </span>
         </template>
       </AppMap>
     </div>
@@ -380,7 +416,7 @@ import {
   faArrowsRotate,
   faDownload,
 } from "@fortawesome/free-solid-svg-icons";
-import { useElementBounding } from "@vueuse/core";
+import { debouncedWatch, useElementBounding } from "@vueuse/core";
 import {
   getDownload,
   getFacets,
@@ -465,7 +501,7 @@ const long = useUrlParam("long", numberParam, 0);
 
 /** map style state */
 const showLegends = ref(true);
-const showStats = ref(false);
+const showExtras = ref(false);
 const selectedBase = ref(baseOptions[0]?.id || "");
 const selectedGradient = ref(gradientOptions[3]?.id || "");
 const selectedLocations = useUrlParam("locations", arrayParam(stringParam), []);
@@ -476,6 +512,9 @@ const flipGradient = ref(false);
 const scaleSteps = ref(6);
 const niceSteps = ref(false);
 const scalePower = ref(1);
+const manualMinMax = ref(false);
+const manualMin = ref(0);
+const manualMax = ref(1);
 const mapWidth = ref(0);
 const mapHeight = ref(0);
 
@@ -503,7 +542,7 @@ async function reset() {
   lat.value = 0;
   long.value = 0;
   showLegends.value = true;
-  showStats.value = false;
+  showExtras.value = false;
   selectedBase.value = baseOptions[0]?.id || "";
   selectedGradient.value = gradientOptions[3]?.id || "";
   selectedLocations.value = [];
@@ -575,17 +614,23 @@ async function loadValues() {
   latest = Symbol();
   const current = latest;
 
-  const result = await getValues(
-    selectedLevel.value,
-    selectedCategory.value,
-    selectedMeasure.value,
-    /** unwrap nested refs */
-    mapValues(selectedFactors.value, (value) => value.value),
-  );
+  try {
+    const result = await getValues(
+      selectedLevel.value,
+      selectedCategory.value,
+      selectedMeasure.value,
+      /** unwrap nested refs */
+      mapValues(selectedFactors.value, (value) => value.value),
+    );
 
-  /** check if current query is latest (prevents race conditions) */
-  if (current === latest) values.value = result;
-  else console.debug("stale");
+    /** check if current query is latest (prevents race conditions) */
+    if (current === latest) values.value = result;
+    else console.debug("stale");
+  } catch (error) {
+    console.error(error);
+    /** reset data on error so not stale */
+    values.value = undefined;
+  }
 }
 
 /** measures from measure category */
@@ -617,6 +662,9 @@ onUnmounted(clearFactorWatchers);
 watch(
   factors,
   () => {
+    /** reset selected factors */
+    selectedFactors.value = {};
+
     /** all previous watchers irrelevant now */
     clearFactorWatchers();
 
@@ -632,8 +680,7 @@ watch(
       /** hook up url reactive with selected factor */
       selectedFactors.value[key] = factor;
 
-      /** dynamically create watchers for factor */
-
+      /** dynamically create watcher for factor */
       stoppers.push(
         /** when factor value changes */
         watch(
@@ -651,34 +698,25 @@ watch(
           { immediate: true },
         ),
       );
-
-      stoppers.push(
-        /**
-         * when factor value changes, reload data. keep after above so value
-         * query reflects fallback.
-         */
-        watch(factor, loadValues),
-      );
     }
-
-    /**
-     * immediately query data (just once, not duplicate "immediate"s in watchers
-     * above)
-     */
-    loadValues();
   },
   { deep: true },
+);
+
+/** load map values data */
+watch(
+  [selectedLevel, selectedCategory, selectedMeasure, selectedFactors],
+  loadValues,
+  {
+    deep: true,
+    immediate: true,
+  },
 );
 
 /** is measure a percent */
 const percent = computed(() =>
   isPercent(values.value?.min || 0, values.value?.max || 1),
 );
-
-/** load map values data */
-watch([selectedLevel, selectedCategory, selectedMeasure], loadValues, {
-  immediate: true,
-});
 
 /** turn facet into list of select box options */
 function facetToOptions(facet: Facet): Option[] {
@@ -729,19 +767,33 @@ const _locations = computed(
   () => pick(locations.value, selectedLocations.value) as Locations | undefined,
 );
 
+/** auto-update manual min/max */
+watchEffect(() => {
+  if (manualMinMax.value) return;
+  const { min, max } = values.value || {};
+  if (min !== undefined) manualMin.value = min;
+  if (max !== undefined) manualMax.value = max;
+});
+
 /** auto-adjust map height */
 const map = ref<InstanceType<typeof AppMap>>();
 const bounding = computed(() =>
   map.value?.ref ? useElementBounding(map.value.ref) : null,
 );
-const autoMapHeight = computed(() => {
-  if (window.innerHeight < 400) return;
-  if (!bounding.value) return;
-  if (mapWidth.value || mapHeight.value) return;
-  const top = bounding.value.top.value;
-  if (top < 0) return;
-  return window.innerHeight - top - 40 + "px";
-});
+const autoMapHeight = ref("");
+/** avoid browser slow-down */
+debouncedWatch(
+  bounding,
+  () => {
+    if (window.innerHeight < 400) return;
+    if (!bounding.value) return;
+    if (mapWidth.value || mapHeight.value) return;
+    const top = bounding.value.top.value;
+    if (top < 0) return;
+    autoMapHeight.value = window.innerHeight - top - 40 + "px";
+  },
+  { deep: true, debounce: 500 },
+);
 </script>
 
 <style scoped>

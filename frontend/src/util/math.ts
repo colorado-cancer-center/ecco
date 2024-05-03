@@ -8,10 +8,16 @@ export function formatValue(
 ): string {
   if (percent) return round(value * 100, compact ? 1 : 3) + "%";
   else
-    return value.toLocaleString(undefined, {
-      notation: compact ? "compact" : undefined,
-      maximumFractionDigits: 2,
-    });
+    return value.toLocaleString(
+      undefined,
+      compact
+        ? {
+            notation: "compact",
+            maximumFractionDigits: 2,
+            maximumSignificantDigits: 3,
+          }
+        : undefined,
+    );
 }
 
 /** check if range is within 0-1 and should be treated as percent */

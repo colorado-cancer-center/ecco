@@ -113,19 +113,19 @@
 
       <div class="mini-table">
         <!-- primary "value" for feature -->
-        <template v-if="featureInfo.value">
+        <template v-if="featureInfo.value !== undefined">
           <span>
             {{ featureInfo.aac ? "Rate" : "Value" }}
           </span>
           <span>{{
             typeof featureInfo.value === "number"
-              ? formatValue(featureInfo.value || 0, percent, false)
+              ? formatValue(featureInfo.value, percent, false)
               : featureInfo.value
           }}</span>
         </template>
 
         <!-- average annual count -->
-        <template v-if="featureInfo.aac">
+        <template v-if="featureInfo.aac !== undefined">
           <span>Avg. Annual Count</span>
           <span>{{ formatValue(featureInfo.aac, false, false) }}</span>
         </template>
@@ -356,7 +356,7 @@ function bindPopup(layer: L.Layer) {
       if (props.explicitScale) info.value = props.explicitScale[value.value];
       else {
         info.value = value.value;
-        info.aac = value.aac || undefined;
+        info.aac = value.aac ?? undefined;
       }
     }
     featureInfo.value = info;
@@ -407,7 +407,7 @@ const scale = computed(() => {
       });
 
     /** explicit color */
-    const getColor = (value: keyof typeof props.explicitScale) =>
+    const getColor = (value?: keyof typeof props.explicitScale) =>
       steps.find((step) => step.value === value)?.color || noDataColor;
 
     return { steps, getColor };
@@ -472,8 +472,8 @@ const scale = computed(() => {
     }
 
     /** scale interpolator */
-    const getColor = (value: number) =>
-      value < min || value > max
+    const getColor = (value?: number) =>
+      value === undefined
         ? noDataColor
         : d3.scaleQuantile<string>().domain(bands).range(colors)(value);
 
@@ -659,7 +659,7 @@ function updateColors() {
   getLayers<L.GeoJSON>("data", L.GeoJSON).forEach((layer) =>
     layer.setStyle((feature) => ({
       fillColor: scale.value.getColor(
-        props.values?.[feature?.properties.id]?.value || 0,
+        props.values?.[feature?.properties.id]?.value,
       ),
     })),
   );
