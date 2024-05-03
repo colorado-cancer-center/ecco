@@ -1,7 +1,7 @@
 <template>
   <AppAlert>
     <p>
-      <i>This site is still under development</i>. Please
+      <strong>This site is still under development</strong>. Please
       <AppLink to="/about#contact">let us know how we can improve it</AppLink>!
       ECCO is intended to support research, community inquiries, and outreach
       activities. It should not be used to guide clinical decisions.
@@ -767,12 +767,14 @@ const _locations = computed(
   () => pick(locations.value, selectedLocations.value) as Locations | undefined,
 );
 
-/** auto-update manual min/max */
 watchEffect(() => {
-  if (manualMinMax.value) return;
-  const { min, max } = values.value || {};
-  if (min !== undefined) manualMin.value = min;
-  if (max !== undefined) manualMax.value = max;
+  /** if manual min/max off */
+  if (!manualMinMax.value) {
+    /** keep in sync with actual min/max (nicer UX when turning manual on) */
+    const { min, max } = values.value || {};
+    if (min !== undefined) manualMin.value = min;
+    if (max !== undefined) manualMax.value = max;
+  }
 });
 
 /** auto-adjust map height */
