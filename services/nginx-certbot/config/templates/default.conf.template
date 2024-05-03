@@ -9,10 +9,10 @@ upstream backend {
     server backend:8000;
 }
 
-# HTTPS configuration
+# HTTPS configuration, frontend
 server {
     listen 443 ssl;
-    server_name ${DOMAIN_NAMES};
+    server_name ${FRONTEND_DOMAIN};
 
     ssl_certificate /etc/letsencrypt/live/${PRIMARY_DOMAIN}/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/${PRIMARY_DOMAIN}/privkey.pem;
@@ -41,17 +41,36 @@ server {
         index index.html;
         try_files $uri /index.html;
     }
+}
+
+# HTTP configuration, backend
+server {
+    listen 443 ssl;
+    server_name ${API_DOMAIN};
+
+    ssl_certificate /etc/letsencrypt/live/${PRIMARY_DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${PRIMARY_DOMAIN}/privkey.pem;
+
+    include /etc/nginx-conf/ssl-options/options-ssl-nginx.conf;
+    # ssl_dhparam /etc/nginx-conf/ssl-options/ssl-dhparams.pem;
+
+    charset utf-8;
+    client_max_body_size 10M;   # max upload size
+
+    gzip             on;
+    gzip_comp_level  3;
+    gzip_types       text/plain application/xml application/json;
+
+    # allow certbot to respond to ACME challenges
+    location /.well-known/acme-challenge/ {
+        proxy_pass http://localhost;
+        proxy_set_header X-Forwarded-Host $server_name;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
 
     # backend
-    location = /api {
-        absolute_redirect off;
-        return 302 /api/;
-    }
-    location = /openapi.json {
-        proxy_pass http://backend;
-        proxy_http_version 1.1;
-    }
-    location /api/ {
+    location / {
         proxy_pass http://backend/;
         proxy_http_version 1.1;
 

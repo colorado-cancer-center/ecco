@@ -8,7 +8,7 @@ import aiomcache
 
 from routers import geometry, statistics
 
-from settings import IS_DEV
+from settings import IS_DEV, FRONTEND_DOMAIN
 
 # we'll just allow all origins for the time being
 ALLOW_ALL_ORIGINS = True
@@ -22,6 +22,7 @@ app = FastAPI()
 origins = [
     "http://localhost",
     "http://localhost:8001",
+    f"https://{FRONTEND_DOMAIN}"
 ]
 
 app.add_middleware(
