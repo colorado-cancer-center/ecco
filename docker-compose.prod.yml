@@ -11,7 +11,7 @@ services:
     volumes:
       - built_frontend:/app/build/
     environment:
-      - "VITE_API=https://ecco.cu-dbmi.dev/api"
+      - "VITE_API=https://api.coe-ecco.org/"
 
   nginx-certbot:
     # image: nginx:1.19.6-alpine

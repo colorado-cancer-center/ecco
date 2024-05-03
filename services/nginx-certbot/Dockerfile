@@ -13,6 +13,8 @@ COPY ./config/ssl-options/options-ssl-nginx.conf /etc/nginx-conf/ssl-options/opt
 COPY ./entrypoint.sh /var/entrypoint.sh
 COPY ./config/templates/ /etc/nginx/templates/
 
+COPY ./scripts/renew_cert_reload.sh /var/scripts/renew_cert_reload.sh
+
 # override the entrypoint to first start cron, then nginx
 # ENTRYPOINT [ "/var/entrypoint.sh" ]
 
