@@ -1,15 +1,18 @@
 <template>
-  <header>
+  <header class="header">
     <AppLink to="/">
       <h1>
-        <div>{{ pretitle }}</div>
-        <div>
-          <b>E</b>xploring <b>C</b>ancer in <b>Co</b>lorado (<b>ECCO</b>)
+        <div class="pretitle">
+          {{ pretitle }}
+        </div>
+        <div class="title">
+          <b>E</b>xploring <b>C</b>ancer in <b>Co</b>lorado
+          <span class="pretitle">(ECCO)</span>
         </div>
       </h1>
     </AppLink>
 
-    <nav>
+    <nav class="nav">
       <AppLink
         v-for="(route, index) of routes"
         :key="index"
@@ -32,33 +35,39 @@ const { VITE_PRETITLE: pretitle } = import.meta.env;
 </script>
 
 <style scoped>
-header {
+.header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   padding: 20px;
   gap: 10px;
+  font-size: 0.9rem;
 }
 
 @media (max-width: 800px) {
-  header {
+  .header {
     flex-direction: column;
     text-align: center;
   }
 }
 
-h1 > :first-child {
+.pretitle {
+  color: var(--dark-gray);
   font-weight: var(--regular);
   font-size: 0.9rem;
+  letter-spacing: 0.05em;
 }
 
-h1 > :last-child {
+.title {
   font-weight: var(--regular);
-  text-transform: uppercase;
 }
 
-nav {
+.title > b {
+  font-weight: var(--extra-bold);
+}
+
+.nav {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;

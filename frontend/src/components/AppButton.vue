@@ -40,7 +40,7 @@ const component = computed(() => (props.to ? AppLink : "button"));
   align-items: center;
   justify-content: center;
   min-height: 35px;
-  padding: 5px 10px;
+  padding: 5px 15px;
   gap: 10px;
   border: none;
   border-radius: var(--rounded);
@@ -57,16 +57,17 @@ const component = computed(() => (props.to ? AppLink : "button"));
 }
 
 .button:hover {
-  background: var(--gray);
+  background: var(--theme-light);
 }
 
 .accent {
-  background: var(--black);
+  background: var(--dark-gray);
   color: var(--white);
 }
 
 .accent:hover {
-  background: var(--dark-gray);
+  background: var(--theme);
+  color: var(--black);
 }
 
 .square {

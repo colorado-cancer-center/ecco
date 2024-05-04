@@ -1,6 +1,8 @@
 <template>
-  <label class="container" @click.prevent>
-    <div class="label">{{ label }}</div>
+  <label :class="multi ? 'multi' : 'single'">
+    <div class="label" :style="{ gridColumn: multi ? 'span 2' : '' }">
+      {{ label }}
+    </div>
 
     <Listbox
       v-slot="{ open }"
@@ -9,7 +11,6 @@
       @update:model-value="onChange"
     >
       <Float
-        :shift="10"
         :middleware="middleware"
         floating-as="template"
         portal
@@ -22,11 +23,10 @@
             v-tooltip="tooltip"
             :icon="open ? faCaretUp : faCaretDown"
             :flip="true"
-            class="button"
-            :style="{ gridColumn: multi ? '' : 'span 2' }"
+            class="box"
             @keydown="onKeypress"
           >
-            <span>
+            <span class="box-label">
               {{ selectedLabel }}
             </span>
             <slot
@@ -38,7 +38,7 @@
         </ListboxButton>
 
         <!-- dropdown -->
-        <ListboxOptions>
+        <ListboxOptions class="list">
           <template v-for="(option, index) in options" :key="index">
             <!-- regular option -->
             <ListboxOption
@@ -48,19 +48,19 @@
               :value="option"
             >
               <li
-                :class="{ active, selected }"
+                :class="['item', { active, selected }]"
                 @vue:mounted="(node: VNode) => selected && onDropdownOpen(node)"
               >
                 <font-awesome-icon
                   :style="{ opacity: selected ? 1 : 0 }"
                   :icon="faCheck"
                 />
-                <span>{{ option.label }}</span>
+                <span class="item-label">{{ option.label }}</span>
                 <slot name="preview" :option="option" />
               </li>
             </ListboxOption>
             <!-- group option -->
-            <li v-else class="group">{{ option.group }}</li>
+            <li v-else class="group item">{{ option.group }}</li>
           </template>
         </ListboxOptions>
       </Float>
@@ -238,23 +238,38 @@ function onKeypress({ key }: KeyboardEvent) {
 </script>
 
 <style scoped>
-.container {
+.multi,
+.single {
   display: grid;
-  grid-template-columns: 1fr min-content;
   gap: 10px;
+  cursor: pointer;
 }
 
-.label {
-  grid-column: span 2;
+.multi {
+  grid-template-columns: 1fr min-content;
 }
 
-.button :deep(span) {
+.single {
+  grid-template-columns: 1fr;
+}
+
+.box {
+  overflow: auto;
+}
+
+.box :deep(.icon) {
+  color: var(--gray);
+}
+
+.box-label {
   flex-grow: 1;
+  overflow: hidden;
   text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-ul {
-  max-width: calc(100vw - 60px);
+.list {
   margin: 0;
   padding: 0;
   overflow-y: auto;
@@ -264,24 +279,26 @@ ul {
   box-shadow: var(--shadow);
 }
 
-li {
+.item {
   display: flex;
   align-items: center;
   padding: 5px 10px;
   gap: 10px;
+  line-height: var(--compact);
   list-style: none;
   cursor: pointer;
 }
 
-li span {
+.item-label {
   flex-grow: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .active {
   background: var(--light-gray);
+}
+
+.selected {
+  background: var(--theme-light);
 }
 
 .group {

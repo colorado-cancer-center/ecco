@@ -8,7 +8,7 @@
           (value: boolean) => emit('update:modelValue', value)
         "
       >
-        <button>
+        <button class="button">
           <font-awesome-icon :icon="modelValue ? faSquareCheck : faSquare" />
         </button>
       </Switch>
@@ -41,8 +41,9 @@ const emit = defineEmits<Emits>();
 .container {
   display: flex;
   flex-shrink: 0;
-  align-items: stretch;
-
+  align-items: center;
+  padding: 5px;
+  gap: 5px;
   border-radius: var(--rounded);
   transition: background var(--fast);
 }
@@ -52,29 +53,25 @@ const emit = defineEmits<Emits>();
 }
 
 .container:hover {
-  background: var(--light-gray);
+  background: var(--theme-light);
 }
 
 .label {
   display: flex;
   flex-grow: 1;
-  align-items: center;
-  padding-left: 5px;
 }
 
-button {
+.button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 35px;
-  height: 35px;
   border: none;
   background: none;
   color: var(--off-black);
   font-size: 1.25em;
 }
 
-button:not(:focus-visible) {
+.button:not(:focus-visible) {
   outline: none !important;
 }
 </style>

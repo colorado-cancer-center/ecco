@@ -1,5 +1,5 @@
 <template>
-  <label>
+  <label class="label">
     <span>{{ label }}</span>
 
     <SliderRoot
@@ -45,7 +45,7 @@ const emit = defineEmits<Emits>();
 </script>
 
 <style scoped>
-label {
+.label {
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -60,13 +60,17 @@ label {
   margin-bottom: 5px;
   padding: 10px 0;
   cursor: pointer;
+  transition: color var(--fast);
+}
+
+.root:hover {
+  color: var(--theme);
 }
 
 .track {
   position: relative;
   flex-grow: 1;
   height: 5px;
-
   border-radius: 999px;
   background: var(--gray);
 }
@@ -75,7 +79,7 @@ label {
   position: absolute;
   height: 100%;
   border-radius: 999px;
-  background: var(--black);
+  background: currentColor;
 }
 
 .thumb {
@@ -84,6 +88,6 @@ label {
   height: 15px;
   transform: translate(-50%, -50%);
   border-radius: 999px;
-  background: var(--black);
+  background: currentColor;
 }
 </style>

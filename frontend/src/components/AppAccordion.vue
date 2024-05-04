@@ -5,6 +5,7 @@
         ref="button"
         :icon="open ? faAngleUp : faAngleDown"
         class="button"
+        :accent="true"
       >
         {{ label }}
       </AppButton>
@@ -36,13 +37,5 @@ defineSlots<Slots>();
 <style scoped>
 .panel {
   display: contents;
-}
-
-.button :deep(span) {
-  flex-grow: 1;
-}
-
-.button :deep(svg) {
-  color: var(--dark-gray);
 }
 </style>

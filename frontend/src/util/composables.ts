@@ -107,7 +107,11 @@ export function useScrollable(
 
   /** add gradient styles */
   watchEffect(() => {
-    if (!element.value) return;
+    if (
+      !element.value ||
+      window.getComputedStyle(element.value).overflow === "visible"
+    )
+      return;
 
     /** whether at edges of element */
     const { left, top, right, bottom } = arrivedState;
