@@ -16,15 +16,28 @@ jobs:
         with:
           credentials_json: '${{ secrets.JSON_GCLOUD_SERVICE_ACCOUNT_JSON }}'
 
+      # - name: Set up Cloud SDK
+      #   uses: 'google-github-actions/setup-gcloud@v2'
+      #   with:
+      #     version: '>= 363.0.0'
+
+      # - id: 'compute-ssh'
+      #   uses: 'google-github-actions/ssh-compute@v1'
+      #   with:
+      #     instance_name: 'ecco'
+      #     zone: 'us-central1-a'
+      #     user: 'ecco-deployer'
+      #     ssh_private_key: '${{ secrets.GCP_SSH_PRIVATE_KEY }}'
+      #     # command: 'cd /var/projects/ecco && git pull && ./run_stack.sh prod'
+      #     command: 'touch ~/i_was_here'
+
       - id: 'compute-ssh'
-        uses: 'google-github-actions/ssh-compute@v1'
-        with:
-          instance_name: 'ecco'
-          zone: 'us-central1-a'
-          user: 'ecco-deployer'
-          ssh_private_key: '${{ secrets.GCP_SSH_PRIVATE_KEY }}'
-          # command: 'cd /var/projects/ecco && git pull && ./run_stack.sh prod'
-          command: 'touch ~/i_was_here'
+        run: |-
+          echo -e "${{ secrets.GCP_SSH_PRIVATE_KEY }}" > /tmp/ssh_key
+          # echo -e "${{ secrets.GCP_SSH_PUBLIC_KEY }}" > /tmp/ssh_key.pub
+          chmod 0600 /tmp/ssh_key*
+          ssh -o StrictHostKeyChecking=accept-new -i /tmp/ssh_key ecco-deployer@api.coe-ecco.org -- 'touch ~/i_was_here'
+          rm /tmp/ssh_key
   
       - id: 'test'
         run: |-
