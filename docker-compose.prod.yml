@@ -14,7 +14,6 @@ services:
       - "VITE_URL=https://ecco.cu-dbmi.dev"
       - "VITE_API=https://ecco.cu-dbmi.dev/api"
 
-
   nginx-certbot:
     # image: nginx:1.19.6-alpine
     build: ./services/nginx-certbot/
