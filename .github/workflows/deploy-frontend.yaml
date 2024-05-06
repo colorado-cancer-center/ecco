@@ -16,6 +16,8 @@ jobs:
       - if: runner.debug == '1'
         uses: mxschmitt/action-tmate@v3
 
+      - run: cd frontend
+
       - name: Set up Bun
         uses: oven-sh/setup-bun@v1
 
