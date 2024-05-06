@@ -30,7 +30,7 @@ const dismissed = ref(false);
   display: flex;
   position: relative;
   flex-direction: column;
-  padding: 30px max(40px, (100% - 1000px) / 2);
+  padding: 30px max(60px, (100% - 1000px) / 2);
   gap: 10px;
   background: var(--theme-light);
 }

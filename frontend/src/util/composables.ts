@@ -4,7 +4,6 @@ import {
   onMounted,
   shallowRef,
   watch,
-  watchEffect,
   type Ref,
 } from "vue";
 import { debounce, round } from "lodash";
@@ -93,50 +92,13 @@ export function useUrlParam<T>(
 }
 
 /** style element with gradients at edges to indicate scroll-ability */
-export function useScrollable(
-  element: Ref<HTMLElement | undefined>,
-  thickness = "100px",
-) {
+export function useScrollable(element: Ref<HTMLElement | undefined>) {
   const { arrivedState } = useScroll(element);
 
   /** whether any scrolling is possible */
   const scrollable = computed(() => {
     const { left, top, right, bottom } = arrivedState;
     return !left || !top || !right || !bottom;
-  });
-
-  /** add gradient styles */
-  watchEffect(() => {
-    if (
-      !element.value ||
-      window.getComputedStyle(element.value).overflow === "visible"
-    )
-      return;
-
-    /** whether at edges of element */
-    const { left, top, right, bottom } = arrivedState;
-
-    /** generate gradient in direction */
-    const grad = (dir: string) =>
-      `linear-gradient(to ${dir}, transparent 0, black ${thickness})`;
-
-    /** combine masks into single definition */
-    const mask = [
-      !left && grad("right"),
-      !top && grad("bottom"),
-      !right && grad("left"),
-      !bottom && grad("top"),
-    ]
-      .filter(Boolean)
-      .join(",");
-
-    /** stack masks */
-    element.value.style.webkitMaskComposite = "destination-in";
-    element.value.style.maskComposite = "intersect";
-
-    /** set masks */
-    element.value.style.webkitMaskImage = mask;
-    element.value.style.maskImage = mask;
   });
 
   /** force scroll to update */

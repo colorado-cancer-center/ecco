@@ -40,7 +40,7 @@ const component = computed(() => (props.to ? AppLink : "button"));
   align-items: center;
   justify-content: center;
   min-height: 35px;
-  padding: 5px 15px;
+  padding: 5px 10px;
   gap: 10px;
   border: none;
   border-radius: var(--rounded);

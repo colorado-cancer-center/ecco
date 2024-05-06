@@ -54,13 +54,8 @@ const { VITE_PRETITLE: pretitle } = import.meta.env;
 }
 
 .pretitle {
-  font-weight: var(--regular);
   font-size: 0.9rem;
   letter-spacing: 0.009em;
-}
-
-.title {
-  font-weight: var(--regular);
 }
 
 .title > b {
@@ -70,7 +65,7 @@ const { VITE_PRETITLE: pretitle } = import.meta.env;
 .subtitle {
   margin-left: 0.5em;
   font-size: 0.915rem;
-  opacity: 0.75;
+  opacity: 0.5;
 }
 
 .nav {
