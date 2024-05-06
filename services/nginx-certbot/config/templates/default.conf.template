@@ -35,6 +35,29 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
     }
 
+    # still serve the backend if it's explicitly requested at /api
+    # as well as other backend-specific resources
+    location = /api {
+        absolute_redirect off;
+        return 302 /api/;
+    }
+    location = /openapi.json {
+        proxy_pass http://backend;
+        proxy_http_version 1.1;
+    }
+    location /api/ {
+        proxy_pass http://backend/;
+        proxy_http_version 1.1;
+
+        proxy_set_header X-Forwarded-Host $server_name;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+
+        # needed for websockets(?)
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+    }
+
     # frontend
     location / {
         root /usr/share/nginx/html;
