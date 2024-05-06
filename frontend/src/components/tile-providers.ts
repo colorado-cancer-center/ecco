@@ -1,4 +1,5 @@
 import * as L from "leaflet";
+import { startCase } from "lodash";
 import type { Option } from "@/components/AppSelect.vue";
 import "leaflet-providers";
 
@@ -44,11 +45,8 @@ export const baseOptions = [
 
 /** get selectable option from tile provider name */
 function nameToOption(name: string) {
-  /** insert spaces before uppercases */
-  /** https://stackoverflow.com/a/7599674/2180570 */
-  const label = name
-    .split(/(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|\./)
-    .join(" ");
+  /** make nice label */
+  const label = startCase(name);
 
   const { _url = "", options } = L.tileLayer.provider(name);
   /** get preview image */
