@@ -1,5 +1,5 @@
 <template>
-  <footer>
+  <footer class="footer">
     <a class="logo" :href="logoLink" target="_blank">
       <img src="@/assets/logo.png" :alt="'Presented by...'" />
     </a>
@@ -20,7 +20,7 @@ const {
 </script>
 
 <style scoped>
-footer {
+.footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -29,7 +29,7 @@ footer {
 }
 
 @media (max-width: 500px) {
-  footer {
+  .footer {
     flex-direction: column;
   }
 }

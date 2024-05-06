@@ -1,7 +1,8 @@
 <template>
-  <div ref="containerElement" class="container">
+  <div class="container">
+    <!-- map area -->
     <div ref="scrollElement" class="scroll">
-      <!-- map container -->
+      <!-- map leaflet root -->
       <div
         ref="mapElement"
         class="map"
@@ -10,38 +11,6 @@
           height: height ? height + 'px' : '100%',
         }"
       />
-    </div>
-
-    <!-- control set -->
-    <div class="controls">
-      <AppButton
-        v-tooltip="'Download current map view as PNG'"
-        :icon="faDownload"
-        :accent="true"
-        @click="download"
-      >
-        Download Map
-      </AppButton>
-      <AppButton
-        v-tooltip="'Zoom out'"
-        :icon="faMinus"
-        @click="map?.zoomOut()"
-      />
-      <AppButton v-tooltip="'Zoom in'" :icon="faPlus" @click="map?.zoomIn()" />
-      <AppButton
-        v-tooltip="'Fit view to data'"
-        :icon="faCropSimple"
-        @click="fit"
-      >
-        Fit
-      </AppButton>
-      <AppButton
-        v-tooltip="'View map in full screen'"
-        :icon="faExpand"
-        @click="fullscreen"
-      >
-        Fullscreen
-      </AppButton>
     </div>
 
     <!-- top left legend -->
@@ -99,6 +68,13 @@
       </div>
     </Teleport>
 
+    <!-- bottom left legend -->
+    <Teleport v-if="showLegends && bottomLeftLegend" :to="bottomLeftLegend">
+      <div v-stop class="legend">
+        <slot name="bottom-left" />
+      </div>
+    </Teleport>
+
     <!-- county/tract popup -->
     <Teleport v-if="popup && featureInfo" :to="popup">
       <!-- name -->
@@ -139,7 +115,7 @@
         <!-- link -->
         <template v-if="featureInfo.link">
           <span>Link</span>
-          <AppLink :to="featureInfo.link" class="truncate">
+          <AppLink :to="featureInfo.link">
             {{ featureInfo.link.replace(/(https?:\/\/)?(www\.)?/, "") }}
           </AppLink>
         </template>
@@ -179,16 +155,8 @@ import * as d3 from "d3";
 import domtoimage from "dom-to-image";
 import L, { type MapOptions } from "leaflet";
 import { cloneDeep, debounce, isEmpty, mapValues } from "lodash";
-import {
-  faCropSimple,
-  faDownload,
-  faExpand,
-  faMinus,
-  faPlus,
-} from "@fortawesome/free-solid-svg-icons";
 import { useElementSize, useFullscreen, useResizeObserver } from "@vueuse/core";
 import type { Data, DataProps, LocationProps, Locations, Values } from "@/api";
-import AppButton from "@/components/AppButton.vue";
 import AppLink from "@/components/AppLink.vue";
 import { getGradient } from "@/components/gradient";
 import { markerOptions } from "@/components/markers";
@@ -198,21 +166,18 @@ import { formatValue, isPercent, normalizedApply } from "@/util/math";
 import { getBbox, sleep } from "@/util/misc";
 import "leaflet/dist/leaflet.css";
 
-export type ExplicitScale = Props["explicitScale"];
-
 /** "no data" color */
 let noDataColor = "#a0a0a0";
 
 /** element refs */
-const containerElement = ref<HTMLDivElement>();
 const scrollElement = ref<HTMLDivElement>();
 const mapElement = ref<HTMLDivElement>();
 
 type Props = {
-  /** data */
-  data?: Data;
+  /** features */
+  geometry?: Data;
   locations?: Locations;
-  /** map of feature id to value */
+  /** map of geometry id to value */
   values?: NonNullable<Values>["values"];
   /** value domain */
   min?: number;
@@ -224,11 +189,11 @@ type Props = {
   /** show/hide elements */
   showLegends: boolean;
   /** layer opacities */
-  baseOpacity: number;
-  dataOpacity: number;
+  backgroundOpacity: number;
+  geometryOpacity: number;
   locationOpacity: number;
-  /** tile providers for layers */
-  base: string;
+  /** tile provider */
+  background: string;
   /** color gradient id */
   gradient: string;
   /** scale props */
@@ -245,8 +210,10 @@ type Props = {
   filename: string | string[];
 };
 
+export type ExplicitScale = Props["explicitScale"];
+
 const props = withDefaults(defineProps<Props>(), {
-  data: () => ({ type: "FeatureCollection", features: [] }),
+  geometry: () => ({ type: "FeatureCollection", features: [] }),
   locations: () => ({}),
   values: () => ({}),
   min: undefined,
@@ -267,16 +234,16 @@ type Slots = {
   "top-left": () => unknown;
   "top-right": () => unknown;
   "bottom-right": () => unknown;
+  "bottom-left": () => unknown;
 };
 
 defineSlots<Slots>();
-
-defineExpose({ ref: containerElement });
 
 /** elements to teleport legend template content to */
 const topLeftLegend = ref<HTMLElement>();
 const topRightLegend = ref<HTMLElement>();
 const bottomRightLegend = ref<HTMLElement>();
+const bottomLeftLegend = ref<HTMLElement>();
 
 /** element to teleport popup template content to */
 const popup = ref<HTMLElement>();
@@ -292,6 +259,7 @@ const featureInfo = ref<Info>();
 const mapOptions: MapOptions = {
   zoomControl: false,
   attributionControl: false,
+  trackResize: false,
 };
 
 /** map object */
@@ -375,10 +343,10 @@ function bindPopup(layer: L.Layer) {
 /** close popups (which could contain stale data) any time props change */
 watch(props, () => map?.closePopup(), { deep: true });
 
-/** whether map has any "no data" regions */
+/** whether map has any "no data" geometry regions */
 const noData = computed(
   () =>
-    !props.data.features.every(
+    !props.geometry.features.every(
       (feature) => (feature.properties.id || "") in props.values,
     ),
 );
@@ -484,7 +452,7 @@ const scale = computed(() => {
 /** fit view to data layer content */
 const fit = debounce(async () => {
   /** get bounding box of geojson data */
-  let bounds = getLayers<L.GeoJSON>("data", L.GeoJSON)[0]?.getBounds();
+  let bounds = getLayers<L.GeoJSON>("geometry", L.GeoJSON)[0]?.getBounds();
   if (!bounds?.isValid()) return;
 
   /** get tight fit */
@@ -510,8 +478,8 @@ const fit = debounce(async () => {
   }
 
   map?.fitBounds(bounds, {
-    paddingTopLeft: [padding.left + 20, padding.top + 20],
-    paddingBottomRight: [padding.right + 20, padding.bottom + 20],
+    paddingTopLeft: [padding.left, padding.top],
+    paddingBottomRight: [padding.right, padding.bottom],
   });
 }, 200);
 
@@ -530,14 +498,15 @@ onMounted(() => {
   L.control.attribution({ position: "bottomleft" }).addTo(map);
 
   /** add panes to map */
-  map.createPane("base").style.zIndex = "0";
-  map.createPane("data").style.zIndex = "1";
+  map.createPane("background").style.zIndex = "0";
+  map.createPane("geometry").style.zIndex = "1";
   map.createPane("locations").style.zIndex = "2";
 
   /** add legends to map and set elements to teleport slots into */
   topLeftLegend.value = createLegend({ position: "topleft" });
   topRightLegend.value = createLegend({ position: "topright" });
   bottomRightLegend.value = createLegend({ position: "bottomright" });
+  bottomLeftLegend.value = createLegend({ position: "bottomleft" });
 
   /** update props from map pan/zoom */
   map.on("moveend", () => {
@@ -568,20 +537,20 @@ onBeforeUnmount(() => {
 
 /** update base layer */
 function updateBase() {
-  getLayers("base").forEach((layer) => layer.remove());
-  const layer = L.tileLayer.provider(props.base, { pane: "base" });
+  getLayers("background").forEach((layer) => layer.remove());
+  const layer = L.tileLayer.provider(props.background, { pane: "background" });
   map?.addLayer(layer);
 }
 
 /** update base layer when props change */
-watch(() => props.base, updateBase, { immediate: true });
+watch(() => props.background, updateBase, { immediate: true });
 
 /** update data layers */
 function updateData() {
-  getLayers("data").forEach((layer) => layer.remove());
-  const layer = L.geoJSON(undefined, { pane: "data" });
+  getLayers("geometry").forEach((layer) => layer.remove());
+  const layer = L.geoJSON(undefined, { pane: "geometry" });
   map?.addLayer(layer);
-  layer.addData(props.data);
+  layer.addData(props.geometry);
   bindPopup(layer);
 
   /** set feature static styles */
@@ -606,7 +575,7 @@ function updateData() {
 }
 
 /** update map data layer when props change */
-watch(() => props.data, updateData, { deep: true });
+watch(() => props.geometry, updateData, { deep: true });
 
 /** symbols (icon + label) associated with each location */
 const symbols = computed(() => {
@@ -656,7 +625,7 @@ watch([() => props.lat, () => props.long, () => props.zoom], updateView);
 
 /** update data feature colors */
 function updateColors() {
-  getLayers<L.GeoJSON>("data", L.GeoJSON).forEach((layer) =>
+  getLayers<L.GeoJSON>("geometry", L.GeoJSON).forEach((layer) =>
     layer.setStyle((feature) => ({
       fillColor: scale.value.getColor(
         props.values?.[feature?.properties.id]?.value,
@@ -673,21 +642,21 @@ function updateOpacities() {
   if (!map) return;
 
   /** get layers */
-  const base = map.getPane("base");
-  const data = map.getPane("data");
+  const base = map.getPane("background");
+  const data = map.getPane("geometry");
   const locations = map.getPane("locations");
 
   /** set layer opacities */
-  if (base) base.style.opacity = String(props.baseOpacity);
-  if (data) data.style.opacity = String(props.dataOpacity);
+  if (base) base.style.opacity = String(props.backgroundOpacity);
+  if (data) data.style.opacity = String(props.geometryOpacity);
   if (locations) locations.style.opacity = String(props.locationOpacity);
 }
 
 /** update opacities when props change */
 watch(
   [
-    () => props.baseOpacity,
-    () => props.dataOpacity,
+    () => props.backgroundOpacity,
+    () => props.geometryOpacity,
     () => props.locationOpacity,
   ],
   updateOpacities,
@@ -735,6 +704,15 @@ async function download() {
 
 /** toggle fullscreen on element */
 const { toggle: fullscreen } = useFullscreen(mapElement);
+
+/** allow control from parent */
+defineExpose({
+  download,
+  zoomIn: () => map?.zoomIn(),
+  zoomOut: () => map?.zoomOut(),
+  fit,
+  fullscreen,
+});
 </script>
 
 <style scoped>
@@ -776,10 +754,9 @@ const { toggle: fullscreen } = useFullscreen(mapElement);
   grid-template-columns: 1.5em max-content max-content max-content;
   grid-auto-rows: 1.5em;
   align-items: center;
-  justify-items: stretch;
+  justify-items: flex-end;
   width: fit-content;
   gap: 0 10px;
-  /* text-align: center; */
 }
 
 .steps svg {

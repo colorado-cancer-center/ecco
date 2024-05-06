@@ -9,6 +9,8 @@ import App from "./App.vue";
 import "tippy.js/dist/tippy.css";
 import "./styles.css";
 
+console.debug(import.meta);
+
 createApp(App)
   .component("font-awesome-icon", FontAwesomeIcon)
   .use(router)

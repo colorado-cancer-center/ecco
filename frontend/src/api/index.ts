@@ -1,6 +1,6 @@
 import * as d3 from "d3";
 import type { FeatureCollection, Geometry } from "geojson";
-import { mapValues, omitBy } from "lodash";
+import { mapValues } from "lodash";
 import type { ExplicitScale } from "@/components/AppMap.vue";
 import cancerCenterLocations from "./cancer-center-locations.json";
 import cancerInFocusLocations from "./cancer-in-focus-locations.json";
@@ -170,10 +170,6 @@ export async function getValues(
   const data = await request<_Values>(
     `${api}/stats/${level}/${category}/fips-value?` + params,
   );
-
-  /** suppress age adjusted data for privacy */
-  if (["cancerincidence", "cancermortality"].includes(category))
-    data.values = omitBy(data.values, (value) => value.value < 3);
 
   const values = Object.values(data.values).map(({ value }) => value);
 

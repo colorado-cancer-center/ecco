@@ -26,6 +26,21 @@
   </section>
 
   <section>
+    <AppHeading level="3">Suppressed Values</AppHeading>
+
+    <p>
+      In some cases, values may have been "suppressed", i.e. rounded down to 0
+      or treated as "No Data". This is done to protect the privacy of
+      individuals whose identities could be determined from the combination of a
+      small value and a small population/geographic area. Depending on the data
+      being viewed, the suppression was either already done in the original data
+      source, or done in our pre-processing of the data. Thus, for a given
+      feature on the map, it may be impossible to discriminate between a missing
+      value, a true value of 0, and a very low value that was suppressed.
+    </p>
+  </section>
+
+  <section>
     <AppHeading level="3">Cancer Incidence and Mortality</AppHeading>
 
     <AppHeading level="4">

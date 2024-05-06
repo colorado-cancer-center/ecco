@@ -1,7 +1,8 @@
 <template>
-  <label>
+  <label class="label">
     <span v-if="!hideLabel">{{ label }}</span>
     <input
+      class="input"
       type="number"
       :value="modelValue"
       :min="min"
@@ -47,7 +48,7 @@ function onChange(event: Event) {
 </script>
 
 <style scoped>
-label {
+.label {
   display: flex;
   flex-shrink: 0;
   flex-direction: column;
@@ -56,7 +57,7 @@ label {
   cursor: pointer;
 }
 
-input {
+.input {
   min-height: 35px;
   padding: 5px 10px;
   border: none;
@@ -66,7 +67,7 @@ input {
   transition: background var(--fast);
 }
 
-input:hover {
-  background: var(--gray);
+.input:hover {
+  background: var(--theme-light);
 }
 </style>

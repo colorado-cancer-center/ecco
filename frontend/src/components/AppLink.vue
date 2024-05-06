@@ -39,6 +39,6 @@ const component = computed(() => (isExternal.value ? "a" : "router-link"));
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 0.5em;
 }
 </style>
