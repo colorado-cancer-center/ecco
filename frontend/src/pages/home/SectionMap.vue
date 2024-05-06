@@ -181,7 +181,7 @@
                 :min="-Infinity"
                 :max="Infinity"
                 :step="0.01"
-                label="Manual Min"
+                label="Min"
               />
               <AppNumber
                 v-model="manualMax"
@@ -189,7 +189,7 @@
                 :min="-Infinity"
                 :max="Infinity"
                 :step="0.01"
-                label="Manual Max"
+                label="Max"
               />
             </template>
           </div>
@@ -230,7 +230,7 @@
             <AppCheckbox
               v-model="niceSteps"
               v-tooltip="
-                'Adjust number of scale steps to get nice, round intervals (when power 1)'
+                'Adjust number of scale steps to get nice, round intervals (when power = 1)'
               "
               label="Nice steps"
             />
@@ -459,7 +459,6 @@ import {
   arrayParam,
   numberParam,
   stringParam,
-  useScrollable,
   useUrlParam,
 } from "@/util/composables";
 import { formatValue, isPercent } from "@/util/math";
@@ -510,9 +509,6 @@ const learnMoreLink = computed(() => {
 
   return "/sources";
 });
-
-/** show gradients on elements when scrollable */
-useScrollable(leftPanelElement);
 
 /** data state */
 const geometryStatus = ref<Status>("loading");
@@ -868,7 +864,7 @@ debouncedWatch(
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
   align-items: flex-end;
-  gap: 20px;
+  gap: 15px;
 }
 
 .dimensions-label {
@@ -883,7 +879,7 @@ debouncedWatch(
   display: grid;
   grid-template-columns: 1fr min-content 1fr;
   align-items: center;
-  gap: 5px;
+  gap: 10px;
 }
 
 .gradient-preview {
@@ -912,10 +908,12 @@ debouncedWatch(
   top: 20px;
   flex-direction: column;
   align-items: stretch;
+  min-width: 0;
+  min-height: 0;
   gap: 20px;
 }
 
-.map {
+:deep(.map) {
   flex-grow: 1;
   transition: opacity var(--fast);
 }

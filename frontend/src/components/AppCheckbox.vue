@@ -41,8 +41,8 @@ const emit = defineEmits<Emits>();
 .container {
   display: flex;
   align-items: center;
-  padding: 5px;
-  gap: 5px;
+  padding: 5px 10px;
+  gap: 10px;
   border-radius: var(--rounded);
   transition: background var(--fast);
 }
@@ -63,6 +63,7 @@ const emit = defineEmits<Emits>();
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0;
   border: none;
   background: none;
   color: var(--off-black);

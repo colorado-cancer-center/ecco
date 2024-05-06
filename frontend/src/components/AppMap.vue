@@ -1,145 +1,151 @@
 <template>
-  <div class="container">
-    <!-- map area -->
-    <div ref="scrollElement" class="scroll">
-      <!-- map leaflet root -->
-      <div
-        ref="mapElement"
-        class="map"
-        :style="{
-          width: width ? width + 'px' : '100%',
-          height: height ? height + 'px' : '100%',
-        }"
-      />
-    </div>
-
-    <!-- top left legend -->
-    <Teleport v-if="showLegends && topLeftLegend" :to="topLeftLegend">
-      <div v-stop class="legend">
-        <slot name="top-left" />
-
-        <!-- scale key -->
-        <div class="steps">
-          <template
-            v-for="(step, index) of [...scale.steps].reverse()"
-            :key="index"
-          >
-            <svg viewBox="0 0 1 1">
-              <rect x="0" y="0" width="1" height="1" :fill="step.color" />
-            </svg>
-            <template v-if="'lower' in step && 'upper' in step">
-              <span>{{ formatValue(step.lower, percent) }}</span>
-              <span>&ndash;</span>
-              <span>{{ formatValue(step.upper, percent) }}</span>
-            </template>
-            <template v-if="'value' in step">
-              <span style="grid-column: 2 / -1">{{ step.label }}</span>
-            </template>
-          </template>
-          <template v-if="noData">
-            <svg viewBox="0 0 1 1">
-              <rect x="0" y="0" width="1" height="1" :fill="noDataColor" />
-            </svg>
-            <span style="grid-column: 2 / -1">No data</span>
-          </template>
-        </div>
-      </div>
-    </Teleport>
-
-    <!-- top right legend -->
-    <Teleport v-if="showLegends && topRightLegend" :to="topRightLegend">
-      <div v-stop class="legend">
-        <slot name="top-right" />
-      </div>
-    </Teleport>
-
-    <!-- bottom right legend -->
-    <Teleport v-if="showLegends && bottomRightLegend" :to="bottomRightLegend">
-      <div v-stop class="legend">
-        <slot name="bottom-right" />
-
-        <!-- symbol key -->
-        <div v-if="Object.keys(symbols).length" class="symbols">
-          <template v-for="(symbol, index) of symbols" :key="index">
-            <img :src="symbol.image" alt="" />
-            <small>{{ symbol.label }}</small>
-          </template>
-        </div>
-      </div>
-    </Teleport>
-
-    <!-- bottom left legend -->
-    <Teleport v-if="showLegends && bottomLeftLegend" :to="bottomLeftLegend">
-      <div v-stop class="legend">
-        <slot name="bottom-left" />
-      </div>
-    </Teleport>
-
-    <!-- county/tract popup -->
-    <Teleport v-if="popup && featureInfo" :to="popup">
-      <!-- name -->
-      <template v-if="featureInfo.name">
-        <strong>{{ featureInfo.name }}</strong>
-      </template>
-
-      <!-- id -->
-      <template v-if="featureInfo.fips">
-        <strong>Census Tract<br />{{ featureInfo.fips }}</strong>
-      </template>
-
-      <div class="mini-table">
-        <!-- primary "value" for feature -->
-        <template v-if="featureInfo.value !== undefined">
-          <span>
-            {{ featureInfo.aac ? "Rate" : "Value" }}
-          </span>
-          <span>{{
-            typeof featureInfo.value === "number"
-              ? formatValue(featureInfo.value, percent, false)
-              : featureInfo.value
-          }}</span>
-        </template>
-
-        <!-- average annual count -->
-        <template v-if="featureInfo.aac !== undefined">
-          <span>Avg. Annual Count</span>
-          <span>{{ formatValue(featureInfo.aac, false, false) }}</span>
-        </template>
-
-        <!-- organization -->
-        <template v-if="featureInfo.org">
-          <span>Org</span>
-          <span>{{ featureInfo.org }}</span>
-        </template>
-
-        <!-- link -->
-        <template v-if="featureInfo.link">
-          <span>Link</span>
-          <AppLink :to="featureInfo.link">
-            {{ featureInfo.link.replace(/(https?:\/\/)?(www\.)?/, "") }}
-          </AppLink>
-        </template>
-
-        <!-- address -->
-        <template v-if="featureInfo.address">
-          <span>Address</span>
-          <span>{{ featureInfo.address }}</span>
-        </template>
-
-        <!-- phone -->
-        <template v-if="featureInfo.phone">
-          <span>Phone</span>
-          <span>{{ featureInfo.phone }}</span>
-        </template>
-
-        <!-- notes -->
-        <template v-if="featureInfo.notes">
-          <span>Notes</span>
-          <span>{{ featureInfo.notes }}</span>
-        </template>
-      </div>
-    </Teleport>
+  <div
+    ref="scrollElement"
+    v-bind="$attrs"
+    class="scroll"
+    :style="{
+      maxWidth: width ? width + 'px' : '',
+      maxHeight: height ? height + 'px' : '',
+    }"
+  >
+    <!-- map leaflet root -->
+    <div
+      ref="mapElement"
+      :style="{
+        width: width ? width + 'px' : '100%',
+        height: height ? height + 'px' : '100%',
+      }"
+    />
   </div>
+
+  <!-- top left legend -->
+  <Teleport v-if="showLegends && topLeftLegend" :to="topLeftLegend">
+    <div v-stop class="legend">
+      <slot name="top-left" />
+
+      <!-- scale key -->
+      <div class="steps">
+        <template
+          v-for="(step, index) of [...scale.steps].reverse()"
+          :key="index"
+        >
+          <svg viewBox="0 0 1 1">
+            <rect x="0" y="0" width="1" height="1" :fill="step.color" />
+          </svg>
+          <template v-if="'lower' in step && 'upper' in step">
+            <span>{{ formatValue(step.lower, percent) }}</span>
+            <span>&ndash;</span>
+            <span>{{ formatValue(step.upper, percent) }}</span>
+          </template>
+          <template v-if="'value' in step">
+            <span style="grid-column: 2 / -1">{{ step.label }}</span>
+          </template>
+        </template>
+        <template v-if="noData">
+          <svg viewBox="0 0 1 1">
+            <rect x="0" y="0" width="1" height="1" :fill="noDataColor" />
+          </svg>
+          <span style="grid-column: 2 / -1; justify-self: flex-start"
+            >No data</span
+          >
+        </template>
+      </div>
+    </div>
+  </Teleport>
+
+  <!-- top right legend -->
+  <Teleport v-if="showLegends && topRightLegend" :to="topRightLegend">
+    <div v-stop class="legend">
+      <slot name="top-right" />
+    </div>
+  </Teleport>
+
+  <!-- bottom right legend -->
+  <Teleport v-if="showLegends && bottomRightLegend" :to="bottomRightLegend">
+    <div v-stop class="legend">
+      <slot name="bottom-right" />
+
+      <!-- symbol key -->
+      <div v-if="Object.keys(symbols).length" class="symbols">
+        <template v-for="(symbol, index) of symbols" :key="index">
+          <img :src="symbol.image" alt="" />
+          <small>{{ symbol.label }}</small>
+        </template>
+      </div>
+    </div>
+  </Teleport>
+
+  <!-- bottom left legend -->
+  <Teleport v-if="showLegends && bottomLeftLegend" :to="bottomLeftLegend">
+    <div v-stop class="legend">
+      <slot name="bottom-left" />
+    </div>
+  </Teleport>
+
+  <!-- county/tract popup -->
+  <Teleport v-if="popup && featureInfo" :to="popup">
+    <!-- name -->
+    <template v-if="featureInfo.name">
+      <strong>{{ featureInfo.name }}</strong>
+    </template>
+
+    <!-- id -->
+    <template v-if="featureInfo.fips">
+      <strong>Census Tract<br />{{ featureInfo.fips }}</strong>
+    </template>
+
+    <div class="mini-table">
+      <!-- primary "value" for feature -->
+      <template v-if="featureInfo.value !== undefined">
+        <span>
+          {{ featureInfo.aac ? "Rate" : "Value" }}
+        </span>
+        <span>{{
+          typeof featureInfo.value === "number"
+            ? formatValue(featureInfo.value, percent, false)
+            : featureInfo.value
+        }}</span>
+      </template>
+
+      <!-- average annual count -->
+      <template v-if="featureInfo.aac !== undefined">
+        <span>Avg. Annual Count</span>
+        <span>{{ formatValue(featureInfo.aac, false, false) }}</span>
+      </template>
+
+      <!-- organization -->
+      <template v-if="featureInfo.org">
+        <span>Org</span>
+        <span>{{ featureInfo.org }}</span>
+      </template>
+
+      <!-- link -->
+      <template v-if="featureInfo.link">
+        <span>Link</span>
+        <AppLink :to="featureInfo.link">
+          {{ featureInfo.link.replace(/(https?:\/\/)?(www\.)?/, "") }}
+        </AppLink>
+      </template>
+
+      <!-- address -->
+      <template v-if="featureInfo.address">
+        <span>Address</span>
+        <span>{{ featureInfo.address }}</span>
+      </template>
+
+      <!-- phone -->
+      <template v-if="featureInfo.phone">
+        <span>Phone</span>
+        <span>{{ featureInfo.phone }}</span>
+      </template>
+
+      <!-- notes -->
+      <template v-if="featureInfo.notes">
+        <span>Notes</span>
+        <span>{{ featureInfo.notes }}</span>
+      </template>
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -465,10 +471,14 @@ const fit = debounce(async () => {
 
   /** make room for legends */
   if (props.showLegends) {
+    const mapDimensions = map?.getContainer().getBoundingClientRect()!;
     /** increase padding based on corner legend panel dimensions */
     const padCorner = (v: "top" | "bottom", h: "left" | "right") => {
-      const { width, height } = getBbox(`.leaflet-${v}.leaflet-${h}`);
-      if (height > width) padding[h] = Math.max(width, padding[h]);
+      const { width, height } = getBbox(
+        `.leaflet-${v}.leaflet-${h} .leaflet-control`,
+      );
+      if (mapDimensions?.width > mapDimensions?.height)
+        padding[h] = Math.max(width, padding[h]);
       else padding[v] = Math.max(height, padding[v]);
     };
     padCorner("top", "left");
@@ -478,8 +488,8 @@ const fit = debounce(async () => {
   }
 
   map?.fitBounds(bounds, {
-    paddingTopLeft: [padding.left, padding.top],
-    paddingBottomRight: [padding.right, padding.bottom],
+    paddingTopLeft: [padding.left + 20, padding.top + 20],
+    paddingBottomRight: [padding.right + 20, padding.bottom + 20],
   });
 }, 200);
 
@@ -716,14 +726,7 @@ defineExpose({
 </script>
 
 <style scoped>
-.container {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
 .scroll {
-  flex-grow: 1;
   overflow: auto;
   box-shadow: var(--shadow);
 }
@@ -755,7 +758,6 @@ defineExpose({
   grid-auto-rows: 1.5em;
   align-items: center;
   justify-items: flex-end;
-  width: fit-content;
   gap: 0 10px;
 }
 
@@ -780,9 +782,12 @@ defineExpose({
   font: inherit !important;
 }
 
+.leaflet-interactive {
+  transition: fill-opacity var(--fast);
+}
+
 .leaflet-interactive:hover {
-  filter: brightness(50%) saturate(0%);
-  opacity: 0.5;
+  fill-opacity: 0.25;
 }
 
 .leaflet-control-attribution {
