@@ -9,14 +9,16 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: ./frontend
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - if: runner.debug == '1'
         uses: mxschmitt/action-tmate@v3
-
-      - run: cd frontend
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v1
@@ -31,4 +33,4 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           clean: true
-          folder: dist
+          folder: frontend/dist
