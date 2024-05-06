@@ -167,29 +167,31 @@
 
         <!-- hide controls that are irrelevant with explicit scale -->
         <template v-if="!values?.explicitScale">
-          <!-- scale min/max -->
-          <AppCheckbox
-            v-model="manualMinMax"
-            v-tooltip="'Manually set scale min/max'"
-            label="Manual min/max"
-          />
-          <div v-if="manualMinMax" class="control-row">
-            <AppNumber
-              v-model="manualMin"
-              v-tooltip="'Manual scale min'"
-              :min="-Infinity"
-              :max="Infinity"
-              :step="0.01"
-              label="Manual Min"
+          <div class="control-row">
+            <!-- scale min/max -->
+            <AppCheckbox
+              v-model="manualMinMax"
+              v-tooltip="'Manually set scale min/max'"
+              label="Manual min/max"
             />
-            <AppNumber
-              v-model="manualMax"
-              v-tooltip="'Manual scale max'"
-              :min="-Infinity"
-              :max="Infinity"
-              :step="0.01"
-              label="Manual Max"
-            />
+            <template v-if="manualMinMax">
+              <AppNumber
+                v-model="manualMin"
+                v-tooltip="'Manual scale min'"
+                :min="-Infinity"
+                :max="Infinity"
+                :step="0.01"
+                label="Manual Min"
+              />
+              <AppNumber
+                v-model="manualMax"
+                v-tooltip="'Manual scale max'"
+                :min="-Infinity"
+                :max="Infinity"
+                :step="0.01"
+                label="Manual Max"
+              />
+            </template>
           </div>
 
           <!-- scale steps -->
@@ -382,7 +384,7 @@
           :accent="true"
           @click="map?.download"
         >
-          Image
+          Map
         </AppButton>
         <AppButton
           v-tooltip="'Zoom out'"

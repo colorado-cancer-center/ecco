@@ -40,7 +40,6 @@ const emit = defineEmits<Emits>();
 <style scoped>
 .container {
   display: flex;
-  flex-shrink: 0;
   align-items: center;
   padding: 5px;
   gap: 5px;
@@ -57,7 +56,6 @@ const emit = defineEmits<Emits>();
 }
 
 .label {
-  display: flex;
   flex-grow: 1;
 }
 

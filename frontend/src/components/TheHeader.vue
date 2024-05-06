@@ -5,9 +5,11 @@
         <div class="pretitle">
           {{ pretitle }}
         </div>
-        <div class="title">
-          <b>E</b>xploring <b>C</b>ancer in <b>Co</b>lorado
-          <span class="pretitle">(ECCO)</span>
+        <div>
+          <span class="title">
+            <b>E</b>xploring <b>C</b>ancer in <b>Co</b>lorado
+          </span>
+          <span class="subtitle">ECCO</span>
         </div>
       </h1>
     </AppLink>
@@ -42,7 +44,6 @@ const { VITE_PRETITLE: pretitle } = import.meta.env;
   justify-content: space-between;
   padding: 20px;
   gap: 10px;
-  font-size: 0.9rem;
 }
 
 @media (max-width: 800px) {
@@ -53,10 +54,10 @@ const { VITE_PRETITLE: pretitle } = import.meta.env;
 }
 
 .pretitle {
-  color: var(--dark-gray);
   font-weight: var(--regular);
   font-size: 0.9rem;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.009em;
+  opacity: 0.75;
 }
 
 .title {
@@ -65,6 +66,12 @@ const { VITE_PRETITLE: pretitle } = import.meta.env;
 
 .title > b {
   font-weight: var(--extra-bold);
+}
+
+.subtitle {
+  margin-left: 0.5em;
+  font-size: 0.915rem;
+  opacity: 0.5;
 }
 
 .nav {
