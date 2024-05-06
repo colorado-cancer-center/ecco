@@ -422,7 +422,7 @@ import {
   type ShallowRef,
   type WatchStopHandle,
 } from "vue";
-import { cloneDeep, isEmpty, mapValues, pick, startCase } from "lodash";
+import { clamp, cloneDeep, isEmpty, mapValues, pick, startCase } from "lodash";
 import { faQuestionCircle } from "@fortawesome/free-regular-svg-icons";
 import {
   faArrowsRotate,
@@ -816,8 +816,8 @@ debouncedWatch(
     if (!rightPanelBbox.value) return;
     if (mapWidth.value || mapHeight.value) return;
     const top = rightPanelBbox.value.top.value;
-    if (top < 0) return;
-    autoRightPanelHeight.value = window.innerHeight - top - 20 + "px";
+    const max = window.innerHeight - 20;
+    autoRightPanelHeight.value = clamp(max - top, 400, max) + "px";
   },
   {
     deep: true,

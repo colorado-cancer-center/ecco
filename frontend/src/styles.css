@@ -156,6 +156,12 @@ p {
   text-align: justify;
 }
 
+@media (max-width: 500px) {
+  p {
+    text-align: left;
+  }
+}
+
 p,
 ul,
 ol,
@@ -178,7 +184,7 @@ input {
 a,
 p,
 button {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .table-wrapper {
@@ -216,7 +222,7 @@ blockquote {
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 10px 20px;
+  gap: 20px;
 }
 
 .mini-table {

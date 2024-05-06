@@ -35,7 +35,7 @@ const component = computed(() => (isExternal.value ? "a" : "router-link"));
 </script>
 
 <style scoped>
-.link {
+.link:has(svg) {
   display: inline-flex;
   align-items: center;
   justify-content: center;

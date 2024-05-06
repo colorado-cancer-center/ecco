@@ -9,7 +9,7 @@
           <span class="title">
             <b>E</b>xploring <b>C</b>ancer in <b>Co</b>lorado
           </span>
-          <span class="subtitle">ECCO</span>
+          <span class="subtitle">&nbsp;(ECCO)</span>
         </div>
       </h1>
     </AppLink>
@@ -63,8 +63,7 @@ const { VITE_PRETITLE: pretitle } = import.meta.env;
 }
 
 .subtitle {
-  margin-left: 0.5em;
-  font-size: 0.915rem;
+  font-size: 0.9rem;
   opacity: 0.5;
 }
 
