@@ -166,8 +166,6 @@ import { formatValue, isPercent, normalizedApply } from "@/util/math";
 import { getBbox, sleep } from "@/util/misc";
 import "leaflet/dist/leaflet.css";
 
-export type ExplicitScale = Props["explicitScale"];
-
 /** "no data" color */
 let noDataColor = "#a0a0a0";
 
@@ -211,6 +209,8 @@ type Props = {
   /** filename for download */
   filename: string | string[];
 };
+
+export type ExplicitScale = Props["explicitScale"];
 
 const props = withDefaults(defineProps<Props>(), {
   geometry: () => ({ type: "FeatureCollection", features: [] }),
@@ -259,6 +259,7 @@ const featureInfo = ref<Info>();
 const mapOptions: MapOptions = {
   zoomControl: false,
   attributionControl: false,
+  trackResize: false,
 };
 
 /** map object */
@@ -753,10 +754,9 @@ defineExpose({
   grid-template-columns: 1.5em max-content max-content max-content;
   grid-auto-rows: 1.5em;
   align-items: center;
-  justify-items: stretch;
+  justify-items: flex-end;
   width: fit-content;
   gap: 0 10px;
-  /* text-align: center; */
 }
 
 .steps svg {
