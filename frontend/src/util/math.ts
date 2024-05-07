@@ -24,7 +24,7 @@ export function formatValue(
 
 /** check if min/max is within small range and should be treated as percent */
 export function isPercent(min: number, max: number) {
-  return min >= -1 && max <= 1;
+  return min >= 0 && max <= 1;
 }
 
 /**
