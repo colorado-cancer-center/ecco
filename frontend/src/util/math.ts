@@ -1,28 +1,30 @@
-import { round } from "lodash";
-
 /** format map data value */
 export function formatValue(
   value: number,
   percent = true,
   compact = true,
 ): string {
-  if (percent) return round(value * 100, compact ? 1 : 3) + "%";
+  if (percent)
+    return (
+      (value * 100).toLocaleString(undefined, {
+        maximumSignificantDigits: compact ? 3 : 5,
+      }) + "%"
+    );
   else
     return value.toLocaleString(
       undefined,
       compact
         ? {
             notation: "compact",
-            maximumFractionDigits: 2,
             maximumSignificantDigits: 3,
           }
         : undefined,
     );
 }
 
-/** check if range is within 0-1 and should be treated as percent */
+/** check if min/max is within small range and should be treated as percent */
 export function isPercent(min: number, max: number) {
-  return min >= 0 && max <= 1;
+  return min >= -1 && max <= 1;
 }
 
 /**

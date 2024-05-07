@@ -175,10 +175,10 @@ export async function getValues(
 
   /** calculate stats */
   const stats = {
-    min: d3.min(values),
-    max: d3.max(values),
-    mean: d3.mean(values),
-    median: d3.median(values),
+    min: d3.min(values) || 0,
+    max: d3.max(values) || 0,
+    mean: d3.mean(values) || 0,
+    median: d3.median(values) || 0,
     values: data.values,
   };
 

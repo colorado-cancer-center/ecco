@@ -62,7 +62,7 @@
             <AppSelect
               v-if="selectedFactors[key]"
               class="factor"
-              :model-value="selectedFactors[key]!.value"
+              :model-value="selectedFactors[key]?.value || ''"
               :label="factor.label"
               :options="
                 Object.entries(factor.values).map(([key, value]) => ({
@@ -367,9 +367,9 @@
         <template v-if="showExtras && values" #bottom-left>
           <div class="mini-table">
             <template v-for="(stat, index) in stats" :key="index">
-              <span>{{ stat!.key }}</span>
-              <span v-tooltip="stat!.full">
-                {{ stat!.compact }}
+              <span>{{ stat.key }}</span>
+              <span v-tooltip="stat.full">
+                {{ stat.compact }}
               </span>
             </template>
           </div>
@@ -471,15 +471,13 @@ type Props = {
 
 /** list of measure stats */
 const stats = computed(() =>
-  (["min", "max", "mean", "median"] as const).map((key) =>
-    values.value?.[key]
-      ? {
-          key: startCase(key),
-          full: formatValue(values.value[key] ?? 0, percent.value, false),
-          compact: formatValue(values.value[key] ?? 0, percent.value),
-        }
-      : null,
-  ),
+  values.value
+    ? (["min", "max", "mean", "median"] as const).map((key) => ({
+        key: startCase(key),
+        full: formatValue(values.value![key], percent.value, false),
+        compact: formatValue(values.value![key], percent.value),
+      }))
+    : [],
 );
 
 const props = defineProps<Props>();

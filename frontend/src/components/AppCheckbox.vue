@@ -41,36 +41,33 @@ const emit = defineEmits<Emits>();
 .container {
   display: flex;
   align-items: center;
-  padding: 5px 10px;
-  gap: 10px;
   border-radius: var(--rounded);
   transition: background var(--fast);
-}
-
-.container * {
-  cursor: pointer;
 }
 
 .container:hover {
   background: var(--theme-light);
 }
 
-.label {
-  flex-grow: 1;
-}
-
 .button {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
+  padding: 5px;
   border: none;
   background: none;
   color: var(--off-black);
   font-size: 1.25em;
+  cursor: pointer;
 }
 
 .button:not(:focus-visible) {
   outline: none !important;
+}
+
+.label {
+  flex-grow: 1;
+  padding: 5px;
+  cursor: pointer;
 }
 </style>
