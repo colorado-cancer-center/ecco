@@ -77,7 +77,7 @@ class MeasureUnit(Enum):
     RANK = "rank" # a position in a ranking
     ORDINAL = "ordinal" # a discrete value that can be ordered, e.g. "rising" (1), "falling" (2), "stable" (3)
     CATEGORICAL = "categorical" # a discrete value that *can't* be ordered, e.g. "white", "black", "hispanic"
-    RATIO = "ratio" # range from -1 to +1, where -1 is "least affected" and +1 is "most affected". 
+    RATIO = "ratio" # range from -1 to +1, where -1 is "least affected" and +1 is "most affected"
 
 
 from .cif import (
