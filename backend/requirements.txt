@@ -13,6 +13,7 @@ GeoAlchemy2==0.14.1
 geojson-pydantic==0.6.3
 greenlet==2.0.2
 h11==0.14.0
+httpx==0.27.0
 idna==3.4
 Mako==1.2.4
 MarkupSafe==2.1.3
