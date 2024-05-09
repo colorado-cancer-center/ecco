@@ -62,7 +62,7 @@
         to="https://github.com/colorado-cancer-center/ecco/issues/new/choose"
         >GitHub (preferred)</AppButton
       >
-      <AppButton :icon="faEnvelope" to="mailto:jan.lowery@cuanschutz.edu"
+      <AppButton :icon="faEnvelope" to="mailto:coe@cuanschutz.edu"
         >Email</AppButton
       >
     </div>
