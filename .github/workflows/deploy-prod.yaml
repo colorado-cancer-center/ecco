@@ -1,5 +1,7 @@
 name: Deploy ECCO to VM
+
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -11,7 +13,7 @@ jobs:
     steps:
       - uses: 'actions/checkout@v4'
 
-      - id: 'compute-ssh'
+      - name: SSH into VM and deploy
         run: |-
           echo -e "${{ secrets.GCP_SSH_PRIVATE_KEY }}" > /tmp/ssh_key
           chmod 0600 /tmp/ssh_key
@@ -25,7 +27,5 @@ jobs:
           EOF
           rm /tmp/ssh_key
   
-      - id: 'test'
-        run: |-
-          echo '${{ steps.compute-ssh.outputs.stdout }}'
-          echo '${{ steps.compute-ssh.outputs.stderr }}'
+      - if: runner.debug == '1'
+        uses: mxschmitt/action-tmate@v3
