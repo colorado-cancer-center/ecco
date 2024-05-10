@@ -13,6 +13,9 @@ jobs:
     steps:
       - uses: 'actions/checkout@v4'
 
+      - if: runner.debug == '1'
+        uses: mxschmitt/action-tmate@v3
+
       - name: SSH into VM and deploy
         run: |-
           echo -e "${{ secrets.GCP_SSH_PRIVATE_KEY }}" > /tmp/ssh_key
@@ -27,5 +30,3 @@ jobs:
           EOF
           rm /tmp/ssh_key
   
-      - if: runner.debug == '1'
-        uses: mxschmitt/action-tmate@v3
