@@ -295,7 +295,7 @@ CIF_MEASURE_DESCRIPTIONS = {
         },
         "Economic Segregation": {
             "label": "Economic Segregation",
-            "unit": MeasureUnit.RATIO,
+            "unit": MeasureUnit.LEAST_MOST,
         },
         "Gender Pay Gap": {
             "label": "Gender Pay Gap",
@@ -315,11 +315,11 @@ CIF_MEASURE_DESCRIPTIONS = {
         },
         "Racial Economic Segregation": {
             "label": "Racial Economic Segregation",
-            "unit": MeasureUnit.RATIO,
+            "unit": MeasureUnit.LEAST_MOST,
         },
         "Racial Segregation": {
             "label": "Racial Segregation",
-            "unit": MeasureUnit.RATIO,
+            "unit": MeasureUnit.LEAST_MOST,
         },
         "Lack_English_Prof": {
             "label": "Lack Proficiency in English",
