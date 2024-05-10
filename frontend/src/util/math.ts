@@ -31,7 +31,7 @@ export function formatValue(
       break;
     case "ordinal":
       break;
-    case "ratio":
+    case "least_most":
       format.maximumFractionDigits = compact ? 2 : 5;
       break;
   }

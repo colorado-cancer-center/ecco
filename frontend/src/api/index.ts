@@ -153,7 +153,7 @@ export type Unit =
   | "dollar_amount"
   | "rank"
   | "ordinal"
-  | "ratio"
+  | "least_most"
   | null;
 
 /** response from values api endpoint */
