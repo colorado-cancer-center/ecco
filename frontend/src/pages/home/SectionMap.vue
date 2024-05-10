@@ -689,13 +689,16 @@ watch(
 
     /** for each factor */
     for (const [key, value] of Object.entries(factors.value)) {
+      /** default fallback option */
+      const fallback =
+        value.default in value.values
+          ? /** explicitly defined default */
+            value.default
+          : /** first option */
+            Object.entries(value.values || {})[0]?.[0] || "";
+
       /** ref 2-way synced with url */
-      const factor = useUrlParam(
-        key,
-        stringParam,
-        /** default selected */
-        value.values["All"] ? "All" : Object.keys(value.values)[0] || "",
-      );
+      const factor = useUrlParam(key, stringParam, fallback);
       /** hook up url reactive with selected factor */
       selectedFactors.value[key] = factor;
 
@@ -706,13 +709,11 @@ watch(
           factor,
           () => {
             /** get non-stale factor options */
-            const options = factors.value[key]?.values || {};
+            const newValue = factors.value[key];
             /** if value isn't valid anymore */
-            if (!(factor.value in options))
+            if (!(factor.value in (newValue?.values || {})))
               /** fall back */
-              factor.value = options["All"]
-                ? "All"
-                : Object.keys(options)[0] || "";
+              factor.value = fallback;
           },
           { immediate: true },
         ),

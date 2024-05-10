@@ -93,6 +93,7 @@ type _Facets = {
             factors?: {
               [key: string]: {
                 label: string;
+                default: string;
                 values: { [key: string]: string };
               };
             };
@@ -112,6 +113,7 @@ export type Facet = {
     factors?: {
       [key: string]: {
         label: string;
+        default: string;
         values: { [key: string]: string };
       };
     };
