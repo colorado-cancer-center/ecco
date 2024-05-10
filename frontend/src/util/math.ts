@@ -1,30 +1,41 @@
+import type { Unit } from "@/api/index";
+
 /** format map data value */
 export function formatValue(
-  value: number,
-  percent = true,
-  compact = true,
+  value: number | string,
+  unit?: Unit,
+  compact = false,
 ): string {
-  if (percent)
-    return (
-      (value * 100).toLocaleString(undefined, {
-        maximumSignificantDigits: compact ? 3 : 5,
-      }) + "%"
-    );
-  else
-    return value.toLocaleString(
-      undefined,
-      compact
-        ? {
-            notation: "compact",
-            maximumSignificantDigits: 3,
-          }
-        : undefined,
-    );
-}
-
-/** check if min/max is within small range and should be treated as percent */
-export function isPercent(min: number, max: number) {
-  return min >= 0 && max <= 1;
+  if (typeof value === "string") return value;
+  const format: Intl.NumberFormatOptions = {};
+  let suffix = "";
+  switch (unit) {
+    case "percent":
+      value *= 100;
+      format.maximumFractionDigits = compact ? 1 : 2;
+      suffix = "%";
+      break;
+    case "count":
+      format.notation = compact ? "compact" : "standard";
+      break;
+    case "rate":
+      format.maximumSignificantDigits = compact ? 3 : 5;
+      break;
+    case "dollar_amount":
+      format.notation = compact ? "compact" : "standard";
+      format.style = "currency";
+      format.currency = "USD";
+      break;
+    case "rank":
+      format.maximumSignificantDigits = compact ? 3 : 5;
+      break;
+    case "ordinal":
+      break;
+    case "ratio":
+      format.maximumFractionDigits = compact ? 2 : 5;
+      break;
+  }
+  return value.toLocaleString(undefined, format) + suffix;
 }
 
 /**

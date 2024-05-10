@@ -323,6 +323,7 @@
         :values="values?.values"
         :min="manualMinMax ? manualMin : values?.min"
         :max="manualMinMax ? manualMax : values?.max"
+        :unit="values?.unit"
         :show-legends="showLegends"
         :background-opacity="backgroundOpacity"
         :geometry-opacity="geometryOpacity"
@@ -367,7 +368,9 @@
         <template v-if="showExtras && values" #bottom-left>
           <div class="mini-table">
             <template v-for="(stat, index) in stats" :key="index">
-              <span>{{ stat.key }}</span>
+              <span v-tooltip="startCase(values.unit ?? '')">
+                {{ stat.key }}
+              </span>
               <span v-tooltip="stat.full">
                 {{ stat.compact }}
               </span>
@@ -461,7 +464,7 @@ import {
   stringParam,
   useUrlParam,
 } from "@/util/composables";
-import { formatValue, isPercent } from "@/util/math";
+import { formatValue } from "@/util/math";
 import { sleep } from "@/util/misc";
 
 type Props = {
@@ -474,8 +477,8 @@ const stats = computed(() =>
   values.value
     ? (["min", "max", "mean", "median"] as const).map((key) => ({
         key: startCase(key),
-        full: formatValue(values.value![key], percent.value, false),
-        compact: formatValue(values.value![key], percent.value),
+        full: formatValue(values.value![key], values.value!.unit),
+        compact: formatValue(values.value![key], values.value!.unit, true),
       }))
     : [],
 );
@@ -724,11 +727,6 @@ watch(
   [selectedLevel, selectedCategory, selectedMeasure, selectedFactors],
   loadValues,
   { deep: true, immediate: true },
-);
-
-/** is measure a percent */
-const percent = computed(() =>
-  isPercent(values.value?.min || 0, values.value?.max || 1),
 );
 
 /** turn facet into list of select box options */
