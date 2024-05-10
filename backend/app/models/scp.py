@@ -9,19 +9,22 @@ from typing import Optional
 
 from sqlmodel import Field, SQLModel
 
-from .base import CancerStatsByCounty
+from tools.collections import MeasureMapper
+
+from .base import CancerStatsByCounty, MeasureUnit
 
 
 # ===========================================================================
 # === data models
 # ===========================================================================
 
+
 class SCPCountyModel(CancerStatsByCounty):
     # pulled out for use as factors
-    sex : str = Field(nullable=True, index=True)
-    stage : str = Field(nullable=True, index=True)
-    race : str = Field(nullable=True, index=True)
-    age : str = Field(nullable=True, index=True)
+    sex: str = Field(nullable=True, index=True)
+    stage: str = Field(nullable=True, index=True)
+    race: str = Field(nullable=True, index=True)
+    age: str = Field(nullable=True, index=True)
 
     # since it's based on CancerStatsByCounty, we get the
     # 'Site', 'AAR', and 'AAC' fields from our parent
@@ -29,16 +32,18 @@ class SCPCountyModel(CancerStatsByCounty):
     # AAC is provided as additional data for cancer models
 
     # pulled out to use in the 'trends' views
-    trend : str = Field(nullable=True)
+    trend: str = Field(nullable=True)
 
     @classmethod
     def get_factors(cls):
         return (cls.sex, cls.stage, cls.race, cls.age)
 
+
 class SCPDeathsCounty(SCPCountyModel, table=True):
     class Config:
         # label = "State Cancer Profiles: Deaths"
         label = "Cancer Mortality (age-adj per 100k)"
+
 
 class SCPIncidenceCounty(SCPCountyModel, table=True):
     class Config:
@@ -56,27 +61,25 @@ class SCPIncidenceCounty(SCPCountyModel, table=True):
 
 # the values of the 'trend' field are mapped to these numerical values
 # since the API schema only exposes values as numbers currently
-TREND_MAP = {
-    "falling": 1,
-    "stable": 2,
-    "rising": 3
-}
+TREND_MAP = {"falling": 1, "stable": 2, "rising": 3}
 # for when the trend value is not mappable; we should choose something the
 # frontend will display as 'no data'
 TREND_MAP_NONE = 0
 
+
 class SCPDeathsTrendCounty(SCPCountyModel, table=True):
     __tablename__ = SCPDeathsCounty.__tablename__
-    __table_args__ = {'extend_existing': True} 
+    __table_args__ = {"extend_existing": True}
 
     class Config:
         skip_autogenerate = True
         arbitrary_types_allowed = True
         label = "Cancer Mortality: Trends"
 
+
 class SCPIncidenceTrendCounty(SCPCountyModel, table=True):
     __tablename__ = SCPIncidenceCounty.__tablename__
-    __table_args__ = {'extend_existing': True} 
+    __table_args__ = {"extend_existing": True}
 
     class Config:
         skip_autogenerate = True
@@ -93,14 +96,12 @@ SCP_MODELS = {
         SCPDeathsCounty,
         SCPIncidenceCounty,
         SCPDeathsTrendCounty,
-        SCPIncidenceTrendCounty
+        SCPIncidenceTrendCounty,
     ],
-    "tract": []
+    "tract": [],
 }
 
-SCP_CANCER_MODELS = {
-    SCPDeathsCounty, SCPIncidenceCounty
-}
+SCP_CANCER_MODELS = {SCPDeathsCounty, SCPIncidenceCounty}
 
 # models for which the API uses 'trend_value' property as the 'value' field
 SCP_TRENDS_MODELS = {
@@ -109,8 +110,15 @@ SCP_TRENDS_MODELS = {
 }
 
 
-# just default to literal values unless we need to override them
-SCP_MEASURE_DESCRIPTIONS = {}
+# FIXME: measure descriptions are written out here to match cif_meta, but we
+# might consider switching this object to an accessor that returns
+# the verbatim measure name and MeasureUnit.RATE for all measures
+SCP_MEASURE_DESCRIPTIONS = {
+    "scpincidence": MeasureMapper(MeasureUnit.RATE),
+    "scpdeaths": MeasureMapper(MeasureUnit.RATE),
+    "scpincidencetrend": MeasureMapper(MeasureUnit.ORDINAL),
+    "scpdeathstrend": MeasureMapper(MeasureUnit.ORDINAL),
+}
 
 # descriptions of factors, i.e. additional enumerated values associated
 # with each record. for example, cancer stats have race/ethnicity and sex
@@ -131,33 +139,17 @@ SCP_SHARED_FACTORS = {
     "sex": {
         "label": "Sex",
         "default": "All",
-        "values": {
-            "All": "All",
-            "Female": "Female",
-            "Male": "Male"
-        }
+        "values": {"All": "All", "Female": "Female", "Male": "Male"},
     },
-    "stage": {
-        "label": "Stage",
-        "default": "All Stages",
-        "values": {}
-    },
-    "race": {
-        "label": "Race",
-        "default": "All Races (includes Hispanic)",
-        "values": {}
-    },
-    "age": {
-        "label": "Age",
-        "default": "All Ages",
-        "values": {}
-    }
+    "stage": {"label": "Stage", "default": "All Stages", "values": {}},
+    "race": {"label": "Race", "default": "All Races (includes Hispanic)", "values": {}},
+    "age": {"label": "Age", "default": "All Ages", "values": {}},
 }
 
 # for now, deaths and incidence share the same data
 SCP_FACTOR_DESCRIPTIONS = {
-    "scpdeaths": { **SCP_SHARED_FACTORS },
-    "scpincidence": { **SCP_SHARED_FACTORS },
-    "scpdeathstrend": { **SCP_SHARED_FACTORS },
-    "scpincidencetrend": { **SCP_SHARED_FACTORS }
+    "scpdeaths": {**SCP_SHARED_FACTORS},
+    "scpincidence": {**SCP_SHARED_FACTORS},
+    "scpdeathstrend": {**SCP_SHARED_FACTORS},
+    "scpincidencetrend": {**SCP_SHARED_FACTORS},
 }

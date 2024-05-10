@@ -93,6 +93,7 @@ type _Facets = {
             factors?: {
               [key: string]: {
                 label: string;
+                default: string;
                 values: { [key: string]: string };
               };
             };
@@ -112,6 +113,7 @@ export type Facet = {
     factors?: {
       [key: string]: {
         label: string;
+        default: string;
         values: { [key: string]: string };
       };
     };
@@ -143,6 +145,17 @@ export async function getFacets() {
 
 export type Facets = Awaited<ReturnType<typeof getFacets>>;
 
+/** value type/format */
+export type Unit =
+  | "percent"
+  | "count"
+  | "rate"
+  | "dollar_amount"
+  | "rank"
+  | "ordinal"
+  | "least_most"
+  | null;
+
 /** response from values api endpoint */
 type _Values = {
   /** range of values for specified measure */
@@ -150,6 +163,7 @@ type _Values = {
   min: number;
   /** map of feature id to measure value */
   values: { [key: string]: { value: number; aac?: number | null } };
+  unit: Unit;
 };
 
 /** get values data */
@@ -180,6 +194,7 @@ export async function getValues(
     mean: d3.mean(values) || 0,
     median: d3.median(values) || 0,
     values: data.values,
+    unit: data.unit,
   };
 
   /** if missing data, return empty */
@@ -187,7 +202,7 @@ export async function getValues(
 
   /** define explicit scale for certain data */
   let explicitScale: ExplicitScale;
-  if (category.includes("trend"))
+  if (data.unit === "ordinal")
     explicitScale = { 1: "Falling", 2: "Stable", 3: "Rising" };
 
   return { ...stats, explicitScale };

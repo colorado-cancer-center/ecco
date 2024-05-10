@@ -3,6 +3,7 @@ API endpoints that return statistics, e.g. cancer incidence/mortality,
 or sociodemographic measures.
 """
 
+from enum import Enum
 import os
 import csv
 from io import StringIO, BytesIO
@@ -25,6 +26,7 @@ from db import get_session
 
 from settings import LIMIT_TO_STATE
 
+from models.base import MeasureUnit
 from models import (
     STATS_MODELS,
     CANCER_MODELS,
@@ -52,6 +54,7 @@ class FIPSValue(BaseModel):
 class FIPSMeasureResponse(BaseModel):
     min: Optional[float]
     max: Optional[float]
+    unit: Optional[MeasureUnit]
     values: dict[str, FIPSValue]
 
 # provides high-level information about the available categories and measures
@@ -59,6 +62,7 @@ class FIPSMeasureResponse(BaseModel):
 
 class FactorMetaResponse(BaseModel):
     label : str
+    default : str | None
     values : dict[str, str]
 
 class MeasuresMetaResponse(BaseModel):
@@ -140,6 +144,7 @@ async def get_measures(session: AsyncSession = Depends(get_session)):
                 return {
                     f: {
                         "label": str(fv["label"] or f),
+                        "default": fv.get("default"),
                         "values": {
                             x: fv.get("values", {}).get(x, x) or x
                             for x in factor_results[f].scalars().all()
@@ -152,7 +157,7 @@ async def get_measures(session: AsyncSession = Depends(get_session)):
                 "label": model.Config.label or simple_model_name,
                 "measures": {
                     x: {
-                        "label": measure_descs.get(x, x) or x,
+                        "label": measure_descs.get(x, {}).get('label') or x,
                         "factors": await get_factors_with_values(model, x)
                     }
                     for x in result.scalars().all()
@@ -281,7 +286,7 @@ for type, family in STATS_MODELS.items():
                 #     description="A set of factor/value pairs on which to filter"
                 # ),
                 filters : Annotated[
-                    str | None, Query(regex="^([^:]+:[^:;]+;)*([^:]+:[^:;]+)$"),
+                    str | None, Query(pattern="^([^:]+:[^:;]+;)*([^:]+:[^:;]+)$"),
                 ] = None,
                 session: AsyncSession = Depends(get_session)
             ):
@@ -376,9 +381,19 @@ for type, family in STATS_MODELS.items():
                 else:
                     values = {x["FIPS"]: {"value": x["value"]} for x in objects}
 
+                # determine the unit of measurement for the measure from the metadata
+                # (if available)
+                unit = (
+                    MEASURE_DESCRIPTIONS
+                        .get(simple_model_name, {})
+                        .get(measure, {})
+                        .get("unit", None)
+                )
+
                 return FIPSMeasureResponse(
                     min=stats[0],
                     max=stats[1],
+                    unit=unit,
                     values=values
                 )
 
@@ -397,17 +412,23 @@ for type, family in STATS_MODELS.items():
                 session: AsyncSession = Depends(get_session)
             ):
                 # get human labels for measures within this model, if available
-                model_measure_labels = MEASURE_DESCRIPTIONS.get(simple_model_name, {})
+                model_measure_meta = MEASURE_DESCRIPTIONS.get(simple_model_name, {})
                 # get factors associated with this model, if any
                 # (they'll be added as columns to the output)
                 factor_labels = FACTOR_DESCRIPTIONS.get(simple_model_name, None)
 
                 def model_to_fields(x, factor_labels):
+                    model_measure_label = (
+                        model_measure_meta
+                            .get(x["measure"], {})
+                            .get("label") or x["measure"]
+                    )
+                    
                     fields = [
                         x["GEOID"],
                         x["County"],
                         x["State"],
-                        get_or_key(model_measure_labels, x["measure"]),
+                        model_measure_label,
                         x["value"],
                     ]
 
@@ -508,7 +529,7 @@ async def download_all(
                 simple_model_name = slug_modelname_sans_type(model, type)
 
                 # get human labels for measures within this model, if available
-                model_measure_labels = MEASURE_DESCRIPTIONS.get(simple_model_name, {})
+                model_measure_meta = MEASURE_DESCRIPTIONS.get(simple_model_name, {})
 
                 # retrieve the measures for the model, depending on what type of model it is
                 if model in CANCER_MODELS:
@@ -544,7 +565,8 @@ async def download_all(
 
                         # produce a human-readable name for the measure, if available,
                         # from the MEASURE_DESCRIPTIONS entry for this model
-                        final_name = f"{get_or_key(model_measure_labels, measure)}.csv"
+                        model_measure_label = model_measure_meta.get(measure, {}).get("label") or measure
+                        final_name = f"{model_measure_label}.csv"
                         
                         # produce a complete path consisting of the type, the
                         # name of the model (aka measure category), and the

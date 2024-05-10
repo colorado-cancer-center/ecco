@@ -34,10 +34,5 @@ from .cif import (
     SociodemographicsTract,
     DisparitiesTract,
 )
-from .scp import (
-    SCPDeathsCounty,
-    SCPIncidenceCounty
-)
-from .disparity_index import (
-    CancerDisparitiesIndex
-)
+from .scp import SCPDeathsCounty, SCPIncidenceCounty
+from .disparity_index import CancerDisparitiesIndex

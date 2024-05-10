@@ -33,9 +33,9 @@
             <rect x="0" y="0" width="1" height="1" :fill="step.color" />
           </svg>
           <template v-if="'lower' in step && 'upper' in step">
-            <span>{{ formatValue(step.lower, percent) }}</span>
+            <span>{{ formatValue(step.lower, unit, true) }}</span>
             <span>&ndash;</span>
-            <span>{{ formatValue(step.upper, percent) }}</span>
+            <span>{{ formatValue(step.upper, unit, true) }}</span>
           </template>
           <template v-if="'value' in step">
             <span style="grid-column: 2 / -1">{{ step.label }}</span>
@@ -98,17 +98,13 @@
         <span>
           {{ featureInfo.aac ? "Rate" : "Value" }}
         </span>
-        <span>{{
-          typeof featureInfo.value === "number"
-            ? formatValue(featureInfo.value, percent, false)
-            : featureInfo.value
-        }}</span>
+        <span>{{ formatValue(featureInfo.value, unit) }}</span>
       </template>
 
       <!-- average annual count -->
       <template v-if="featureInfo.aac !== undefined">
         <span>Avg. Annual Count</span>
-        <span>{{ formatValue(featureInfo.aac, false, false) }}</span>
+        <span>{{ formatValue(featureInfo.aac, unit) }}</span>
       </template>
 
       <!-- organization -->
@@ -160,13 +156,20 @@ import domtoimage from "dom-to-image";
 import L, { type MapOptions } from "leaflet";
 import { cloneDeep, debounce, isEmpty, mapValues } from "lodash";
 import { useElementSize, useFullscreen, useResizeObserver } from "@vueuse/core";
-import type { Data, DataProps, LocationProps, Locations, Values } from "@/api";
+import type {
+  Data,
+  DataProps,
+  LocationProps,
+  Locations,
+  Unit,
+  Values,
+} from "@/api";
 import AppLink from "@/components/AppLink.vue";
 import { getGradient } from "@/components/gradient";
 import { markerOptions } from "@/components/markers";
 import { useScrollable } from "@/util/composables";
 import { downloadPng } from "@/util/download";
-import { formatValue, isPercent, normalizedApply } from "@/util/math";
+import { formatValue, normalizedApply } from "@/util/math";
 import { getBbox, sleep } from "@/util/misc";
 import "leaflet/dist/leaflet.css";
 
@@ -186,6 +189,7 @@ type Props = {
   /** value domain */
   min?: number;
   max?: number;
+  unit?: Unit;
   /** map pan/zoom */
   lat: number;
   long: number;
@@ -222,6 +226,7 @@ const props = withDefaults(defineProps<Props>(), {
   values: () => ({}),
   min: undefined,
   max: undefined,
+  unit: undefined,
   explicitScale: undefined,
 });
 
@@ -253,7 +258,8 @@ const bottomLeftLegend = ref<HTMLElement>();
 const popup = ref<HTMLElement>();
 
 type Info = Partial<
-  DataProps & LocationProps & { value: number | string; aac: number }
+  DataProps &
+    LocationProps & { value: number | string; aac: number; unit: Unit }
 >;
 
 /** info about selected feature for popup */
@@ -669,13 +675,6 @@ watch(
   ],
   updateOpacities,
   {},
-);
-
-/** is measure a percent */
-const percent = computed(() =>
-  props.min === undefined || props.max === undefined
-    ? false
-    : isPercent(props.min, props.max),
 );
 
 /** whether element has scrollbars */

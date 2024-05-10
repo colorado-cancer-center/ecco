@@ -3,6 +3,7 @@ Base classes for models, originally derived from cancerinfocus.org ("cif")
 but used elsewhere now, e.g. for the disparities index.
 """
 
+from enum import Enum
 from typing import Optional
 
 from sqlmodel import Field, SQLModel
@@ -52,17 +53,49 @@ class CancerStatsByCounty(BaseStatsModel):
         return ()
 
 class MeasuresByTract(MeasuresByCounty):
-    Tract : Optional[str] = Field(index=True, nullable=True)
+    Tract: Optional[str] = Field(index=True, nullable=True)
 
-# aggregate metadata for all measure-type models
+
+# ---------------------------------------------------------------------------
+# -- metadata about the models
+# ---------------------------------------------------------------------------
+
+
+class MeasureUnit(Enum):
+    """
+    The unit of measurement for a given measure, exposed as the 'unit' field in the API
+    endpoint's fips-values response.
+
+    The 'ratio' unit is a bit complicated; see https://cancerinfocus.org/datasources/, specifically the
+    indices of segregation for examples.
+    """
+
+    PERCENT = "percent" # a percentage; the datasets we use encode these as floats between 0 and 1, inclusive
+    COUNT = "count" # raw count, represented as an integer, e.g. number of cases
+    RATE = "rate" # rate of occurrence, represented as a float and typically normalized by population
+    DOLLAR_AMOUNT = "dollar_amount" # raw dollar amount, e.g. income
+    RANK = "rank" # a position in a ranking
+    ORDINAL = "ordinal" # a discrete value that can be ordered, e.g. "rising" (1), "falling" (2), "stable" (3)
+    CATEGORICAL = "categorical" # a discrete value that *can't* be ordered, e.g. "white", "black", "hispanic"
+    LEAST_MOST = "least_most" # range from -1 to +1, where -1 is "least affected" and +1 is "most affected"
+
+
 from .cif import (
     STATS_MODELS as CIF_STATS_MODELS,
     CIF_CANCER_MODELS,
-    MEASURE_DESCRIPTIONS as CIF_MEASURE_DESCRIPTIONS,
+    CIF_MEASURE_DESCRIPTIONS,
     CIF_FACTOR_DESCRIPTIONS
 )
-from .disparity_index import DISPARITY_INDEX_MODELS
-from .scp import SCP_MODELS, SCP_MEASURE_DESCRIPTIONS, SCP_FACTOR_DESCRIPTIONS, SCP_CANCER_MODELS
+from .disparity_index import (
+    DISPARITY_INDEX_MODELS,
+    DISPARITY_INDEX_MEASURE_DESCRIPTIONS,
+)
+from .scp import (
+    SCP_MODELS,
+    SCP_MEASURE_DESCRIPTIONS,
+    SCP_FACTOR_DESCRIPTIONS,
+    SCP_CANCER_MODELS,
+)
 
 STATS_MODELS = {
     "county": (
@@ -86,7 +119,8 @@ CANCER_MODELS = set.union(SCP_CANCER_MODELS, CIF_CANCER_MODELS)
 
 MEASURE_DESCRIPTIONS = {
     **CIF_MEASURE_DESCRIPTIONS,
-    **SCP_MEASURE_DESCRIPTIONS
+    **SCP_MEASURE_DESCRIPTIONS,
+    **DISPARITY_INDEX_MEASURE_DESCRIPTIONS
 }
 
 FACTOR_DESCRIPTIONS = {

@@ -9,7 +9,7 @@ Note that since they're all at the county level, we leave out putting
 "county" in the name.
 """
 
-from .base import MeasuresByCounty
+from .base import MeasureUnit, MeasuresByCounty
 
 # ===========================================================================
 # === models from the CDPHE disparity index data
@@ -29,4 +29,25 @@ DISPARITY_INDEX_MODELS = {
         CancerDisparitiesIndex
     ],
     "tract": []
+}
+
+DISPARITY_INDEX_MEASURE_DESCRIPTIONS = {
+    "cancerdisparitiesindex": {
+        "Colorectal Cancer Index": {
+            "label": "Colorectal Cancer Index",
+            "unit": MeasureUnit.RANK,
+        },
+        "Lung Cancer Index": {
+            "label": "Lung Cancer Index",
+            "unit": MeasureUnit.RANK
+        },
+        "Head and Neck Cancer Index": {
+            "label": "Head and Neck Cancer Index",
+            "unit": MeasureUnit.RANK,
+        },
+        "Breast Cancer Index": {
+            "label": "Breast Cancer Index",
+            "unit": MeasureUnit.RANK,
+        },
+    }
 }
