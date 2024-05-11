@@ -1,0 +1,32 @@
+name: Deploy ECCO to VM
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy_prod:
+    runs-on: 'ubuntu-latest'
+
+    steps:
+      - uses: 'actions/checkout@v4'
+
+      - if: runner.debug == '1'
+        uses: mxschmitt/action-tmate@v3
+
+      - name: SSH into VM and deploy
+        run: |-
+          echo -e "${{ secrets.GCP_SSH_PRIVATE_KEY }}" > /tmp/ssh_key
+          chmod 0600 /tmp/ssh_key
+          ssh -t -o StrictHostKeyChecking=accept-new -i /tmp/ssh_key ecco-deployer@api.coe-ecco.org \
+            -- /bin/bash -i -s << "EOF"
+            cd /var/projects/ecco && \
+            echo $PWD && \
+            git pull && ( echo "$( git rev-parse HEAD ) - $( date )" ) >> deploys.txt && \
+            ./run_stack.sh prod && \
+            exit $( docker container wait ecco-frontend-1 )
+          EOF
+          rm /tmp/ssh_key
+  
