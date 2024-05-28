@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en-US">
   <head>
     <!-- basic -->
@@ -40,6 +40,18 @@
     <noscript>
       Sorry, this website doesn't work without JavaScript enabled.
     </noscript>
+
+    <script>
+      /** redirect from old netlify prod url to custom domain */
+      const url = new URL(window.location);
+      if (
+        url.hostname.endsWith("netlify.app") &&
+        !url.hostname.startsWith("deploy-preview")
+      ) {
+        url.hostname = "coe-ecco.org";
+        window.location = url;
+      }
+    </script>
 
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
