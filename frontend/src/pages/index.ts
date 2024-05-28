@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
+import PageContact from "@/pages/PageContact.vue";
 import PageSources from "@/pages/PageSources.vue";
 import { waitFor } from "@/util/misc";
 import PageAbout from "./PageAbout.vue";
@@ -19,14 +20,19 @@ export const routes = [
     },
   },
   {
+    name: "Sources",
+    path: "/sources",
+    component: PageSources,
+  },
+  {
     name: "About",
     path: "/about",
     component: PageAbout,
   },
   {
-    name: "Sources",
-    path: "/sources",
-    component: PageSources,
+    name: "Contact",
+    path: "/Contact",
+    component: PageContact,
   },
 ];
 

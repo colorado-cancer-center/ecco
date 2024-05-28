@@ -2,7 +2,7 @@
   <section>
     <AppHeading level="2">About</AppHeading>
 
-    <AppHeading level="3">The map</AppHeading>
+    <AppHeading level="3">The Map</AppHeading>
 
     <p>
       Create your own map to visualize your data and region of interest. First
@@ -45,34 +45,13 @@
     <p>
       If you have any questions or require additional information for your
       acknowledgement, please feel free to
-      <AppLink to="#contact">contact us</AppLink>. Thank you for your
+      <AppLink to="/contact">contact us</AppLink>. Thank you for your
       cooperation and for using our site.
     </p>
-
-    <AppHeading level="3">Contact</AppHeading>
-
-    <p>
-      To suggest a new data source, report an issue, or for general questions or
-      help, please contact us:
-    </p>
-
-    <div class="buttons">
-      <AppButton
-        :icon="faGithub"
-        to="https://github.com/colorado-cancer-center/ecco/issues/new/choose"
-        >GitHub (preferred)</AppButton
-      >
-      <AppButton :icon="faEnvelope" to="mailto:coe@cuanschutz.edu"
-        >Email</AppButton
-      >
-    </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { faGithub } from "@fortawesome/free-brands-svg-icons";
-import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
-import AppButton from "@/components/AppButton.vue";
 import AppHeading from "@/components/AppHeading.vue";
 import AppLink from "@/components/AppLink.vue";
 

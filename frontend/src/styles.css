@@ -228,6 +228,7 @@ blockquote {
 .mini-table {
   display: grid;
   grid-template-columns: max-content auto;
+  place-content: center;
   gap: 5px 15px;
 }
 

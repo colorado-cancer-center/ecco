@@ -1,5 +1,6 @@
 # Exploring Cancer in Colorado (ECCO)
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/edf013d1-6ee8-4480-a7c6-b4ec2991da61/deploy-status)](https://app.netlify.com/sites/exploring-cancer-in-colorado/deploys)  
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
 [**⭐️⭐️ View the Site ⭐️⭐️**](https://coe-ecco.org/)
