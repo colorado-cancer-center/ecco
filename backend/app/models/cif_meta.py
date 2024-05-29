@@ -121,6 +121,22 @@ CIF_MEASURE_DESCRIPTIONS = {
             "label": "Public Water System Violations since 2016",
             "unit": MeasureUnit.PERCENT,
         },
+        "pct5G_35_3": {
+            "label": "Area with 35/3 Mbps Mobile 5G Coverage",
+            "unit": MeasureUnit.PERCENT
+        },
+        "pct5G_7_1": {
+            "label": "Area with 7/1 Mbps Mobile 5G Coverage",
+            "unit": MeasureUnit.PERCENT
+        },
+        "pctBB_100_20": {
+            "label": "Housing Units with 100/20 Mbps Broadband Service",
+            "unit": MeasureUnit.PERCENT
+        },
+        "pctBB_1000_10": {
+            "label": "Housing Units with 1000/10 Mbps Broadband Service",
+            "unit": MeasureUnit.PERCENT
+        },
     },
     "housingtrans": {
         "Crowded Housing": {
