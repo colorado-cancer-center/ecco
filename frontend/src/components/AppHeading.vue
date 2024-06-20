@@ -63,7 +63,7 @@ onUpdated(updateLink);
 .anchor {
   display: inline-block;
   width: 0;
-  margin-left: 0.75em;
+  margin-left: 0.5em;
   font-size: 0.8em;
   text-decoration: none;
   opacity: 0;

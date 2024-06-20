@@ -754,6 +754,28 @@
       </AppLink>
     </p>
   </section>
+
+  <section>
+    <AppHeading level="3">Radon Exposure</AppHeading>
+
+    <AppHeading level="4">
+      <AppLink to="https://coepht.colorado.gov/radon-dataset-details"
+        >Colorado Environmental Public Health Tracking (CDPHE)</AppLink
+      >
+    </AppHeading>
+
+    <p>
+      The CDPHE provides communities in Colorado with relevant, accurate and
+      accessible web-based data on environmental health hazards and related
+      health effects.
+    </p>
+
+    <p>
+      ECCO uses CDPHE's radon dataset to provide various measures of indoor
+      household radon levels taken between 2005 and 2017 via mostly
+      self-administered tests.
+    </p>
+  </section>
 </template>
 
 <script setup lang="ts">
