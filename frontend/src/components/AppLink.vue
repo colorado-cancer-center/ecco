@@ -38,7 +38,6 @@ const component = computed(() => (isExternal.value ? "a" : "router-link"));
 .link:has(svg) {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 0.5em;
 }
 </style>

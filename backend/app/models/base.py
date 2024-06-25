@@ -90,6 +90,10 @@ from .disparity_index import (
     DISPARITY_INDEX_MODELS,
     DISPARITY_INDEX_MEASURE_DESCRIPTIONS,
 )
+from .radon import (
+    RADON_MODELS,
+    RADON_MEASURE_DESCRIPTIONS
+)
 from .scp import (
     SCP_MODELS,
     SCP_MEASURE_DESCRIPTIONS,
@@ -101,11 +105,13 @@ STATS_MODELS = {
     "county": (
         CIF_STATS_MODELS["county"] +
         DISPARITY_INDEX_MODELS["county"] +
+        RADON_MODELS["county"] +
         SCP_MODELS["county"]
     ),
     "tract": (
         CIF_STATS_MODELS["tract"] + 
         DISPARITY_INDEX_MODELS["tract"] +
+        RADON_MODELS["tract"] +
         SCP_MODELS["tract"]
     )
 }
@@ -120,7 +126,8 @@ CANCER_MODELS = set.union(SCP_CANCER_MODELS, CIF_CANCER_MODELS)
 MEASURE_DESCRIPTIONS = {
     **CIF_MEASURE_DESCRIPTIONS,
     **SCP_MEASURE_DESCRIPTIONS,
-    **DISPARITY_INDEX_MEASURE_DESCRIPTIONS
+    **DISPARITY_INDEX_MEASURE_DESCRIPTIONS,
+    **RADON_MEASURE_DESCRIPTIONS,
 }
 
 FACTOR_DESCRIPTIONS = {
