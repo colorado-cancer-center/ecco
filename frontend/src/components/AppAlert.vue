@@ -1,14 +1,14 @@
 <template>
-  <div v-if="!dismissed" class="alert">
+  <aside v-if="!dismissed" class="alert">
     <slot />
     <AppButton
       v-tooltip="'Dismiss'"
       class="button"
       :icon="faXmark"
       aria-label="Dismiss"
-      @click="dismissed = true"
+      @click="onClick"
     />
-  </div>
+  </aside>
 </template>
 
 <script setup lang="ts">
@@ -23,15 +23,23 @@ type Slots = {
 defineSlots<Slots>();
 
 const dismissed = ref(false);
+
+function onClick() {
+  dismissed.value = true;
+  /** force map auto-height re-adjust */
+  window.scrollBy({ top: 1 });
+  window.scrollBy({ top: -1 });
+}
 </script>
 
 <style scoped>
 .alert {
   display: flex;
   position: relative;
-  flex-direction: column;
-  padding: 30px max(60px, (100% - 1000px) / 2);
-  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 20px 40px;
+  gap: 20px;
   background: var(--theme-light);
 }
 
