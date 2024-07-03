@@ -804,7 +804,7 @@ const columnsTop = computed(
 );
 watch(
   columnsTop,
-  async () => {
+  () => {
     if (window.innerHeight < 400) return;
     if (!columnsTop.value) return;
     if (mapWidth.value || mapHeight.value) return;
