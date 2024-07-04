@@ -9,6 +9,7 @@
       <AppButton
         to="https://app.smartsheet.com/b/form/e66c076519a34f59a253a9e9e40b9c03"
         :icon="faComment"
+        :flip="true"
         :accent="true"
         >Give us feedback</AppButton
       >

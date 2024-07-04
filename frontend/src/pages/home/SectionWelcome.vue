@@ -19,12 +19,12 @@
       >
       <AppButton
         to="/about#acknowledge"
-        :icon="faPenNib"
+        :icon="faBookmark"
         :flip="true"
         :accent="true"
         >Acknowledge us</AppButton
       >
-      <AppButton to="/contact" :icon="faComment" :accent="true"
+      <AppButton to="/contact" :icon="faComment" :flip="true" :accent="true"
         >Give us feedback</AppButton
       >
     </div>
@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import { faComment } from "@fortawesome/free-regular-svg-icons";
-import { faArrowRightLong, faPenNib } from "@fortawesome/free-solid-svg-icons";
+import { faBookmark, faComment } from "@fortawesome/free-regular-svg-icons";
+import { faArrowRightLong } from "@fortawesome/free-solid-svg-icons";
 import AppButton from "@/components/AppButton.vue";
 </script>
