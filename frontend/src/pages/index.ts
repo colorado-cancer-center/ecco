@@ -38,7 +38,14 @@ export const routes = [
 
 export const history = createWebHistory();
 
-export const router = createRouter({ history, routes });
+export const router = createRouter({
+  history,
+  routes,
+  scrollBehavior: (to, from, savedPosition) => {
+    if (savedPosition) return savedPosition;
+    else return { top: 0 };
+  },
+});
 
 router.afterEach(async (to) => {
   /** scroll to hash target */
