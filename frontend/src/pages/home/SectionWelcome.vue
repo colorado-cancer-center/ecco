@@ -10,12 +10,16 @@
     </p>
 
     <div class="buttons">
-      <AppButton to="/about" :icon="faCircleInfo" :flip="true" :accent="true"
+      <AppButton
+        to="/about"
+        :icon="faArrowRightLong"
+        :flip="true"
+        :accent="true"
         >Learn more</AppButton
       >
       <AppButton
         to="/about#acknowledge"
-        :icon="faScroll"
+        :icon="faPenNib"
         :flip="true"
         :accent="true"
         >Acknowledge us</AppButton
@@ -29,6 +33,6 @@
 
 <script setup lang="ts">
 import { faComment } from "@fortawesome/free-regular-svg-icons";
-import { faCircleInfo, faScroll } from "@fortawesome/free-solid-svg-icons";
+import { faArrowRightLong, faPenNib } from "@fortawesome/free-solid-svg-icons";
 import AppButton from "@/components/AppButton.vue";
 </script>

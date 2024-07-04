@@ -1,5 +1,5 @@
 <template>
-  <div ref="columnsElement" class="columns">
+  <div class="columns">
     <!-- left panel -->
     <div ref="leftPanelElement" class="left-panel" role="group">
       <!-- data selections -->
@@ -297,7 +297,11 @@
     </div>
 
     <!-- right panel -->
-    <div class="right-panel" :style="{ height: rightPanelHeight }">
+    <div
+      ref="rightPanelElement"
+      class="right-panel"
+      :style="{ height: autoRightPanelHeight }"
+    >
       <!-- map -->
       <AppMap
         v-if="renderMap"
@@ -431,7 +435,7 @@ import {
   faMinus,
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
-import { useElementBounding } from "@vueuse/core";
+import { debouncedWatch, useElementBounding } from "@vueuse/core";
 import {
   getDownload,
   getGeo,
@@ -482,8 +486,8 @@ const stats = computed(() =>
 const props = defineProps<Props>();
 
 /** element refs */
-const columnsElement = ref<HTMLElement>();
 const leftPanelElement = ref<HTMLElement>();
+const rightPanelElement = ref<HTMLElement>();
 const map = ref<InstanceType<typeof AppMap>>();
 
 /** get "learn more" link based on selections */
@@ -798,20 +802,25 @@ watchEffect(() => {
 });
 
 /** auto-adjust right panel/map height */
-const rightPanelHeight = ref("");
-const columnsTop = computed(
-  () => useElementBounding(columnsElement.value).top.value,
+const autoRightPanelHeight = ref("");
+const rightPanelBbox = computed(() =>
+  rightPanelElement.value ? useElementBounding(rightPanelElement.value) : null,
 );
-watch(
-  columnsTop,
+debouncedWatch(
+  rightPanelBbox,
   () => {
     if (window.innerHeight < 400) return;
-    if (!columnsTop.value) return;
+    if (!rightPanelBbox.value) return;
     if (mapWidth.value || mapHeight.value) return;
+    const top = rightPanelBbox.value.top.value;
     const max = window.innerHeight - 20;
-    rightPanelHeight.value = clamp(max - columnsTop.value, 400, max) + "px";
+    autoRightPanelHeight.value = clamp(max - top, 400, max) + "px";
   },
-  { immediate: true },
+  {
+    deep: true,
+    /** avoid browser slow-down */
+    debounce: 100,
+  },
 );
 </script>
 
