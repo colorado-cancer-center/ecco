@@ -435,7 +435,11 @@ import {
   faMinus,
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
-import { debouncedWatch, useElementBounding } from "@vueuse/core";
+import {
+  debouncedWatch,
+  useElementBounding,
+  useWindowSize,
+} from "@vueuse/core";
 import {
   getDownload,
   getGeo,
@@ -803,23 +807,22 @@ watchEffect(() => {
 
 /** auto-adjust right panel/map height */
 const autoRightPanelHeight = ref("");
-const rightPanelBbox = computed(() =>
-  rightPanelElement.value ? useElementBounding(rightPanelElement.value) : null,
-);
+const { top: rightPanelTop } = useElementBounding(rightPanelElement);
+const { height: windowHeight } = useWindowSize();
 debouncedWatch(
-  rightPanelBbox,
+  [rightPanelTop, windowHeight],
   () => {
-    if (window.innerHeight < 400) return;
-    if (!rightPanelBbox.value) return;
+    if (windowHeight.value < 400) return;
     if (mapWidth.value || mapHeight.value) return;
-    const top = rightPanelBbox.value.top.value;
-    const max = window.innerHeight - 20;
+    if (!rightPanelElement.value) return;
+    const top = rightPanelTop.value;
+    const max = windowHeight.value - 20;
     autoRightPanelHeight.value = clamp(max - top, 400, max) + "px";
   },
   {
-    deep: true,
-    /** avoid browser slow-down */
-    debounce: 500,
+    immediate: true,
+    /** avoid leaflet resize slow-down */
+    debounce: 100,
   },
 );
 </script>
