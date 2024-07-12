@@ -213,7 +213,7 @@ export type Values = Awaited<ReturnType<typeof getValues>>;
 /** get data download link */
 export function getDownload(level: string, category: string, measure?: string) {
   return `${api}/stats/${level}/${category}/as-csv${
-    measure ? `?measure=${measure}` : ""
+    measure ? `?measure=${window.encodeURIComponent(measure)}` : ""
   }`;
 }
 
