@@ -45,6 +45,12 @@ const icons = [
   faLocationCrosshairs,
 ];
 
+let iconIndex = 0;
+/** get next icon in sequence */
+function getIcon() {
+  return icons[++iconIndex % icons.length]!;
+}
+
 /** https://tailwindcss.com/docs/customizing-colors */
 const colors = [
   "#ef4444",
@@ -66,40 +72,101 @@ const colors = [
   "#f43f5e",
 ].reverse();
 
-export const markerOptions = icons.map((def, index) => {
-  /** lookup icon definition */
-  const { node } = icon(def);
+let colorIndex = 0;
+/** get next color in sequence */
+function getColor() {
+  /**
+   * skip every N colors to space them out visually. don't use N that is factor
+   * of number of colors.
+   */
+  return colors[(++colorIndex * 3) % colors.length]!;
+}
 
-  /** get html of icon */
-  const svg = node[0] as SVGSVGElement;
+/** line stroke dashes for areas */
+const dashes = ["10 10 10 10 10", "5 10 15 10 5"];
 
-  /** skip every N colors to space them out visually */
-  /** don't use N that is factor of number of colors or else you'll get repeats */
-  const color = colors[(index * 3) % colors.length] || "black";
+let dashIndex = 0;
+/** get next dash in sequence */
+function getDash() {
+  return dashes[++dashIndex % dashes.length]!;
+}
 
-  /** outline thickness */
-  const stroke = 150;
+/** reset marker sequence */
+export function resetMarkers() {
+  iconIndex = 0;
+  colorIndex = 0;
+  dashIndex = 0;
+}
 
-  /** expand viewbox to account for stroke */
-  const padding = stroke / 2;
-  const [x = 0, y = 0, w = 512, h = 512] =
-    svg.getAttribute("viewBox")?.split(" ").map(Number) || [];
-  svg.setAttribute(
-    "viewBox",
-    [x - padding, y - padding, w + padding * 2, h + padding * 2].join(" "),
-  );
+/** get next marker in sequence */
+export function getMarker(type: "point" | "area") {
+  /** get next color */
+  const color = getColor();
+  /** get next dash pattern */
+  const dash = getDash();
 
-  /** hard-code styles (<img>'s can't be styled from "outside", e.g. in css) */
-  svg.style.color = color;
-  svg.style.stroke = "black";
-  svg.style.strokeWidth = String(stroke);
-  svg.style.paintOrder = "stroke";
+  /** svg of icon */
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  document.body.append(svg);
+
+  /** use font-awesome point marker */
+  if (type === "point") {
+    const stroke = 50;
+
+    /** get html of next icon */
+    svg.innerHTML = icon(getIcon()).node[0]!.innerHTML;
+
+    /** styles */
+    svg.style.color = color;
+    svg.style.stroke = "black";
+    svg.style.strokeWidth = String(stroke * 2);
+    svg.style.paintOrder = "stroke";
+
+    /** expand viewbox to include stroke */
+    const { x, y, width, height } = svg.getBBox();
+    svg.setAttribute(
+      "viewBox",
+      [x - stroke, y - stroke, width + 2 * stroke, height + 2 * stroke].join(
+        " ",
+      ),
+    );
+  } else {
+    const width = 100;
+    const stroke = 10;
+
+    /** create dash */
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    svg.append(line);
+    line.setAttribute("x1", "0");
+    line.setAttribute("x2", String(width));
+    line.setAttribute("pathLength", "50");
+
+    /** styles */
+    svg.style.fill = "none";
+    svg.style.stroke = color;
+    svg.style.strokeWidth = String(stroke);
+    svg.style.strokeDasharray = dash;
+
+    /** fit viewbox to contents */
+    svg.setAttribute("viewBox", `0 ${-stroke * 4} ${width} ${stroke * 2 * 4}`);
+  }
 
   /** encode url */
-  const url = "data:image/svg+xml;base64," + window.btoa(svg.outerHTML);
+  const url = URL.createObjectURL(
+    new Blob([svg.outerHTML], { type: "image/svg+xml" }),
+  );
 
-  return L.icon({
-    iconUrl: url,
-    iconSize: [15, 15],
-  });
-});
+  svg.remove();
+
+  return {
+    /** main color */
+    color,
+    /** dash pattern */
+    dash,
+    /** icon object url */
+    url,
+    /** leaflet icon object */
+    icon: L.icon({ iconUrl: url, iconSize: [15, 15] }),
+  };
+}

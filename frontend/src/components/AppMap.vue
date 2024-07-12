@@ -65,9 +65,9 @@
 
       <!-- symbol key -->
       <div v-if="Object.keys(symbols).length" class="symbols">
-        <template v-for="(symbol, index) of symbols" :key="index">
-          <img :src="symbol.image" alt="" />
-          <small>{{ symbol.label }}</small>
+        <template v-for="(symbol, _index) of symbols" :key="_index">
+          <img :src="symbol?.url" alt="" />
+          <small>{{ symbol?.label }}</small>
         </template>
       </div>
     </div>
@@ -121,6 +121,24 @@
         </AppLink>
       </template>
 
+      <!-- representative -->
+      <template v-if="featureInfo.representative">
+        <span>Representative</span>
+        <span>{{ featureInfo.representative }}</span>
+      </template>
+
+      <!-- party -->
+      <template v-if="featureInfo.party">
+        <span>Party</span>
+        <span>{{ featureInfo.party }}</span>
+      </template>
+
+      <!-- email -->
+      <template v-if="featureInfo.email">
+        <span>Email</span>
+        <span>{{ featureInfo.email }}</span>
+      </template>
+
       <!-- address -->
       <template v-if="featureInfo.address">
         <span>Address</span>
@@ -159,14 +177,14 @@ import { useElementSize, useFullscreen, useResizeObserver } from "@vueuse/core";
 import type {
   Data,
   DataProps,
+  Location,
   LocationProps,
-  Locations,
   Unit,
   Values,
 } from "@/api";
 import AppLink from "@/components/AppLink.vue";
 import { getGradient } from "@/components/gradient";
-import { markerOptions } from "@/components/markers";
+import { getMarker, resetMarkers } from "@/components/markers";
 import { useScrollable } from "@/util/composables";
 import { downloadPng } from "@/util/download";
 import { formatValue, normalizedApply } from "@/util/math";
@@ -183,7 +201,7 @@ const mapElement = ref<HTMLDivElement>();
 type Props = {
   /** features */
   geometry?: Data;
-  locations?: Locations;
+  locations?: Record<string, Location>;
   /** map of geometry id to value */
   values?: NonNullable<Values>["values"];
   /** value domain */
@@ -571,7 +589,6 @@ function updateData() {
   layer.setStyle({
     weight: 1,
     color: "black",
-    opacity: 1,
     fillOpacity: 1,
   });
 
@@ -593,31 +610,36 @@ watch(() => props.geometry, updateData, { deep: true });
 
 /** symbols (icon + label) associated with each location */
 const symbols = computed(() => {
-  let index = 0;
-  return mapValues(props.locations, ({ label }) => {
-    const icon = markerOptions[index++ % markerOptions.length];
-    const image = icon?.options.iconUrl || "";
-    return { label, icon, image };
+  resetMarkers();
+
+  return mapValues(props.locations, (location, label) => {
+    if (location.features[0]?.geometry.type === "Point")
+      return { ...getMarker("point"), label };
+    if (location.features[0]?.geometry.type === "Polygon")
+      return { ...getMarker("area"), label };
   });
 });
 
 /** update location layers */
 function updateLocations() {
-  const layers = getLayers<L.GeoJSON>("locations", L.Marker);
+  const layers = getLayers<L.GeoJSON>("locations");
   layers.forEach((layer) => layer.remove());
-  for (const [key, { features }] of Object.entries(props.locations)) {
-    const icon = symbols.value[key]?.icon;
+  for (const [key, features] of Object.entries(props.locations)) {
+    const { color, dash, icon } = symbols.value[key] ?? {};
     const layer = L.geoJSON(undefined, {
-      pointToLayer: (feature, coords) => {
-        /** for point, display as marker */
-        if (feature.geometry.type === "Point")
-          return L.marker(coords, { icon, pane: "locations" });
-        return L.layerGroup();
-      },
+      pane: "locations",
+      pointToLayer: (feature, coords) =>
+        L.marker(coords, { icon, pane: "locations" }),
     });
     bindPopup(layer);
     map?.addLayer(layer);
     layer.addData(features);
+    layer.setStyle({
+      weight: 3,
+      color,
+      fillOpacity: 0,
+      dashArray: dash,
+    });
   }
 }
 

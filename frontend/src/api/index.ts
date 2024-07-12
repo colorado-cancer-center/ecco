@@ -2,8 +2,7 @@ import * as d3 from "d3";
 import type { FeatureCollection, Geometry } from "geojson";
 import { mapValues } from "lodash";
 import type { ExplicitScale } from "@/components/AppMap.vue";
-import cancerCenterLocations from "./cancer-center-locations.json";
-import cancerInFocusLocations from "./cancer-in-focus-locations.json";
+import locationsData from "./locations-data.json";
 
 /** api root (no trailing slash) */
 const api = import.meta.env.VITE_API;
@@ -14,7 +13,15 @@ console.debug("API:", api);
 const cache = new Map();
 
 /** general request */
-export async function request<T>(url: string) {
+export async function request<T>(
+  url: string | URL,
+  params: Record<string, string | string[]> = {},
+) {
+  /** make url object */
+  url = new URL(url);
+  /** construct params */
+  for (const [key, value] of Object.entries(params))
+    for (const param of [value].flat()) url.searchParams.append(key, param);
   /** construct request */
   const request = new Request(url);
   console.debug(`📞 Request ${url}`, { request });
@@ -125,17 +132,17 @@ export async function getFacets() {
   const data = await request<_Facets>(`${api}/stats/measures`);
 
   /** transform data into desired format */
-  return mapValues(data, ({ label, categories }, key) => ({
+  return mapValues(data, ({ label, categories }, id) => ({
     /** geographic level */
-    id: key,
+    id,
     label,
-    list: mapValues(categories, ({ label, measures }, key) => ({
+    list: mapValues(categories, ({ label, measures }, id) => ({
       /** measure category */
-      id: key,
+      id,
       label,
-      list: mapValues(measures, ({ label, factors }, key) => ({
+      list: mapValues(measures, ({ label, factors }, id) => ({
         /** measure */
-        id: key,
+        id,
         label,
         factors,
       })),
@@ -176,13 +183,10 @@ export async function getValues(
   const filtersString = Object.entries(filters || {})
     .map((entry) => entry.join(":"))
     .join(";");
-  const params = new URLSearchParams({
-    measure,
-    ...(filtersString && { filters: filtersString }),
-  });
 
   const data = await request<_Values>(
-    `${api}/stats/${level}/${category}/fips-value?` + params,
+    `${api}/stats/${level}/${category}/fips-value?`,
+    { measure, ...(filtersString && { filters: filtersString }) },
   );
 
   const values = Object.values(data.values).map(({ value }) => value);
@@ -212,9 +216,9 @@ export type Values = Awaited<ReturnType<typeof getValues>>;
 
 /** get data download link */
 export function getDownload(level: string, category: string, measure?: string) {
-  return `${api}/stats/${level}/${category}/as-csv${
-    measure ? `?measure=${window.encodeURIComponent(measure)}` : ""
-  }`;
+  const url = new URL(`${api}/stats/${level}/${category}/as-csv`);
+  if (measure) url.searchParams.set(measure, measure);
+  return url.toString();
 }
 
 /** get download all link */
@@ -230,29 +234,32 @@ export type LocationProps = {
   address?: string;
   phone?: string;
   notes?: string;
+  email?: string;
+  district?: number;
+  representative?: string;
+  party?: string;
   fips?: string;
 };
 
 /** response from locations api endpoint */
-type _Locations = {
-  [key: string]: {
-    label: string;
-    features: FeatureCollection<Geometry, LocationProps>;
-  };
-};
+type _Location = FeatureCollection<Geometry, LocationProps>;
+
+/** loaded locations */
+const locations: Record<string, _Location> = {};
 
 /** get locations (markers, highlighted areas, etc) */
-export async function getLocations() {
-  // const data = await request<_Locations>(`${api}/locations`);
+export async function getLocation(id: string) {
+  /** if already loaded, return that */
+  if (locations[id]) return locations[id];
 
-  const data =
-    /** merge together, assume no overlap in keys */
-    {
-      ...cancerInFocusLocations,
-      ...cancerCenterLocations,
-    } as _Locations;
+  /** TEMPORARY. REPLACE WITH BACKEND REQUEST. */
+  const data = (locationsData as Record<string, _Location>)[id];
+  if (!data) throw Error("Failed to load location");
+  // const data = await request<_Location>(`${api}/locations`, { id });
 
+  /** keep loaded data */
+  locations[id] = data;
   return data;
 }
 
-export type Locations = Awaited<ReturnType<typeof getLocations>>;
+export type Location = Awaited<ReturnType<typeof getLocation>>;
