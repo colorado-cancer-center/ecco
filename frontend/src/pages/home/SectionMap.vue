@@ -810,18 +810,25 @@ watchEffect(() => {
 
 /** auto-adjust right panel/map height */
 const autoRightPanelHeight = ref("");
-const { top: rightPanelTop } = useElementBounding(rightPanelElement);
+const rightPanelTop = computed(() =>
+  rightPanelElement.value
+    ? /**
+       * useElementBounding supposed to be able to accept element ref, but glitches
+       * happen if we don't do pass raw, non-undefined element
+       */
+      useElementBounding(rightPanelElement.value).top.value
+    : 0,
+);
 const { height: windowHeight } = useWindowSize();
 debouncedWatch(
   [rightPanelTop, windowHeight],
   () => {
-    console.log("hi");
     if (windowHeight.value < 400) return;
+    if (!rightPanelTop.value) return;
     if (mapWidth.value || mapHeight.value) return;
-    if (!rightPanelElement.value) return;
     const top = rightPanelTop.value;
     const max = windowHeight.value - 20;
-    // autoRightPanelHeight.value = clamp(max - top, 400, max) + "px";
+    autoRightPanelHeight.value = clamp(max - top, 400, max) + "px";
   },
   {
     immediate: true,

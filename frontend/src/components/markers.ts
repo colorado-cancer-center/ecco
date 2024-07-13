@@ -1,4 +1,5 @@
 import * as L from "leaflet";
+import { max, sum } from "lodash";
 import { icon } from "@fortawesome/fontawesome-svg-core";
 import {
   faBolt,
@@ -48,7 +49,7 @@ const icons = [
 let iconIndex = 0;
 /** get next icon in sequence */
 function getIcon() {
-  return icons[++iconIndex % icons.length]!;
+  return icons[iconIndex++ % icons.length]!;
 }
 
 /** https://tailwindcss.com/docs/customizing-colors */
@@ -79,16 +80,21 @@ function getColor() {
    * skip every N colors to space them out visually. don't use N that is factor
    * of number of colors.
    */
-  return colors[(++colorIndex * 3) % colors.length]!;
+  return colors[(colorIndex++ * 3) % colors.length]!;
 }
 
 /** line stroke dashes for areas */
-const dashes = ["10 10 10 10 10", "5 10 15 10 5"];
+const dashes = ["0 0", "10 10", "5 5", "5 5 15 5"];
+
+/** total dash length of line symbol in legend */
+const dashSymbolLength = String(
+  max(dashes.map((dash) => sum(dash.split(" ").map(Number))))!,
+);
 
 let dashIndex = 0;
 /** get next dash in sequence */
 function getDash() {
-  return dashes[++dashIndex % dashes.length]!;
+  return dashes[dashIndex++ % dashes.length]!;
 }
 
 /** reset marker sequence */
@@ -140,7 +146,7 @@ export function getMarker(type: "point" | "area") {
     svg.append(line);
     line.setAttribute("x1", "0");
     line.setAttribute("x2", String(width));
-    line.setAttribute("pathLength", "50");
+    line.setAttribute("pathLength", String(dashSymbolLength));
 
     /** styles */
     svg.style.fill = "none";
