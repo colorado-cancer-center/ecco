@@ -2,34 +2,27 @@
   <SectionBanner />
   <section class="full">
     <!-- loading/error status -->
-    <AppStatus v-if="coreStatus !== 'success'" :status="coreStatus" />
+    <AppStatus v-if="status && status !== 'success'" :status="status" />
     <SectionMap v-if="facets" :facets="facets" />
   </section>
   <SectionWelcome />
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import { getFacets, type Facets } from "@/api";
+import { onMounted } from "vue";
+import { getFacets } from "@/api";
 import AppStatus from "@/components/AppStatus.vue";
-import type { Status } from "@/components/AppStatus.vue";
 import SectionBanner from "@/pages/home/SectionBanner.vue";
 import SectionMap from "@/pages/home/SectionMap.vue";
 import SectionWelcome from "@/pages/home/SectionWelcome.vue";
-
-const coreStatus = ref<Status>("loading");
-const facets = ref<Facets>();
+import { useQuery } from "@/util/composables";
 
 /** get "core" data once on page load */
-async function loadCore() {
-  try {
-    coreStatus.value = "loading";
-    facets.value = await getFacets();
-    coreStatus.value = "success";
-  } catch (error) {
-    console.error(error);
-    coreStatus.value = "error";
-  }
-}
-loadCore();
+const {
+  query: loadFacets,
+  data: facets,
+  status,
+} = useQuery(getFacets, undefined);
+
+onMounted(loadFacets);
 </script>

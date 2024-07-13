@@ -445,7 +445,6 @@ import {
   getGeo,
   getLocation,
   getValues,
-  type Data,
   type Facet,
   type Facets,
 } from "@/api";
@@ -458,7 +457,6 @@ import AppMap from "@/components/AppMap.vue";
 import AppNumber from "@/components/AppNumber.vue";
 import AppSelect, { type Entry, type Option } from "@/components/AppSelect.vue";
 import AppSlider from "@/components/AppSlider.vue";
-import { type Status } from "@/components/AppStatus.vue";
 import { gradientOptions } from "@/components/gradient";
 import { baseOptions } from "@/components/tile-providers";
 import {
@@ -513,12 +511,6 @@ const learnMoreLink = computed(() => {
 
   return "/sources";
 });
-
-/** data state */
-const geometryStatus = ref<Status>("loading");
-const counties = ref<Data>();
-const tracts = ref<Data>();
-const geometry = ref<Data>();
 
 /** select boxes state */
 const selectedLevel = useUrlParam("level", stringParam, "");
@@ -585,28 +577,20 @@ async function reset() {
   renderMap.value = true;
 }
 
-/** load and select geometry data to display on map, on request to save bandwidth */
-watchEffect(async () => {
-  try {
-    geometryStatus.value = "loading";
-    /** clear geometry while loading */
-    geometry.value = undefined;
+/** load geometry data to display on map */
+const {
+  query: loadGeometry,
+  data: geometry,
+  status: geometryStatus,
+} = useQuery(async function () {
+  if (selectedLevel.value === "county")
+    return await getGeo("counties", "us_fips");
+  else if (selectedLevel.value === "tract")
+    return await getGeo("tracts", "fips");
+}, undefined);
 
-    /** choose and fetch data */
-    if (selectedLevel.value === "county") {
-      counties.value ??= await getGeo("counties", "us_fips");
-      geometry.value = counties.value;
-    } else if (selectedLevel.value === "tract") {
-      tracts.value ??= await getGeo("tracts", "fips");
-      geometry.value = tracts.value;
-    }
-
-    geometryStatus.value = "success";
-  } catch (error) {
-    console.error(error);
-    geometryStatus.value = "error";
-  }
-});
+/** load geometry data to display on map */
+watch(selectedLevel, loadGeometry, { immediate: true });
 
 /** geographic levels from facets data */
 const levels = computed(() => cloneDeep(props.facets));

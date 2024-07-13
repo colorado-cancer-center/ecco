@@ -10,7 +10,7 @@ const api = import.meta.env.VITE_API;
 console.debug("API:", api);
 
 /** request cache */
-const cache = new Map();
+const cache = new Map<string, Response>();
 
 /** general request */
 export async function request<T>(
@@ -24,16 +24,20 @@ export async function request<T>(
     for (const param of [value].flat()) url.searchParams.append(key, param);
   /** construct request */
   const request = new Request(url);
-  console.debug(`📞 Request ${url}`, { request });
   /** unique request id for caching */
   const id = JSON.stringify(request, ["url", "method", "headers"]);
-  /** get response from cache or make new request */
-  const response = cache.get(id) || (await fetch(request));
+  /** get response from cache */
+  const cached = cache.get(id);
+  /** log info */
+  const log = `(${cached ? "cached" : "new"}) ${url}`;
+  console.debug(`📞 Request ${log}`, { request });
+  /** make new request */
+  const response = cached ?? (await fetch(request));
   /** check status code */
   if (!response.ok) throw Error("Response not OK");
   /** parse response */
   const parsed = await response.clone().json();
-  console.debug(`📣 Response ${url}`, { response, parsed });
+  console.debug(`📣 Response ${log}`, { response, parsed });
   /** set cache for next time */
   if (request.method === "GET") cache.set(id, response);
   return parsed as T;
@@ -244,21 +248,13 @@ export type LocationProps = {
 /** response from locations api endpoint */
 type _Location = FeatureCollection<Geometry, LocationProps>;
 
-/** loaded locations */
-const locations: Record<string, _Location> = {};
-
 /** get locations (markers, highlighted areas, etc) */
 export async function getLocation(id: string) {
-  /** if already loaded, return that */
-  if (locations[id]) return locations[id];
-
   /** TEMPORARY. REPLACE WITH BACKEND REQUEST. */
   const data = (locationsData as Record<string, _Location>)[id];
   if (!data) throw Error("Failed to load location");
   // const data = await request<_Location>(`${api}/locations`, { id });
 
-  /** keep loaded data */
-  locations[id] = data;
   return data;
 }
 
