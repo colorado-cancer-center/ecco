@@ -1,6 +1,7 @@
 import * as d3 from "d3";
-import type { FeatureCollection, Geometry } from "geojson";
+import type { FeatureCollection, Geometry, Position } from "geojson";
 import { mapValues } from "lodash";
+import { centerOfMass } from "@turf/turf";
 import type { ExplicitScale } from "@/components/AppMap.vue";
 import cancerCenterLocations from "./cancer-center-locations.json";
 import cancerInFocusLocations from "./cancer-in-focus-locations.json";
@@ -54,11 +55,12 @@ export type DataProps = {
   us_fips?: string | undefined;
   objectid: number;
   ogc_fid: number;
+  center?: Position;
 };
 
 /** get geojson from geography data */
 export async function getGeo(
-  type: string,
+  type: "counties" | "tracts",
   idField: string,
 ): Promise<FeatureCollection<Geometry, DataProps>> {
   const data = await request<_Data>(`${api}/${type}`);
@@ -66,15 +68,21 @@ export async function getGeo(
   /** transform data into desired format */
   return {
     type: "FeatureCollection",
-    features: data.map(({ wkb_geometry, ...d }) => ({
-      type: "Feature",
-      geometry: JSON.parse(wkb_geometry) as Geometry,
-      properties: {
-        ...d,
-        id: d[idField],
-        name: d.full || d.name || "",
-      },
-    })),
+    features: data.map(({ wkb_geometry, ...d }) => {
+      const geometry = JSON.parse(wkb_geometry) as Geometry;
+
+      return {
+        type: "Feature",
+        geometry,
+        properties: {
+          ...d,
+          id: d[idField],
+          name: d.full || d.name || "",
+          /** for label positioning */
+          center: centerOfMass(geometry).geometry.coordinates,
+        },
+      };
+    }),
   };
 }
 
