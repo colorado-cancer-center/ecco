@@ -527,13 +527,20 @@ onMounted(() => {
   bottomLeftLegend.value = createLegend({ position: "bottomleft" });
 
   /** update props from map pan/zoom */
-  map.on("moveend", () => {
-    if (!map) return;
-    const { lat, lng } = map.getCenter();
-    emit("update:lat", lat);
-    emit("update:long", lng);
-    emit("update:zoom", map.getZoom());
-  });
+  map.on(
+    "moveend",
+    /**
+     * wait for autopan to finish and wait for spurious moveend events from
+     * positioning tooltip to finish
+     */
+    debounce(() => {
+      if (!map) return;
+      const { lat, lng } = map.getCenter();
+      emit("update:lat", lat);
+      emit("update:long", lng);
+      emit("update:zoom", map.getZoom());
+    }, 1000),
+  );
 
   /** preserve fine-grain fitted zoom on drag */
   map.on("dragstart", fineZoom);
