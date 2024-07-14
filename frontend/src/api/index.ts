@@ -191,8 +191,9 @@ export async function getValues(
   const stats = {
     min: d3.min(values) || 0,
     max: d3.max(values) || 0,
-    mean: d3.mean(values) || 0,
+    avg: d3.mean(values) || 0,
     median: d3.median(values) || 0,
+    total: d3.sum(values) || 0,
     values: data.values,
     unit: data.unit,
   };
