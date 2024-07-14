@@ -350,8 +350,12 @@ function bindPopup(layer: L.Layer) {
   });
 }
 
-/** close popups (which could contain stale data) any time props change */
-watch(props, () => map?.closePopup(), { deep: true });
+/** close popups when data becomes stale */
+watch(
+  [() => props.geometry, () => props.locations, () => props.values],
+  () => map?.closePopup(),
+  { deep: true },
+);
 
 /** whether map has any "no data" geometry regions */
 const noData = computed(
