@@ -25,6 +25,8 @@ Then run the following series of commands within the `backend` container:
 ./commands/import_cif_data.py <CIF data folder>
 ./commands/import_scp_data.py <SCP data folder>
 ./commands/import_cancer_disparities.py <Disparities Excel Sheet>
+./commands/import_radon.py <Radon Excel Sheet>
+./commands/import_locations.py <Location Category JSON> <Location Data JSON>
 ```
 
 The geometry tables `County` and `Tract` are populated
