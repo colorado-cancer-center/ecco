@@ -62,15 +62,15 @@ async def get_locations(category_id: str, session: AsyncSession = Depends(get_se
 
     return locations
 
-@router.get("/locations/{item_id}", response_model=Location)
-async def get_location_by_id(item_id: str, session: AsyncSession = Depends(get_session)):
+@router.get("/locations/{location_id}", response_model=Location)
+async def get_location_by_id(location_id: str, session: AsyncSession = Depends(get_session)):
     """
     Returns specific locations by ID. The geometry itself is in the
     geometry_json field and is represented as a GeoJSON FeatureCollection.
     """
 
     # pull one location that matches the requested ID
-    result = await session.execute(select(Location).where(Location.id == item_id))
+    result = await session.execute(select(Location).where(Location.id == location_id))
     locations = result.scalars().one()
 
     return locations
