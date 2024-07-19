@@ -6,7 +6,7 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.memcached import MemcachedBackend
 import aiomcache
 
-from routers import geometry, statistics
+from routers import geometry, locations, statistics
 
 from settings import IS_DEV, FRONTEND_DOMAIN
 
@@ -44,4 +44,5 @@ async def startup():
 
 # adds in routers that host geometry, statistics endpoints
 app.include_router(geometry.router)
+app.include_router(locations.router)
 app.include_router(statistics.router)
