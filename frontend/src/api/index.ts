@@ -2,7 +2,6 @@ import * as d3 from "d3";
 import type { FeatureCollection, Geometry } from "geojson";
 import { mapValues } from "lodash";
 import type { ExplicitScale } from "@/components/AppMap.vue";
-import locationsData from "./locations-data.json";
 
 /** api root (no trailing slash) */
 const api = import.meta.env.VITE_API;
@@ -42,54 +41,6 @@ export async function request<T>(
   if (request.method === "GET") cache.set(id, response);
   return parsed as T;
 }
-
-/** response from counties/tract api endpoints */
-type _Data = {
-  [key: string]: string | number | undefined;
-
-  full?: string;
-  name?: string;
-  fips?: string;
-  us_fips?: string;
-  objectid: number;
-  ogc_fid: number;
-  wkb_geometry: string;
-}[];
-
-/** data geojson properties fields */
-export type DataProps = {
-  id: string | number | undefined;
-  name: string;
-  full?: string | undefined;
-  fips?: string | undefined;
-  us_fips?: string | undefined;
-  objectid: number;
-  ogc_fid: number;
-};
-
-/** get geojson from geography data */
-export async function getGeo(
-  type: string,
-  idField: string,
-): Promise<FeatureCollection<Geometry, DataProps>> {
-  const data = await request<_Data>(`${api}/${type}`);
-
-  /** transform data into desired format */
-  return {
-    type: "FeatureCollection",
-    features: data.map(({ wkb_geometry, ...d }) => ({
-      type: "Feature",
-      geometry: JSON.parse(wkb_geometry) as Geometry,
-      properties: {
-        ...d,
-        id: d[idField],
-        name: d.full || d.name || "",
-      },
-    })),
-  };
-}
-
-export type Data = Awaited<ReturnType<typeof getGeo>>;
 
 /** response from facets api endpoint */
 type _Facets = {
@@ -156,6 +107,66 @@ export async function getFacets() {
 
 export type Facets = Awaited<ReturnType<typeof getFacets>>;
 
+type _LocationList = {
+  [key: string]: { [key: string]: string };
+};
+
+/** get listing/metadata of locations */
+export async function getLocationList() {
+  const data = await request<_LocationList>(`${api}/locations`);
+  return data;
+}
+
+export type LocationList = Awaited<ReturnType<typeof getLocationList>>;
+
+/** response from counties/tract api endpoints */
+type _Geo = {
+  [key: string]: string | number | undefined;
+
+  full?: string;
+  name?: string;
+  fips?: string;
+  us_fips?: string;
+  objectid: number;
+  ogc_fid: number;
+  wkb_geometry: string;
+}[];
+
+/** data geojson properties fields */
+export type GeoProps = {
+  id: string | number | undefined;
+  name: string;
+  full?: string | undefined;
+  fips?: string | undefined;
+  us_fips?: string | undefined;
+  objectid: number;
+  ogc_fid: number;
+};
+
+/** get geojson from geography data */
+export async function getGeo(
+  type: string,
+  idField: string,
+): Promise<FeatureCollection<Geometry, GeoProps>> {
+  const data = await request<_Geo>(`${api}/${type}`);
+
+  /** transform data into desired format */
+  return {
+    type: "FeatureCollection",
+    features: data.map(({ wkb_geometry, ...d }) => ({
+      type: "Feature",
+      geometry: JSON.parse(wkb_geometry) as Geometry,
+      properties: {
+        ...d,
+        id: d[idField],
+        name: d.full || d.name || "",
+      },
+    })),
+  };
+}
+
+export type Geo = Awaited<ReturnType<typeof getGeo>>;
+
 /** value type/format */
 export type Unit =
   | "percent"
@@ -218,6 +229,22 @@ export async function getValues(
 
 export type Values = Awaited<ReturnType<typeof getValues>>;
 
+/** response from locations api endpoint */
+type _Location = {
+  id: string;
+  name: string;
+  category_id: string;
+  geometry_json: FeatureCollection<Geometry, LocationProps>;
+};
+
+/** get locations (markers, highlighted areas, etc) */
+export async function getLocation(id: string) {
+  const data = await request<_Location>(`${api}/locations/${id}`);
+  return data.geometry_json;
+}
+
+export type Location = Awaited<ReturnType<typeof getLocation>>;
+
 /** get data download link */
 export function getDownload(level: string, category: string, measure?: string) {
   const url = new URL(`${api}/stats/${level}/${category}/as-csv`);
@@ -244,18 +271,3 @@ export type LocationProps = {
   party?: string;
   fips?: string;
 };
-
-/** response from locations api endpoint */
-type _Location = FeatureCollection<Geometry, LocationProps>;
-
-/** get locations (markers, highlighted areas, etc) */
-export async function getLocation(id: string) {
-  /** TEMPORARY. REPLACE WITH BACKEND REQUEST. */
-  const data = (locationsData as Record<string, _Location>)[id];
-  if (!data) throw Error("Failed to load location");
-  // const data = await request<_Location>(`${api}/locations`, { id });
-
-  return data;
-}
-
-export type Location = Awaited<ReturnType<typeof getLocation>>;

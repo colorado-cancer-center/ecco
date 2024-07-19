@@ -2,15 +2,26 @@
   <SectionBanner />
   <section class="full">
     <!-- loading/error status -->
-    <AppStatus v-if="status && status !== 'success'" :status="status" />
-    <SectionMap v-if="facets" :facets="facets" />
+    <AppStatus
+      v-if="facetsStatus === 'error' || locationListStatus == 'error'"
+      status="error"
+    />
+    <AppStatus
+      v-else-if="facetsStatus === 'loading' || locationListStatus == 'loading'"
+      status="loading"
+    />
+    <SectionMap
+      v-else-if="facets && locationList"
+      :facets="facets"
+      :location-list="locationList"
+    />
   </section>
   <SectionWelcome />
 </template>
 
 <script setup lang="ts">
 import { onMounted } from "vue";
-import { getFacets } from "@/api";
+import { getFacets, getLocationList } from "@/api";
 import AppStatus from "@/components/AppStatus.vue";
 import SectionBanner from "@/pages/home/SectionBanner.vue";
 import SectionMap from "@/pages/home/SectionMap.vue";
@@ -21,8 +32,14 @@ import { useQuery } from "@/util/composables";
 const {
   query: loadFacets,
   data: facets,
-  status,
+  status: facetsStatus,
 } = useQuery(getFacets, undefined);
+const {
+  query: loadLocationList,
+  data: locationList,
+  status: locationListStatus,
+} = useQuery(getLocationList, undefined);
 
 onMounted(loadFacets);
+onMounted(loadLocationList);
 </script>

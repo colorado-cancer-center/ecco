@@ -175,8 +175,8 @@ import L, { type MapOptions } from "leaflet";
 import { cloneDeep, debounce, isEmpty, mapValues } from "lodash";
 import { useElementSize, useFullscreen, useResizeObserver } from "@vueuse/core";
 import type {
-  Data,
-  DataProps,
+  Geo,
+  GeoProps,
   Location,
   LocationProps,
   Unit,
@@ -200,7 +200,7 @@ const mapElement = ref<HTMLDivElement>();
 
 type Props = {
   /** features */
-  geometry?: Data;
+  geometry?: Geo;
   locations?: Record<string, Location>;
   /** map of geometry id to value */
   values?: NonNullable<Values>["values"];
@@ -276,8 +276,7 @@ const bottomLeftLegend = ref<HTMLElement>();
 const popup = ref<HTMLElement>();
 
 type Info = Partial<
-  DataProps &
-    LocationProps & { value: number | string; aac: number; unit: Unit }
+  GeoProps & LocationProps & { value: number | string; aac: number; unit: Unit }
 >;
 
 /** info about selected feature for popup */

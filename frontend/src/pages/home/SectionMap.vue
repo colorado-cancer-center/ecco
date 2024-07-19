@@ -447,8 +447,8 @@ import {
   getValues,
   type Facet,
   type Facets,
+  type LocationList,
 } from "@/api";
-import locationsList from "@/api/locations.json";
 import AppAccordion from "@/components/AppAccordion.vue";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
@@ -471,6 +471,7 @@ import { sleep } from "@/util/misc";
 
 type Props = {
   facets: Facets;
+  locationList: LocationList;
 };
 
 /** list of measure stats */
@@ -635,7 +636,7 @@ const factors = computed(() =>
 );
 
 /** selected value state for each factor */
-const selectedFactors = shallowRef<{ [key: string]: ShallowRef<string> }>({});
+const selectedFactors = shallowRef<Record<string, ShallowRef<string>>>({});
 
 /** keep track of dynamically created factor watchers */
 let stoppers: WatchStopHandle[] = [];
@@ -745,11 +746,10 @@ watch(
 /** location dropdown options */
 const locationOptions = computed(() => {
   const entries: Entry[] = [];
-  for (const [group, options] of Object.entries(locationsList)) {
+  for (const [group, options] of Object.entries(props.locationList)) {
     entries.push({ group });
-    for (const [label, id] of Object.entries(options)) {
+    for (const [label, id] of Object.entries(options))
       entries.push({ id, label });
-    }
   }
 
   return entries;
@@ -759,7 +759,7 @@ const locationOptions = computed(() => {
 const { query: loadLocations, data: locations } = useQuery(async function () {
   /** convert locations list to map of id to human-readable label */
   const idToLabel = Object.fromEntries(
-    Object.values(locationsList)
+    Object.values(props.locationList)
       .map((value) => Object.entries(value))
       .flat()
       .map(([label, id]) => [id, label] as const),
