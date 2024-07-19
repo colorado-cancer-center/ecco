@@ -548,6 +548,11 @@ onMounted(() => {
   map.on("dragend", coarseZoom);
   coarseZoom();
 
+  /** provide zoom level as css variable */
+  map.on("zoomend", ({ target }) =>
+    map?.getContainer().style.setProperty("--zoom", target._zoom),
+  );
+
   /** update stuff once map init'd */
   updateBase();
   updateData();
@@ -573,18 +578,41 @@ watch(() => props.background, updateBase, { immediate: true });
 /** update data layers */
 function updateData() {
   getLayers("geometry").forEach((layer) => layer.remove());
-  const layer = L.geoJSON(undefined, { pane: "geometry" });
+  const layer = L.geoJSON<DataProps>(undefined, {
+    pane: "geometry",
+    onEachFeature:
+      props.geometry.features.length < 100
+        ? /** add feature labels */
+          (feature) => {
+            const [long = 0, lat = 0] = feature.properties.center ?? [];
+            const name = feature.properties.name.replace(/county/i, "");
+            const label = L.marker([lat, long], {
+              pane: "geometry",
+              icon: L.divIcon({
+                className: "geometry-label",
+                html: `<div>${name}</div>`,
+                iconSize: [0, 0],
+              }),
+            });
+            map?.addLayer(label);
+          }
+        : undefined,
+  });
   map?.addLayer(layer);
   layer.addData(props.geometry);
-  bindPopup(layer);
 
-  /** set feature static styles */
+  /**
+   * set feature static styles. can't use css class due to leaflet bugs.
+   * https://github.com/leaflet/leaflet/issues/2662#issuecomment-2193684759
+   */
   layer.setStyle({
     weight: 1,
     color: "black",
     opacity: 1,
     fillOpacity: 1,
   });
+
+  bindPopup(layer);
 
   /** if no pan/zoom specified, fit view to content, */
   if (!props.lat && !props.long && !props.zoom) {
@@ -835,5 +863,22 @@ defineExpose({
 /* https://github.com/Leaflet/Leaflet/issues/3994 */
 .leaflet-fade-anim .leaflet-popup {
   transition: none;
+}
+
+.geometry-label {
+  z-index: 999 !important;
+}
+
+.geometry-label > div {
+  width: min-content;
+  height: min-content;
+  transform: translate(-50%, -50%);
+  font-size: calc(0.05 * pow(2, var(--zoom)) * 1px);
+  line-height: 1;
+  text-align: center;
+  -webkit-text-stroke: 2px white;
+  paint-order: stroke;
+  font-weight: var(--bold);
+  pointer-events: none;
 }
 </style>

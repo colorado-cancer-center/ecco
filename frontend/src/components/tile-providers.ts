@@ -6,9 +6,9 @@ import "leaflet-providers";
 /** some pretty base layer tile providers */
 /** from https://leaflet-extras.github.io/leaflet-providers/preview/ */
 export const baseOptions = [
-  "Stadia.OSMBright",
   "Stadia.AlidadeSmooth",
   "Stadia.AlidadeSmoothDark",
+  "Stadia.OSMBright",
   "Stadia.StamenTerrainBackground",
   "Stadia.StamenTonerLite",
   "Stadia.StamenToner",
