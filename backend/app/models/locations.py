@@ -17,16 +17,17 @@ from sqlmodel import Field, SQLModel, Relationship
 
 class LocationCategory(SQLModel, table=True):
     id: str = Field(index=True, primary_key=True)
-    name: str = Field(index=True)
+    name: str = Field(index=True, unique=True)
 
     locations: list["Location"] = Relationship(
         back_populates="category",
-        sa_relationship_kwargs={"cascade": "delete"}
+        sa_relationship_kwargs={"cascade": "delete", "lazy": "joined"}
     )
 
 
 class Location(SQLModel, table=True):
     id: str = Field(index=True, primary_key=True)
+    name: str = Field(index=True, unique=True)
 
     # each location belongs to a location category
     # (locations are removed when its parent category is removed)
