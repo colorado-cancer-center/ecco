@@ -2,7 +2,7 @@
   <component
     :is="component"
     :[toAttr]="to"
-    :target="newTab ?? isExternal ? '_blank' : ''"
+    :target="(newTab ?? isExternal) ? '_blank' : ''"
     class="link"
   >
     <slot />
