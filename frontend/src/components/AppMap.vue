@@ -595,7 +595,7 @@ watch(() => props.background, updateBase, { immediate: true });
 /** update data layers */
 function updateData() {
   getLayers("geometry").forEach((layer) => layer.remove());
-  const layer = L.geoJSON<DataProps>(undefined, {
+  const layer = L.geoJSON<GeoProps>(undefined, {
     pane: "geometry",
     onEachFeature:
       props.geometry.features.length < 100

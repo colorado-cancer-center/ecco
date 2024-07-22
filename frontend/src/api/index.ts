@@ -142,11 +142,12 @@ export type GeoProps = {
   us_fips?: string | undefined;
   objectid: number;
   ogc_fid: number;
+  center?: Position;
 };
 
 /** get geojson from geography data */
 export async function getGeo(
-  type: string,
+  type: "counties" | "tracts",
   idField: string,
 ): Promise<FeatureCollection<Geometry, GeoProps>> {
   const data = await request<_Geo>(`${api}/${type}`);
@@ -154,15 +155,21 @@ export async function getGeo(
   /** transform data into desired format */
   return {
     type: "FeatureCollection",
-    features: data.map(({ wkb_geometry, ...d }) => ({
-      type: "Feature",
-      geometry: JSON.parse(wkb_geometry) as Geometry,
-      properties: {
-        ...d,
-        id: d[idField],
-        name: d.full || d.name || "",
-      },
-    })),
+    features: data.map(({ wkb_geometry, ...d }) => {
+      const geometry = JSON.parse(wkb_geometry) as Geometry;
+
+      return {
+        type: "Feature",
+        geometry,
+        properties: {
+          ...d,
+          id: d[idField],
+          name: d.full || d.name || "",
+          /** for label positioning */
+          center: centerOfMass(geometry).geometry.coordinates,
+        },
+      };
+    }),
   };
 }
 
