@@ -367,8 +367,12 @@ function bindPopup(layer: L.Layer) {
   });
 }
 
-/** close popups (which could contain stale data) any time props change */
-watch(props, () => map?.closePopup(), { deep: true });
+/** close popups when data becomes stale */
+watch(
+  [() => props.geometry, () => props.locations, () => props.values],
+  () => map?.closePopup(),
+  { deep: true },
+);
 
 /** whether map has any "no data" geometry regions */
 const noData = computed(
@@ -540,19 +544,31 @@ onMounted(() => {
   bottomLeftLegend.value = createLegend({ position: "bottomleft" });
 
   /** update props from map pan/zoom */
-  map.on("moveend", () => {
-    if (!map) return;
-    const { lat, lng } = map.getCenter();
-    emit("update:lat", lat);
-    emit("update:long", lng);
-    emit("update:zoom", map.getZoom());
-  });
+  map.on(
+    "moveend",
+    /**
+     * wait for autopan to finish and wait for spurious moveend events from
+     * positioning tooltip to finish
+     */
+    debounce(() => {
+      if (!map) return;
+      const { lat, lng } = map.getCenter();
+      emit("update:lat", lat);
+      emit("update:long", lng);
+      emit("update:zoom", map.getZoom());
+    }, 1000),
+  );
 
   /** preserve fine-grain fitted zoom on drag */
   map.on("dragstart", fineZoom);
   /** reset zoom snap when done dragging */
   map.on("dragend", coarseZoom);
   coarseZoom();
+
+  /** provide zoom level as css variable */
+  map.on("zoomend", ({ target }) =>
+    map?.getContainer().style.setProperty("--zoom", target._zoom),
+  );
 
   /** update stuff once map init'd */
   updateBase();
@@ -579,17 +595,40 @@ watch(() => props.background, updateBase, { immediate: true });
 /** update data layers */
 function updateData() {
   getLayers("geometry").forEach((layer) => layer.remove());
-  const layer = L.geoJSON(undefined, { pane: "geometry" });
+  const layer = L.geoJSON<DataProps>(undefined, {
+    pane: "geometry",
+    onEachFeature:
+      props.geometry.features.length < 100
+        ? /** add feature labels */
+          (feature) => {
+            const [long = 0, lat = 0] = feature.properties.center ?? [];
+            const name = feature.properties.name.replace(/county/i, "");
+            const label = L.marker([lat, long], {
+              pane: "geometry",
+              icon: L.divIcon({
+                className: "geometry-label",
+                html: `<div>${name}</div>`,
+                iconSize: [0, 0],
+              }),
+            });
+            map?.addLayer(label);
+          }
+        : undefined,
+  });
   map?.addLayer(layer);
   layer.addData(props.geometry);
-  bindPopup(layer);
 
-  /** set feature static styles */
+  /**
+   * set feature static styles. can't use css class due to leaflet bugs.
+   * https://github.com/leaflet/leaflet/issues/2662#issuecomment-2193684759
+   */
   layer.setStyle({
     weight: 1,
     color: "black",
     fillOpacity: 1,
   });
+
+  bindPopup(layer);
 
   /** if no pan/zoom specified, fit view to content, */
   if (!props.lat && !props.long && !props.zoom) {
@@ -845,5 +884,22 @@ defineExpose({
 /* https://github.com/Leaflet/Leaflet/issues/3994 */
 .leaflet-fade-anim .leaflet-popup {
   transition: none;
+}
+
+.geometry-label {
+  z-index: 999 !important;
+}
+
+.geometry-label > div {
+  width: min-content;
+  height: min-content;
+  transform: translate(-50%, -50%);
+  font-size: calc(0.05 * pow(2, var(--zoom)) * 1px);
+  line-height: 1;
+  text-align: center;
+  -webkit-text-stroke: 2px white;
+  paint-order: stroke;
+  font-weight: var(--bold);
+  pointer-events: none;
 }
 </style>

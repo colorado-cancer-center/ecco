@@ -40,6 +40,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./services/postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+      - ./services/postgres/docker-entrypoint-postinit.d:/docker-entrypoint-postinit.d
       - ./db-exports:/db-exports
     healthcheck:
       test: ["CMD-SHELL", "/opt/healthcheck.sh || exit 1"]

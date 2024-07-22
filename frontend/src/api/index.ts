@@ -1,6 +1,7 @@
 import * as d3 from "d3";
-import type { FeatureCollection, Geometry } from "geojson";
+import type { FeatureCollection, Geometry, Position } from "geojson";
 import { mapValues } from "lodash";
+import { centerOfMass } from "@turf/turf";
 import type { ExplicitScale } from "@/components/AppMap.vue";
 
 /** api root (no trailing slash) */

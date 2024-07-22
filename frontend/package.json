@@ -15,6 +15,7 @@
     "@fortawesome/vue-fontawesome": "^3.0.6",
     "@headlessui-float/vue": "^0.13.2",
     "@headlessui/vue": "^1.7.19",
+    "@turf/turf": "^7.0.0",
     "@vue/eslint-config-typescript": "^13.0.0",
     "@vueuse/core": "^10.9.0",
     "d3": "^7.9.0",
