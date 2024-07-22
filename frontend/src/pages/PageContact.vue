@@ -42,7 +42,7 @@ import AppHeading from "@/components/AppHeading.vue";
 
 <style scoped>
 .table {
-  align-items: center;
+  place-content: center;
   margin: 40px auto;
   gap: 15px;
 }

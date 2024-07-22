@@ -39,7 +39,7 @@
 
         <!-- dropdown -->
         <ListboxOptions class="list">
-          <template v-for="(option, index) in options" :key="index">
+          <template v-for="(option, _index) in options" :key="_index">
             <!-- regular option -->
             <ListboxOption
               v-if="isOption(option)"

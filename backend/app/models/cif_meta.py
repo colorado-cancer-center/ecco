@@ -119,7 +119,7 @@ CIF_MEASURE_DESCRIPTIONS = {
         },
         "PWS_Violations_Since_2016": {
             "label": "Public Water System Violations since 2016",
-            "unit": MeasureUnit.PERCENT,
+            "unit": MeasureUnit.COUNT,
         },
         "pct5G_35_3": {
             "label": "Area with 35/3 Mbps Mobile 5G Coverage",
