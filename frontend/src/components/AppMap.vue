@@ -92,6 +92,11 @@
       <strong>Census Tract<br />{{ featureInfo.fips }}</strong>
     </template>
 
+    <!-- district -->
+    <template v-if="featureInfo.district">
+      <strong>District {{ featureInfo.district }}</strong>
+    </template>
+
     <div class="mini-table">
       <!-- primary "value" for feature -->
       <template v-if="featureInfo.value !== undefined">
