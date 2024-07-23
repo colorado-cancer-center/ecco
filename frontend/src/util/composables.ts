@@ -1,11 +1,5 @@
-import {
-  computed,
-  nextTick,
-  onMounted,
-  shallowRef,
-  watch,
-  type Ref,
-} from "vue";
+import { computed, nextTick, onMounted, ref, shallowRef, watch } from "vue";
+import type { Ref } from "vue";
 import { debounce, round } from "lodash";
 import {
   useMutationObserver,
@@ -113,3 +107,58 @@ export function useScrollable(element: Ref<HTMLElement | undefined>) {
 
   return scrollable;
 }
+
+/**
+ * inspired by tanstack-query. simple query manager/wrapper for making queries
+ * in components. reduces repetitive boilerplate code for loading/error states,
+ * try/catch blocks, de-duplicating requests, etc.
+ */
+export const useQuery = <Data, Args extends unknown[]>(
+  /**
+   * main async func that returns data. should be side-effect free to avoid race
+   * conditions, because multiple can be running at same time.
+   */
+  func: (...args: Args) => Promise<Data>,
+  /** default value used for data before done loading and on error. */
+  defaultValue: Data,
+) => {
+  /** query state */
+  const status = ref<"" | "loading" | "error" | "success">("");
+
+  /** query results */
+  const data = ref<Data>(defaultValue) as Ref<Data>;
+  /** https://github.com/vuejs/composition-api/issues/483 */
+
+  /** latest query id, unique to this useQuery instance */
+  let latest;
+
+  /** wrapped query function */
+  async function query(...args: Args): Promise<void> {
+    try {
+      /** unique id for current run */
+      const current = Symbol();
+      latest = current;
+
+      /** reset state */
+      status.value = "loading";
+      data.value = defaultValue;
+
+      /** run provided function */
+      const result = await func(...args);
+
+      /** if this run still the latest */
+      if (current === latest) {
+        /** assign results to data */
+        data.value = result;
+        status.value = "success";
+      } else {
+        console.error("Stale query");
+      }
+    } catch (error) {
+      console.error(error);
+      status.value = "error";
+    }
+  }
+
+  return { query, data, status };
+};

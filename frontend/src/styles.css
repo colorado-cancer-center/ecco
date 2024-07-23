@@ -236,6 +236,10 @@ blockquote {
   font-weight: var(--bold);
 }
 
+.mini-table > :nth-child(even) {
+  overflow-wrap: anywhere;
+}
+
 .mini-table:empty::before {
   content: "No Info";
 }

@@ -3,8 +3,6 @@ import type { FeatureCollection, Geometry, Position } from "geojson";
 import { mapValues } from "lodash";
 import { centerOfMass } from "@turf/turf";
 import type { ExplicitScale } from "@/components/AppMap.vue";
-import cancerCenterLocations from "./cancer-center-locations.json";
-import cancerInFocusLocations from "./cancer-in-focus-locations.json";
 
 /** api root (no trailing slash) */
 const api = import.meta.env.VITE_API;
@@ -12,81 +10,38 @@ const api = import.meta.env.VITE_API;
 console.debug("API:", api);
 
 /** request cache */
-const cache = new Map();
+const cache = new Map<string, Response>();
 
 /** general request */
-export async function request<T>(url: string) {
+export async function request<T>(
+  url: string | URL,
+  params: Record<string, string | string[]> = {},
+) {
+  /** make url object */
+  url = new URL(url);
+  /** construct params */
+  for (const [key, value] of Object.entries(params))
+    for (const param of [value].flat()) url.searchParams.append(key, param);
   /** construct request */
   const request = new Request(url);
-  console.debug(`📞 Request ${url}`, { request });
   /** unique request id for caching */
   const id = JSON.stringify(request, ["url", "method", "headers"]);
-  /** get response from cache or make new request */
-  const response = cache.get(id) || (await fetch(request));
+  /** get response from cache */
+  const cached = cache.get(id);
+  /** log info */
+  const log = `(${cached ? "cached" : "new"}) ${url}`;
+  console.debug(`📞 Request ${log}`, { request });
+  /** make new request */
+  const response = cached ?? (await fetch(request));
   /** check status code */
   if (!response.ok) throw Error("Response not OK");
   /** parse response */
   const parsed = await response.clone().json();
-  console.debug(`📣 Response ${url}`, { response, parsed });
+  console.debug(`📣 Response ${log}`, { response, parsed });
   /** set cache for next time */
   if (request.method === "GET") cache.set(id, response);
   return parsed as T;
 }
-
-/** response from counties/tract api endpoints */
-type _Data = {
-  [key: string]: string | number | undefined;
-
-  full?: string;
-  name?: string;
-  fips?: string;
-  us_fips?: string;
-  objectid: number;
-  ogc_fid: number;
-  wkb_geometry: string;
-}[];
-
-/** data geojson properties fields */
-export type DataProps = {
-  id: string | number | undefined;
-  name: string;
-  full?: string | undefined;
-  fips?: string | undefined;
-  us_fips?: string | undefined;
-  objectid: number;
-  ogc_fid: number;
-  center?: Position;
-};
-
-/** get geojson from geography data */
-export async function getGeo(
-  type: "counties" | "tracts",
-  idField: string,
-): Promise<FeatureCollection<Geometry, DataProps>> {
-  const data = await request<_Data>(`${api}/${type}`);
-
-  /** transform data into desired format */
-  return {
-    type: "FeatureCollection",
-    features: data.map(({ wkb_geometry, ...d }) => {
-      const geometry = JSON.parse(wkb_geometry) as Geometry;
-
-      return {
-        type: "Feature",
-        geometry,
-        properties: {
-          ...d,
-          id: d[idField],
-          name: d.full || d.name || "",
-          /** for label positioning */
-          center: centerOfMass(geometry).geometry.coordinates,
-        },
-      };
-    }),
-  };
-}
-
-export type Data = Awaited<ReturnType<typeof getGeo>>;
 
 /** response from facets api endpoint */
 type _Facets = {
@@ -133,17 +88,17 @@ export async function getFacets() {
   const data = await request<_Facets>(`${api}/stats/measures`);
 
   /** transform data into desired format */
-  return mapValues(data, ({ label, categories }, key) => ({
+  return mapValues(data, ({ label, categories }, id) => ({
     /** geographic level */
-    id: key,
+    id,
     label,
-    list: mapValues(categories, ({ label, measures }, key) => ({
+    list: mapValues(categories, ({ label, measures }, id) => ({
       /** measure category */
-      id: key,
+      id,
       label,
-      list: mapValues(measures, ({ label, factors }, key) => ({
+      list: mapValues(measures, ({ label, factors }, id) => ({
         /** measure */
-        id: key,
+        id,
         label,
         factors,
       })),
@@ -152,6 +107,73 @@ export async function getFacets() {
 }
 
 export type Facets = Awaited<ReturnType<typeof getFacets>>;
+
+type _LocationList = {
+  [key: string]: { [key: string]: string };
+};
+
+/** get listing/metadata of locations */
+export async function getLocationList() {
+  const data = await request<_LocationList>(`${api}/locations`);
+  return data;
+}
+
+export type LocationList = Awaited<ReturnType<typeof getLocationList>>;
+
+/** response from counties/tract api endpoints */
+type _Geo = {
+  [key: string]: string | number | undefined;
+
+  full?: string;
+  name?: string;
+  fips?: string;
+  us_fips?: string;
+  objectid: number;
+  ogc_fid: number;
+  wkb_geometry: string;
+}[];
+
+/** data geojson properties fields */
+export type GeoProps = {
+  id: string | number | undefined;
+  name: string;
+  full?: string | undefined;
+  fips?: string | undefined;
+  us_fips?: string | undefined;
+  objectid: number;
+  ogc_fid: number;
+  center?: Position;
+};
+
+/** get geojson from geography data */
+export async function getGeo(
+  type: "counties" | "tracts",
+  idField: string,
+): Promise<FeatureCollection<Geometry, GeoProps>> {
+  const data = await request<_Geo>(`${api}/${type}`);
+
+  /** transform data into desired format */
+  return {
+    type: "FeatureCollection",
+    features: data.map(({ wkb_geometry, ...d }) => {
+      const geometry = JSON.parse(wkb_geometry) as Geometry;
+
+      return {
+        type: "Feature",
+        geometry,
+        properties: {
+          ...d,
+          id: d[idField],
+          name: d.full || d.name || "",
+          /** for label positioning */
+          center: centerOfMass(geometry).geometry.coordinates,
+        },
+      };
+    }),
+  };
+}
+
+export type Geo = Awaited<ReturnType<typeof getGeo>>;
 
 /** value type/format */
 export type Unit =
@@ -184,13 +206,10 @@ export async function getValues(
   const filtersString = Object.entries(filters || {})
     .map((entry) => entry.join(":"))
     .join(";");
-  const params = new URLSearchParams({
-    measure,
-    ...(filtersString && { filters: filtersString }),
-  });
 
   const data = await request<_Values>(
-    `${api}/stats/${level}/${category}/fips-value?` + params,
+    `${api}/stats/${level}/${category}/fips-value?`,
+    { measure, ...(filtersString && { filters: filtersString }) },
   );
 
   const values = Object.values(data.values).map(({ value }) => value);
@@ -218,11 +237,27 @@ export async function getValues(
 
 export type Values = Awaited<ReturnType<typeof getValues>>;
 
+/** response from locations api endpoint */
+type _Location = {
+  id: string;
+  name: string;
+  category_id: string;
+  geometry_json: FeatureCollection<Geometry, LocationProps>;
+};
+
+/** get locations (markers, highlighted areas, etc) */
+export async function getLocation(id: string) {
+  const data = await request<_Location>(`${api}/locations/${id}`);
+  return data.geometry_json;
+}
+
+export type Location = Awaited<ReturnType<typeof getLocation>>;
+
 /** get data download link */
 export function getDownload(level: string, category: string, measure?: string) {
-  return `${api}/stats/${level}/${category}/as-csv${
-    measure ? `?measure=${window.encodeURIComponent(measure)}` : ""
-  }`;
+  const url = new URL(`${api}/stats/${level}/${category}/as-csv`);
+  if (measure) url.searchParams.set(measure, measure);
+  return url.toString();
 }
 
 /** get download all link */
@@ -238,29 +273,9 @@ export type LocationProps = {
   address?: string;
   phone?: string;
   notes?: string;
+  email?: string;
+  district?: number;
+  representative?: string;
+  party?: string;
   fips?: string;
 };
-
-/** response from locations api endpoint */
-type _Locations = {
-  [key: string]: {
-    label: string;
-    features: FeatureCollection<Geometry, LocationProps>;
-  };
-};
-
-/** get locations (markers, highlighted areas, etc) */
-export async function getLocations() {
-  // const data = await request<_Locations>(`${api}/locations`);
-
-  const data =
-    /** merge together, assume no overlap in keys */
-    {
-      ...cancerInFocusLocations,
-      ...cancerCenterLocations,
-    } as _Locations;
-
-  return data;
-}
-
-export type Locations = Awaited<ReturnType<typeof getLocations>>;

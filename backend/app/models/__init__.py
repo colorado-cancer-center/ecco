@@ -6,6 +6,10 @@ from .geom import (
     Tract,
     USState,
 )
+from .locations import (
+    LocationCategory,
+    Location,
+)
 from .base import (
     MeasuresByCounty,
     MeasuresByTract,

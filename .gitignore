@@ -164,3 +164,5 @@ node_modules
 
 # ignores the deploys.txt log on the server, so it won't make the working dir dirty when it's auto-updated
 /deploys.txt
+
+.DS_Store

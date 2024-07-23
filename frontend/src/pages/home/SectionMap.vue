@@ -319,7 +319,7 @@
             : null
         "
         :geometry="geometry"
-        :locations="filteredLocations"
+        :locations="locations"
         :values="values?.values"
         :min="manualMinMax ? manualMin : values?.min"
         :max="manualMinMax ? manualMax : values?.max"
@@ -425,7 +425,7 @@ import {
   type ShallowRef,
   type WatchStopHandle,
 } from "vue";
-import { clamp, cloneDeep, isEmpty, mapValues, pick, startCase } from "lodash";
+import { clamp, cloneDeep, isEmpty, mapValues, startCase } from "lodash";
 import { faQuestionCircle } from "@fortawesome/free-regular-svg-icons";
 import {
   faArrowsRotate,
@@ -443,14 +443,12 @@ import {
 import {
   getDownload,
   getGeo,
+  getLocation,
   getValues,
-  type Data,
   type Facet,
   type Facets,
-  type Locations,
-  type Values,
+  type LocationList,
 } from "@/api";
-import locationGroups from "@/api/location-groups.json";
 import AppAccordion from "@/components/AppAccordion.vue";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
@@ -459,13 +457,13 @@ import AppMap from "@/components/AppMap.vue";
 import AppNumber from "@/components/AppNumber.vue";
 import AppSelect, { type Entry, type Option } from "@/components/AppSelect.vue";
 import AppSlider from "@/components/AppSlider.vue";
-import { type Status } from "@/components/AppStatus.vue";
 import { gradientOptions } from "@/components/gradient";
 import { baseOptions } from "@/components/tile-providers";
 import {
   arrayParam,
   numberParam,
   stringParam,
+  useQuery,
   useUrlParam,
 } from "@/util/composables";
 import { formatValue } from "@/util/math";
@@ -473,7 +471,7 @@ import { sleep } from "@/util/misc";
 
 type Props = {
   facets: Facets;
-  locations: Locations;
+  locationList: LocationList;
 };
 
 /** list of measure stats */
@@ -514,14 +512,6 @@ const learnMoreLink = computed(() => {
 
   return "/sources";
 });
-
-/** data state */
-const geometryStatus = ref<Status>("loading");
-const counties = ref<Data>();
-const tracts = ref<Data>();
-const geometry = ref<Data>();
-const valuesStatus = ref<Status>("loading");
-const values = ref<Values>();
 
 /** select boxes state */
 const selectedLevel = useUrlParam("level", stringParam, "");
@@ -588,28 +578,20 @@ async function reset() {
   renderMap.value = true;
 }
 
-/** load and select geometry data to display on map, on request to save bandwidth */
-watchEffect(async () => {
-  try {
-    geometryStatus.value = "loading";
-    /** clear geometry while loading */
-    geometry.value = undefined;
+/** load geometry data to display on map */
+const {
+  query: loadGeometry,
+  data: geometry,
+  status: geometryStatus,
+} = useQuery(async function () {
+  if (selectedLevel.value === "county")
+    return await getGeo("counties", "us_fips");
+  else if (selectedLevel.value === "tract")
+    return await getGeo("tracts", "fips");
+}, undefined);
 
-    /** choose and fetch data */
-    if (selectedLevel.value === "county") {
-      counties.value ??= await getGeo("counties", "us_fips");
-      geometry.value = counties.value;
-    } else if (selectedLevel.value === "tract") {
-      tracts.value ??= await getGeo("tracts", "fips");
-      geometry.value = tracts.value;
-    }
-
-    geometryStatus.value = "success";
-  } catch (error) {
-    console.error(error);
-    geometryStatus.value = "error";
-  }
-});
+/** load geometry data to display on map */
+watch(selectedLevel, loadGeometry, { immediate: true });
 
 /** geographic levels from facets data */
 const levels = computed(() => cloneDeep(props.facets));
@@ -619,42 +601,29 @@ const categories = computed(() =>
   cloneDeep(levels.value[selectedLevel.value]?.list || {}),
 );
 
-/** keep track of latest query */
-let latest: Symbol;
-
-/** load map values data */
-async function loadValues() {
-  if (!selectedLevel.value || !selectedCategory.value || !selectedMeasure.value)
-    return;
-
-  valuesStatus.value = "loading";
-  /** clear values while loading */
-  values.value = undefined;
-
-  /** assign unique id to query */
-  latest = Symbol();
-  const current = latest;
-
-  try {
-    /** fetch data */
-    const result = await getValues(
+const {
+  query: loadValues,
+  data: values,
+  status: valuesStatus,
+} = useQuery(
+  /** load map values data */
+  async function () {
+    if (
+      !selectedLevel.value ||
+      !selectedCategory.value ||
+      !selectedMeasure.value
+    )
+      return;
+    return await getValues(
       selectedLevel.value,
       selectedCategory.value,
       selectedMeasure.value,
       /** unwrap nested refs */
       mapValues(selectedFactors.value, (value) => value.value),
     );
-
-    /** check if current query is latest (prevent race conditions) */
-    if (current === latest) values.value = result;
-    else console.debug("stale");
-
-    valuesStatus.value = "success";
-  } catch (error) {
-    console.error(error);
-    valuesStatus.value = "error";
-  }
-}
+  },
+  undefined,
+);
 
 /** measures from measure category */
 const measures = computed(() =>
@@ -667,7 +636,7 @@ const factors = computed(() =>
 );
 
 /** selected value state for each factor */
-const selectedFactors = shallowRef<{ [key: string]: ShallowRef<string> }>({});
+const selectedFactors = shallowRef<Record<string, ShallowRef<string>>>({});
 
 /** keep track of dynamically created factor watchers */
 let stoppers: WatchStopHandle[] = [];
@@ -777,23 +746,41 @@ watch(
 /** location dropdown options */
 const locationOptions = computed(() => {
   const entries: Entry[] = [];
-  for (const [group, options] of Object.entries(locationGroups)) {
+  for (const [group, options] of Object.entries(props.locationList)) {
     entries.push({ group });
-    for (const option of options) {
-      entries.push({
-        id: option,
-        label: props.locations[option]?.label || "",
-      });
-    }
+    for (const [label, id] of Object.entries(options))
+      entries.push({ id, label });
   }
 
   return entries;
 });
 
-/** location data to pass to map, filtered by selected locations */
-const filteredLocations = computed(
-  () => pick(props.locations, selectedLocations.value) as Locations | undefined,
-);
+/** get location data to pass to map based on selected locations */
+const { query: loadLocations, data: locations } = useQuery(async function () {
+  /** convert locations list to map of id to human-readable label */
+  const idToLabel = Object.fromEntries(
+    Object.values(props.locationList)
+      .map((value) => Object.entries(value))
+      .flat()
+      .map(([label, id]) => [id, label] as const),
+  );
+
+  return Object.fromEntries(
+    /** query for locations in parallel */
+    await Promise.all(
+      selectedLocations.value.map(
+        async (location) =>
+          [
+            /** location id */
+            idToLabel[location] ?? "",
+            /** location geo data */
+            await getLocation(location),
+          ] as const,
+      ),
+    ),
+  );
+}, undefined);
+watch(selectedLocations, loadLocations, { immediate: true });
 
 watchEffect(() => {
   /** if manual min/max off */
@@ -813,8 +800,8 @@ debouncedWatch(
   [rightPanelTop, windowHeight],
   () => {
     if (windowHeight.value < 400) return;
+    if (!rightPanelTop.value) return;
     if (mapWidth.value || mapHeight.value) return;
-    if (!rightPanelElement.value) return;
     const top = rightPanelTop.value;
     const max = windowHeight.value - 20;
     autoRightPanelHeight.value = clamp(max - top, 400, max) + "px";
