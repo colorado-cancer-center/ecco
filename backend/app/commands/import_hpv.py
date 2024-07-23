@@ -24,30 +24,13 @@ from models.hpv import (
 )
 
 
-class ModelNotProvidedException(Exception):
-    """
-    Raised when an input file is found that has no associated
-    model class.
-    """
-    pass
-
-class UnexpectedSheetException(Exception):
-    """
-    Raised when the sheet in the input file is not what was expected
-    (i.e., it didn't match the name in HPV_SHEETS_META for that index)
-    """
-    pass
-
 async def import_measure(model, measure, rows, session):
     """
     Imports a table of measurements into 'model' in the database.
 
-    Note that the "rows" object is created in the import_radon function; it's
+    Note that the "rows" object is created in the import_hpv_data function; it's
     not just the original row from the spreadsheet. We expect that each row
-    object has the following keys: "fips", "county", and "value".
-
-    We reuse the value column as the name of the measure, so the measures will
-    come from HPV_MEASURES below.
+    object has the following keys: "fips", "county", "value", and "sex".
     """
 
     # read each row, creating an object from it and adding it to the list
@@ -66,13 +49,6 @@ async def import_measure(model, measure, rows, session):
     # bulk insert all objects
     session.add_all(obj_list)
 
-# columns in both county and tract sheets that we'll import as measures
-HPV_MEASURES = [
-    "NTests", # Total Tests
-    "NTestsover4", # Total Test over 4 pCi/L
-    "PctOver4", # Percentage of Tests over 4 pCi/L
-]
-
 # the spreadsheet lists gender under the "Vaccine" column, so
 # we need to map those values to the genders "All", "Male", "Female"
 VACCINE_TO_GENDER = {
@@ -84,10 +60,12 @@ VACCINE_TO_GENDER = {
 async def import_hpv_data(sheets, delete_before_import=True):
     """
     Given a set of sheets with CDPHE HPV vaccination info, imports them one by one into the database.
+    Since HPV data is provided as a set of spreadsheets, one per gender,
+    we need to import them separately and then combine them into a single table.
 
-    Expects the sheets to have the following columns:
-    - County
-    - Vaccine
+    The method expects the sheets to all have the following columns:
+    - County (used to determine the county FIPS)
+    - Vaccine (used to determine the 'sex' factor)
     - Colorado NIS Rate
     - US NIS Rates
     - HP2020 Goals
@@ -96,12 +74,16 @@ async def import_hpv_data(sheets, delete_before_import=True):
     - Up-To-Date Percent (used as the measure's value)
     - State Rate
 
-    This data can be found at the following website:
-    https://cohealthviz.dphe.state.co.us/t/DCEED_Public/views/CountyRateMaps-Storyboard/CountyRateMapsCombined?%3Aembed=y&%3AisGuestRedirectFromVizportal=y
+    The use of each column is in parentheses if it's used, otherwise it's
+    ignored.
 
-    Iterates over each sheet, zipping it with HPV_SHEETS_META to get
-    metadata about the sheet. Then, for each column in HPV_SHEETS_META,
-    it imports that column's value, using the column name as the measure name.
+    The input sheets include a "Vaccine" column that identifies the gender as
+    well as the vaccine. We map these to our internal genders, e.g. "All",
+    "Male", and "Female" and disregard the vaccine name since we're just
+    interested in HPV.
+
+    This data can be found at the following website:
+    https://cohealthviz.dphe.state.co.us/t/DCEED_Public/views/CountyRateMaps-Storyboard/CountyRateMapsCombined
     """
 
     async_session = sessionmaker(
@@ -120,13 +102,15 @@ async def import_hpv_data(sheets, delete_before_import=True):
 
         # get a dict of county names to FIPS mappings so we don't have to
         # do a ton of queries
-        county_fips_results = await session.execute(select(County.county, County.us_fips))
+        county_fips_results = await session.execute(
+            select(County.county, County.us_fips)
+        )
         county_to_fips = {
             row[0]: row[1]
             for row in county_fips_results.all()
         }
 
-        # read in the excel file via openpyxl
+        # read in the excel files via openpyxl
         for sheet in sheets:
             tqdm.write(f"* About to process {sheet}...")
 
