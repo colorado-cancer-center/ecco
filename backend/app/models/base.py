@@ -22,6 +22,15 @@ class MeasuresByCounty(BaseStatsModel):
     measure : str = Field(index=True)
     value : float = Field(nullable=True)
 
+    @classmethod
+    def get_factors(cls):
+        """
+        Returns a set of factors to include in, e.g., downloaded CSVs.
+
+        This is a placeholder method that should be overridden by child models.
+        """
+        return ()
+
 class CancerStatsByCounty(BaseStatsModel):
     # NOTE: the 'measure' and 'value' columns are named 'Site' and 'AAR' in the
     # original schema, but we rename them here so they can be treated in
@@ -42,15 +51,6 @@ class CancerStatsByCounty(BaseStatsModel):
     AAR : float
     # average annual count (typically age-adjusted per 100k)
     AAC : float
-
-    @classmethod
-    def get_factors(cls):
-        """
-        Returns a set of factors to include in, e.g., downloaded CSVs.
-
-        This is a placeholder method that should be overridden by child models.
-        """
-        return ()
 
 class MeasuresByTract(MeasuresByCounty):
     Tract: Optional[str] = Field(index=True, nullable=True)

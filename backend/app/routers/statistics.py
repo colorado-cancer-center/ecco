@@ -454,7 +454,7 @@ for type, family in STATS_MODELS.items():
 
                 else:
                     query = select(
-                        (model.FIPS.label("GEOID"), model.County, model.State, model.measure, model.value)
+                        (model.FIPS.label("GEOID"), model.County, model.State, model.measure, model.value, *model.get_factors())
                     )
 
                     if measure is not None:
