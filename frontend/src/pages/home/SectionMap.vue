@@ -468,6 +468,7 @@ import {
 } from "@/util/composables";
 import { formatValue } from "@/util/math";
 import { sleep } from "@/util/misc";
+import type { KeysOfValue } from "@/util/types";
 
 type Props = {
   facets: Facets;
@@ -475,15 +476,19 @@ type Props = {
 };
 
 /** list of measure stats */
-const stats = computed(() =>
-  values.value
-    ? (["min", "max", "mean", "median"] as const).map((key) => ({
-        key: startCase(key),
-        full: formatValue(values.value![key], values.value!.unit),
-        compact: formatValue(values.value![key], values.value!.unit, true),
-      }))
-    : [],
-);
+const stats = computed(() => {
+  if (!values.value) return [];
+  const value = values.value!;
+  const unit = value.unit;
+  const stats: KeysOfValue<typeof values.value, number>[] = [];
+  if (["count", "dollar_amount"].includes(unit ?? "")) stats.push("total");
+  stats.push("min", "max", "avg", "median");
+  return stats.map((key) => ({
+    key: startCase(key),
+    full: formatValue(value[key], unit),
+    compact: formatValue(value[key], unit, true),
+  }));
+});
 
 const props = defineProps<Props>();
 
@@ -525,7 +530,7 @@ const long = useUrlParam("long", numberParam, 0);
 
 /** map style state */
 const showLegends = ref(true);
-const showExtras = ref(false);
+const showExtras = ref(true);
 const selectedBackground = ref(baseOptions[0]?.id || "");
 const selectedGradient = ref(gradientOptions[3]?.id || "");
 const selectedLocations = useUrlParam("locations", arrayParam(stringParam), []);
