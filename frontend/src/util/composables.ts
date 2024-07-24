@@ -130,15 +130,19 @@ export const useQuery = <Data, Args extends unknown[]>(
   /** https://github.com/vuejs/composition-api/issues/483 */
 
   /** latest query id, unique to this useQuery instance */
-  let latest;
+  let latest: Symbol;
 
   /** wrapped query function */
   async function query(...args: Args): Promise<void> {
-    try {
-      /** unique id for current run */
-      const current = Symbol();
-      latest = current;
+    /** unique id for current run */
+    const current = Symbol();
+    latest = current;
 
+    /** check if this run is still latest */
+    const isLatest = () =>
+      current === latest ? true : console.warn("Stale query");
+
+    try {
       /** reset state */
       status.value = "loading";
       data.value = defaultValue;
@@ -146,17 +150,16 @@ export const useQuery = <Data, Args extends unknown[]>(
       /** run provided function */
       const result = await func(...args);
 
-      /** if this run still the latest */
-      if (current === latest) {
+      if (isLatest()) {
         /** assign results to data */
         data.value = result;
         status.value = "success";
-      } else {
-        console.error("Stale query");
       }
     } catch (error) {
-      console.error(error);
-      status.value = "error";
+      if (isLatest()) {
+        console.error(error);
+        status.value = "error";
+      }
     }
   }
 
