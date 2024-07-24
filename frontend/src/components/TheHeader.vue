@@ -16,8 +16,8 @@
 
     <nav class="nav">
       <AppLink
-        v-for="(route, _index) of routes"
-        :key="_index"
+        v-for="(route, index) of routes"
+        :key="index"
         :to="route.path"
         class="nav-link"
         :data-active="route.name === $route.name"

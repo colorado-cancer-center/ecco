@@ -125,11 +125,10 @@
                 <defs>
                   <linearGradient :id="option?.id">
                     <stop
-                      v-for="(color, _index) in option?.colors"
-                      :key="_index"
+                      v-for="(color, index) in option?.colors"
+                      :key="index"
                       :offset="
-                        100 * (_index / ((option?.colors.length || 1) - 1)) +
-                        '%'
+                        100 * (index / ((option?.colors.length || 1) - 1)) + '%'
                       "
                       :stop-color="color"
                     />
@@ -368,7 +367,7 @@
         <!-- stats -->
         <template v-if="showExtras && !isEmpty(stats) && values" #bottom-left>
           <div class="mini-table">
-            <template v-for="(stat, _index) in stats" :key="_index">
+            <template v-for="(stat, index) in stats" :key="index">
               <span>
                 {{ stat.key }}
               </span>

@@ -26,8 +26,8 @@
       <!-- scale key -->
       <div class="steps">
         <template
-          v-for="(step, _index) of [...scale.steps].reverse()"
-          :key="_index"
+          v-for="(step, index) of [...scale.steps].reverse()"
+          :key="index"
         >
           <svg viewBox="0 0 1 1">
             <rect x="0" y="0" width="1" height="1" :fill="step.color" />
@@ -65,7 +65,7 @@
 
       <!-- symbol key -->
       <div v-if="Object.keys(symbols).length" class="symbols">
-        <template v-for="(symbol, _index) of symbols" :key="_index">
+        <template v-for="(symbol, index) of symbols" :key="index">
           <img :src="symbol?.url" alt="" />
           <small>{{ symbol?.label }}</small>
         </template>
