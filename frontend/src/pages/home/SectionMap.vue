@@ -603,7 +603,7 @@ const stats = computed(() => {
     dollar_amount: minMax,
     rank: minMax,
     least_most: minMax,
-    ordinal: minMax,
+    ordinal: [],
     "": [],
   };
 
