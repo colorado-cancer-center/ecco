@@ -544,6 +544,7 @@ import {
   type GeoProps,
   type LocationList,
   type LocationProps,
+  type Unit,
   type Values,
 } from "@/api";
 import AppAccordion from "@/components/AppAccordion.vue";
@@ -586,26 +587,27 @@ type FeatureInfo = Expand<
 /** list of measure stats */
 const stats = computed(() => {
   if (!values.value) return [];
-  const value = values.value!;
-  const unit = value.unit ?? "";
+  const value = values.value;
 
-  const stats: KeysOfValue<typeof values.value, number>[] = [];
+  type Stat = KeysOfValue<typeof values.value, number>;
 
-  if (["count"].includes(unit)) stats.push("total");
-  if (
-    [
-      "count",
-      "percent",
-      "rate",
-      "dollar_amount",
-      "rank",
-      "least_most",
-    ].includes(unit)
-  )
-    stats.push("min", "max");
-  if (["count"].includes(unit)) stats.push("avg", "median");
+  /** all stats */
+  const all: Stat[] = ["total", "min", "max", "avg", "median"];
+  /** all stats, minus ones that could be misconstrued in non-absolute units */
+  const minMax: Stat[] = ["min", "max"];
 
-  return stats.map((key) => ({
+  const stats: Record<NonNullable<Unit> | "", Stat[]> = {
+    count: all,
+    percent: minMax,
+    rate: minMax,
+    dollar_amount: minMax,
+    rank: minMax,
+    least_most: minMax,
+    ordinal: minMax,
+    "": [],
+  };
+
+  return stats[value.unit ?? ""].map((key) => ({
     key: startCase(key),
     full: formatValue(value[key], value.unit),
     compact: formatValue(value[key], value.unit, true),
