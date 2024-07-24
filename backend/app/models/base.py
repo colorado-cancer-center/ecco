@@ -22,6 +22,15 @@ class MeasuresByCounty(BaseStatsModel):
     measure : str = Field(index=True)
     value : float = Field(nullable=True)
 
+    @classmethod
+    def get_factors(cls):
+        """
+        Returns a set of factors to include in, e.g., downloaded CSVs.
+
+        This is a placeholder method that should be overridden by child models.
+        """
+        return ()
+
 class CancerStatsByCounty(BaseStatsModel):
     # NOTE: the 'measure' and 'value' columns are named 'Site' and 'AAR' in the
     # original schema, but we rename them here so they can be treated in
@@ -42,15 +51,6 @@ class CancerStatsByCounty(BaseStatsModel):
     AAR : float
     # average annual count (typically age-adjusted per 100k)
     AAC : float
-
-    @classmethod
-    def get_factors(cls):
-        """
-        Returns a set of factors to include in, e.g., downloaded CSVs.
-
-        This is a placeholder method that should be overridden by child models.
-        """
-        return ()
 
 class MeasuresByTract(MeasuresByCounty):
     Tract: Optional[str] = Field(index=True, nullable=True)
@@ -94,6 +94,11 @@ from .radon import (
     RADON_MODELS,
     RADON_MEASURE_DESCRIPTIONS
 )
+from .hpv import (
+    HPV_MODELS,
+    HPV_MEASURE_DESCRIPTIONS,
+    HPV_FACTOR_DESCRIPTIONS
+)
 from .scp import (
     SCP_MODELS,
     SCP_MEASURE_DESCRIPTIONS,
@@ -106,6 +111,7 @@ STATS_MODELS = {
         CIF_STATS_MODELS["county"] +
         DISPARITY_INDEX_MODELS["county"] +
         RADON_MODELS["county"] +
+        HPV_MODELS["county"] +
         SCP_MODELS["county"]
     ),
     "tract": (
@@ -128,9 +134,11 @@ MEASURE_DESCRIPTIONS = {
     **SCP_MEASURE_DESCRIPTIONS,
     **DISPARITY_INDEX_MEASURE_DESCRIPTIONS,
     **RADON_MEASURE_DESCRIPTIONS,
+    **HPV_MEASURE_DESCRIPTIONS,
 }
 
 FACTOR_DESCRIPTIONS = {
     **CIF_FACTOR_DESCRIPTIONS,
     **SCP_FACTOR_DESCRIPTIONS,
+    **HPV_FACTOR_DESCRIPTIONS,
 }

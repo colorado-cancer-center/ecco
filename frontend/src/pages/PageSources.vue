@@ -776,6 +776,26 @@
       self-administered tests.
     </p>
   </section>
+
+  <section>
+    <AppHeading level="3">HPV Immunization</AppHeading>
+
+    <AppHeading level="4">
+      <AppLink
+        to="https://cohealthviz.dphe.state.co.us/t/DCEED_Public/views/CountyRateMaps-Storyboard/CountyRateMapsCombined"
+        >Colorado Environmental Public Health Tracking (CDPHE)</AppLink
+      >
+    </AppHeading>
+
+    <p>
+      ECCO uses CDPHE's teen HPV immunization dataset from the most recent
+      collection period (2020). The data comes from the Colorado Immunization
+      Information System (CIIS), a system for estimating immunization uptake and
+      tracking vaccination coverage levels over time. The data this system has
+      available is based voluntary reporting, and is subject to other
+      constraints.
+    </p>
+  </section>
 </template>
 
 <script setup lang="ts">

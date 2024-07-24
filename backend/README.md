@@ -27,6 +27,7 @@ Then run the following series of commands within the `backend` container:
 ./commands/import_cancer_disparities.py <Disparities Excel Sheet>
 ./commands/import_radon.py <Radon Excel Sheet>
 ./commands/import_locations.py <Location Category JSON> <Location Data JSON>
+./commands/import_hpv.py <Sheet 1> [Sheet 2...]
 ```
 
 The geometry tables `County` and `Tract` are populated
