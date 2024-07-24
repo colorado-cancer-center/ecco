@@ -26,8 +26,8 @@
       <!-- scale key -->
       <div class="steps">
         <template
-          v-for="(step, index) of [...scale.steps].reverse()"
-          :key="index"
+          v-for="(step, _index) of [...scale.steps].reverse()"
+          :key="_index"
         >
           <svg viewBox="0 0 1 1">
             <rect x="0" y="0" width="1" height="1" :fill="step.color" />
@@ -80,90 +80,16 @@
     </div>
   </Teleport>
 
-  <!-- county/tract popup -->
-  <Teleport v-if="popup && featureInfo" :to="popup">
-    <!-- name -->
-    <template v-if="featureInfo.name">
-      <strong>{{ featureInfo.name }}</strong>
-    </template>
-
-    <!-- id -->
-    <template v-if="featureInfo.fips">
-      <strong>Census Tract<br />{{ featureInfo.fips }}</strong>
-    </template>
-
-    <!-- district -->
-    <template v-if="featureInfo.district">
-      <strong>District {{ featureInfo.district }}</strong>
-    </template>
-
-    <div class="mini-table">
-      <!-- primary "value" for feature -->
-      <template v-if="featureInfo.value !== undefined">
-        <span>
-          {{ featureInfo.aac ? "Rate" : "Value" }}
-        </span>
-        <span>{{ formatValue(featureInfo.value, unit) }}</span>
-      </template>
-
-      <!-- average annual count -->
-      <template v-if="featureInfo.aac !== undefined">
-        <span>Avg. Annual Count</span>
-        <span>{{ formatValue(featureInfo.aac, unit) }}</span>
-      </template>
-
-      <!-- organization -->
-      <template v-if="featureInfo.org">
-        <span>Org</span>
-        <span>{{ featureInfo.org }}</span>
-      </template>
-
-      <!-- link -->
-      <template v-if="featureInfo.link">
-        <span>Link</span>
-        <AppLink :to="featureInfo.link">
-          {{ featureInfo.link.replace(/(https?:\/\/)?(www\.)?/, "") }}
-        </AppLink>
-      </template>
-
-      <!-- representative -->
-      <template v-if="featureInfo.representative">
-        <span>Representative</span>
-        <span>{{ featureInfo.representative }}</span>
-      </template>
-
-      <!-- party -->
-      <template v-if="featureInfo.party">
-        <span>Party</span>
-        <span>{{ featureInfo.party }}</span>
-      </template>
-
-      <!-- email -->
-      <template v-if="featureInfo.email">
-        <span>Email</span>
-        <span>{{ featureInfo.email }}</span>
-      </template>
-
-      <!-- address -->
-      <template v-if="featureInfo.address">
-        <span>Address</span>
-        <span>{{ featureInfo.address }}</span>
-      </template>
-
-      <!-- phone -->
-      <template v-if="featureInfo.phone">
-        <span>Phone</span>
-        <span>{{ featureInfo.phone }}</span>
-      </template>
-
-      <!-- notes -->
-      <template v-if="featureInfo.notes">
-        <span>Notes</span>
-        <span>{{ featureInfo.notes }}</span>
-      </template>
-    </div>
+  <!-- feature popup -->
+  <Teleport v-if="popup && Object.keys(featureInfo).length" :to="popup">
+    <slot :feature="featureInfo" name="popup" />
   </Teleport>
 </template>
+
+<script lang="ts">
+type FeatureInfo = Record<string, unknown>;
+export type ExplicitScale = Record<number, number | string>;
+</script>
 
 <script setup lang="ts">
 import {
@@ -176,18 +102,11 @@ import {
 } from "vue";
 import * as d3 from "d3";
 import domtoimage from "dom-to-image";
+import type { Feature, FeatureCollection, Geometry } from "geojson";
 import L, { type MapOptions } from "leaflet";
 import { cloneDeep, debounce, isEmpty, mapValues } from "lodash";
 import { useElementSize, useFullscreen, useResizeObserver } from "@vueuse/core";
-import type {
-  Geo,
-  GeoProps,
-  Location,
-  LocationProps,
-  Unit,
-  Values,
-} from "@/api";
-import AppLink from "@/components/AppLink.vue";
+import { type Unit } from "@/api";
 import { getGradient } from "@/components/gradient";
 import { getMarker, resetMarkers } from "@/components/markers";
 import { useScrollable } from "@/util/composables";
@@ -205,10 +124,10 @@ const mapElement = ref<HTMLDivElement>();
 
 type Props = {
   /** features */
-  geometry?: Geo;
-  locations?: Record<string, Location>;
+  geometry?: FeatureCollection;
+  locations?: Record<string, FeatureCollection>;
   /** map of geometry id to value */
-  values?: NonNullable<Values>["values"];
+  values?: Record<string, { value: number; [key: string]: unknown }>;
   /** value domain */
   min?: number;
   max?: number;
@@ -233,15 +152,13 @@ type Props = {
   niceSteps: boolean;
   scalePower: number;
   /** explicit scale mapping */
-  explicitScale?: Record<number, string>;
+  explicitScale?: ExplicitScale;
   /** forced dimensions */
   width: number;
   height: number;
   /** filename for download */
   filename: string | string[];
 };
-
-export type ExplicitScale = Props["explicitScale"];
 
 const props = withDefaults(defineProps<Props>(), {
   geometry: () => ({ type: "FeatureCollection", features: [] }),
@@ -267,6 +184,7 @@ type Slots = {
   "top-right": () => unknown;
   "bottom-right": () => unknown;
   "bottom-left": () => unknown;
+  popup: ({ feature }: { feature: FeatureInfo }) => unknown;
 };
 
 defineSlots<Slots>();
@@ -280,12 +198,8 @@ const bottomLeftLegend = ref<HTMLElement>();
 /** element to teleport popup template content to */
 const popup = ref<HTMLElement>();
 
-type Info = Partial<
-  GeoProps & LocationProps & { value: number | string; aac: number; unit: Unit }
->;
-
 /** info about selected feature for popup */
-const featureInfo = ref<Info>();
+const featureInfo = ref<FeatureInfo>({});
 
 /** https://leafletjs.com/reference.html#map-option */
 const mapOptions: MapOptions = {
@@ -342,7 +256,6 @@ function bindPopup(layer: L.Layer) {
         ?.querySelector<HTMLElement>(".leaflet-popup-content-wrapper") ||
       undefined;
     if (!popup.value) return;
-    popup.value.innerHTML = "";
     /** wait for popup to teleport */
     await nextTick();
 
@@ -350,14 +263,11 @@ function bindPopup(layer: L.Layer) {
      * set info for selected feature. clone to avoid weird proxy linking
      * effects.
      */
-    const info: Info = cloneDeep(event.sourceTarget.feature.properties);
-    const value = props.values[info.id || ""];
+    let info: FeatureInfo = cloneDeep(event.sourceTarget.feature.properties);
+    const value = props.values?.[typeof info.id === "string" ? info.id : ""];
     if (value) {
       if (props.explicitScale) info.value = props.explicitScale[value.value];
-      else {
-        info.value = value.value;
-        info.aac = value.aac ?? undefined;
-      }
+      else info = { ...info, ...value };
     }
     featureInfo.value = info;
 
@@ -368,7 +278,7 @@ function bindPopup(layer: L.Layer) {
   layer.on("popupclose", () => {
     /** unset popup */
     popup.value = undefined;
-    featureInfo.value = undefined;
+    featureInfo.value = {};
   });
 }
 
@@ -383,7 +293,7 @@ watch(
 const noData = computed(
   () =>
     !props.geometry.features.every(
-      (feature) => (feature.properties.id || "") in props.values,
+      (feature) => (feature.properties?.id ?? "") in props.values,
     ),
 );
 
@@ -523,6 +433,18 @@ const fit = debounce(async () => {
   });
 }, 200);
 
+/**
+ * wait for autopan to finish and wait for spurious moveend events from
+ * positioning tooltip to finish
+ */
+const onMoveEnd = debounce(() => {
+  if (!map) return;
+  const { lat, lng } = map.getCenter();
+  emit("update:lat", lat);
+  emit("update:long", lng);
+  emit("update:zoom", map.getZoom());
+}, 1000);
+
 /** auto-fit when props change */
 watch([() => props.showLegends, () => props.locations], fit, { deep: true });
 
@@ -549,20 +471,7 @@ onMounted(() => {
   bottomLeftLegend.value = createLegend({ position: "bottomleft" });
 
   /** update props from map pan/zoom */
-  map.on(
-    "moveend",
-    /**
-     * wait for autopan to finish and wait for spurious moveend events from
-     * positioning tooltip to finish
-     */
-    debounce(() => {
-      if (!map) return;
-      const { lat, lng } = map.getCenter();
-      emit("update:lat", lat);
-      emit("update:long", lng);
-      emit("update:zoom", map.getZoom());
-    }, 1000),
-  );
+  map.on("moveend", onMoveEnd);
 
   /** preserve fine-grain fitted zoom on drag */
   map.on("dragstart", fineZoom);
@@ -584,7 +493,8 @@ onMounted(() => {
 /** when map container destroyed */
 onBeforeUnmount(() => {
   /** cleanup map on unmount */
-  map?.remove();
+  fit.cancel();
+  onMoveEnd.cancel();
 });
 
 /** update base layer */
@@ -600,23 +510,30 @@ watch(() => props.background, updateBase, { immediate: true });
 /** update data layers */
 function updateData() {
   getLayers("geometry").forEach((layer) => layer.remove());
-  const layer = L.geoJSON<GeoProps>(undefined, {
+  const layer = L.geoJSON(undefined, {
     pane: "geometry",
     onEachFeature:
       props.geometry.features.length < 100
         ? /** add feature labels */
-          (feature) => {
-            const [long = 0, lat = 0] = feature.properties.center ?? [];
-            const name = feature.properties.name.replace(/county/i, "");
-            const label = L.marker([lat, long], {
-              pane: "geometry",
-              icon: L.divIcon({
-                className: "geometry-label",
-                html: `<div>${name}</div>`,
-                iconSize: [0, 0],
-              }),
-            });
-            map?.addLayer(label);
+          (feature: Feature<Geometry, FeatureInfo>) => {
+            /** make sure label props exist */
+            if (typeof feature.properties.label !== "string") return;
+            if (typeof feature.properties.cent_lat !== "number") return;
+            if (typeof feature.properties.cent_long !== "number") return;
+
+            /** create label layer */
+            const layer = L.marker(
+              [feature.properties.cent_lat, feature.properties.cent_long],
+              {
+                pane: "geometry",
+                icon: L.divIcon({
+                  className: "geometry-label",
+                  html: `<div>${feature.properties.label}</div>`,
+                  iconSize: [0, 0],
+                }),
+              },
+            );
+            map?.addLayer(layer);
           }
         : undefined,
   });
@@ -707,7 +624,7 @@ function updateColors() {
   getLayers<L.GeoJSON>("geometry", L.GeoJSON).forEach((layer) =>
     layer.setStyle((feature) => ({
       fillColor: scale.value.getColor(
-        props.values?.[feature?.properties.id]?.value,
+        props.values?.[feature?.properties.id]?.value ?? 0,
       ),
     })),
   );
@@ -874,8 +791,7 @@ defineExpose({
 }
 
 .leaflet-popup-content {
-  width: unset !important;
-  margin: 0;
+  display: none;
 }
 
 .leaflet-popup-tip {
@@ -896,15 +812,15 @@ defineExpose({
 }
 
 .geometry-label > div {
+  -webkit-text-stroke: calc(0.01 * pow(2, var(--zoom)) * 1px) white;
+  paint-order: stroke;
   width: min-content;
   height: min-content;
   transform: translate(-50%, -50%);
-  font-size: calc(0.05 * pow(2, var(--zoom)) * 1px);
+  font-weight: var(--bold);
+  font-size: calc(0.075 * pow(2, var(--zoom)) * 1px);
   line-height: 1;
   text-align: center;
-  -webkit-text-stroke: 2px white;
-  paint-order: stroke;
-  font-weight: var(--bold);
   pointer-events: none;
 }
 </style>

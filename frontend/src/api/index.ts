@@ -1,7 +1,6 @@
 import * as d3 from "d3";
-import type { FeatureCollection, Geometry, Position } from "geojson";
+import type { FeatureCollection, Geometry } from "geojson";
 import { mapValues } from "lodash";
-import { centerOfMass } from "@turf/turf";
 import type { ExplicitScale } from "@/components/AppMap.vue";
 
 /** api root (no trailing slash) */
@@ -128,21 +127,24 @@ type _Geo = {
   name?: string;
   fips?: string;
   us_fips?: string;
-  objectid: number;
-  ogc_fid: number;
+  objectid?: number;
+  ogc_fid?: number;
   wkb_geometry: string;
+  cent_lat?: number;
+  cent_long?: number;
 }[];
 
 /** data geojson properties fields */
 export type GeoProps = {
-  id: string | number | undefined;
-  name: string;
-  full?: string | undefined;
-  fips?: string | undefined;
-  us_fips?: string | undefined;
-  objectid: number;
-  ogc_fid: number;
-  center?: Position;
+  id?: string | number;
+  name?: string;
+  label?: string;
+  fips?: string;
+  us_fips?: string;
+  objectid?: number;
+  ogc_fid?: number;
+  cent_lat?: number;
+  cent_long?: number;
 };
 
 /** get geojson from geography data */
@@ -155,8 +157,9 @@ export async function getGeo(
   /** transform data into desired format */
   return {
     type: "FeatureCollection",
-    features: data.map(({ wkb_geometry, ...d }) => {
+    features: data.map(({ wkb_geometry, full, ...d }) => {
       const geometry = JSON.parse(wkb_geometry) as Geometry;
+      const name = full || d.name || "";
 
       return {
         type: "Feature",
@@ -164,9 +167,8 @@ export async function getGeo(
         properties: {
           ...d,
           id: d[idField],
-          name: d.full || d.name || "",
-          /** for label positioning */
-          center: centerOfMass(geometry).geometry.coordinates,
+          name,
+          label: name.replace(/county/i, ""),
         },
       };
     }),
@@ -177,13 +179,13 @@ export type Geo = Awaited<ReturnType<typeof getGeo>>;
 
 /** value type/format */
 export type Unit =
-  | "percent"
   | "count"
+  | "percent"
   | "rate"
   | "dollar_amount"
   | "rank"
-  | "ordinal"
   | "least_most"
+  | "ordinal"
   | null;
 
 /** response from values api endpoint */
@@ -212,26 +214,27 @@ export async function getValues(
     { measure, ...(filtersString && { filters: filtersString }) },
   );
 
-  const values = Object.values(data.values).map(({ value }) => value);
+  /** get raw number values */
+  const numbers = Object.values(data.values).map(({ value }) => value);
+
+  /** if missing data, return empty */
+  if (!numbers.length) return;
+
+  /** define explicit scale for certain data */
+  let explicitScale: ExplicitScale | undefined;
+  if (data.unit === "ordinal")
+    explicitScale = { 1: "Falling", 2: "Stable", 3: "Rising" };
 
   /** calculate stats */
   const stats = {
-    min: d3.min(values) || 0,
-    max: d3.max(values) || 0,
-    avg: d3.mean(values) || 0,
-    median: d3.median(values) || 0,
-    total: d3.sum(values) || 0,
+    min: d3.min(numbers) || 0,
+    max: d3.max(numbers) || 0,
+    avg: d3.mean(numbers) || 0,
+    median: d3.median(numbers) || 0,
+    total: d3.sum(numbers) || 0,
     values: data.values,
     unit: data.unit,
   };
-
-  /** if missing data, return empty */
-  if (!values.length) return;
-
-  /** define explicit scale for certain data */
-  let explicitScale: ExplicitScale;
-  if (data.unit === "ordinal")
-    explicitScale = { 1: "Falling", 2: "Stable", 3: "Rising" };
 
   return { ...stats, explicitScale };
 }
