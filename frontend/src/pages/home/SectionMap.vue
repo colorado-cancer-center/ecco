@@ -342,7 +342,7 @@
       >
         <!-- main legend -->
         <template #top-left>
-          <div>
+          <div v-tooltip="`Unit: ${startCase(values?.unit ?? '')}`">
             <strong>{{ measures[selectedMeasure]?.label }}</strong>
             <br />
             {{ categories[selectedCategory]?.label }}
@@ -365,15 +365,109 @@
         </template>
 
         <!-- stats -->
-        <template v-if="showExtras && values" #bottom-left>
+        <template v-if="showExtras && !isEmpty(stats) && values" #bottom-left>
           <div class="mini-table">
             <template v-for="(stat, index) in stats" :key="index">
-              <span v-tooltip="startCase(values.unit ?? '')">
+              <span>
                 {{ stat.key }}
               </span>
               <span v-tooltip="stat.full">
                 {{ stat.compact }}
               </span>
+            </template>
+          </div>
+        </template>
+
+        <!-- feature popup -->
+        <template #popup="{ feature }: { feature: FeatureInfo }">
+          <!-- name -->
+          <template v-if="feature.name">
+            <strong>{{ feature.name }}</strong>
+          </template>
+
+          <!-- id -->
+          <template v-if="feature.fips">
+            <strong>Census Tract<br />{{ feature.fips }}</strong>
+          </template>
+
+          <!-- district -->
+          <template v-if="feature.district">
+            <strong>District {{ feature.district }}</strong>
+          </template>
+
+          <div class="mini-table">
+            <!-- primary "value" for feature -->
+            <template
+              v-if="
+                typeof feature.value === 'number' ||
+                typeof feature.value === 'string'
+              "
+            >
+              <span>
+                {{ feature.aac ? "Rate" : "Value" }}
+              </span>
+              <span>{{ formatValue(feature.value, values?.unit) }}</span>
+            </template>
+
+            <!-- average annual count -->
+            <template
+              v-if="
+                typeof feature.aac === 'number' ||
+                typeof feature.aac === 'string'
+              "
+            >
+              <span>Avg. Annual Count</span>
+              <span>{{ formatValue(feature.aac, values?.unit) }}</span>
+            </template>
+
+            <!-- organization -->
+            <template v-if="feature.org">
+              <span>Org</span>
+              <span>{{ feature.org }}</span>
+            </template>
+
+            <!-- link -->
+            <template v-if="typeof feature.link === 'string'">
+              <span>Link</span>
+              <AppLink :to="feature.link">
+                {{ feature.link.replace(/(https?:\/\/)?(www\.)?/, "") }}
+              </AppLink>
+            </template>
+
+            <!-- representative -->
+            <template v-if="feature.representative">
+              <span>Representative</span>
+              <span>{{ feature.representative }}</span>
+            </template>
+
+            <!-- party -->
+            <template v-if="feature.party">
+              <span>Party</span>
+              <span>{{ feature.party }}</span>
+            </template>
+
+            <!-- email -->
+            <template v-if="feature.email">
+              <span>Email</span>
+              <span>{{ feature.email }}</span>
+            </template>
+
+            <!-- address -->
+            <template v-if="feature.address">
+              <span>Address</span>
+              <span>{{ feature.address }}</span>
+            </template>
+
+            <!-- phone -->
+            <template v-if="feature.phone">
+              <span>Phone</span>
+              <span>{{ feature.phone }}</span>
+            </template>
+
+            <!-- notes -->
+            <template v-if="feature.notes">
+              <span>Notes</span>
+              <span>{{ feature.notes }}</span>
             </template>
           </div>
         </template>
@@ -447,7 +541,11 @@ import {
   getValues,
   type Facet,
   type Facets,
+  type GeoProps,
   type LocationList,
+  type LocationProps,
+  type Unit,
+  type Values,
 } from "@/api";
 import AppAccordion from "@/components/AppAccordion.vue";
 import AppButton from "@/components/AppButton.vue";
@@ -468,25 +566,51 @@ import {
 } from "@/util/composables";
 import { formatValue } from "@/util/math";
 import { sleep } from "@/util/misc";
-import type { KeysOfValue } from "@/util/types";
+import type { Expand, KeysOfValue, Update } from "@/util/types";
 
 type Props = {
   facets: Facets;
   locationList: LocationList;
 };
 
+type Value = NonNullable<Values>["values"][string];
+
+type FeatureInfo = Expand<
+  Partial<
+    GeoProps &
+      LocationProps &
+      /** "value" can also be string because of explicit scale */
+      Update<Value, "value", string>
+  >
+>;
+
 /** list of measure stats */
 const stats = computed(() => {
   if (!values.value) return [];
-  const value = values.value!;
-  const unit = value.unit;
-  const stats: KeysOfValue<typeof values.value, number>[] = [];
-  if (["count", "dollar_amount"].includes(unit ?? "")) stats.push("total");
-  stats.push("min", "max", "avg", "median");
-  return stats.map((key) => ({
+  const value = values.value;
+
+  type Stat = KeysOfValue<typeof values.value, number>;
+
+  /** all stats */
+  const all: Stat[] = ["total", "min", "max", "avg", "median"];
+  /** all stats, minus ones that could be misconstrued in non-absolute units */
+  const minMax: Stat[] = ["min", "max"];
+
+  const stats: Record<NonNullable<Unit> | "", Stat[]> = {
+    count: all,
+    percent: minMax,
+    rate: minMax,
+    dollar_amount: minMax,
+    rank: minMax,
+    least_most: minMax,
+    ordinal: minMax,
+    "": [],
+  };
+
+  return stats[value.unit ?? ""].map((key) => ({
     key: startCase(key),
-    full: formatValue(value[key], unit),
-    compact: formatValue(value[key], unit, true),
+    full: formatValue(value[key], value.unit),
+    compact: formatValue(value[key], value.unit, true),
   }));
 });
 
