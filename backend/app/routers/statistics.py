@@ -532,7 +532,10 @@ async def download_all(
                 model_measure_meta = MEASURE_DESCRIPTIONS.get(simple_model_name, {})
 
                 # retrieve the measures for the model, depending on what type of model it is
-                if model in CANCER_MODELS:
+                # (SCP trends models resemble cancer models in this case but they're handled
+                # differently elsewhere, so we can't add them to CANCER_MODELS. instead, we
+                # just check for either model type here.)
+                if model in CANCER_MODELS or model in SCP_TRENDS_MODELS:
                     query = select(model.Site).distinct().order_by(model.Site)
                 else:
                     query = select(model.measure).distinct().order_by(model.measure)
