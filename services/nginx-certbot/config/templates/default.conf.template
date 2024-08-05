@@ -2,7 +2,24 @@
 server {
     listen 80 default_server;
     server_name _;
-    return 301 https://$host$request_uri;
+
+    # allow certbot to respond to ACME challenges
+    # (note that certbot must be configured to use an alternate http01 challenge
+    # port, 8443)
+    # sample update command:
+    # certbot renew --cert-name <cert_name> --standalone \
+    #   --preferred-challenges=http --http-01-port=8443
+    location /.well-known/acme-challenge/ {
+        proxy_pass http://localhost:8443;
+        proxy_set_header X-Forwarded-Host $server_name;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    # for all other requests, redirect to HTTPS
+    location / {
+        return 301 https://$host$request_uri;
+    }
 }
 
 upstream backend {
@@ -26,14 +43,6 @@ server {
     gzip             on;
     gzip_comp_level  3;
     gzip_types       text/plain application/xml application/json;
-
-    # allow certbot to respond to ACME challenges
-    location /.well-known/acme-challenge/ {
-        proxy_pass http://localhost;
-        proxy_set_header X-Forwarded-Host $server_name;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
 
     # still serve the backend if it's explicitly requested at /api
     # as well as other backend-specific resources
@@ -83,14 +92,6 @@ server {
     gzip             on;
     gzip_comp_level  3;
     gzip_types       text/plain application/xml application/json;
-
-    # allow certbot to respond to ACME challenges
-    location /.well-known/acme-challenge/ {
-        proxy_pass http://localhost;
-        proxy_set_header X-Forwarded-Host $server_name;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
 
     # backend
     location / {
