@@ -768,6 +768,14 @@ defineExpose({
   fill-opacity: 0.25;
 }
 
+.leaflet-marker-icon {
+  transition: opacity var(--fast);
+}
+
+.leaflet-marker-icon:hover {
+  opacity: 0.25;
+}
+
 .leaflet-control-attribution {
   max-width: 500px;
   padding: 0.25em 0.5em;
