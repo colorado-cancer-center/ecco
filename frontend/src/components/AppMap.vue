@@ -322,7 +322,7 @@ const scale = computed(() => {
 
     /** explicit color */
     const getColor = (value?: keyof typeof props.explicitScale) =>
-      steps.find((step) => step.value === value)?.color || noDataColor;
+      steps.find((step) => step.value === value)?.color ?? noDataColor;
 
     return { steps, getColor };
   } else {
@@ -624,7 +624,7 @@ function updateColors() {
   getLayers<L.GeoJSON>("geometry", L.GeoJSON).forEach((layer) =>
     layer.setStyle((feature) => ({
       fillColor: scale.value.getColor(
-        props.values?.[feature?.properties.id]?.value ?? 0,
+        props.values?.[feature?.properties.id]?.value,
       ),
     })),
   );
