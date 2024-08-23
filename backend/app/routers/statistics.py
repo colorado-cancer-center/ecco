@@ -196,6 +196,13 @@ async def get_county_measures(county_fips:str, session: AsyncSession = Depends(g
     county_name = (
         await session.execute(select(County.full).where(County.us_fips == county_fips))
     ).scalar()
+
+    if county_name is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"County with FIPS {county_fips} not found"
+        )
+
     all_measures = {
         "FIPS": county_fips,
         "name": county_name,
