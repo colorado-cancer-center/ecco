@@ -170,14 +170,23 @@ async def get_measures(session: AsyncSession = Depends(get_session)):
 
 # provides an overview of values for a specific county
 
+class CountyMeasureValueResponse(BaseModel):
+    label: str
+    value: Optional[float]
+    aac: Optional[float]
+
+class CountyMeasureCategoryResponse(BaseModel):
+    label: str
+    measures: dict[str, CountyMeasureValueResponse]
+
 class ByCountyResponse(BaseModel):
     FIPS: str
     name: str
-    measures: dict[str, dict[str, dict[str, str]]]
+    categories: dict[str, CountyMeasureCategoryResponse]
 
-@router.get("/by-county/{county_fips}") #, response_model=dict[str, ByCountyResponse])
+@router.get("/by-county/{county_fips}", response_model=ByCountyResponse)
 @cache()
-async def get_measures(county_fips:str, session: AsyncSession = Depends(get_session)):
+async def get_county_measures(county_fips:str, session: AsyncSession = Depends(get_session)):
     f"""
     For a given county specified by its FIPS, returns all statistics associated
     with the county.
