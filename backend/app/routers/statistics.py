@@ -9,7 +9,7 @@ import csv
 from io import StringIO, BytesIO
 import zipfile
 
-from typing import Optional, Annotated
+from typing import Optional, Annotated, Any
 from fastapi import Depends, Query, HTTPException, APIRouter
 from fastapi.responses import StreamingResponse, FileResponse
 from pydantic import BaseModel
@@ -172,8 +172,9 @@ async def get_measures(session: AsyncSession = Depends(get_session)):
 
 class CountyMeasureValueResponse(BaseModel):
     label: str
-    value: Optional[float]
-    aac: Optional[float]
+    unit: MeasureUnit
+    value: float
+    aac: Optional[float] = None
 
 class CountyMeasureCategoryResponse(BaseModel):
     label: str
@@ -230,7 +231,10 @@ async def get_county_measures(county_fips:str, session: AsyncSession = Depends(g
         measure_values = {
             x["label"]: {
                 **x, # brings in either 'value', or 'value' + 'aac' if it's a cancer/SCP model
-                **{ "label": measure_descs.get(x["label"], {}).get('label') or x["label"] }
+                **{
+                    "label": measure_descs.get(x["label"], {}).get('label') or x["label"],
+                    "unit": measure_descs.get(x["label"], {}).get("unit", None)
+                }
             }
             for x in result.all()
         }
