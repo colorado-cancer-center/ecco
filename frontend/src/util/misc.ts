@@ -16,16 +16,16 @@ export function getBbox(selector: string): DOMRect {
   );
 }
 
-/** wait for element matching selector to appear, checking periodically */
-export async function waitFor<El extends Element>(
-  selector: string,
-): Promise<El | undefined> {
+/** wait for function to return something, checking periodically */
+export async function waitFor<Result>(
+  func: () => Result,
+): Promise<Result | undefined> {
   const waits = [
     0, 1, 5, 10, 20, 30, 40, 50, 100, 200, 300, 400, 500, 1000, 2000, 3000,
   ];
   while (waits.length) {
-    const match = document.querySelector<El>(selector);
-    if (match) return match;
+    const result = func();
+    if (result) return result;
     await sleep(waits.shift());
   }
 }

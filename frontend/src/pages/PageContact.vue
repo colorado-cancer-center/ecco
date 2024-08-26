@@ -1,6 +1,6 @@
 <template>
   <section>
-    <AppHeading level="2">Contact</AppHeading>
+    <AppHeading level="1">Contact</AppHeading>
 
     <div class="buttons">
       <AppButton

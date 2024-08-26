@@ -25,7 +25,7 @@ import AppLink from "@/components/AppLink.vue";
 
 type Props = {
   /** heading level */
-  level: "2" | "3" | "4";
+  level: "1" | "2" | "3" | "4";
   /** manually specified id */
   id?: string;
 };

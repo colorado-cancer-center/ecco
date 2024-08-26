@@ -19,7 +19,10 @@
   </div>
 
   <!-- top left legend -->
-  <Teleport v-if="showLegends && topLeftLegend" :to="topLeftLegend">
+  <Teleport
+    v-if="showLegends && topLeftLegend && scale.steps.length"
+    :to="topLeftLegend"
+  >
     <div v-stop class="legend">
       <slot name="top-left" />
 
@@ -107,8 +110,9 @@ import L, { type MapOptions } from "leaflet";
 import { cloneDeep, debounce, isEmpty, mapValues } from "lodash";
 import { useElementSize, useFullscreen, useResizeObserver } from "@vueuse/core";
 import { type Unit } from "@/api";
-import { getGradient } from "@/components/gradient";
+import { getGradient, gradientOptions } from "@/components/gradient";
 import { getMarker, resetMarkers } from "@/components/markers";
+import { baseOptions } from "@/components/tile-providers";
 import { useScrollable } from "@/util/composables";
 import { downloadPng } from "@/util/download";
 import { formatValue, normalizedApply } from "@/util/math";
@@ -133,31 +137,31 @@ type Props = {
   max?: number;
   unit?: Unit;
   /** map pan/zoom */
-  lat: number;
-  long: number;
-  zoom: number;
+  lat?: number;
+  long?: number;
+  zoom?: number;
   /** show/hide elements */
-  showLegends: boolean;
+  showLegends?: boolean;
   /** layer opacities */
-  backgroundOpacity: number;
-  geometryOpacity: number;
-  locationOpacity: number;
+  backgroundOpacity?: number;
+  geometryOpacity?: number;
+  locationOpacity?: number;
   /** tile provider */
-  background: string;
+  background?: string;
   /** color gradient id */
-  gradient: string;
+  gradient?: string;
   /** scale props */
-  flipGradient: boolean;
-  scaleSteps: number;
-  niceSteps: boolean;
-  scalePower: number;
+  flipGradient?: boolean;
+  scaleSteps?: number;
+  niceSteps?: boolean;
+  scalePower?: number;
   /** explicit scale mapping */
   explicitScale?: ExplicitScale;
   /** forced dimensions */
-  width: number;
-  height: number;
+  width?: number;
+  height?: number;
   /** filename for download */
-  filename: string | string[];
+  filename?: string | string[];
 };
 
 const props = withDefaults(defineProps<Props>(), {
@@ -167,7 +171,23 @@ const props = withDefaults(defineProps<Props>(), {
   min: undefined,
   max: undefined,
   unit: undefined,
+  lat: 0,
+  long: 0,
+  zoom: 1,
+  showLegends: true,
+  backgroundOpacity: 1,
+  geometryOpacity: 0.75,
+  locationOpacity: 1,
+  background: baseOptions[0]!.id,
+  gradient: gradientOptions[3]!.id,
+  flipGradient: false,
+  scaleSteps: 5,
+  niceSteps: false,
+  scalePower: 1,
   explicitScale: undefined,
+  width: 0,
+  height: 0,
+  filename: "map",
 });
 
 type Emits = {
@@ -582,7 +602,7 @@ const symbols = computed(() => {
 
 /** update location layers */
 function updateLocations() {
-  const layers = getLayers<L.GeoJSON>("locations");
+  const layers = getLayers<L.GeoJSON>("locations", L.GeoJSON);
   layers.forEach((layer) => layer.remove());
   for (const [key, features] of Object.entries(props.locations)) {
     const { color, dash, icon } = symbols.value[key] ?? {};
@@ -694,6 +714,17 @@ async function download() {
 /** toggle fullscreen on element */
 const { toggle: fullscreen } = useFullscreen(mapElement);
 
+/** highlight and zoom in on feature */
+async function selectFeature(id: string) {
+  if (!map) return;
+  const layer = getLayers<L.Polygon>("geometry", L.Polygon).find(
+    (layer) => layer.feature?.properties.id === id,
+  );
+  if (!layer) return;
+  map.fitBounds(layer.getBounds());
+  layer.setStyle({ fillColor: "var(--theme)" });
+}
+
 /** allow control from parent */
 defineExpose({
   download,
@@ -701,6 +732,7 @@ defineExpose({
   zoomOut: () => map?.zoomOut(),
   fit,
   fullscreen,
+  selectFeature,
 });
 </script>
 

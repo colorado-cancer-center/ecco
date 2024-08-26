@@ -470,6 +470,16 @@
               <span>{{ feature.notes }}</span>
             </template>
           </div>
+
+          <!-- link to full data -->
+          <AppButton
+            v-if="selectedLevel === 'county'"
+            :icon="faExternalLinkAlt"
+            :to="`/county/${feature.id}`"
+            :flip="true"
+            :new-tab="true"
+            >See All Data</AppButton
+          >
         </template>
       </AppMap>
 
@@ -526,6 +536,7 @@ import {
   faCropSimple,
   faDownload,
   faExpand,
+  faExternalLinkAlt,
   faMinus,
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
@@ -655,8 +666,8 @@ const long = useUrlParam("long", numberParam, 0);
 /** map style state */
 const showLegends = ref(true);
 const showExtras = ref(true);
-const selectedBackground = ref(baseOptions[0]?.id || "");
-const selectedGradient = ref(gradientOptions[3]?.id || "");
+const selectedBackground = ref(baseOptions[0]!.id || "");
+const selectedGradient = ref(gradientOptions[3]!.id || "");
 const selectedLocations = useUrlParam("locations", arrayParam(stringParam), []);
 const backgroundOpacity = ref(1);
 const geometryOpacity = ref(0.75);

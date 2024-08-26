@@ -107,6 +107,7 @@ export async function getFacets() {
 
 export type Facets = Awaited<ReturnType<typeof getFacets>>;
 
+/** response from location list api endpoint */
 type _LocationList = {
   [key: string]: { [key: string]: string };
 };
@@ -283,3 +284,26 @@ export type LocationProps = {
   party?: string;
   fips?: string;
 };
+
+/** response from county data api endpoint */
+type _CountyData = {
+  FIPS: string;
+  name: string;
+  categories: {
+    [key: string]: {
+      label: string;
+      measures: {
+        [key: string]: {
+          label: string;
+          value: number;
+          aac?: number | null;
+          unit: Unit;
+        };
+      };
+    };
+  };
+};
+
+/** get all data for particular county */
+export const getCountyData = (id: string) =>
+  request<_CountyData>(`${api}/stats/by-county/${id}`);

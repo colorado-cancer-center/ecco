@@ -1,6 +1,6 @@
 <template>
   <section>
-    <AppHeading level="2">Sources</AppHeading>
+    <AppHeading level="1">Sources</AppHeading>
 
     <p>
       Data for ECCO were gathered from several publicly available sources. Due
@@ -26,7 +26,7 @@
   </section>
 
   <section>
-    <AppHeading level="3">Suppressed Values</AppHeading>
+    <AppHeading level="2">Suppressed Values</AppHeading>
 
     <p>
       In some cases, values may have been "suppressed", i.e. rounded down to 0
@@ -41,9 +41,9 @@
   </section>
 
   <section>
-    <AppHeading level="3">Cancer Incidence and Mortality</AppHeading>
+    <AppHeading level="2">Cancer Incidence and Mortality</AppHeading>
 
-    <AppHeading level="4">
+    <AppHeading level="3">
       <AppLink to="https://statecancerprofiles.cancer.gov/index.html"
         >State Cancer Profiles (SCP)</AppLink
       >
@@ -78,7 +78,7 @@
   </section>
 
   <section>
-    <AppHeading level="3">
+    <AppHeading level="2">
       Sociodemographics, Economics &amp; Insurance, and Housing &amp;
       Transportation
     </AppHeading>
@@ -90,7 +90,7 @@
       >
     </p>
 
-    <AppHeading level="4">
+    <AppHeading level="3">
       <AppLink to="https://data.census.gov/cedsci/"
         >American Community Survey (ACS), 5-Year Estimates, U.S. Census
         Bureau</AppLink
@@ -290,7 +290,7 @@
       </table>
     </div>
 
-    <AppHeading level="4">
+    <AppHeading level="3">
       <AppLink to="https://www.bls.gov/data/"
         >U.S. Bureau of Labor Statistics (BLS)</AppLink
       >
@@ -307,11 +307,11 @@
   </section>
 
   <section>
-    <AppHeading level="3"
+    <AppHeading level="2"
       >Screening &amp; Risk Factors and Other Health Factors</AppHeading
     >
 
-    <AppHeading level="4">
+    <AppHeading level="3">
       <AppLink to="https://www.cdc.gov/places/">PLACES</AppLink>
     </AppHeading>
 
@@ -481,7 +481,7 @@
   </section>
 
   <section>
-    <AppHeading level="3">Environment</AppHeading>
+    <AppHeading level="2">Environment</AppHeading>
 
     <p>
       See also:
@@ -490,7 +490,7 @@
       >
     </p>
 
-    <AppHeading level="4">
+    <AppHeading level="3">
       <AppLink
         to="https://www.ers.usda.gov/data-products/food-access-research-atlas/"
         >Economic Research Service, U.S. Department of Agriculture (USDA
@@ -512,7 +512,7 @@
       most recently available data is from 2015.
     </p>
 
-    <AppHeading level="4">
+    <AppHeading level="3">
       <AppLink
         to="https://www.fcc.gov/general/broadband-deployment-data-fcc-form-477"
         >Federal Communications Commission (FCC)</AppLink
@@ -534,7 +534,7 @@
       FCC data is not included in the ECCO mapping applications.
     </p>
 
-    <AppHeading level="4">
+    <AppHeading level="3">
       <AppLink to="https://www.epa.gov/ejscreen"
         >Environmental Protection Agency (EPA) Environmental Justice Screening
         (EJScreen)</AppLink
@@ -552,7 +552,7 @@
       the Census tract level from the 2022 EJScreen dataset.
     </p>
 
-    <AppHeading level="4">
+    <AppHeading level="3">
       <AppLink
         to="https://www.epa.gov/ground-water-and-drinking-water/safe-drinking-water-information-system-sdwis-federal-reporting"
         >EPA Safe Drinking Water Information System (SDWIS)</AppLink
@@ -574,9 +574,9 @@
   </section>
 
   <section>
-    <AppHeading level="3">Facilities &amp; Providers</AppHeading>
+    <AppHeading level="2">Facilities &amp; Providers</AppHeading>
 
-    <AppHeading level="4">
+    <AppHeading level="3">
       <AppLink to="https://enviro.epa.gov/">EPA Envirofacts</AppLink>
     </AppHeading>
 
@@ -599,7 +599,7 @@
       available Toxic Release Inventory data is from 2021.
     </p>
 
-    <AppHeading level="4">
+    <AppHeading level="3">
       <AppLink to="https://data.hrsa.gov/data/about"
         >Health Resources &amp; Services Administration (HRSA), Department of
         Health &amp; Human Services</AppLink
@@ -625,7 +625,7 @@
       currently recognized by HRSA.
     </p>
 
-    <AppHeading level="4">
+    <AppHeading level="3">
       <AppLink
         to="https://www.acr.org/Clinical-Resources/Lung-Cancer-Screening-Resources/LCS-Locator-Tool"
         >Lung Cancer Screening Registry (LCSR), American College of
@@ -660,7 +660,7 @@
       >
     </p>
 
-    <AppHeading level="4">
+    <AppHeading level="3">
       <AppLink to="https://nppes.cms.hhs.gov/#/"
         >National Plan &amp; Provider Enumeration System (NPPES)</AppLink
       >
@@ -680,7 +680,7 @@
       all practicing providers.
     </p>
 
-    <AppHeading level="4">
+    <AppHeading level="3">
       <AppLink
         to="https://www.fda.gov/radiation-emitting-products/consumer-information-mqsa/search-certified-facility"
         >United States Food and Drug Administration (FDA)</AppLink
@@ -707,7 +707,7 @@
   </section>
 
   <section>
-    <AppHeading level="3">Cancer Disparities Index</AppHeading>
+    <AppHeading level="2">Cancer Disparities Index</AppHeading>
 
     <p>
       Burden data were used to rank every county using the cancer disparities
@@ -733,7 +733,7 @@
   </section>
 
   <section>
-    <AppHeading level="3">Social Determinants of Health</AppHeading>
+    <AppHeading level="2">Social Determinants of Health</AppHeading>
 
     <p>
       Social determinants of health (SDOH) are the conditions in the
@@ -756,9 +756,9 @@
   </section>
 
   <section>
-    <AppHeading level="3">Radon Exposure</AppHeading>
+    <AppHeading level="2">Radon Exposure</AppHeading>
 
-    <AppHeading level="4">
+    <AppHeading level="3">
       <AppLink to="https://coepht.colorado.gov/radon-dataset-details"
         >Colorado Environmental Public Health Tracking (CDPHE)</AppLink
       >
@@ -778,9 +778,9 @@
   </section>
 
   <section>
-    <AppHeading level="3">HPV Immunization</AppHeading>
+    <AppHeading level="2">HPV Immunization</AppHeading>
 
-    <AppHeading level="4">
+    <AppHeading level="3">
       <AppLink
         to="https://cohealthviz.dphe.state.co.us/t/DCEED_Public/views/CountyRateMaps-Storyboard/CountyRateMapsCombined"
         >Colorado Environmental Public Health Tracking (CDPHE)</AppLink
