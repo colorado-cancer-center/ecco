@@ -110,6 +110,13 @@ async def import_file(file, session, model=None, delete_before_import=True, dont
 
             # set each value
             for name, value in row.items():
+                # for some reason, CIF changes the "Monthly Unemployment Rate" column
+                # to include the current month, e.g. "Monthly Unemployment Rate (Dec)"
+                # since we don't want to record metadata for each month, we'll just
+                # strip out the month name
+                if value.startswith("Monthly Unemployment Rate"):
+                    value = "Monthly Unemployment Rate"
+
                 # perform casts for numeric types
                 if field_types[name] in (int, float):
                     if type(value) is str and value.strip() == "" or "NOS" in value:
