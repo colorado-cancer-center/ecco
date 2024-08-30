@@ -222,6 +222,14 @@ async def get_county_measures(county_fips:str, session: AsyncSession = Depends(g
         else:
             query = select(model.measure.label("label"), model.value).order_by(model.measure)
 
+        # if the model has factors, constrain them to their default values
+        # for example, for SCP models, this selects the following factor values:
+        # "sex": "All", "stage": "All Stages", "race": "All Races (includes Hispanic)", "age": "All Ages"
+        factor_labels = FACTOR_DESCRIPTIONS.get(simple_model_name, None)
+        if factor_labels:
+            for f, fv in factor_labels.items():
+                query = query.where(getattr(model, f) == fv.get("default"))
+
         # furthermore, limit the query to the specified county
         query = query.where(model.FIPS == county_fips)
 
