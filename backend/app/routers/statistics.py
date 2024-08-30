@@ -173,7 +173,7 @@ async def get_measures(session: AsyncSession = Depends(get_session)):
 class CountyMeasureValueResponse(BaseModel):
     label: str
     unit: MeasureUnit
-    value: float
+    value: float|str
     aac: Optional[float] = None
 
 class CountyMeasureCategoryResponse(BaseModel):
@@ -215,8 +215,10 @@ async def get_county_measures(county_fips:str, session: AsyncSession = Depends(g
         simple_model_name = slug_modelname_sans_type(model, type)
         measure_descs = MEASURE_DESCRIPTIONS.get(simple_model_name, {})
 
-        if model in CANCER_MODELS or model in SCP_TRENDS_MODELS:
+        if model in CANCER_MODELS:
             query = select(model.Site.label("label"), model.AAR.label("value"), model.AAC.label("aac")).order_by(model.Site)
+        elif model in SCP_TRENDS_MODELS:
+            query = select(model.Site.label("label"), model.trend.label("value")).where(model.trend != "").order_by(model.Site)
         else:
             query = select(model.measure.label("label"), model.value).order_by(model.measure)
 

@@ -295,7 +295,7 @@ type _CountyData = {
       measures: {
         [key: string]: {
           label: string;
-          value: number;
+          value: number | string;
           aac?: number | null;
           unit: Unit;
         };
