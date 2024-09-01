@@ -1,4 +1,5 @@
 import type { Unit } from "@/api/index";
+import { capitalize } from "@/util/string";
 
 /** format map data value */
 export function formatValue(
@@ -6,7 +7,7 @@ export function formatValue(
   unit?: Unit,
   compact = false,
 ): string {
-  if (typeof value === "string") return value;
+  if (typeof value === "string") return capitalize(value);
   const format: Intl.NumberFormatOptions = {};
   let suffix = "";
   switch (unit) {
