@@ -71,6 +71,7 @@ import AppHeading from "@/components/AppHeading.vue";
 import AppMap from "@/components/AppMap.vue";
 import AppSelect from "@/components/AppSelect.vue";
 import AppStatus from "@/components/AppStatus.vue";
+import { appTitle } from "@/meta";
 import { useQuery } from "@/util/composables";
 import { formatValue } from "@/util/math";
 import { waitFor } from "@/util/misc";
@@ -153,6 +154,9 @@ const filteredCountyData = computed(() => {
 
   return data;
 });
+
+/** update tab title */
+watch(countyData, () => (appTitle.value = [countyData.value?.name ?? ""]));
 </script>
 
 <style scoped>
