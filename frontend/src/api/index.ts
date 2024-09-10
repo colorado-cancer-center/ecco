@@ -296,7 +296,9 @@ type _CountyData = {
         [key: string]: {
           label: string;
           value: number | string;
-          aac?: number | null;
+          avg_value: number | string;
+          aac?: number | string | null;
+          avg_aac?: number | string | null;
           unit: Unit;
         };
       };

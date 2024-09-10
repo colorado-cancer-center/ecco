@@ -39,6 +39,11 @@
         label="Measures"
       />
 
+      <p class="center">
+        County value vs.
+        <span class="state-wide">state-wide average/median</span>
+      </p>
+
       <div v-if="filteredCountyData" class="grid">
         <template
           v-for="(category, categoryKey) in filteredCountyData.categories"
@@ -51,7 +56,35 @@
               :key="measureKey"
             >
               <dt>{{ measure.label }}</dt>
-              <dd>{{ formatValue(measure.value, measure.unit) }}</dd>
+              <dd v-tooltip="formatValue(measure.value, measure.unit)">
+                {{ formatValue(measure.value, measure.unit, true) }}
+              </dd>
+              <span>
+                <template v-if="measure.value && measure.avg_value">
+                  <font-awesome-icon
+                    v-if="measure.value > measure.avg_value"
+                    class="greater-than"
+                    :icon="faGreaterThan"
+                  />
+                  <font-awesome-icon
+                    v-if="measure.value < measure.avg_value"
+                    class="less-than"
+                    :icon="faLessThan"
+                  />
+                  <font-awesome-icon
+                    v-if="measure.value === measure.avg_value"
+                    class="equal"
+                    :icon="faEquals"
+                  />
+                </template>
+              </span>
+              <span
+                v-tooltip="formatValue(measure.avg_value, measure.unit)"
+                class="state-wide"
+                aria-label="State-wide value"
+              >
+                {{ formatValue(measure.avg_value, measure.unit, true) }}
+              </span>
             </template>
           </div>
         </template>
@@ -64,7 +97,12 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { cloneDeep, fromPairs, isEmpty, orderBy, toPairs } from "lodash";
-import { faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
+import {
+  faEquals,
+  faExternalLinkAlt,
+  faGreaterThan,
+  faLessThan,
+} from "@fortawesome/free-solid-svg-icons";
 import { getCountyData, getGeo } from "@/api";
 import AppButton from "@/components/AppButton.vue";
 import AppHeading from "@/components/AppHeading.vue";
@@ -167,23 +205,23 @@ watch(countyData, () => (appTitle.value = [countyData.value?.name ?? ""]));
 
 .select {
   width: 300px;
-  margin: 60px auto;
+  margin: 0 auto;
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr));
   align-items: flex-start;
-  gap: 40px;
+  gap: 40px 60px;
 }
 
 .grid > :first-child {
-  grid-row: 1 / span 2;
+  grid-row: 1 / span 3;
 }
 
 .cell {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1fr max-content 10px max-content;
   align-items: center;
   gap: 10px 20px;
 }
@@ -191,5 +229,21 @@ watch(countyData, () => (appTitle.value = [countyData.value?.name ?? ""]));
 .heading {
   grid-column: 1 / -1;
   font-weight: var(--bold);
+}
+
+.state-wide {
+  color: var(--gray);
+}
+
+.greater-than {
+  color: var(--gray);
+}
+
+.less-than {
+  color: var(--gray);
+}
+
+.equal {
+  color: var(--gray);
 }
 </style>
