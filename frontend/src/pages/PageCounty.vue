@@ -97,12 +97,7 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { cloneDeep, fromPairs, isEmpty, orderBy, toPairs } from "lodash";
-import {
-  faEquals,
-  faExternalLinkAlt,
-  faGreaterThan,
-  faLessThan,
-} from "@fortawesome/free-solid-svg-icons";
+import { faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
 import { getCountyData, getGeo } from "@/api";
 import AppButton from "@/components/AppButton.vue";
 import AppHeading from "@/components/AppHeading.vue";
