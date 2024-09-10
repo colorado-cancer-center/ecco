@@ -116,8 +116,8 @@ SCP_TRENDS_MODELS = {
 SCP_MEASURE_DESCRIPTIONS = {
     "scpincidence": MeasureMapper(MeasureUnit.RATE),
     "scpdeaths": MeasureMapper(MeasureUnit.RATE),
-    "scpincidencetrend": MeasureMapper(MeasureUnit.ORDINAL),
-    "scpdeathstrend": MeasureMapper(MeasureUnit.ORDINAL),
+    "scpincidencetrend": MeasureMapper(MeasureUnit.ORDINAL, extras={"order": ["falling", "stable", "rising"]}),
+    "scpdeathstrend": MeasureMapper(MeasureUnit.ORDINAL, extras={"order": ["falling", "stable", "rising"]}),
 }
 
 # descriptions of factors, i.e. additional enumerated values associated
