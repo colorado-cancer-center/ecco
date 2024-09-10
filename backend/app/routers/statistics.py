@@ -56,6 +56,7 @@ class FIPSMeasureResponse(BaseModel):
     min: Optional[float]
     max: Optional[float]
     unit: Optional[MeasureUnit]
+    order: Optional[list[str]]
     values: dict[str, FIPSValue]
 
 # provides high-level information about the available categories and measures
@@ -473,17 +474,17 @@ for type, family in STATS_MODELS.items():
 
                 # determine the unit of measurement for the measure from the metadata
                 # (if available)
-                unit = (
+                measure_meta = (
                     MEASURE_DESCRIPTIONS
                         .get(simple_model_name, {})
                         .get(measure, {})
-                        .get("unit", None)
                 )
 
                 return FIPSMeasureResponse(
                     min=stats[0],
                     max=stats[1],
-                    unit=unit,
+                    unit=measure_meta.get("unit", None),
+                    order=measure_meta.get("order", None),
                     values=values
                 )
 
