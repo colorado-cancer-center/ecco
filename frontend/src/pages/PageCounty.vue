@@ -59,25 +59,25 @@
               <dd v-tooltip="formatValue(measure.value, measure.unit)">
                 {{ formatValue(measure.value, measure.unit, true) }}
               </dd>
-              <span>
-                <template v-if="measure.value && measure.avg_value">
-                  <font-awesome-icon
-                    v-if="measure.value > measure.avg_value"
-                    class="greater-than"
-                    :icon="faGreaterThan"
-                  />
-                  <font-awesome-icon
-                    v-if="measure.value < measure.avg_value"
-                    class="less-than"
-                    :icon="faLessThan"
-                  />
-                  <font-awesome-icon
-                    v-if="measure.value === measure.avg_value"
-                    class="equal"
-                    :icon="faEquals"
-                  />
-                </template>
-              </span>
+              <template v-if="measure.value && measure.avg_value">
+                <span
+                  v-if="measure.value > measure.avg_value"
+                  class="greater-than"
+                  >{{ ">" }}</span
+                >
+                <span
+                  v-else-if="measure.value < measure.avg_value"
+                  class="less-than"
+                  >{{ "<" }}</span
+                >
+                <span
+                  v-else-if="measure.value === measure.avg_value"
+                  class="equal"
+                  >{{ "=" }}</span
+                >
+                <span v-else></span>
+              </template>
+              <span v-else></span>
               <span
                 v-tooltip="formatValue(measure.avg_value, measure.unit)"
                 class="state-wide"
@@ -233,6 +233,7 @@ watch(countyData, () => (appTitle.value = [countyData.value?.name ?? ""]));
 
 .state-wide {
   color: var(--gray);
+  font-style: italic;
 }
 
 .greater-than {
