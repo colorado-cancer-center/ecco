@@ -174,12 +174,24 @@ async def get_measures(session: AsyncSession = Depends(get_session)):
 class CountyMeasureValueResponse(BaseModel):
     label: str
     unit: MeasureUnit
-    value: float|str
-    aac: Optional[float] = None
+    value: float
+    avg_value: float
+
+class CountyCancerMeasureValueResponse(CountyMeasureValueResponse):
+    aac: float
+    avg_aac: float
+
+class CountyCancerTrendMeasureValueResponse(CountyMeasureValueResponse):
+    order: list[str]
+    value: str
+    avg_value: str
 
 class CountyMeasureCategoryResponse(BaseModel):
     label: str
-    measures: dict[str, CountyMeasureValueResponse]
+    measures: dict[
+        str,
+        CountyCancerMeasureValueResponse|CountyCancerTrendMeasureValueResponse|CountyMeasureValueResponse
+    ]
 
 class ByCountyResponse(BaseModel):
     FIPS: str
@@ -212,16 +224,48 @@ async def get_county_measures(county_fips:str, session: AsyncSession = Depends(g
     }
     type = "county"
 
+    # map trend values back to their human-readable labels
+    INVERTED_TREND_MAP = dict((v,k) for k,v in TREND_MAP.items())
+
     for model in STATS_MODELS[type]:
         simple_model_name = slug_modelname_sans_type(model, type)
         measure_descs = MEASURE_DESCRIPTIONS.get(simple_model_name, {})
 
+        # since we need both the average values for all regions and individual
+        # values for the specified county, we have to issue two queries:
+        # 1. a query for the average values of all regions
+        # 2. a restricted query just for the specified region
+        # (of course, taking the average or median for a single number just
+        # produces that number, so we can use the same query for both.)
+
         if model in CANCER_MODELS:
-            query = select(model.Site.label("label"), model.AAR.label("value"), model.AAC.label("aac")).order_by(model.Site)
+            query = select(
+                model.Site.label("label"),
+                func.avg(model.AAR).label("value"),
+                func.avg(model.AAC).label("aac")
+            ).group_by(model.Site).order_by(model.Site)
+
         elif model in SCP_TRENDS_MODELS:
-            query = select(model.Site.label("label"), model.trend.label("value")).where(model.trend != "").order_by(model.Site)
+            # for trend models, since we're dealing with ordinal values
+            # stored as strings in the database, we have to do the following:
+            # 1. map string values to ordinal values so that they're ordered
+            # 2. take the median
+            # 3. map the ordinal values back to their string values
+            query = select(
+                model.Site.label("label"),
+                func.percentile_cont(0.5).within_group(case(
+                    (model.trend == 'falling', TREND_MAP['falling']),
+                    (model.trend == 'stable', TREND_MAP['stable']),
+                    (model.trend == 'rising', TREND_MAP['rising']),
+                    else_=TREND_MAP_NONE
+                )).label("value")
+            ).group_by(model.Site).where(model.trend != "").order_by(model.Site)
+
         else:
-            query = select(model.measure.label("label"), model.value).order_by(model.measure)
+            query = select(
+                model.measure.label("label"),
+                func.avg(model.value).label("value")
+            ).group_by(model.measure).order_by(model.measure)
 
         # if the model has factors, constrain them to their default values
         # for example, for SCP models, this selects the following factor values:
@@ -230,6 +274,18 @@ async def get_county_measures(county_fips:str, session: AsyncSession = Depends(g
         if factor_labels:
             for f, fv in factor_labels.items():
                 query = query.where(getattr(model, f) == fv.get("default"))
+
+        # issue the query before we filter down to a FIPS to get the average
+        # over all regions
+        result = await session.execute(query)
+        avg_values = {
+            x["label"]: dict(zip(x.keys(), x)) for x in result.all()
+        }
+
+        # map the trend values back to their human-readable labels
+        if model in SCP_TRENDS_MODELS:
+            for x in avg_values:
+                avg_values[x]["value"] = INVERTED_TREND_MAP.get(int(avg_values[x]["value"]), "")
 
         # furthermore, limit the query to the specified county
         query = query.where(model.FIPS == county_fips)
@@ -241,10 +297,16 @@ async def get_county_measures(county_fips:str, session: AsyncSession = Depends(g
         # version from the metadata, if available
         measure_values = {
             x["label"]: {
-                **x, # brings in either 'value', or 'value' + 'aac' if it's a cancer/SCP model
+                # bring in unit + extra data, e.g. ordinal ordering for SCP trends
+                **measure_descs.get(x["label"], {}),
+                # bring in all the fields in the row
+                **x,
+                # process columns that require special handling or cross-refs
                 **{
+                    "value": x["value"] if model not in SCP_TRENDS_MODELS else INVERTED_TREND_MAP.get(int(x["value"]), ""),
                     "label": measure_descs.get(x["label"], {}).get('label') or x["label"],
-                    "unit": measure_descs.get(x["label"], {}).get("unit", None)
+                    "avg_value": avg_values[x["label"]]["value"],
+                    "avg_aac": avg_values[x["label"]].get("aac", None)
                 }
             }
             for x in result.all()
