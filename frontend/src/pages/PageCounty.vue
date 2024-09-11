@@ -41,7 +41,7 @@
 
       <p class="center">
         County value vs.
-        <span class="state-wide">state-wide average/median</span>
+        <span class="state-wide">state-wide average (non-weighted)</span>
       </p>
 
       <div v-if="filteredCountyData" class="grid">
