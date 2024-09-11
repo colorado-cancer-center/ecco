@@ -49,7 +49,7 @@ router = APIRouter(prefix="/stats")
 # ----------------------------------------------------------------
 
 class FIPSValue(BaseModel):
-    value: Optional[float]
+    value: Optional[float|str]
     aac: Optional[float]
 
 class FIPSMeasureResponse(BaseModel):
@@ -454,12 +454,13 @@ for type, family in STATS_MODELS.items():
                     query = select(
                         (
                             model.FIPS,
-                            case(
-                                (model.trend == 'falling', TREND_MAP['falling']),
-                                (model.trend == 'stable', TREND_MAP['stable']),
-                                (model.trend == 'rising', TREND_MAP['rising']),
-                                else_=TREND_MAP_NONE
-                            ).label("value")
+                            # case(
+                            #     (model.trend == 'falling', TREND_MAP['falling']),
+                            #     (model.trend == 'stable', TREND_MAP['stable']),
+                            #     (model.trend == 'rising', TREND_MAP['rising']),
+                            #     else_=TREND_MAP_NONE
+                            # ).label("value")
+                            model.trend.label("value")
                         )
                     ).where(model.Site == measure)
                 elif model in CANCER_MODELS:
