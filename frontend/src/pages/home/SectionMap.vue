@@ -165,8 +165,8 @@
           </template>
         </AppSelect>
 
-        <!-- hide controls that are irrelevant with explicit scale -->
-        <template v-if="!values?.explicitScale">
+        <!-- hide controls that are irrelevant with ordinal unit -->
+        <template v-if="values?.unit !== 'ordinal'">
           <div class="control-row">
             <!-- scale min/max -->
             <AppCheckbox
@@ -334,7 +334,7 @@
         :scale-steps="scaleSteps"
         :nice-steps="niceSteps"
         :scale-power="scalePower"
-        :explicit-scale="values?.explicitScale"
+        :scale-values="values?.order"
         :width="mapWidth"
         :height="mapHeight"
         :filename="[selectedMeasure, selectedLevel]"

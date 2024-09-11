@@ -91,7 +91,6 @@
 
 <script lang="ts">
 type FeatureInfo = Record<string, unknown>;
-export type ExplicitScale = Record<number, number | string>;
 </script>
 
 <script setup lang="ts">
@@ -131,7 +130,7 @@ type Props = {
   geometry?: FeatureCollection;
   locations?: Record<string, FeatureCollection>;
   /** map of geometry id to value */
-  values?: Record<string, { value: number; [key: string]: unknown }>;
+  values?: Record<string, { value: number | string; [key: string]: unknown }>;
   /** value domain */
   min?: number;
   max?: number;
@@ -155,8 +154,8 @@ type Props = {
   scaleSteps?: number;
   niceSteps?: boolean;
   scalePower?: number;
-  /** explicit scale mapping */
-  explicitScale?: ExplicitScale;
+  /** enumerated values for scale */
+  scaleValues?: (number | string)[];
   /** forced dimensions */
   width?: number;
   height?: number;
@@ -184,7 +183,7 @@ const props = withDefaults(defineProps<Props>(), {
   scaleSteps: 5,
   niceSteps: false,
   scalePower: 1,
-  explicitScale: undefined,
+  scaleValues: undefined,
   width: 0,
   height: 0,
   filename: "map",
@@ -285,10 +284,7 @@ function bindPopup(layer: L.Layer) {
      */
     let info: FeatureInfo = cloneDeep(event.sourceTarget.feature.properties);
     const value = props.values?.[typeof info.id === "string" ? info.id : ""];
-    if (value) {
-      if (props.explicitScale) info.value = props.explicitScale[value.value];
-      else info = { ...info, ...value };
-    }
+    if (value) info = { ...info, ...value };
     featureInfo.value = info;
 
     /** wait for popup to populate to full size before updating position */
@@ -326,22 +322,19 @@ const scale = computed(() => {
   const gradient = getGradient(props.gradient);
 
   /** map specific values to specific colors */
-  if (props.explicitScale) {
+  if (props.scaleValues) {
     /** explicit steps */
-    const steps = d3
-      /** https://stackoverflow.com/questions/52856496/typescript-object-keys-return-string */
-      .sort(Object.keys(props.explicitScale).map(Number))
-      .map((value, index, array) => {
-        const percent = index / (array.length - 1);
-        return {
-          value,
-          label: props.explicitScale?.[value],
-          color: gradient(props.flipGradient ? 1 - percent : percent),
-        };
-      });
+    const steps = props.scaleValues.map((value, index, array) => {
+      const percent = index / (array.length - 1);
+      return {
+        value,
+        label: value,
+        color: gradient(props.flipGradient ? 1 - percent : percent),
+      };
+    });
 
     /** explicit color */
-    const getColor = (value?: keyof typeof props.explicitScale) =>
+    const getColor = (value?: number | string) =>
       steps.find((step) => step.value === value)?.color ?? noDataColor;
 
     return { steps, getColor };
@@ -406,8 +399,8 @@ const scale = computed(() => {
     }
 
     /** scale interpolator */
-    const getColor = (value?: number) =>
-      value === undefined
+    const getColor = (value?: number | string) =>
+      value === undefined || typeof value === "string"
         ? noDataColor
         : d3.scaleQuantile<string>().domain(bands).range(colors)(value);
 
