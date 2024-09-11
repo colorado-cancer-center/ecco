@@ -223,9 +223,6 @@ export async function getValues(
     .map(({ value }) => Number(value))
     .filter((value) => !Number.isNaN(value));
 
-  /** if missing data, return empty */
-  if (!numbers.length) return;
-
   return {
     min: d3.min(numbers) || 0,
     max: d3.max(numbers) || 0,
