@@ -34,7 +34,7 @@ from models import (
     MEASURE_DESCRIPTIONS,
     FACTOR_DESCRIPTIONS
 )
-from models.scp import SCP_TRENDS_MODELS, TREND_MAP, TREND_MAP_NONE
+from models.scp import SCP_TRENDS_MODELS, TREND_MAP, INVERTED_TREND_MAP, TREND_MAP_NONE
 
 
 router = APIRouter(prefix="/stats")
@@ -53,8 +53,8 @@ class FIPSValue(BaseModel):
     aac: Optional[float]
 
 class FIPSMeasureResponse(BaseModel):
-    min: Optional[float]
-    max: Optional[float]
+    min: Optional[float|str]
+    max: Optional[float|str]
     unit: Optional[MeasureUnit]
     order: Optional[list[str]]
     values: dict[str, FIPSValue]
@@ -223,9 +223,6 @@ async def get_county_measures(county_fips:str, session: AsyncSession = Depends(g
         "categories": {}
     }
     type = "county"
-
-    # map trend values back to their human-readable labels
-    INVERTED_TREND_MAP = dict((v,k) for k,v in TREND_MAP.items())
 
     for model in STATS_MODELS[type]:
         simple_model_name = slug_modelname_sans_type(model, type)
@@ -475,8 +472,22 @@ for type, family in STATS_MODELS.items():
 
                 # compute mins and maxes so we can build a color scale
                 # # if it's a cancer endpint, we need to use the "Site" column instead of "measure", and "AAR" instead of "value
-                if model in CANCER_MODELS or model in SCP_TRENDS_MODELS:
+                if model in CANCER_MODELS:
                     stats_query = select(func.min(model.AAR), func.max(model.AAR)).where(model.Site == measure)
+                elif model in SCP_TRENDS_MODELS:
+                    # we compute the min and max over the trends' numeric value, excluding regions without a trend
+                    stats_query = select(
+                        func.min(case(
+                            (model.trend == 'falling', TREND_MAP['falling']),
+                            (model.trend == 'stable', TREND_MAP['stable']),
+                            (model.trend == 'rising', TREND_MAP['rising'])
+                        )),
+                        func.max(case(
+                            (model.trend == 'falling', TREND_MAP['falling']),
+                            (model.trend == 'stable', TREND_MAP['stable']),
+                            (model.trend == 'rising', TREND_MAP['rising'])
+                        ))
+                    ).where(model.Site == measure)
                 else:
                     stats_query = select(func.min(model.value), func.max(model.value)).where(model.measure == measure)
                 
@@ -543,8 +554,8 @@ for type, family in STATS_MODELS.items():
                 )
 
                 return FIPSMeasureResponse(
-                    min=stats[0],
-                    max=stats[1],
+                    min=stats[0] if model not in SCP_TRENDS_MODELS else INVERTED_TREND_MAP[stats[0]],
+                    max=stats[1] if model not in SCP_TRENDS_MODELS else INVERTED_TREND_MAP[stats[1]],
                     unit=measure_meta.get("unit", None),
                     order=measure_meta.get("order", None),
                     values=values

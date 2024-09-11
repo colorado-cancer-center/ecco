@@ -66,6 +66,9 @@ TREND_MAP = {"falling": 1, "stable": 2, "rising": 3}
 # frontend will display as 'no data'
 TREND_MAP_NONE = 0
 
+# allow reverse lookup of trend values
+INVERTED_TREND_MAP = dict((v,k) for k,v in TREND_MAP.items())
+
 
 class SCPDeathsTrendCounty(SCPCountyModel, table=True):
     __tablename__ = SCPDeathsCounty.__tablename__
