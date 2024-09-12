@@ -66,6 +66,9 @@ TREND_MAP = {"falling": 1, "stable": 2, "rising": 3}
 # frontend will display as 'no data'
 TREND_MAP_NONE = 0
 
+# allow reverse lookup of trend values
+INVERTED_TREND_MAP = dict((v,k) for k,v in TREND_MAP.items())
+
 
 class SCPDeathsTrendCounty(SCPCountyModel, table=True):
     __tablename__ = SCPDeathsCounty.__tablename__
@@ -116,8 +119,8 @@ SCP_TRENDS_MODELS = {
 SCP_MEASURE_DESCRIPTIONS = {
     "scpincidence": MeasureMapper(MeasureUnit.RATE),
     "scpdeaths": MeasureMapper(MeasureUnit.RATE),
-    "scpincidencetrend": MeasureMapper(MeasureUnit.ORDINAL),
-    "scpdeathstrend": MeasureMapper(MeasureUnit.ORDINAL),
+    "scpincidencetrend": MeasureMapper(MeasureUnit.ORDINAL, extras={"order": ["falling", "stable", "rising"]}),
+    "scpdeathstrend": MeasureMapper(MeasureUnit.ORDINAL, extras={"order": ["falling", "stable", "rising"]}),
 }
 
 # descriptions of factors, i.e. additional enumerated values associated

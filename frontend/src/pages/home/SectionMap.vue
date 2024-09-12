@@ -165,8 +165,8 @@
           </template>
         </AppSelect>
 
-        <!-- hide controls that are irrelevant with explicit scale -->
-        <template v-if="!values?.explicitScale">
+        <!-- hide controls that are irrelevant with ordinal unit -->
+        <template v-if="values?.unit !== 'ordinal'">
           <div class="control-row">
             <!-- scale min/max -->
             <AppCheckbox
@@ -334,7 +334,7 @@
         :scale-steps="scaleSteps"
         :nice-steps="niceSteps"
         :scale-power="scalePower"
-        :explicit-scale="values?.explicitScale"
+        :scale-values="values?.order"
         :width="mapWidth"
         :height="mapHeight"
         :filename="[selectedMeasure, selectedLevel]"
@@ -470,6 +470,16 @@
               <span>{{ feature.notes }}</span>
             </template>
           </div>
+
+          <!-- link to full data -->
+          <AppButton
+            v-if="selectedLevel === 'county'"
+            :icon="faExternalLinkAlt"
+            :to="`/county/${feature.id}`"
+            :flip="true"
+            :new-tab="true"
+            >See All Data</AppButton
+          >
         </template>
       </AppMap>
 
@@ -526,6 +536,7 @@ import {
   faCropSimple,
   faDownload,
   faExpand,
+  faExternalLinkAlt,
   faMinus,
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
@@ -655,8 +666,8 @@ const long = useUrlParam("long", numberParam, 0);
 /** map style state */
 const showLegends = ref(true);
 const showExtras = ref(true);
-const selectedBackground = ref(baseOptions[0]?.id || "");
-const selectedGradient = ref(gradientOptions[3]?.id || "");
+const selectedBackground = ref(baseOptions[0]!.id || "");
+const selectedGradient = ref(gradientOptions[3]!.id || "");
 const selectedLocations = useUrlParam("locations", arrayParam(stringParam), []);
 const backgroundOpacity = ref(1);
 const geometryOpacity = ref(0.75);

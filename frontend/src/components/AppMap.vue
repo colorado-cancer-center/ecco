@@ -19,7 +19,10 @@
   </div>
 
   <!-- top left legend -->
-  <Teleport v-if="showLegends && topLeftLegend" :to="topLeftLegend">
+  <Teleport
+    v-if="showLegends && topLeftLegend && scale.steps.length"
+    :to="topLeftLegend"
+  >
     <div v-stop class="legend">
       <slot name="top-left" />
 
@@ -88,7 +91,6 @@
 
 <script lang="ts">
 type FeatureInfo = Record<string, unknown>;
-export type ExplicitScale = Record<number, number | string>;
 </script>
 
 <script setup lang="ts">
@@ -107,8 +109,9 @@ import L, { type MapOptions } from "leaflet";
 import { cloneDeep, debounce, isEmpty, mapValues } from "lodash";
 import { useElementSize, useFullscreen, useResizeObserver } from "@vueuse/core";
 import { type Unit } from "@/api";
-import { getGradient } from "@/components/gradient";
+import { getGradient, gradientOptions } from "@/components/gradient";
 import { getMarker, resetMarkers } from "@/components/markers";
+import { baseOptions } from "@/components/tile-providers";
 import { useScrollable } from "@/util/composables";
 import { downloadPng } from "@/util/download";
 import { formatValue, normalizedApply } from "@/util/math";
@@ -127,37 +130,37 @@ type Props = {
   geometry?: FeatureCollection;
   locations?: Record<string, FeatureCollection>;
   /** map of geometry id to value */
-  values?: Record<string, { value: number; [key: string]: unknown }>;
+  values?: Record<string, { value: number | string; [key: string]: unknown }>;
   /** value domain */
   min?: number;
   max?: number;
   unit?: Unit;
   /** map pan/zoom */
-  lat: number;
-  long: number;
-  zoom: number;
+  lat?: number;
+  long?: number;
+  zoom?: number;
   /** show/hide elements */
-  showLegends: boolean;
+  showLegends?: boolean;
   /** layer opacities */
-  backgroundOpacity: number;
-  geometryOpacity: number;
-  locationOpacity: number;
+  backgroundOpacity?: number;
+  geometryOpacity?: number;
+  locationOpacity?: number;
   /** tile provider */
-  background: string;
+  background?: string;
   /** color gradient id */
-  gradient: string;
+  gradient?: string;
   /** scale props */
-  flipGradient: boolean;
-  scaleSteps: number;
-  niceSteps: boolean;
-  scalePower: number;
-  /** explicit scale mapping */
-  explicitScale?: ExplicitScale;
+  flipGradient?: boolean;
+  scaleSteps?: number;
+  niceSteps?: boolean;
+  scalePower?: number;
+  /** enumerated values for scale */
+  scaleValues?: (number | string)[];
   /** forced dimensions */
-  width: number;
-  height: number;
+  width?: number;
+  height?: number;
   /** filename for download */
-  filename: string | string[];
+  filename?: string | string[];
 };
 
 const props = withDefaults(defineProps<Props>(), {
@@ -167,7 +170,23 @@ const props = withDefaults(defineProps<Props>(), {
   min: undefined,
   max: undefined,
   unit: undefined,
-  explicitScale: undefined,
+  lat: 0,
+  long: 0,
+  zoom: 1,
+  showLegends: true,
+  backgroundOpacity: 1,
+  geometryOpacity: 0.75,
+  locationOpacity: 1,
+  background: baseOptions[0]!.id,
+  gradient: gradientOptions[3]!.id,
+  flipGradient: false,
+  scaleSteps: 5,
+  niceSteps: false,
+  scalePower: 1,
+  scaleValues: undefined,
+  width: 0,
+  height: 0,
+  filename: "map",
 });
 
 type Emits = {
@@ -265,10 +284,7 @@ function bindPopup(layer: L.Layer) {
      */
     let info: FeatureInfo = cloneDeep(event.sourceTarget.feature.properties);
     const value = props.values?.[typeof info.id === "string" ? info.id : ""];
-    if (value) {
-      if (props.explicitScale) info.value = props.explicitScale[value.value];
-      else info = { ...info, ...value };
-    }
+    if (value) info = { ...info, ...value };
     featureInfo.value = info;
 
     /** wait for popup to populate to full size before updating position */
@@ -306,22 +322,19 @@ const scale = computed(() => {
   const gradient = getGradient(props.gradient);
 
   /** map specific values to specific colors */
-  if (props.explicitScale) {
+  if (props.scaleValues) {
     /** explicit steps */
-    const steps = d3
-      /** https://stackoverflow.com/questions/52856496/typescript-object-keys-return-string */
-      .sort(Object.keys(props.explicitScale).map(Number))
-      .map((value, index, array) => {
-        const percent = index / (array.length - 1);
-        return {
-          value,
-          label: props.explicitScale?.[value],
-          color: gradient(props.flipGradient ? 1 - percent : percent),
-        };
-      });
+    const steps = props.scaleValues.map((value, index, array) => {
+      const percent = index / (array.length - 1);
+      return {
+        value,
+        label: value,
+        color: gradient(props.flipGradient ? 1 - percent : percent),
+      };
+    });
 
     /** explicit color */
-    const getColor = (value?: keyof typeof props.explicitScale) =>
+    const getColor = (value?: number | string) =>
       steps.find((step) => step.value === value)?.color ?? noDataColor;
 
     return { steps, getColor };
@@ -386,8 +399,8 @@ const scale = computed(() => {
     }
 
     /** scale interpolator */
-    const getColor = (value?: number) =>
-      value === undefined
+    const getColor = (value?: number | string) =>
+      value === undefined || typeof value === "string"
         ? noDataColor
         : d3.scaleQuantile<string>().domain(bands).range(colors)(value);
 
@@ -582,7 +595,7 @@ const symbols = computed(() => {
 
 /** update location layers */
 function updateLocations() {
-  const layers = getLayers<L.GeoJSON>("locations");
+  const layers = getLayers<L.GeoJSON>("locations", L.GeoJSON);
   layers.forEach((layer) => layer.remove());
   for (const [key, features] of Object.entries(props.locations)) {
     const { color, dash, icon } = symbols.value[key] ?? {};
@@ -694,6 +707,17 @@ async function download() {
 /** toggle fullscreen on element */
 const { toggle: fullscreen } = useFullscreen(mapElement);
 
+/** highlight and zoom in on feature */
+async function selectFeature(id: string) {
+  if (!map) return;
+  const layer = getLayers<L.Polygon>("geometry", L.Polygon).find(
+    (layer) => layer.feature?.properties.id === id,
+  );
+  if (!layer) return;
+  map.fitBounds(layer.getBounds());
+  layer.setStyle({ fillColor: "var(--theme)" });
+}
+
 /** allow control from parent */
 defineExpose({
   download,
@@ -701,6 +725,7 @@ defineExpose({
   zoomOut: () => map?.zoomOut(),
   fit,
   fullscreen,
+  selectFeature,
 });
 </script>
 

@@ -1,29 +1,28 @@
 <template>
   <header class="header">
     <AppLink to="/">
-      <h1>
-        <div class="pretitle">
-          {{ pretitle }}
-        </div>
-        <div>
-          <span class="title">
-            <b>E</b>xploring <b>C</b>ancer in <b>Co</b>lorado
-          </span>
-          <span class="subtitle">&nbsp;(ECCO)</span>
-        </div>
-      </h1>
+      <div class="pretitle">
+        {{ pretitle }}
+      </div>
+      <div>
+        <span class="title">
+          <b>E</b>xploring <b>C</b>ancer in <b>Co</b>lorado
+        </span>
+        <span class="subtitle">&nbsp;(ECCO)</span>
+      </div>
     </AppLink>
 
     <nav class="nav">
-      <AppLink
-        v-for="(route, index) of routes"
-        :key="index"
-        :to="route.path"
-        class="nav-link"
-        :data-active="route.name === $route.name"
-      >
-        {{ route.name }}
-      </AppLink>
+      <template v-for="(route, index) of routes" :key="index">
+        <AppLink
+          v-if="route.meta?.header"
+          :to="route.path"
+          class="nav-link"
+          :data-active="route.name === $route.name"
+        >
+          {{ route.name }}
+        </AppLink>
+      </template>
     </nav>
   </header>
 </template>

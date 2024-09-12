@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import PageContact from "@/pages/PageContact.vue";
+import PageCounty from "@/pages/PageCounty.vue";
 import PageSources from "@/pages/PageSources.vue";
 import { waitFor } from "@/util/misc";
 import PageAbout from "./PageAbout.vue";
@@ -18,22 +19,27 @@ export const routes = [
         return url;
       }
     },
+    meta: { header: true },
   },
   {
     name: "Sources",
     path: "/sources",
     component: PageSources,
+    meta: { header: true },
   },
   {
     name: "About",
     path: "/about",
     component: PageAbout,
+    meta: { header: true },
   },
   {
     name: "Contact",
-    path: "/Contact",
+    path: "/contact",
     component: PageContact,
+    meta: { header: true },
   },
+  { name: "County", path: "/county/:id", component: PageCounty },
 ];
 
 export const history = createWebHistory();
@@ -50,7 +56,7 @@ export const router = createRouter({
 router.afterEach(async (to) => {
   /** scroll to hash target */
   if (to.hash)
-    (await waitFor(to.hash))?.scrollIntoView({
+    (await waitFor(() => document.querySelector(to.hash)))?.scrollIntoView({
       block: "start",
       behavior: "smooth",
     });

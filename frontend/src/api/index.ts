@@ -1,7 +1,6 @@
 import * as d3 from "d3";
 import type { FeatureCollection, Geometry } from "geojson";
 import { mapValues } from "lodash";
-import type { ExplicitScale } from "@/components/AppMap.vue";
 
 /** api root (no trailing slash) */
 const api = import.meta.env.VITE_API;
@@ -107,6 +106,7 @@ export async function getFacets() {
 
 export type Facets = Awaited<ReturnType<typeof getFacets>>;
 
+/** response from location list api endpoint */
 type _LocationList = {
   [key: string]: { [key: string]: string };
 };
@@ -194,8 +194,12 @@ type _Values = {
   max: number;
   min: number;
   /** map of feature id to measure value */
-  values: { [key: string]: { value: number; aac?: number | null } };
+  values: {
+    [key: string]: { value: number | string; aac?: number | string | null };
+  };
+  /** unit info */
   unit: Unit;
+  order?: string[];
 };
 
 /** get values data */
@@ -215,18 +219,11 @@ export async function getValues(
   );
 
   /** get raw number values */
-  const numbers = Object.values(data.values).map(({ value }) => value);
+  const numbers = Object.values(data.values)
+    .map(({ value }) => Number(value))
+    .filter((value) => !Number.isNaN(value));
 
-  /** if missing data, return empty */
-  if (!numbers.length) return;
-
-  /** define explicit scale for certain data */
-  let explicitScale: ExplicitScale | undefined;
-  if (data.unit === "ordinal")
-    explicitScale = { 1: "Falling", 2: "Stable", 3: "Rising" };
-
-  /** calculate stats */
-  const stats = {
+  return {
     min: d3.min(numbers) || 0,
     max: d3.max(numbers) || 0,
     avg: d3.mean(numbers) || 0,
@@ -234,9 +231,8 @@ export async function getValues(
     total: d3.sum(numbers) || 0,
     values: data.values,
     unit: data.unit,
+    order: data.order,
   };
-
-  return { ...stats, explicitScale };
 }
 
 export type Values = Awaited<ReturnType<typeof getValues>>;
@@ -283,3 +279,29 @@ export type LocationProps = {
   party?: string;
   fips?: string;
 };
+
+/** response from county data api endpoint */
+type _CountyData = {
+  FIPS: string;
+  name: string;
+  categories: {
+    [key: string]: {
+      label: string;
+      measures: {
+        [key: string]: {
+          label: string;
+          value: number | string;
+          avg_value: number | string;
+          aac?: number | string | null;
+          avg_aac?: number | string | null;
+          unit: Unit;
+          order?: string[];
+        };
+      };
+    };
+  };
+};
+
+/** get all data for particular county */
+export const getCountyData = (id: string) =>
+  request<_CountyData>(`${api}/stats/by-county/${id}`);

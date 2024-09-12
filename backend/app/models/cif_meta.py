@@ -99,7 +99,7 @@ CIF_MEASURE_DESCRIPTIONS = {
             "label": "Enrolled in Medicaid",
             "unit": MeasureUnit.PERCENT,
         },
-        "Monthly Unemployment Rate (Apr)": {
+        "Monthly Unemployment Rate": {
             "label": "Monthly Unemployment Rate",
             "unit": MeasureUnit.PERCENT,
         },

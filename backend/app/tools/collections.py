@@ -15,16 +15,20 @@ class MeasureMapper(Mapping):
     This is useful for many of our stats models where the key for a measure and
     its label are the same, and the unit is shared across lots of different
     measures.
+
+    Also supports a dictionary of extras, which can be used to add information
+    to each request for a key.
     """
 
-    def __init__(self, default_unit: MeasureUnit):
+    def __init__(self, default_unit: MeasureUnit, extras: dict=None):
         self.default_unit = default_unit
+        self.extras = extras or {}
 
     def __getitem__(self, key):
-        return {"label": key, "unit": self.default_unit}
+        return {**{"label": key, "unit": self.default_unit}, **self.extras}
     
     def get(self, key, default=None):
-        return {"label": key, "unit": self.default_unit}
+        return {**{"label": key, "unit": self.default_unit}, **self.extras}
     
     def __len__(self):
         """

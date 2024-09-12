@@ -1,8 +1,8 @@
 <template>
   <section>
-    <AppHeading level="2">About</AppHeading>
+    <AppHeading level="1">About</AppHeading>
 
-    <AppHeading level="3">The Map</AppHeading>
+    <AppHeading level="2">The Map</AppHeading>
 
     <p>
       Create your own map to visualize your data and region of interest. First
@@ -20,7 +20,7 @@
       of the map as an image.
     </p>
 
-    <AppHeading level="3">Acknowledge</AppHeading>
+    <AppHeading level="2">Acknowledge</AppHeading>
 
     <p>
       If you find this site useful in your academic or research work, we ask

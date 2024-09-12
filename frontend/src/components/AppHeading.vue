@@ -1,7 +1,3 @@
-<!--
-  heading component with anchor link and (optionally) automatic level
--->
-
 <template>
   <component :is="tag" :id="link" ref="heading">
     <slot />
@@ -25,7 +21,7 @@ import AppLink from "@/components/AppLink.vue";
 
 type Props = {
   /** heading level */
-  level: "2" | "3" | "4";
+  level: "1" | "2" | "3" | "4";
   /** manually specified id */
   id?: string;
 };
@@ -49,10 +45,7 @@ const heading = ref<HTMLElement>();
 
 /** determine link from text content of heading */
 function updateLink() {
-  /** h1 and h2s should only appear at top of document, so anchor not useful */
-  link.value = ["h1", "h2"].includes(tag.value)
-    ? ""
-    : kebabCase(props.id ?? heading.value?.textContent ?? "");
+  link.value = kebabCase(props.id ?? heading.value?.textContent ?? "");
 }
 
 onMounted(updateLink);
@@ -76,7 +69,7 @@ onUpdated(updateLink);
   opacity: 1;
 }
 
-:is(h2, h3, h4):hover .anchor {
+:is(h1, h2, h3, h4):hover .anchor {
   opacity: 1;
 }
 </style>

@@ -69,6 +69,10 @@ section.full {
   --col: 10000px;
 }
 
+section.wide {
+  --col: 2000px;
+}
+
 section {
   --col: 1000px;
   padding: 60px max(calc((100% - var(--col)) / 2), 40px);
@@ -101,8 +105,8 @@ h4 {
 
 h1 {
   margin: 0;
-  font-weight: var(--regular);
-  font-size: 1.2rem;
+  font-size: 1.4rem;
+  text-align: center;
 }
 
 h2 {
@@ -205,6 +209,11 @@ td {
 
 tr:last-child td {
   border: none;
+}
+
+dt,
+dd {
+  margin: 0;
 }
 
 blockquote {
