@@ -11,7 +11,7 @@
       e.g. % college graduates, household income, high rent burden. Note that
       some measures are only available for certain geographic levels. You can
       select locations to overlay on the map, e.g. screening centers, clinics,
-      specialists. Click on a region or point on the map to see more details.
+      specialists.
     </p>
 
     <p>

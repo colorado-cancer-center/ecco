@@ -175,16 +175,16 @@ class CountyMeasureValueResponse(BaseModel):
     label: str
     unit: MeasureUnit
     value: float
-    avg_value: float
+    state_value: float
 
 class CountyCancerMeasureValueResponse(CountyMeasureValueResponse):
     aac: float
-    avg_aac: float
+    state_aac: float
 
 class CountyCancerTrendMeasureValueResponse(CountyMeasureValueResponse):
     order: list[str]
     value: str
-    avg_value: str
+    state_value: str
 
 class CountyMeasureCategoryResponse(BaseModel):
     label: str
@@ -275,14 +275,14 @@ async def get_county_measures(county_fips:str, session: AsyncSession = Depends(g
         # issue the query before we filter down to a FIPS to get the average
         # over all regions
         result = await session.execute(query)
-        avg_values = {
+        state_values = {
             x["label"]: dict(zip(x.keys(), x)) for x in result.all()
         }
 
         # map the trend values back to their human-readable labels
         if model in SCP_TRENDS_MODELS:
-            for x in avg_values:
-                avg_values[x]["value"] = INVERTED_TREND_MAP.get(int(avg_values[x]["value"]), "")
+            for x in state_values:
+                state_values[x]["value"] = INVERTED_TREND_MAP.get(int(state_values[x]["value"]), "")
 
         # furthermore, limit the query to the specified county
         query = query.where(model.FIPS == county_fips)
@@ -302,8 +302,8 @@ async def get_county_measures(county_fips:str, session: AsyncSession = Depends(g
                 **{
                     "value": x["value"] if model not in SCP_TRENDS_MODELS else INVERTED_TREND_MAP.get(int(x["value"]), ""),
                     "label": measure_descs.get(x["label"], {}).get('label') or x["label"],
-                    "avg_value": avg_values[x["label"]]["value"],
-                    "avg_aac": avg_values[x["label"]].get("aac", None)
+                    "state_value": state_values[x["label"]]["value"],
+                    "state_aac": state_values[x["label"]].get("aac", None)
                 }
             }
             for x in result.all()

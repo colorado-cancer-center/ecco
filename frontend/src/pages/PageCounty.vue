@@ -16,7 +16,7 @@
   </section>
 
   <template v-else>
-    <section>
+    <section v-if="false">
       <AppMap ref="map" class="map" :geometry="geometry">
         <template #popup="{ feature }">
           <!-- link to full data -->
@@ -40,13 +40,25 @@
       />
 
       <p class="center">
-        County value vs.
-        <span class="state-wide">state-wide average (non-weighted)</span>
+        <span class="county-label">County</span>
+        vs.
+        <span class="state-label">State</span>
       </p>
 
-      <div v-if="filteredCountyData" class="grid">
+      <div v-if="filter === 'basic'" class="charts">
+        <AppBarChart
+          v-for="(chart, key) in chartData"
+          :key="key"
+          :title="chart.title"
+          :data="chart.data"
+          :y-format="(value) => formatValue(value ?? '', chart.unit, true)"
+          :enumerated="chart.unit === 'ordinal'"
+        />
+      </div>
+
+      <div v-else-if="countyData && filter === 'all'" class="grid">
         <template
-          v-for="(category, categoryKey) in filteredCountyData.categories"
+          v-for="(category, categoryKey) in countyData.categories"
           :key="categoryKey"
         >
           <div class="cell">
@@ -56,35 +68,41 @@
               :key="measureKey"
             >
               <dt>{{ measure.label }}</dt>
-              <dd v-tooltip="formatValue(measure.value, measure.unit)">
+              <dd
+                v-tooltip="formatValue(measure.value, measure.unit)"
+                class="county-label"
+              >
                 {{ formatValue(measure.value, measure.unit, true) }}
               </dd>
-              <template v-if="measure.value && measure.avg_value">
+
+              <template v-if="measure.state_value !== undefined">
                 <span
-                  v-if="measure.value > measure.avg_value"
-                  class="greater-than"
+                  v-if="measure.value > measure.state_value"
+                  class="compare-symbol"
                   >{{ ">" }}</span
                 >
                 <span
-                  v-else-if="measure.value < measure.avg_value"
-                  class="less-than"
+                  v-else-if="measure.value < measure.state_value"
+                  class="compare-symbol"
                   >{{ "<" }}</span
                 >
                 <span
-                  v-else-if="measure.value === measure.avg_value"
-                  class="equal"
+                  v-else-if="measure.value === measure.state_value"
+                  class="compare-symbol"
                   >{{ "=" }}</span
                 >
-                <span v-else></span>
               </template>
+
               <span v-else></span>
               <span
-                v-tooltip="formatValue(measure.avg_value, measure.unit)"
-                class="state-wide"
-                aria-label="State-wide value"
+                v-if="measure.state_value !== undefined"
+                v-tooltip="formatValue(measure.state_value, measure.unit)"
+                class="state-label"
+                aria-label="State value"
               >
-                {{ formatValue(measure.avg_value, measure.unit, true) }}
+                {{ formatValue(measure.state_value, measure.unit, true) }}
               </span>
+              <span v-else></span>
             </template>
           </div>
         </template>
@@ -96,9 +114,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
-import { cloneDeep, fromPairs, isEmpty, orderBy, toPairs } from "lodash";
+import { fromPairs, mapValues, orderBy, toPairs } from "lodash";
 import { faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
 import { getCountyData, getGeo } from "@/api";
+import AppBarChart from "@/components/AppBarChart.vue";
 import AppButton from "@/components/AppButton.vue";
 import AppHeading from "@/components/AppHeading.vue";
 import AppMap from "@/components/AppMap.vue";
@@ -171,22 +190,28 @@ const {
 
 watch(() => route.params.id, loadCountyData, { immediate: true });
 
-/** county data, with certain measures filtered out */
-const filteredCountyData = computed(() => {
-  const data = cloneDeep(countyData.value);
-
-  /** filter by certain measures */
-  if (filter.value === "basic")
-    for (const [categoryKey, { measures }] of Object.entries(
-      data?.categories ?? {},
-    )) {
-      for (const [measureKey, { label }] of Object.entries(measures))
-        if (!basicMeasures.includes(label)) delete measures[measureKey];
-      if (isEmpty(measures)) delete data?.categories[categoryKey];
-    }
-
-  return data;
-});
+/** get select chart data from county data */
+const chartData = computed(() =>
+  countyData.value
+    ? basicMeasures.map(({ title, category, measures }) => {
+        /** full value info for each measure */
+        const measureValues = Object.fromEntries(
+          measures.map((measure) => [
+            measure,
+            countyData.value?.categories[category]?.measures[measure],
+          ]),
+        );
+        return {
+          title,
+          unit: measureValues[measures[0]!]?.unit,
+          data: {
+            County: mapValues(measureValues, (value) => value?.value),
+            State: mapValues(measureValues, (value) => value?.state_value),
+          },
+        };
+      })
+    : [],
+);
 
 /** update tab title */
 watch(countyData, () => (appTitle.value = [countyData.value?.name ?? ""]));
@@ -226,20 +251,24 @@ watch(countyData, () => (appTitle.value = [countyData.value?.name ?? ""]));
   font-weight: var(--bold);
 }
 
-.state-wide {
-  color: var(--gray);
-  font-style: italic;
+.county-label,
+.state-label {
+  z-index: 0;
+  position: relative;
+  padding: 2px 5px;
+  border-radius: var(--rounded);
+  text-align: center;
 }
 
-.greater-than {
-  color: var(--gray);
+.county-label {
+  background: var(--accent-a-light);
 }
 
-.less-than {
-  color: var(--gray);
+.state-label {
+  background: var(--accent-b-light);
 }
 
-.equal {
+.compare-symbol {
   color: var(--gray);
 }
 </style>

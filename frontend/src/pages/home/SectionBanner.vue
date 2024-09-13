@@ -1,24 +1,20 @@
 <template>
   <AppAlert>
     <p>
-      Welcome to <b>ECCO</b>! This tool is intended to support research,
-      community inquiries, and outreach activities. It should not be used to
-      guide clinical decisions.
-    </p>
-    <div class="buttons">
-      <AppButton
-        to="https://app.smartsheet.com/b/form/e66c076519a34f59a253a9e9e40b9c03"
-        :icon="faComment"
-        :flip="true"
-        :accent="true"
-        >Give us feedback</AppButton
+      Welcome to <b>ECCO</b>, an interactive resource for
+      <b>exploring cancer data in Colorado</b>! View data like population,
+      demographics, cancer burden & disparities, risk factors, health behaviors,
+      and environmental exposures, and local resources like cancer prevention,
+      screening, treatment, and survivorship.
+      <i
+        >This tool is intended to support research, community inquiries, and
+        outreach activities. It should not be used to guide clinical
+        decisions.</i
       >
-    </div>
+    </p>
   </AppAlert>
 </template>
 
 <script setup lang="ts">
-import { faComment } from "@fortawesome/free-regular-svg-icons";
 import AppAlert from "@/components/AppAlert.vue";
-import AppButton from "@/components/AppButton.vue";
 </script>

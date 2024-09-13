@@ -1,13 +1,9 @@
 <template>
-  <aside v-if="!dismissed" class="alert">
+  <aside :class="['alert', dismissed && 'dismissed']" :aria-hidden="dismissed">
     <slot />
-    <AppButton
-      v-tooltip="'Dismiss'"
-      class="button"
-      :icon="faXmark"
-      aria-label="Dismiss"
-      @click="onClick"
-    />
+    <AppButton class="dismiss" :icon="faXmark" :accent="true" @click="onClick"
+      >Dismiss</AppButton
+    >
   </aside>
 </template>
 
@@ -34,23 +30,30 @@ function onClick() {
 
 <style scoped>
 .alert {
-  display: flex;
+  --col: 1500px;
   position: relative;
-  flex-wrap: wrap;
-  justify-content: center;
-  padding: 20px 40px;
-  gap: 20px;
+  height: calc-size(auto);
+  height: calc-size(auto);
+  padding: 40px max(calc((100% - var(--col)) / 2), 40px);
   background: var(--theme-light);
+  text-align: center;
+  transition:
+    height var(--slow),
+    padding var(--slow);
 }
 
-.alert > :deep(*) {
-  margin: 0;
+.dismissed {
+  height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  overflow: hidden;
 }
 
-.button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: none;
+.alert > :first-of-type {
+  margin-top: 0 !important;
+}
+
+.dismiss {
+  margin-top: 20px;
 }
 </style>

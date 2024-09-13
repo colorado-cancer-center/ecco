@@ -1,25 +1,42 @@
 [
-  "Total Population",
-  "Hispanic",
-  "Over 64 Years Old",
-  "Uninsured",
-  "All Cancer Sites",
-  "Breast (Female)",
-  "Prostate",
-  "Lung & Bronchus",
-  "Colon & Rectum",
-  "All Cancer Sites",
-  "Breast (Female)",
-  "Prostate",
-  "Lung & Bronchus",
-  "Colon & Rectum",
-  "Binge Drink",
-  "Obese (BMI over 30)",
-  "Currently Smoke",
-  "Diagnosed with Diabetes",
-  "Physically Inactive",
-  "Radon Exposure (Percentage of Tests over 4pCi/L)",
-  "Met Breast Screening Recommendations",
-  "Met Cervical Screening Recommendations",
-  "Met Colorectal Screening Recommendations"
+  {
+    "title": "Cancer Disparities",
+    "category": "cancerdisparitiesindex",
+    "measures": ["Breast Cancer Index", "Lung Cancer Index"]
+  },
+  {
+    "title": "Disparities",
+    "category": "disparities",
+    "measures": ["Economic Segregation", "Racial Segregation"]
+  },
+  {
+    "title": "Economics",
+    "category": "economy",
+    "measures": ["Annual Unemployment Rate", "Below Poverty", "Uninsured"]
+  },
+  {
+    "title": "Housing",
+    "category": "housingtrans",
+    "measures": ["Median Gross Rent", "Median Monthly Mortgage"]
+  },
+  {
+    "title": "Risk Factors",
+    "category": "rfandscreening",
+    "measures": ["Asthma", "Depression", "Diabetes_DX"]
+  },
+  {
+    "title": "Cancer Mortality",
+    "category": "scpdeaths",
+    "measures": ["All Cancer Sites", "Lung & Bronchus"]
+  },
+  {
+    "title": "Cancer Incidence",
+    "category": "scpincidencetrend",
+    "measures": ["All Cancer Sites", "Lung & Bronchus", "Non-Hodgkin Lymphoma"]
+  },
+  {
+    "title": "Sociodemographics",
+    "category": "sociodemographics",
+    "measures": ["High School", "College"]
+  }
 ]
