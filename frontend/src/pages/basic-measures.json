@@ -1,42 +1,56 @@
 [
   {
-    "title": "Cancer Disparities",
-    "category": "cancerdisparitiesindex",
-    "measures": ["Breast Cancer Index", "Lung Cancer Index"]
+    "title": "Demographic Measures",
+    "measures": [
+      ["sociodemographics", "Hispanic"],
+      ["sociodemographics", "Over 64"],
+      ["economy", "Uninsured"]
+    ]
   },
   {
-    "title": "Disparities",
-    "category": "disparities",
-    "measures": ["Economic Segregation", "Racial Segregation"]
+    "title": "Cancer Incidence Rates (per 100k)",
+    "measures": [
+      ["scpincidence", "All Cancer Sites"],
+      ["scpincidence", "Breast (Female)"],
+      ["scpincidence", "Colon & Rectum"],
+      ["scpincidence", "Lung & Bronchus"],
+      ["scpincidence", "Prostate"]
+    ]
   },
   {
-    "title": "Economics",
-    "category": "economy",
-    "measures": ["Annual Unemployment Rate", "Below Poverty", "Uninsured"]
+    "title": "Cancer Mortality Rates (per 100k)",
+    "measures": [
+      ["scpdeaths", "All Cancer Sites"],
+      ["scpdeaths", "Breast (Female)"],
+      ["scpdeaths", "Colon & Rectum"],
+      ["scpdeaths", "Lung & Bronchus"],
+      ["scpdeaths", "Prostate"]
+    ]
   },
   {
-    "title": "Housing",
-    "category": "housingtrans",
-    "measures": ["Median Gross Rent", "Median Monthly Mortgage"]
+    "title": "Presence of Risk Factors (%)",
+    "measures": [
+      ["rfandscreening", "Binge_Drinking"],
+      ["rfandscreening", "Currently_Smoke"],
+      ["rfandscreening", "Diabetes_DX"],
+      ["rfandscreening", "BMI_Obese"],
+      ["rfandscreening", "Physically_Inactive"]
+    ]
   },
   {
-    "title": "Risk Factors",
-    "category": "rfandscreening",
-    "measures": ["Asthma", "Depression", "Diabetes_DX"]
+    "title": "Adults Recommended for Cancer Screening (%)",
+    "measures": [
+      ["rfandscreening", "Met_Breast_Screen"],
+      ["rfandscreening", "Met_Cervical_Screen"],
+      ["rfandscreening", "Met_Colon_Screen"]
+    ]
   },
   {
-    "title": "Cancer Mortality",
-    "category": "scpdeaths",
-    "measures": ["All Cancer Sites", "Lung & Bronchus"]
-  },
-  {
-    "title": "Cancer Incidence",
-    "category": "scpincidencetrend",
-    "measures": ["All Cancer Sites", "Lung & Bronchus", "Non-Hodgkin Lymphoma"]
-  },
-  {
-    "title": "Sociodemographics",
-    "category": "sociodemographics",
-    "measures": ["High School", "College"]
+    "title": "Cancer Incidence Trends",
+    "measures": [
+      ["scpincidencetrend", "All Cancer Sites"],
+      ["scpincidencetrend", "Lung & Bronchus"],
+      ["scpincidencetrend", "Non-Hodgkin Lymphoma"]
+    ]
   }
 ]

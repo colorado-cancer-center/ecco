@@ -22,6 +22,8 @@ import { use } from "echarts/core";
 import { SVGRenderer } from "echarts/renderers";
 import { uniq } from "lodash";
 import { useElementSize } from "@vueuse/core";
+import type { Unit } from "@/api";
+import { formatValue } from "@/util/math";
 import { getCssVar } from "@/util/misc";
 
 use([
@@ -40,21 +42,18 @@ type Props = {
   title: string;
   /** chart data */
   data: Record<string, Record<string, Value>>;
-  /** y-axis label formatter */
-  yFormat?: (value: Value) => string;
+  /** y-axis unit */
+  unit?: Unit;
   /** whether data is numbers or enumerated strings */
   enumerated?: boolean;
 };
 
-const props = withDefaults(defineProps<Props>(), {
-  yFormat: (value: Value) =>
-    typeof value === "number" ? value.toLocaleString() : (value ?? ""),
-});
+const props = withDefaults(defineProps<Props>(), { unit: undefined });
 
 const chart = ref<ComponentInstance<typeof VChart>>();
 const { width, height } = useElementSize(() => chart.value?.root);
 watchEffect(() => {
-  /** manually resize */
+  /** manually resize to fit container */
   chart.value?.resize({
     width: width.value ?? 200,
     height: height.value ?? 200,
@@ -63,9 +62,11 @@ watchEffect(() => {
 
 provide(THEME_KEY, "light");
 
+/** get colors from css theme vars */
 const colorA = getCssVar("--accent-a");
 const colorB = getCssVar("--accent-b");
 
+/** echarts options */
 const option = computed(() => {
   const options: EChartsOption = {};
 
@@ -94,7 +95,7 @@ const option = computed(() => {
   };
   options.xAxis.axisLabel = {
     interval: 0,
-    width: 100,
+    width: 80,
     overflow: "break",
     color: "black",
     fontSize: 16,
@@ -106,24 +107,45 @@ const option = computed(() => {
     interval: props.enumerated ? 0 : undefined,
     color: "black",
     fontSize: 16,
-    formatter: props.yFormat,
+    formatter: (value: Value) => formatValue(value ?? "", props.unit, true),
   };
-
-  if (props.enumerated) console.log(props.data);
 
   const symbolSize = 30;
 
   options.series = Object.entries(props.data).map(([name, data], index) => ({
     name,
     type: props.enumerated ? "pictorialBar" : "bar",
-    barMinHeight: props.enumerated ? 0 : 10,
+    data: Object.values(data).map((value) => ({
+      value: value ?? (props.enumerated ? "?" : 0),
+      itemStyle: value ? undefined : { color: "#00000020" },
+      noData: value === undefined,
+    })),
+    color: [colorA, colorB][index],
+    barMinHeight: props.enumerated ? 0 : 5,
     symbol: "diamond",
     symbolPosition: "end",
     symbolSize: [symbolSize, symbolSize],
     symbolOffset: [(index - 0.5) * 125 + "%", "-50%"],
-    color: [colorA, colorB][index],
-    data: Object.values(data).filter((value) => value !== undefined),
   }));
+
+  options.tooltip = {};
+  options.tooltip.trigger = "item";
+  options.tooltip.formatter = (params) => {
+    if (Array.isArray(params)) return "";
+    let {
+      value,
+      name,
+      seriesName,
+      // @ts-expect-error attaching custom meta field
+      data: { noData },
+    } = params;
+    if (typeof value === "object") return "";
+    if (noData) value = "No Data";
+    else value = formatValue(value ?? "", props.unit);
+    return [seriesName, name, value].join("<br>");
+  };
+  options.tooltip.transitionDuration = 0;
+  options.tooltip.textStyle = { fontSize: 16 };
 
   return options;
 });

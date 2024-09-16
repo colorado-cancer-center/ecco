@@ -1,22 +1,25 @@
 <template>
   <footer class="footer">
-    <a class="logo" :href="logoLink" target="_blank">
+    <AppLink
+      class="logo"
+      to="https://medschool.cuanschutz.edu/colorado-cancer-center"
+    >
       <img src="@/assets/logo.png" :alt="'Presented by...'" />
-    </a>
+    </AppLink>
     <span class="links">
-      <a :href="sourceCode" target="_blank">Source Code</a>
-      <a :href="license" target="_blank">License</a>
+      <AppLink to="https://github.com/colorado-cancer-center/ecco"
+        >Source Code</AppLink
+      >
+      <AppLink
+        to="https://github.com/colorado-cancer-center/ecco/blob/main/LICENSE"
+        >License</AppLink
+      >
     </span>
   </footer>
 </template>
 
 <script setup lang="ts">
-/** project info */
-const {
-  VITE_LOGO_LINK: logoLink,
-  VITE_SOURCE_CODE: sourceCode,
-  VITE_LICENSE: license,
-} = import.meta.env;
+import AppLink from "@/components/AppLink.vue";
 </script>
 
 <style scoped>

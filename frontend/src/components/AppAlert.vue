@@ -1,10 +1,13 @@
 <template>
-  <aside :class="['alert', dismissed && 'dismissed']" :aria-hidden="dismissed">
+  <section
+    :class="['alert', dismissed && 'dismissed']"
+    :aria-hidden="dismissed"
+  >
     <slot />
     <AppButton class="dismiss" :icon="faXmark" :accent="true" @click="onClick"
       >Dismiss</AppButton
     >
-  </aside>
+  </section>
 </template>
 
 <script setup lang="ts">

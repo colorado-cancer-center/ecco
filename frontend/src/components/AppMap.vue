@@ -742,6 +742,8 @@ async function selectFeature(id: string) {
   if (!layer) return;
   map.fitBounds(layer.getBounds());
   layer.setStyle({ fillColor: "var(--theme)" });
+  /** zoom out a bit to give context of surroundings */
+  map.zoomOut(1);
 }
 
 /** allow control from parent */

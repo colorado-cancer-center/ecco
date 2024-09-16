@@ -3,20 +3,18 @@
     <AppHeading level="1"
       >Data for {{ countyData?.name || route.params.id }}</AppHeading
     >
-  </section>
 
-  <!-- loading/error status -->
-  <section v-if="countyDataStatus === 'error' || geometryStatus == 'error'">
-    <AppStatus status="error" />
-  </section>
-  <section
-    v-else-if="countyDataStatus === 'loading' || geometryStatus == 'loading'"
-  >
-    <AppStatus status="loading" />
-  </section>
+    <!-- loading/error status -->
+    <template v-if="countyDataStatus === 'error' || geometryStatus == 'error'">
+      <AppStatus status="error" />
+    </template>
+    <template
+      v-else-if="countyDataStatus === 'loading' || geometryStatus == 'loading'"
+    >
+      <AppStatus status="loading" />
+    </template>
 
-  <template v-else>
-    <section v-if="false">
+    <template v-else>
       <AppMap ref="map" class="map" :geometry="geometry">
         <template #popup="{ feature }">
           <!-- link to full data -->
@@ -29,8 +27,10 @@
           >
         </template>
       </AppMap>
-    </section>
+    </template>
+  </section>
 
+  <template v-if="countyDataStatus === 'success'">
     <section id="county" class="wide">
       <AppSelect
         v-model="filter"
@@ -40,9 +40,9 @@
       />
 
       <p class="center">
-        <span class="county-label">County</span>
+        <span class="county-label">{{ countyData?.name }}</span>
         vs.
-        <span class="state-label">State</span>
+        <span class="state-label">Colorado</span>
       </p>
 
       <div v-if="filter === 'basic'" class="charts">
@@ -51,7 +51,7 @@
           :key="key"
           :title="chart.title"
           :data="chart.data"
-          :y-format="(value) => formatValue(value ?? '', chart.unit, true)"
+          :unit="chart.unit"
           :enumerated="chart.unit === 'ordinal'"
         />
       </div>
@@ -114,7 +114,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
-import { fromPairs, mapValues, orderBy, toPairs } from "lodash";
+import { fromPairs, mapValues, orderBy, startCase, toPairs } from "lodash";
 import { faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
 import { getCountyData, getGeo } from "@/api";
 import AppBarChart from "@/components/AppBarChart.vue";
@@ -193,17 +193,20 @@ watch(() => route.params.id, loadCountyData, { immediate: true });
 /** get select chart data from county data */
 const chartData = computed(() =>
   countyData.value
-    ? basicMeasures.map(({ title, category, measures }) => {
+    ? basicMeasures.map(({ title, measures }) => {
         /** full value info for each measure */
         const measureValues = Object.fromEntries(
-          measures.map((measure) => [
-            measure,
-            countyData.value?.categories[category]?.measures[measure],
+          measures.map(([category, measure]) => [
+            startCase(measure),
+            countyData.value?.categories[category ?? ""]?.measures[
+              measure ?? ""
+            ],
           ]),
         );
+
         return {
           title,
-          unit: measureValues[measures[0]!]?.unit,
+          unit: Object.values(measureValues).find((value) => value?.unit)?.unit,
           data: {
             County: mapValues(measureValues, (value) => value?.value),
             State: mapValues(measureValues, (value) => value?.state_value),
@@ -220,7 +223,7 @@ watch(countyData, () => (appTitle.value = [countyData.value?.name ?? ""]));
 <style scoped>
 :deep(.map) {
   width: 100%;
-  height: 500px;
+  height: 400px;
 }
 
 .select {

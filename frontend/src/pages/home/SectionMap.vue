@@ -447,7 +447,7 @@
             </template>
           </div>
 
-          <!-- link to full data -->
+          <!-- link to full data for county -->
           <AppButton
             v-if="selectedLevel === 'county'"
             :icon="faExternalLinkAlt"
@@ -507,7 +507,7 @@
           >
           <AppButton
             to="/about#acknowledge"
-            :icon="faBookmark"
+            :icon="faFeatherPointed"
             :flip="true"
             :accent="true"
             >Acknowledge</AppButton
@@ -531,7 +531,6 @@ import {
 } from "vue";
 import { clamp, cloneDeep, isEmpty, mapValues } from "lodash";
 import {
-  faBookmark,
   faComment,
   faHandPointer,
   faQuestionCircle,
@@ -543,6 +542,7 @@ import {
   faDownload,
   faExpand,
   faExternalLinkAlt,
+  faFeatherPointed,
   faMinus,
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
