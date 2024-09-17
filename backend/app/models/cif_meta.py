@@ -22,7 +22,7 @@ CIF_MEASURE_DESCRIPTIONS = {
             "unit": MeasureUnit.PERCENT
         },
         "Below 9th grade": {
-            "label": "Below 9th grade",
+            "label": "Did Not Attend High School",
             "unit": MeasureUnit.PERCENT
         },
         "Black": {
@@ -41,10 +41,11 @@ CIF_MEASURE_DESCRIPTIONS = {
             "label": "Hispanic",
             "unit": MeasureUnit.PERCENT
         },
-        "Lack_English_Prof": {
-            "label": "Lack Proficiency in English",
-            "unit": MeasureUnit.PERCENT,
-        },
+        # moved to disparities as of 2024-09
+        # "Lack_English_Prof": {
+        #     "label": "Lack Proficiency in English",
+        #     "unit": MeasureUnit.PERCENT,
+        # },
         "Other_Races": {
             "label": "Other Non-Hispanic Race",
             "unit": MeasureUnit.PERCENT,
@@ -64,6 +65,7 @@ CIF_MEASURE_DESCRIPTIONS = {
         "Urban_Percentage": {
             "label": "Urbanized Residents",
             "unit": MeasureUnit.PERCENT,
+            "county_only": True
         },
         "White": {
             "label": "White (non-Hispanic)",
@@ -83,10 +85,11 @@ CIF_MEASURE_DESCRIPTIONS = {
             "label": "Living Below Poverty",
             "unit": MeasureUnit.PERCENT
         },
-        "Gini Coefficient": {
-            "label": "Income Inequality (Gini Coefficient)",
-            "unit": MeasureUnit.PERCENT,
-        },
+        # moved to rfandscreening as of 2024-09
+        # "Gini Coefficient": {
+        #     "label": "Income Inequality (Gini Coefficient)",
+        #     "unit": MeasureUnit.PERCENT,
+        # },
         "Household Income": {
             "label": "Household Income ($)",
             "unit": MeasureUnit.DOLLAR_AMOUNT,
@@ -102,6 +105,7 @@ CIF_MEASURE_DESCRIPTIONS = {
         "Monthly Unemployment Rate": {
             "label": "Monthly Unemployment Rate",
             "unit": MeasureUnit.PERCENT,
+            "county_only": True
         },
         "Received Public Assistance": {
             "label": "Received TANF or SNAP Public Assistance",
@@ -112,30 +116,119 @@ CIF_MEASURE_DESCRIPTIONS = {
             "unit": MeasureUnit.PERCENT
         },
     },
+    # environment is now completely different between counties
+    # and tracts; we'll use the county_only and tract_only fields
+    # to differentiate between the two, e.g. for tests
     "environment": {
+        # county fields
         "LILATracts_Vehicle": {
             "label": "Tracts that are Food Deserts",
             "unit": MeasureUnit.PERCENT,
+            "county_only": True
         },
-        "PWS_Violations_Since_2016": {
-            "label": "Public Water System Violations since 2016",
-            "unit": MeasureUnit.COUNT,
-        },
+        # missing as of the 2024-04 release?
+        # "PWS_Violations_Since_2016": {
+        #     "label": "Public Water System Violations since 2016",
+        #     "unit": MeasureUnit.COUNT,
+        #     "county_only": True
+        # },
         "pct5G_35_3": {
             "label": "Area with 35/3 Mbps Mobile 5G Coverage",
-            "unit": MeasureUnit.PERCENT
+            "unit": MeasureUnit.PERCENT,
+            "county_only": True
         },
         "pct5G_7_1": {
             "label": "Area with 7/1 Mbps Mobile 5G Coverage",
-            "unit": MeasureUnit.PERCENT
+            "unit": MeasureUnit.PERCENT,
+            "county_only": True
         },
         "pctBB_100_20": {
             "label": "Housing Units with 100/20 Mbps Broadband Service",
-            "unit": MeasureUnit.PERCENT
+            "unit": MeasureUnit.PERCENT,
+            "county_only": True
         },
         "pctBB_1000_10": {
             "label": "Housing Units with 1000/10 Mbps Broadband Service",
-            "unit": MeasureUnit.PERCENT
+            "unit": MeasureUnit.PERCENT,
+            "county_only": True
+        },
+        # tract fields
+        # FIXME: validate labels, units against CIF site
+        # introduced in 2024-07 release, removed in 2024-09 release?
+        # "Air Toxics Cancer": {
+        #     "label": "Air Toxics Cancer Risk",
+        #     "unit": MeasureUnit.RATE,
+        #     "tract_only": True
+        # },
+        # "Air Toxics Resp": {
+        #     "label": "Air Toxics Respiratory Risk",
+        #     "unit": MeasureUnit.RATE,
+        #     "tract_only": True
+        # },
+        "Diesel PM": {
+            "label": "Diesel Particulate Matter (annual avg. mcg/m^3)",
+            "unit": MeasureUnit.RATE,
+            "tract_only": True
+        },
+        "Drinking Water Noncompliance": {
+            "label": "Drinking Water Non-Compliance",
+            "unit": MeasureUnit.RATE,
+            "tract_only": True
+        },
+        "Hazardous Waste Proximity": {
+            "label": "Hazardous Waste Proximity",
+            "unit": MeasureUnit.RATE,
+            "tract_only": True
+        },
+        "Lead Paint": {
+            "label": "Housing Units Built Pre-1960",
+            "unit": MeasureUnit.RATE,
+            "tract_only": True
+        },
+        "Nitrogen Dioxide": {
+            "label": "Nitrogen Dioxide (annual avg. part per billion)",
+            "unit": MeasureUnit.RATE,
+            "tract_only": True
+        },
+        "Ozone": {
+            "label": "Annual Ozone Average (ppm)",
+            "unit": MeasureUnit.RATE,
+            "tract_only": True
+        },
+        "PM25": {
+            "label": "Particulate Matter 2.5 (annual avg. mcg/m^3)",
+            "unit": MeasureUnit.RATE,
+            "tract_only": True
+        },
+        "RMP Proximity": {
+            "label": "Risk Management Plan Facility Proximity",
+            "unit": MeasureUnit.RATE,
+            "tract_only": True
+        },
+        "Superfund Proximity": {
+            "label": "Superfund Proximity",
+            "unit": MeasureUnit.RATE,
+            "tract_only": True
+        },
+        "Toxics Release to Air": {
+            "label": "Toxic Releases to Air",
+            "unit": MeasureUnit.RATE,
+            "tract_only": True
+        },
+        "Traffic Proximity": {
+            "label": "Traffic Volume",
+            "unit": MeasureUnit.RATE,
+            "tract_only": True
+        },
+        "Underground Storage Tanks": {
+            "label": "Underground Storage Tanks",
+            "unit": MeasureUnit.RATE,
+            "tract_only": True
+        },
+        "Water Discharge": {
+            "label": "Toxic Water Discharge",
+            "unit": MeasureUnit.RATE,
+            "tract_only": True
         },
     },
     "housingtrans": {
@@ -217,6 +310,10 @@ CIF_MEASURE_DESCRIPTIONS = {
             "label": "History of Cancer Diagnosis",
             "unit": MeasureUnit.PERCENT,
         },
+        "Cognitive_Disability": {
+            "label": "Cognitive Disability",
+            "unit": MeasureUnit.PERCENT
+        },
         "CHD": {
             "label": "Have Coronary Heart Disease",
             "unit": MeasureUnit.PERCENT
@@ -226,7 +323,7 @@ CIF_MEASURE_DESCRIPTIONS = {
             "unit": MeasureUnit.PERCENT
         },
         "Currently_Smoke": {
-            "label": "Currently Smoke",
+            "label": "Currently Smoke (adults)",
             "unit": MeasureUnit.PERCENT
         },
         "Depression": {
@@ -237,29 +334,63 @@ CIF_MEASURE_DESCRIPTIONS = {
             "label": "Diagnosed with Diabetes",
             "unit": MeasureUnit.PERCENT,
         },
+        "Food_Insecure": {
+            "label": "Experienced Food Insecurity in Last 12 Months",
+            "unit": MeasureUnit.PERCENT
+        },
         "Had_Stroke": {
             "label": "Had a Stroke",
+            "unit": MeasureUnit.PERCENT
+        },
+        "Hearing_Disability": {
+            "label": "Hearing Disability",
             "unit": MeasureUnit.PERCENT
         },
         "High_BP": {
             "label": "Have High Blood Pressure",
             "unit": MeasureUnit.PERCENT
         },
-        "Kidney_Disease": {
-            "label": "Have Chronic Kidney Disease",
-            "unit": MeasureUnit.PERCENT,
+        # removed in 2024-09 release?
+        # "Kidney_Disease": {
+        #     "label": "Have Chronic Kidney Disease",
+        #     "unit": MeasureUnit.PERCENT,
+        # },
+        "High_Cholesterol": {
+            "label": "Have High Cholesterol",
+            "unit": MeasureUnit.PERCENT
+        },
+        "Housing_Insecure": {
+            "label": "Experienced Housing Insecurity in Last 12 Months",
+            "unit": MeasureUnit.PERCENT
+        },
+        "Independent_Living_Disability": {
+            "label": "Independent Living Disability",
+            "unit": MeasureUnit.PERCENT
+        },
+        "Lacked_Reliable_Transportation": {
+            "label": "Lacked Reliable Transportation in Last 12 Months",
+            "unit": MeasureUnit.PERCENT
+        },
+        "Lacked_Social_Emotional_Support": {
+            "label": "Lacked Social/Emotional Support in Last 12 Months",
+            "unit": MeasureUnit.PERCENT
         },
         "Met_Breast_Screen": {
             "label": "Met Breast Screening Recommendations",
             "unit": MeasureUnit.PERCENT,
         },
-        "Met_Cervical_Screen": {
-            "label": "Met Cervical Screening Recommendations",
-            "unit": MeasureUnit.PERCENT,
-        },
+        # removed in 2024-09 release?
+        # "Met_Cervical_Screen": {
+        #     "label": "Met Cervical Screening Recommendations",
+        #     "unit": MeasureUnit.PERCENT,
+        # },
         "Met_Colon_Screen": {
             "label": "Met Colorectal Screening Recommendations",
             "unit": MeasureUnit.PERCENT,
+        },
+        "Mobility_Disability": {
+            "label": "Mobility Disability",
+            "unit": MeasureUnit.PERCENT
         },
         "No_Teeth": {
             "label": "All Adult Teeth Lost",
@@ -285,8 +416,20 @@ CIF_MEASURE_DESCRIPTIONS = {
             "label": "Had a Dental Visit in the Last Year",
             "unit": MeasureUnit.PERCENT,
         },
+        "Selfcare_Disability": {
+            "label": "Self-care Disability",
+            "unit": MeasureUnit.PERCENT
+        },
         "Sleep_Debt": {
             "label": "Sleep < 7 Hours a Night",
+            "unit": MeasureUnit.PERCENT
+        },
+        "Socially_Isolated": {
+            "label": "Felt Socially Isolated in Last 12 Months",
+            "unit": MeasureUnit.PERCENT
+        },
+        "Vision_Disability": {
+            "label": "Vision Disability",
             "unit": MeasureUnit.PERCENT
         },
     },
