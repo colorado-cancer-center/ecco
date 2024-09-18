@@ -23,29 +23,24 @@ from models.scp import (
 # the FIPS code for Colorado
 STATE_CO_FIPS = 8
 
-# optional suffix for SCP data that's filtered to,
-# .e.g, a state FIPS
-STATE_FIPS_SUFFIX = "_state08"
-# STATE_FIPS_SUFFIX = ""
-
 # filenames under the SCP folder to process
 INPUT_FILES = [
-    f'state_cancer_profiles_death{STATE_FIPS_SUFFIX}.csv',
-    f'state_cancer_profiles_incidence{STATE_FIPS_SUFFIX}.csv',
+    f'state_cancer_profiles_mortality.csv',
+    f'state_cancer_profiles_incidence.csv',
 ]
 
 # mapping from input filenames to model classes
 # and model-specific metadata
 FILENAMES_TO_MODELS_AND_META = {
-    f"state_cancer_profiles_death{STATE_FIPS_SUFFIX}.csv": {
+    f"state_cancer_profiles_mortality.csv": {
         "model": SCPDeathsCounty,
         "aac_col": "average_annual_count",
-        "aar_col": "age_adjusted_death_raterate_note___deaths_per_100_000"
+        "aar_col": "age_adjusted_rate_per_100_000"
     },
-    f"state_cancer_profiles_incidence{STATE_FIPS_SUFFIX}.csv": {
+    f"state_cancer_profiles_incidence.csv": {
         "model": SCPIncidenceCounty,
         "aac_col": "average_annual_count",
-        "aar_col": "age_adjusted_incidence_raterate_note___cases_per_100_000"
+        "aar_col": "age_adjusted_rate_per_100_000"
     }
 }
 
@@ -101,7 +96,7 @@ async def import_scp_dataset(model, csv_path:Path, aac_col: str, aar_col:str, de
             # create a new object
             obj_list.append(model(**{
                 "FIPS" : row["fips"],
-                "County" : row["county"].replace(", Colorado", "").replace(" (8)", ""),
+                "County" : row["locale"],
                 "State" : "Colorado",
 
                 # cancer-specific values
