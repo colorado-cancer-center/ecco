@@ -56,6 +56,8 @@ class FIPSMeasureResponse(BaseModel):
     min: Optional[float|str]
     max: Optional[float|str]
     unit: Optional[MeasureUnit]
+    source: Optional[str]
+    source_url: Optional[str]
     order: Optional[list[str]]
     values: dict[str, FIPSValue]
 
@@ -69,6 +71,9 @@ class FactorMetaResponse(BaseModel):
 
 class MeasuresMetaResponse(BaseModel):
     label: str
+    unit: Optional[MeasureUnit]
+    source: Optional[str]
+    source_url: Optional[str]
     factors: Optional[dict[str, FactorMetaResponse]]
 
 class CategoryMetaResponse(BaseModel):
@@ -160,6 +165,9 @@ async def get_measures(session: AsyncSession = Depends(get_session)):
                 "measures": {
                     measure: {
                         "label": measure_descs.get(measure, {}).get('label') or measure,
+                        "unit": measure_descs.get(measure, {}).get('unit'),
+                        "source": measure_descs.get(measure, {}).get('source'),
+                        "source_url": measure_descs.get(measure, {}).get('source_url'),
                         "factors": await get_factors_with_values(model, measure)
                     }
                     for measure in result.scalars().all()
@@ -673,6 +681,8 @@ for type, family in STATS_MODELS.items():
                 return FIPSMeasureResponse(
                     min=stats[0] if model not in SCP_TRENDS_MODELS else INVERTED_TREND_MAP[stats[0]],
                     max=stats[1] if model not in SCP_TRENDS_MODELS else INVERTED_TREND_MAP[stats[1]],
+                    source=measure_meta.get("source", None),
+                    source_url=measure_meta.get("source_url", None),
                     unit=measure_meta.get("unit", None),
                     order=measure_meta.get("order", None),
                     values=values
