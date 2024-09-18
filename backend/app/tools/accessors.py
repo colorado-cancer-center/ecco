@@ -22,3 +22,9 @@ def get_keys(d, *k):
     (1, 2)
     """
     return [d[i] for i in k]
+
+def omit(d, *keys):
+    """
+    Given a dict-like d, return a new dict with the given keys omitted.
+    """
+    return { k: v for k, v in d.items() if k not in keys }
