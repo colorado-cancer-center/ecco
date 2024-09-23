@@ -39,6 +39,11 @@ else
     ARGS="${DEFAULT_ARGS}"
 fi
 
+# if they specified 'shell' as a single arg, then we'll just run the shell
+if [ "$#" -eq 1 ] && [ "$1" = "shell" ]; then
+    ARGS="exec backend /bin/bash"
+fi
+
 FINAL_CMD="docker compose ${COMPOSE_FILE_ARGS} ${ARGS}"
 
 echo "* Running command: ${FINAL_CMD}"
