@@ -53,22 +53,28 @@ SHEETS_TO_MODELS = {
             "Data Source": "source",
             "StateAvg": "state_avg",
         }
-    }
+    },
+    "Radon": {
+        "model": StateSociodemographicStats,
+        "constants": {
+            "measure_category": "Radon Exposure",
+        },
+        "colmap": {
+            "Radon Exposure": "measure",
+            "Data Source": "source",
+            "StateAvg": "state_avg",
+        }
+    },
 }
 
 
-async def import_measure(rows, model, session, delete_before_import=True):
+async def import_measure(rows, model, session):
     """
     Imports a table of measurements into 'model' in the database.
 
     If delete_before_import is True, all existing entries in the target model
     are deleted before importing.
     """
-
-    # delete all existing entries in the target model
-    if delete_before_import:
-        result = await session.execute(delete(model))
-        tqdm.write(f" - Deleted {result.rowcount} from {model.__name__}")
 
     # read each row, creating an object from it and adding it to the list
     obj_list = []
@@ -95,6 +101,12 @@ async def import_ccc_state_stats(excel_path, delete_before_import=True):
 
     # for each file, import it into the database
     async with async_session() as session:
+        # pre-step: clear out the existing data
+        if delete_before_import:
+            for model in set(x["model"] for x in SHEETS_TO_MODELS.values()):
+                result = await session.execute(delete(model))
+                tqdm.write(f" - Deleted {result.rowcount} from {model.__name__}")
+
         tqdm.write(f"* About to process {excel_path}...")
 
         # read in the excel file via openpyxl
@@ -136,7 +148,7 @@ async def import_ccc_state_stats(excel_path, delete_before_import=True):
                     rows.append(row_dict)
 
                 await import_measure(
-                    rows, model, session, delete_before_import
+                    rows, model, session
                 )
 
                 tqdm.write(f"...insert done, committing...")
