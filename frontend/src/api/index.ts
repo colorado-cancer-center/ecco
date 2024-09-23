@@ -203,6 +203,7 @@ type _Values = {
   order?: string[];
   /** where data came from */
   source?: string;
+  source_url?: string;
 };
 
 /** get values data */

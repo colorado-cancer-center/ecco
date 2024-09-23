@@ -351,7 +351,12 @@
         </template>
 
         <template #top-left-lower>
-          <div v-if="values?.source">From: {{ values?.source }}</div>
+          <div v-if="values?.source || values?.source_url">
+            Source:
+            <AppLink :to="values?.source_url ?? ''">
+              {{ values?.source ?? "source" }}
+            </AppLink>
+          </div>
         </template>
 
         <!-- feature popup -->

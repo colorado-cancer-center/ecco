@@ -27,10 +27,12 @@ defineSlots<Slots>();
 
 /** is link to internal route or external url */
 const external = computed(() =>
-  ["http:", "mailto:"].some((prefix) => props.to.startsWith(prefix)),
+  ["https:", "http:", "mailto:"].some((prefix) => props.to.startsWith(prefix)),
 );
 
-const component = computed(() => (external.value ? "a" : "router-link"));
+const component = computed(() =>
+  props.to ? (external.value ? "a" : "router-link") : "span",
+);
 
 const toAttr = computed(() => (external.value ? "href" : "to"));
 
