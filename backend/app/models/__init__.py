@@ -40,3 +40,8 @@ from .cif import (
 )
 from .scp import SCPDeathsCounty, SCPIncidenceCounty
 from .disparity_index import CancerDisparitiesIndex
+from .ccc_state_stats import (
+    StateCancerIncidenceStats,
+    StateCancerMortalityStats,
+    StateSociodemographicStats
+)
