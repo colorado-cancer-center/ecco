@@ -75,7 +75,12 @@
                 {{ formatValue(measure.value, measure.unit, true) }}
               </dd>
 
-              <template v-if="measure.state_value !== undefined && measure.state_value !== null">
+              <template
+                v-if="
+                  measure.state_value !== undefined &&
+                  measure.state_value !== null
+                "
+              >
                 <span
                   v-if="measure.value > measure.state_value"
                   class="compare-symbol"
@@ -95,7 +100,10 @@
 
               <span v-else></span>
               <span
-                v-if="measure.state_value !== undefined && measure.state_value !== null"
+                v-if="
+                  measure.state_value !== undefined &&
+                  measure.state_value !== null
+                "
                 v-tooltip="formatValue(measure.state_value, measure.unit)"
                 class="state-label"
                 aria-label="State value"
