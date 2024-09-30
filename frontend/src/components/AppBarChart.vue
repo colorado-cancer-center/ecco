@@ -51,12 +51,11 @@ type Props = {
 const props = withDefaults(defineProps<Props>(), { unit: undefined });
 
 const chart = ref<ComponentInstance<typeof VChart>>();
-const { width, height } = useElementSize(() => chart.value?.root);
+const { width } = useElementSize(() => chart.value?.root);
 watchEffect(() => {
   /** manually resize to fit container */
   chart.value?.resize({
     width: width.value ?? 200,
-    height: height.value ?? 200,
   });
 });
 
