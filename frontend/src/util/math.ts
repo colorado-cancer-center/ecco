@@ -9,31 +9,28 @@ export function formatValue(
 ): string {
   if (typeof value === "string") return capitalize(value);
   const format: Intl.NumberFormatOptions = {};
+  format.notation = compact ? "compact" : "standard";
+  format.maximumSignificantDigits = compact ? 2 : 5;
   let suffix = "";
   switch (unit) {
     case "percent":
       value *= 100;
-      format.maximumFractionDigits = compact ? 1 : 2;
       suffix = "%";
       break;
     case "count":
-      format.notation = compact ? "compact" : "standard";
+      format.maximumFractionDigits = 0;
       break;
     case "rate":
-      format.maximumSignificantDigits = compact ? 3 : 5;
       break;
     case "dollar_amount":
-      format.notation = compact ? "compact" : "standard";
       format.style = "currency";
       format.currency = "USD";
       break;
     case "rank":
-      format.maximumSignificantDigits = compact ? 3 : 5;
       break;
     case "ordinal":
       break;
     case "least_most":
-      format.maximumFractionDigits = compact ? 2 : 5;
       break;
   }
   return value.toLocaleString(undefined, format) + suffix;

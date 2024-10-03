@@ -11,7 +11,8 @@ export const tippyOptions: {
   defaultProps: {
     allowHTML: true,
     offset: [0, 15],
-    delay: 300,
+    duration: [100, 0],
+    delay: [100, 0],
     onCreate: update,
     onShow: update,
     // onHide: () => false,
@@ -19,16 +20,20 @@ export const tippyOptions: {
 };
 
 /** create or update tooltip instance */
-function update({ reference, props: { content }, setProps }: Instance) {
+function update({ reference, props: { content } }: Instance) {
   /** don't show if content blank */
   if (!content) return false;
 
-  setProps({
-    /** only make interactive if content includes link to click on */
-    interactive: String(content).includes("<a"),
-  });
+  if (
+    (reference instanceof HTMLElement || reference instanceof SVGElement) &&
+    window.getComputedStyle(reference).cursor === "auto"
+  )
+    reference.style.cursor = "help";
 
   /** set aria label to content */
-  if (!(reference as HTMLElement).innerText.trim())
+  if (
+    (reference instanceof HTMLElement && !reference.innerText.trim()) ||
+    reference instanceof SVGElement
+  )
     reference.setAttribute("aria-label", makeLabel(String(content)));
 }

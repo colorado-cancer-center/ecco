@@ -9,15 +9,6 @@
         :options="facetToOptions(levels)"
       />
 
-      <AppLink
-        v-if="selectedLevel === 'tract'"
-        to="/sources#suppressed-values"
-        :new-tab="true"
-      >
-        <font-awesome-icon :icon="faQuestionCircle" class="icon" />
-        Low values may be suppressed
-      </AppLink>
-
       <div class="side-control">
         <AppSelect
           v-model="selectedCategory"
@@ -49,8 +40,17 @@
       </div>
 
       <AppLink :to="learnMoreLink" :new-tab="true">
-        <font-awesome-icon :icon="faQuestionCircle" class="icon" />
         Learn more about selected data
+        <font-awesome-icon :icon="faArrowRight" />
+      </AppLink>
+
+      <AppLink
+        v-if="selectedLevel === 'tract' || noData"
+        to="/sources#suppressed-values"
+        :new-tab="true"
+      >
+        Low values may be suppressed
+        <font-awesome-icon :icon="faQuestionCircle" />
       </AppLink>
 
       <hr />
@@ -101,11 +101,6 @@
             v-tooltip="'Show/hide legend panels on map'"
             label="Show legends"
           />
-          <AppCheckbox
-            v-model="showExtras"
-            v-tooltip="'Show/hide extra info in legends'"
-            label="Extra info"
-          />
         </div>
 
         <!-- gradient -->
@@ -125,10 +120,10 @@
                 <defs>
                   <linearGradient :id="option?.id">
                     <stop
-                      v-for="(color, index) in option?.colors"
-                      :key="index"
+                      v-for="(color, key) in option?.colors"
+                      :key="key"
                       :offset="
-                        100 * (index / ((option?.colors.length || 1) - 1)) + '%'
+                        100 * (key / ((option?.colors.length || 1) - 1)) + '%'
                       "
                       :stop-color="color"
                     />
@@ -309,6 +304,7 @@
         v-model:zoom="zoom"
         v-model:lat="lat"
         v-model:long="long"
+        v-model:no-data="noData"
         class="map"
         :style="
           geometryStatus !== 'success' || valuesStatus !== 'success'
@@ -316,7 +312,7 @@
                 opacity: 0.25,
                 filter: 'saturate(0.25)',
               }
-            : null
+            : undefined
         "
         :geometry="geometry"
         :locations="locations"
@@ -338,43 +334,28 @@
         :width="mapWidth"
         :height="mapHeight"
         :filename="[selectedMeasure, selectedLevel]"
-        @no-data="(value) => (noData = value)"
       >
         <!-- main legend -->
-        <template #top-left>
-          <div v-tooltip="`Unit: ${startCase(values?.unit ?? '')}`">
-            <strong>{{ measures[selectedMeasure]?.label }}</strong>
-            <br />
-            {{ categories[selectedCategory]?.label }}
-            <br />
-            by {{ levels[selectedLevel]?.label }}
-            <br />
+        <template #top-left-upper>
+          <strong>{{ measures[selectedMeasure]?.label }}</strong>
+          <div>{{ categories[selectedCategory]?.label }}</div>
+          <div>
+            {{
+              Object.values(selectedFactors)
+                .map((factor) => factor.value)
+                .filter((factor) => !factor.match(/(^|\s)all($|\s)/i))
+                .join(", ")
+            }}
           </div>
+          <div v-if="values?.state">State-wide: {{ values?.state }}</div>
         </template>
 
-        <!-- selected factors -->
-        <template v-if="showExtras && !isEmpty(factors)" #top-right>
-          <div class="mini-table">
-            <template v-for="(factor, key) in factors" :key="key">
-              <span>{{ factor.label }}</span>
-              <span>{{
-                factor.values[selectedFactors[key]?.value || ""]
-              }}</span>
-            </template>
-          </div>
-        </template>
-
-        <!-- stats -->
-        <template v-if="showExtras && !isEmpty(stats) && values" #bottom-left>
-          <div class="mini-table">
-            <template v-for="(stat, index) in stats" :key="index">
-              <span>
-                {{ stat.key }}
-              </span>
-              <span v-tooltip="stat.full">
-                {{ stat.compact }}
-              </span>
-            </template>
+        <template #top-left-lower>
+          <div v-if="values?.source || values?.source_url">
+            Source:
+            <AppLink :to="values?.source_url ?? ''">
+              {{ values?.source ?? "source" }}
+            </AppLink>
           </div>
         </template>
 
@@ -471,7 +452,7 @@
             </template>
           </div>
 
-          <!-- link to full data -->
+          <!-- link to full data for county -->
           <AppButton
             v-if="selectedLevel === 'county'"
             :icon="faExternalLinkAlt"
@@ -485,34 +466,58 @@
 
       <!-- actions -->
       <div class="actions">
-        <AppButton
-          v-tooltip="'Download current map view as PNG'"
-          :icon="faDownload"
-          :accent="true"
-          @click="map?.download"
-        >
-          Map
-        </AppButton>
-        <AppButton
-          v-tooltip="'Zoom out'"
-          :icon="faMinus"
-          @click="map?.zoomOut"
-        />
-        <AppButton v-tooltip="'Zoom in'" :icon="faPlus" @click="map?.zoomIn" />
-        <AppButton
-          v-tooltip="'Fit view to data'"
-          :icon="faCropSimple"
-          @click="map?.fit"
-        >
-          Fit
-        </AppButton>
-        <AppButton
-          v-tooltip="'View map in full screen'"
-          :icon="faExpand"
-          @click="map?.fullscreen"
-        >
-          Fullscreen
-        </AppButton>
+        <div class="action-row">
+          <AppButton
+            v-tooltip="'Download current map view as PNG'"
+            :icon="faDownload"
+            :accent="true"
+            @click="map?.download"
+          >
+            Map
+          </AppButton>
+          <AppButton
+            v-tooltip="'Zoom out'"
+            :icon="faMinus"
+            @click="map?.zoomOut"
+          />
+          <AppButton
+            v-tooltip="'Zoom in'"
+            :icon="faPlus"
+            @click="map?.zoomIn"
+          />
+          <AppButton
+            v-tooltip="'Fit view to data'"
+            :icon="faCropSimple"
+            @click="map?.fit"
+          >
+            Fit
+          </AppButton>
+          <AppButton
+            v-tooltip="'View map in full screen'"
+            :icon="faExpand"
+            @click="map?.fullscreen"
+          >
+            Fullscreen
+          </AppButton>
+        </div>
+
+        <div class="action-row note">
+          <font-awesome-icon :icon="faHandPointer" />Click on a
+          {{ selectedLevel }} or location to see more info.
+        </div>
+
+        <div class="action-row">
+          <AppButton to="/contact" :icon="faComment" :flip="true" :accent="true"
+            >Feedback</AppButton
+          >
+          <AppButton
+            to="/about#acknowledge"
+            :icon="faFeatherPointed"
+            :flip="true"
+            :accent="true"
+            >Acknowledge</AppButton
+          >
+        </div>
       </div>
     </div>
   </div>
@@ -529,14 +534,20 @@ import {
   type ShallowRef,
   type WatchStopHandle,
 } from "vue";
-import { clamp, cloneDeep, isEmpty, mapValues, startCase } from "lodash";
-import { faQuestionCircle } from "@fortawesome/free-regular-svg-icons";
+import { clamp, cloneDeep, isEmpty, mapValues } from "lodash";
 import {
+  faComment,
+  faHandPointer,
+  faQuestionCircle,
+} from "@fortawesome/free-regular-svg-icons";
+import {
+  faArrowRight,
   faArrowsRotate,
   faCropSimple,
   faDownload,
   faExpand,
   faExternalLinkAlt,
+  faFeatherPointed,
   faMinus,
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
@@ -555,7 +566,6 @@ import {
   type GeoProps,
   type LocationList,
   type LocationProps,
-  type Unit,
   type Values,
 } from "@/api";
 import AppAccordion from "@/components/AppAccordion.vue";
@@ -577,7 +587,7 @@ import {
 } from "@/util/composables";
 import { formatValue } from "@/util/math";
 import { sleep } from "@/util/misc";
-import type { Expand, KeysOfValue, Update } from "@/util/types";
+import type { Expand, Update } from "@/util/types";
 
 type Props = {
   facets: Facets;
@@ -594,36 +604,6 @@ type FeatureInfo = Expand<
       Update<Value, "value", string>
   >
 >;
-
-/** list of measure stats */
-const stats = computed(() => {
-  if (!values.value) return [];
-  const value = values.value;
-
-  type Stat = KeysOfValue<typeof values.value, number>;
-
-  /** all stats */
-  const all: Stat[] = ["total", "min", "max", "avg", "median"];
-  /** all stats, minus ones that could be misconstrued in non-absolute units */
-  const minMax: Stat[] = ["min", "max"];
-
-  const stats: Record<NonNullable<Unit> | "", Stat[]> = {
-    count: all,
-    percent: minMax,
-    rate: minMax,
-    dollar_amount: minMax,
-    rank: minMax,
-    least_most: minMax,
-    ordinal: [],
-    "": [],
-  };
-
-  return stats[value.unit ?? ""].map((key) => ({
-    key: startCase(key),
-    full: formatValue(value[key], value.unit),
-    compact: formatValue(value[key], value.unit, true),
-  }));
-});
 
 const props = defineProps<Props>();
 
@@ -665,7 +645,6 @@ const long = useUrlParam("long", numberParam, 0);
 
 /** map style state */
 const showLegends = ref(true);
-const showExtras = ref(true);
 const selectedBackground = ref(baseOptions[0]!.id || "");
 const selectedGradient = ref(gradientOptions[3]!.id || "");
 const selectedLocations = useUrlParam("locations", arrayParam(stringParam), []);
@@ -694,7 +673,6 @@ async function reset() {
   lat.value = 0;
   long.value = 0;
   showLegends.value = true;
-  showExtras.value = false;
   selectedBackground.value = baseOptions[0]?.id || "";
   selectedGradient.value = gradientOptions[3]?.id || "";
   backgroundOpacity.value = 1;
@@ -927,8 +905,8 @@ watchEffect(() => {
   if (!manualMinMax.value) {
     /** keep in sync with actual min/max (nicer UX when turning manual on) */
     const { min, max } = values.value || {};
-    if (min !== undefined) manualMin.value = min;
-    if (max !== undefined) manualMax.value = max;
+    if (typeof min === "number") manualMin.value = min;
+    if (typeof max === "number") manualMax.value = max;
   }
 });
 
@@ -1058,7 +1036,21 @@ debouncedWatch(
 .actions {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.action-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 10px;
+}
+
+.note {
+  flex-grow: 1;
+  color: var(--gray);
+  font-style: italic;
 }
 </style>

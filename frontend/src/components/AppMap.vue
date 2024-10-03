@@ -24,33 +24,24 @@
     :to="topLeftLegend"
   >
     <div v-stop class="legend">
-      <slot name="top-left" />
+      <slot name="top-left-upper" />
 
       <!-- scale key -->
-      <div class="steps">
-        <template
-          v-for="(step, index) of [...scale.steps].reverse()"
-          :key="index"
-        >
-          <svg viewBox="0 0 1 1">
-            <rect x="0" y="0" width="1" height="1" :fill="step.color" />
-          </svg>
-          <template v-if="'lower' in step && 'upper' in step">
-            <span>{{ formatValue(step.lower, unit, true) }}</span>
-            <span>&ndash;</span>
-            <span>{{ formatValue(step.upper, unit, true) }}</span>
-          </template>
-          <template v-if="'value' in step">
-            <span style="grid-column: 2 / -1">{{ step.label }}</span>
-          </template>
-        </template>
-        <template v-if="noData">
-          <svg viewBox="0 0 1 1">
-            <rect x="0" y="0" width="1" height="1" :fill="noDataColor" />
-          </svg>
-          <span style="grid-column: 2 / -1">No data</span>
-        </template>
+      <div class="scale" :style="{ '--cols': scale.steps.length }">
+        <div
+          v-for="(step, key) of scale.steps"
+          :key="key"
+          v-tooltip="step.tooltip"
+          class="scale-color"
+          tabindex="0"
+          :style="{ background: step.color }"
+        />
+        <div v-for="(step, key) of scale.steps" :key="key" class="scale-label">
+          {{ step.label }}
+        </div>
       </div>
+
+      <slot name="top-left-lower" />
     </div>
   </Teleport>
 
@@ -68,7 +59,7 @@
 
       <!-- symbol key -->
       <div v-if="Object.keys(symbols).length" class="symbols">
-        <template v-for="(symbol, index) of symbols" :key="index">
+        <template v-for="(symbol, key) of symbols" :key="key">
           <img :src="symbol?.url" alt="" />
           <small>{{ symbol?.label }}</small>
         </template>
@@ -117,6 +108,7 @@ import { downloadPng } from "@/util/download";
 import { formatValue, normalizedApply } from "@/util/math";
 import { getBbox, sleep } from "@/util/misc";
 import "leaflet/dist/leaflet.css";
+import { capitalize } from "@/util/string";
 
 /** "no data" color */
 let noDataColor = "#a0a0a0";
@@ -132,8 +124,8 @@ type Props = {
   /** map of geometry id to value */
   values?: Record<string, { value: number | string; [key: string]: unknown }>;
   /** value domain */
-  min?: number;
-  max?: number;
+  min?: number | string;
+  max?: number | string;
   unit?: Unit;
   /** map pan/zoom */
   lat?: number;
@@ -193,13 +185,14 @@ type Emits = {
   "update:zoom": [Props["zoom"]];
   "update:lat": [Props["lat"]];
   "update:long": [Props["long"]];
-  noData: [boolean];
+  "update:no-data": [boolean];
 };
 
 const emit = defineEmits<Emits>();
 
 type Slots = {
-  "top-left": () => unknown;
+  "top-left-upper": () => unknown;
+  "top-left-lower": () => unknown;
   "top-right": () => unknown;
   "bottom-right": () => unknown;
   "bottom-left": () => unknown;
@@ -314,40 +307,60 @@ const noData = computed(
 );
 
 /** tell parent about no data */
-watch(noData, () => emit("noData", noData.value), { immediate: true });
+watch(noData, () => emit("update:no-data", noData.value), { immediate: true });
 
 /** scale object */
 const scale = computed(() => {
   /** get gradient interpolator function from shorthand id/name */
   const gradient = getGradient(props.gradient);
 
+  /** scale steps */
+  const steps: ((
+    | { value: number | string }
+    | { lower: number; upper: number }
+  ) & { label: string; color: string; tooltip: string })[] = [];
+
+  /** no-data scale entry */
+  if (noData.value)
+    steps.push({
+      value: "",
+      label: "?",
+      color: noDataColor,
+      tooltip: "No data",
+    });
+
   /** map specific values to specific colors */
   if (props.scaleValues) {
     /** explicit steps */
-    const steps = props.scaleValues.map((value, index, array) => {
-      const percent = index / (array.length - 1);
-      return {
-        value,
-        label: value,
-        color: gradient(props.flipGradient ? 1 - percent : percent),
-      };
-    });
+    steps.push(
+      ...props.scaleValues.map((value, index, array) => {
+        const percent = index / (array.length - 1);
+        const label =
+          typeof value === "number"
+            ? formatValue(value, props.unit, true)
+            : capitalize(value);
+        return {
+          value,
+          label,
+          color: gradient(props.flipGradient ? 1 - percent : percent),
+          tooltip: label,
+        };
+      }),
+    );
 
     /** explicit color */
     const getColor = (value?: number | string) =>
-      steps.find((step) => step.value === value)?.color ?? noDataColor;
+      steps.find((step) => ("value" in step ? step.value === value : undefined))
+        ?.color ?? noDataColor;
 
     return { steps, getColor };
-  } else {
-    /** if missing data, return empty scale */
-    if (
-      isEmpty(props.values) ||
-      props.min === undefined ||
-      props.max === undefined ||
-      props.min === props.max
-    )
-      return { steps: [], getColor: () => noDataColor };
-
+  } else if (
+    /** if we have valid needed values */
+    !isEmpty(props.values) &&
+    typeof props.min === "number" &&
+    typeof props.max === "number" &&
+    props.min !== props.max
+  ) {
     /** get range of data (accounting for "no data" values) */
     const min = props.min;
     const max = props.max;
@@ -385,11 +398,21 @@ const scale = computed(() => {
     );
 
     /** derive props for each step between points */
-    const steps = d3.pairs(bands).map(([lower, upper], index, array) => ({
-      lower,
-      upper,
-      color: gradient(index / (array.length - 1)),
-    }));
+    steps.push(
+      ...d3.pairs(bands).map(([lower, upper], index, array) => ({
+        lower,
+        upper,
+        label:
+          /** only add first and last labels */
+          index === 0
+            ? formatValue(min, props.unit, true)
+            : index === array.length - 1
+              ? formatValue(max, props.unit, true)
+              : "",
+        color: gradient(index / (array.length - 1)),
+        tooltip: `${formatValue(lower, props.unit)} &ndash; ${formatValue(upper, props.unit)}`,
+      })),
+    );
 
     /** reverse color values */
     const colors = steps.map((step) => step.color);
@@ -405,6 +428,9 @@ const scale = computed(() => {
         : d3.scaleQuantile<string>().domain(bands).range(colors)(value);
 
     return { steps, getColor };
+  } else {
+    /** last resort fallback */
+    return { steps: [], getColor: () => noDataColor };
   }
 });
 
@@ -716,6 +742,8 @@ async function selectFeature(id: string) {
   if (!layer) return;
   map.fitBounds(layer.getBounds());
   layer.setStyle({ fillColor: "var(--theme)" });
+  /** zoom out a bit to give context of surroundings */
+  map.zoomOut(1);
 }
 
 /** allow control from parent */
@@ -740,7 +768,7 @@ defineExpose({
   flex-direction: column;
   max-width: 250px;
   padding: 20px;
-  gap: 20px;
+  gap: 10px;
   border-radius: var(--rounded);
   background: var(--white);
   box-shadow: var(--shadow);
@@ -756,16 +784,25 @@ defineExpose({
   gap: 10px;
 }
 
-.steps {
+.scale {
   display: grid;
-  grid-template-columns: 1.5em max-content max-content max-content;
-  grid-auto-rows: 1.5em;
-  align-items: center;
-  gap: 0 10px;
+  grid-template-rows: 20px;
+  grid-template-columns: repeat(var(--cols), 1fr);
+  justify-items: center;
+  gap: 5px 0;
 }
 
-.steps svg {
+.scale-color {
   width: 100%;
+  height: 100%;
+}
+
+.scale-label {
+  max-width: 60px;
+  padding: 0 5px;
+  overflow: visible;
+  text-align: center;
+  overflow-wrap: break-word;
 }
 
 .symbols {
@@ -782,7 +819,7 @@ defineExpose({
 
 <style>
 .leaflet-container {
-  font: inherit !important;
+  font: inherit;
 }
 
 .leaflet-interactive {
@@ -806,7 +843,7 @@ defineExpose({
   padding: 0.25em 0.5em;
   border-radius: var(--rounded) 0 0 0;
   background: var(--white);
-  box-shadow: var(--shadow) !important;
+  box-shadow: var(--shadow);
   font: inherit;
   font-size: 0.8rem;
 }
@@ -835,9 +872,22 @@ defineExpose({
   box-shadow: unset;
 }
 
+.leaflet-control {
+  transition: opacity 0.5s;
+}
+
+.leaflet-container:has(.leaflet-popup)
+  :is(.leaflet-control-container, .leaflet-control-container *) {
+  pointer-events: none;
+}
+
+.leaflet-container:has(.leaflet-popup) .leaflet-control {
+  opacity: 0;
+}
+
 /* https://github.com/Leaflet/Leaflet/issues/3994 */
 .leaflet-fade-anim .leaflet-popup {
-  transition: none;
+  transition: none !important;
 }
 
 .geometry-label {

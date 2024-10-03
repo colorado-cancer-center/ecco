@@ -1,4 +1,3 @@
-import * as d3 from "d3";
 import type { FeatureCollection, Geometry } from "geojson";
 import { mapValues } from "lodash";
 
@@ -191,15 +190,20 @@ export type Unit =
 /** response from values api endpoint */
 type _Values = {
   /** range of values for specified measure */
-  max: number;
-  min: number;
+  max: number | string;
+  min: number | string;
+  /** "global" value */
+  state?: number | string;
   /** map of feature id to measure value */
   values: {
-    [key: string]: { value: number | string; aac?: number | string | null };
+    [key: string]: { value: number | string; aac?: number | string };
   };
   /** unit info */
   unit: Unit;
   order?: string[];
+  /** where data came from */
+  source?: string;
+  source_url?: string;
 };
 
 /** get values data */
@@ -218,21 +222,7 @@ export async function getValues(
     { measure, ...(filtersString && { filters: filtersString }) },
   );
 
-  /** get raw number values */
-  const numbers = Object.values(data.values)
-    .map(({ value }) => Number(value))
-    .filter((value) => !Number.isNaN(value));
-
-  return {
-    min: d3.min(numbers) || 0,
-    max: d3.max(numbers) || 0,
-    avg: d3.mean(numbers) || 0,
-    median: d3.median(numbers) || 0,
-    total: d3.sum(numbers) || 0,
-    values: data.values,
-    unit: data.unit,
-    order: data.order,
-  };
+  return data;
 }
 
 export type Values = Awaited<ReturnType<typeof getValues>>;
@@ -291,9 +281,9 @@ type _CountyData = {
         [key: string]: {
           label: string;
           value: number | string;
-          avg_value: number | string;
-          aac?: number | string | null;
-          avg_aac?: number | string | null;
+          state_value?: number | string;
+          aac?: number | string;
+          state_aac?: number | string;
           unit: Unit;
           order?: string[];
         };

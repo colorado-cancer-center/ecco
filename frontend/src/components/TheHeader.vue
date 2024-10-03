@@ -1,9 +1,7 @@
 <template>
   <header class="header">
     <AppLink to="/">
-      <div class="pretitle">
-        {{ pretitle }}
-      </div>
+      <div class="pretitle">University of Colorado Cancer Center's</div>
       <div>
         <span class="title">
           <b>E</b>xploring <b>C</b>ancer in <b>Co</b>lorado
@@ -13,7 +11,7 @@
     </AppLink>
 
     <nav class="nav">
-      <template v-for="(route, index) of routes" :key="index">
+      <template v-for="(route, key) of routes" :key="key">
         <AppLink
           v-if="route.meta?.header"
           :to="route.path"
@@ -30,9 +28,6 @@
 <script setup lang="ts">
 import AppLink from "@/components/AppLink.vue";
 import { routes } from "@/pages";
-
-/** project info */
-const { VITE_PRETITLE: pretitle } = import.meta.env;
 </script>
 
 <style scoped>

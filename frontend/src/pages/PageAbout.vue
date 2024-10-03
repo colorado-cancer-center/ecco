@@ -2,6 +2,21 @@
   <section>
     <AppHeading level="1">About</AppHeading>
 
+    <p>
+      Welcome to <b>ECCO</b>, an interactive resource for
+      <b>exploring cancer data in Colorado</b>! View data like population,
+      demographics, cancer burden & disparities, risk factors, health behaviors,
+      and environmental exposures, and local resources like cancer prevention,
+      screening, treatment, and survivorship.
+    </p>
+
+    <AppHeading level="2">Disclaimer</AppHeading>
+
+    <p>
+      This tool is intended to support research, community inquiries, and
+      outreach activities. It should not be used to guide clinical decisions.
+    </p>
+
     <AppHeading level="2">The Map</AppHeading>
 
     <p>
@@ -11,7 +26,7 @@
       e.g. % college graduates, household income, high rent burden. Note that
       some measures are only available for certain geographic levels. You can
       select locations to overlay on the map, e.g. screening centers, clinics,
-      specialists. Click on a region or point on the map to see more details.
+      specialists.
     </p>
 
     <p>

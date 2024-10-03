@@ -10,6 +10,10 @@
   --dark-gray: #434343;
   --off-black: #1a1a1a;
   --black: #000000;
+  --accent-a: hsl(200, 35%, 60%);
+  --accent-b: hsl(80, 35%, 60%);
+  --accent-a-light: hsl(200, 50%, 85%);
+  --accent-b-light: hsl(80, 50%, 85%);
 
   /* font weights */
   --regular: 300;
@@ -19,9 +23,13 @@
   /* effects */
   --rounded: 3px;
   --fast: 0.1s ease-in-out;
+  --slow: 0.5s ease-in-out;
   --shadow: 0 0 10px #00000020, 1px 2px 5px #00000020;
   --spacing: 2;
   --compact: 1.3;
+
+  /** sizes */
+  --content: 1000px;
 }
 
 * {
@@ -66,16 +74,16 @@ footer {
 }
 
 section.full {
-  --col: 10000px;
+  --section: 10000px;
 }
 
 section.wide {
-  --col: 2000px;
+  --section: 2000px;
 }
 
 section {
-  --col: 1000px;
-  padding: 60px max(calc((100% - var(--col)) / 2), 40px);
+  --section: 1000px;
+  padding: 60px max(calc((100% - var(--section)) / 2), 40px);
 }
 
 section:last-child {
@@ -98,15 +106,15 @@ h1,
 h2,
 h3,
 h4 {
-  margin: 40px 0 20px 0;
+  margin: 40px 0;
   color: var(--off-black);
   font-weight: var(--bold);
 }
 
 h1 {
-  margin: 0;
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   text-align: center;
+  text-transform: uppercase;
 }
 
 h2 {
@@ -114,7 +122,6 @@ h2 {
   font-size: 1.3rem;
   letter-spacing: 0.5px;
   text-align: center;
-  text-transform: uppercase;
 }
 
 h3 {
@@ -250,6 +257,24 @@ blockquote {
 
 .mini-table:empty::before {
   content: "No Info";
+}
+
+.charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr));
+  place-content: center;
+  place-items: center;
+  width: 100%;
+  margin: 40px 0;
+  gap: 40px;
+}
+
+.chart,
+.charts > * {
+  aspect-ratio: 4 / 3;
+  max-width: calc(var(--section) / 2);
+  border-radius: var(--rounded);
+  box-shadow: var(--shadow);
 }
 
 .tippy-box {

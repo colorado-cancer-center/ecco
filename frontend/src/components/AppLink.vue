@@ -1,10 +1,5 @@
 <template>
-  <component
-    :is="component"
-    :[toAttr]="to"
-    :target="(newTab ?? isExternal) ? '_blank' : ''"
-    class="link"
-  >
+  <component :is="component" :[toAttr]="to" :target="target" class="link">
     <slot />
   </component>
 </template>
@@ -13,11 +8,16 @@
 import { computed } from "vue";
 
 type Props = {
+  /** internal route or external url to link to */
   to: string;
+  /** force new tab or not */
   newTab?: boolean;
 };
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  external: undefined,
+  newTab: undefined,
+});
 
 type Slots = {
   default?: () => unknown;
@@ -25,13 +25,20 @@ type Slots = {
 
 defineSlots<Slots>();
 
-const isExternal = computed(() =>
-  ["http:", "https:", "mailto:"].some((prefix) => props.to.startsWith(prefix)),
+/** is link to internal route or external url */
+const external = computed(() =>
+  ["https:", "http:", "mailto:"].some((prefix) => props.to.startsWith(prefix)),
 );
 
-const toAttr = computed(() => (isExternal.value ? "href" : "to"));
+const component = computed(() =>
+  props.to ? (external.value ? "a" : "router-link") : "span",
+);
 
-const component = computed(() => (isExternal.value ? "a" : "router-link"));
+const toAttr = computed(() => (external.value ? "href" : "to"));
+
+const target = computed(() =>
+  (props.newTab ?? external.value) ? "_blank" : "",
+);
 </script>
 
 <style scoped>
