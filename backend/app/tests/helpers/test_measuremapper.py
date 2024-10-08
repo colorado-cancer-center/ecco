@@ -1,7 +1,7 @@
 import pytest
 
 import sys
-sys.path.append("/app")
+sys.path.append("/app/src")
 
 from models.base import MeasureUnit
 from models.scp import SCP_MEASURE_DESCRIPTIONS

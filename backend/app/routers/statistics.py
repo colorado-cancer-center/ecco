@@ -3,25 +3,26 @@ API endpoints that return statistics, e.g. cancer incidence/mortality,
 or sociodemographic measures.
 """
 
-from collections import defaultdict
 import os
 import csv
 from io import StringIO, BytesIO
 import zipfile
 
-from typing import Optional, Annotated
+from typing import Any, Optional, Annotated
 from fastapi import Depends, Query, HTTPException, APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from sqlalchemy import func, case, distinct, or_, and_
+from sqlalchemy import func, case
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlmodel import paginate
 from fastapi_cache.decorator import cache
 
+from tools.queries import get_model_factor_defaults_clause, factor_default_clauses
 from tools.strings import slugify, slug_modelname_sans_type, sanitize
-from tools.accessors import get_keys, omit
+from tools.accessors import get_keys
+
 from db import get_session
 
 from settings import LIMIT_TO_STATE
@@ -192,6 +193,7 @@ class CountyMeasureValueResponse(BaseModel):
     value: float
     state_value: Optional[float] = None
     state_stat_source: Optional[str] = None
+    factor_constraints: dict[str, Any]
 
 class CountyCancerMeasureValueResponse(CountyMeasureValueResponse):
     aac: float
@@ -218,84 +220,6 @@ class ByCountyResponse(BaseModel):
 # by averaging over the county/tract values. if false, it will query the
 # CCC models for state statistics.
 AUTOGENERATE_STATE_STATS = False
-
-async def get_category_factors_with_values(model, type, session):
-    """
-    Given a model (i.e. measure category), produces factors and the set of
-    factor values observed in the data for each measure under that 
-    category.
-
-    Response is of the form:
-    {
-        <measure>: {
-            <factor>: {
-                "label": str,
-                "default": str,
-                "values": {
-                    <value>: <label>:str
-                }
-            }
-        }
-    }
-    """
-
-    # retrieve metadata about the factors for the given model+type
-    simple_model_name = slug_modelname_sans_type(model, type)
-    factor_descs = FACTOR_DESCRIPTIONS.get(simple_model_name, {})
-
-    # if there are no factors, return an empty dict
-    if not factor_descs:
-        return {}
-
-    # determine the measure column ('Site' for cancer-related, 'measure' otherwise)
-    measure_col = (
-        model.Site
-        if model in CANCER_MODELS or model in SCP_TRENDS_MODELS else
-        model.measure
-    ).label("measure")
-
-    # select a list of all distinct factor values for each measure...
-    select_factor_args = [
-        func.array_agg(distinct(getattr(model, col))).label(col)
-        for col in factor_descs
-    ]
-    # ...but only for factor values that actually occur in the measure
-    having_factor_args = [
-        func.count(distinct(getattr(model, col))) > 0
-        for col in factor_descs
-    ]
-
-    # query for all factor values for each measure
-    query = (
-        select(
-            measure_col,
-            *select_factor_args
-        )
-        .group_by(measure_col)
-        .having(and_(*having_factor_args))
-        .distinct()
-    )
-
-    result = await session.execute(query)
-    factor_results = result.mappings().all()
-
-    # produce a response that looks very much like the factor response
-    # for a specific measure, but over all measures
-    return {
-        x["measure"]: {
-            k: {
-                "label": str(factor_descs[k]["label"] or k),
-                "default": factor_descs[k].get("default"),
-                "values": {
-                    value: label
-                    for value, label in factor_descs[k]["values"].items() if
-                    value in v
-                }
-            }
-            for k, v in omit(x, 'measure').items()
-        }
-        for x in factor_results
-    }
 
 @router.get("/by-county/{county_fips}", response_model=ByCountyResponse)
 @cache()
@@ -367,20 +291,6 @@ async def get_county_measures(county_fips:str, session: AsyncSession = Depends(g
                 func.avg(model.value).label("value")
             ).group_by(model.measure).order_by(model.measure)
 
-        # if the model has factors, constrain them to their default values
-        # for example, for SCP models, this selects the following factor values:
-        # "sex": "All", "stage": "All Stages", "race": "All Races (includes Hispanic)", "age": "All Ages"
-        factor_labels = FACTOR_DESCRIPTIONS.get(simple_model_name, None)
-        all_factor_values = await get_category_factors_with_values(model, type, session)
-
-        # determine the measure column ('Site' for cancer-related, 'measure' otherwise)
-        measure_col = (
-            model.Site
-            if model in CANCER_MODELS or model in SCP_TRENDS_MODELS else
-            model.measure
-        ).label("measure")
-
-
         # =========================================================================
         # === resolve factor values for current measure category
         # =========================================================================
@@ -389,45 +299,10 @@ async def get_county_measures(county_fips:str, session: AsyncSession = Depends(g
         # the default values for each factor, or a possible value if the default
         # doesn't exist (e.g., if the default for sex is "All" but the data only has
         # "Female" entries due to being a sex-linked cancer, e.g. ovarian cancer)
-        
-        # record the factor constraints so we can apply them to both our queries
-        factor_constraints = defaultdict(dict)
 
-        # converts factor_constraints to a set of clauses that can be applied to
-        # a query for a specific model
-        def factor_default_clauses(constraints, model, measure_col):
-            return [
-                and_(
-                    measure_col == measure,
-                    getattr(model, factor) == default
-                )
-                for measure, factor_values in constraints.items()
-                for factor, default in factor_values.items()
-            ]
-
-        if factor_labels:
-            for f, fv in factor_labels.items():
-                for measure in all_factor_values:
-                    measure_values = list(all_factor_values[measure][f]["values"].keys())
-
-                    # this is the hardcoded default value, regardless of what's in the data
-                    naive_default = fv.get("default")
-
-                    if len(measure_values) > 0:
-                        # get the default if it occurs in the data
-                        # otherwise get the first value that actually occurs
-                        effective_default = naive_default if naive_default in measure_values else measure_values[0]
-                    else:
-                        # we have no data for this factor, so just use the default
-                        effective_default = fv.get("default")
-
-                    # populate factor_constraints with the effective default
-                    factor_constraints[measure][f] = effective_default
-
-                # issue a big OR'd where here, because each measure has its own set of possible factor values
-                query = query.where(
-                    or_(*factor_default_clauses(factor_constraints, model, measure_col))
-                )
+        factor_constraints, factor_defaults_clause = await get_model_factor_defaults_clause(model, type, session)
+        if factor_defaults_clause is not None:
+            query = query.where(factor_defaults_clause)
 
         # =========================================================================
         # === retrieve (or compute) state-level values
@@ -441,9 +316,7 @@ async def get_county_measures(county_fips:str, session: AsyncSession = Depends(g
                     state_model.site.label("measure"),
                     state_model.state_avg.label("value"),
                 ).where(
-                    or_(*factor_default_clauses(
-                        factor_constraints, state_model, state_model.site
-                    ))
+                    factor_default_clauses(factor_constraints, state_model, state_model.site)
                 )
             )
 
@@ -483,15 +356,12 @@ async def get_county_measures(county_fips:str, session: AsyncSession = Depends(g
             # map the trend values back to their human-readable labels
             if model in SCP_TRENDS_MODELS:
                 for x in autogen_state_values:
-                    autogen_state_values[x]["value"] = INVERTED_TREND_MAP.get(int(autogen_state_values[x]["value"]), "")
+                    autogen_state_values[x]["value"] = INVERTED_TREND_MAP.get(
+                        int(autogen_state_values[x]["value"]), ""
+                    )
 
-            # merge autogen'd stats on a per-measure basis into the state_values dict
-            # for measure in set(autogen_state_values.keys()) | set(state_values.keys()):
-            #     state_values[measure] = {
-            #         **autogen_state_values.get(measure, {}), 
-            #         **state_values.get(measure, {})
-            #     }
-
+            # merge existing state values and autogenerated values, preferring
+            # the given state values over the computed ones
             state_values = {
                 **autogen_state_values,
                 **state_values
@@ -521,6 +391,7 @@ async def get_county_measures(county_fips:str, session: AsyncSession = Depends(g
                     "state_value": state_values.get(measure_descs.get(x["measure"], {}).get('label'), {}).get("value", None),
                     "state_aac": state_values.get(measure_descs.get(x["measure"], {}).get('label'), {}).get("aac", None),
                     "state_stat_source": state_values.get(measure_descs.get(x["measure"], {}).get('label'), {}).get("stat_source", None),
+                    "factor_constraints": factor_constraints.get(x["measure"], {})
                 }
             }
             for x in result.all()
@@ -773,8 +644,8 @@ for type, family in STATS_MODELS.items():
                 )
 
                 return FIPSMeasureResponse(
-                    min=stats[0] if model not in SCP_TRENDS_MODELS else INVERTED_TREND_MAP[stats[0]],
-                    max=stats[1] if model not in SCP_TRENDS_MODELS else INVERTED_TREND_MAP[stats[1]],
+                    min=stats[0] if model not in SCP_TRENDS_MODELS else INVERTED_TREND_MAP.get(stats[0], stats[0]),
+                    max=stats[1] if model not in SCP_TRENDS_MODELS else INVERTED_TREND_MAP.get(stats[1], stats[1]),
                     source=measure_meta.get("source", None),
                     source_url=measure_meta.get("source_url", None),
                     unit=measure_meta.get("unit", None),

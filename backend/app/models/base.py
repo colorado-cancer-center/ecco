@@ -15,13 +15,6 @@ from sqlmodel import Field, SQLModel
 class BaseStatsModel(SQLModel):
     id: Optional[int] = Field(default=None, nullable=False, primary_key=True)
 
-class MeasuresByCounty(BaseStatsModel):
-    FIPS : str = Field(index=True)
-    County : str = Field(index=True)
-    State : str = Field(index=True, foreign_key="us_state.name")
-    measure : str = Field(index=True)
-    value : float = Field(nullable=True)
-
     @classmethod
     def get_factors(cls):
         """
@@ -30,6 +23,13 @@ class MeasuresByCounty(BaseStatsModel):
         This is a placeholder method that should be overridden by child models.
         """
         return ()
+
+class MeasuresByCounty(BaseStatsModel):
+    FIPS : str = Field(index=True)
+    County : str = Field(index=True)
+    State : str = Field(index=True, foreign_key="us_state.name")
+    measure : str = Field(index=True)
+    value : float = Field(nullable=True)
 
 class CancerStatsByCounty(BaseStatsModel):
     # NOTE: the 'measure' and 'value' columns are named 'Site' and 'AAR' in the
