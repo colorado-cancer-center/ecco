@@ -1,13 +1,13 @@
-import pytest
+import sys
 
+import pytest_asyncio
 from fastapi.testclient import TestClient
 
-import sys
 sys.path.append("/app")
 
 from main import app
 
-@pytest.fixture
-def client():
+@pytest_asyncio.fixture()
+async def client():
     with TestClient(app) as c:
         yield c
