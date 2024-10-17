@@ -33,7 +33,9 @@ echo "* Using target environment ${TARGET_ENV}"
 
 COMPOSE_FILE_ARGS=$( echo ${COMPOSE_FILES[@]} | xargs -n 1 echo "-f" | xargs )
 
-if [ "$#" -gt 0 ]; then
+if [ "$#" -eq 1 ] && [ "${1}" = "shell" ]; then
+    ARGS="exec -it backend /bin/bash"
+elif [ "$#" -gt 0 ]; then
     ARGS="$@"
 else
     ARGS="${DEFAULT_ARGS}"
