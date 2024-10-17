@@ -3,14 +3,14 @@ import pytest
 from urllib.parse import quote_plus
 
 import sys
-sys.path.append("/app")
+sys.path.append("/app/src")
 
 from models.base import STATS_MODELS, MEASURE_DESCRIPTIONS
 from tools.strings import slug_modelname_sans_type
 
-pytestmark = pytest.mark.asyncio
 
-async def test_unit_in_response(client):
+@pytest.mark.asyncio(loop_scope='function')
+async def test_unit_in_response(event_loop, client):
     for type in STATS_MODELS:
         for model in STATS_MODELS[type]:
             simple_model_name = slug_modelname_sans_type(model, type)

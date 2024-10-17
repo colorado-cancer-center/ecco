@@ -117,10 +117,24 @@ SCP_TRENDS_MODELS = {
 # might consider switching this object to an accessor that returns
 # the verbatim measure name and MeasureUnit.RATE for all measures
 SCP_MEASURE_DESCRIPTIONS = {
-    "scpincidence": MeasureMapper(MeasureUnit.RATE),
-    "scpdeaths": MeasureMapper(MeasureUnit.RATE),
-    "scpincidencetrend": MeasureMapper(MeasureUnit.ORDINAL, extras={"order": ["falling", "stable", "rising"]}),
-    "scpdeathstrend": MeasureMapper(MeasureUnit.ORDINAL, extras={"order": ["falling", "stable", "rising"]}),
+    "scpincidence": MeasureMapper(
+        MeasureUnit.RATE,
+        model=SCPIncidenceCounty, measure_column='Site'
+    ),
+    "scpdeaths": MeasureMapper(
+        MeasureUnit.RATE,
+        model=SCPDeathsCounty, measure_column='Site'
+    ),
+    "scpincidencetrend": MeasureMapper(
+        MeasureUnit.ORDINAL,
+        model=SCPIncidenceTrendCounty, measure_column='Site',
+        extras={"order": ["falling", "stable", "rising"]}
+    ),
+    "scpdeathstrend": MeasureMapper(
+        MeasureUnit.ORDINAL,
+        model=SCPDeathsTrendCounty, measure_column='Site',
+        extras={"order": ["falling", "stable", "rising"]}
+    ),
 }
 
 # descriptions of factors, i.e. additional enumerated values associated
