@@ -45,16 +45,38 @@
         <span class="state-label">Colorado</span>
       </p>
 
-      <div v-if="filter === 'basic'" class="charts">
-        <AppBarChart
-          v-for="(chart, key) in chartData"
-          :key="key"
-          :title="chart.title"
-          :data="chart.data"
-          :unit="chart.unit"
-          :enumerated="chart.unit === 'ordinal'"
-        />
-      </div>
+      <template v-if="filter === 'basic'">
+        <p class="center">
+          <strong>Population</strong>: &nbsp;&nbsp;
+          <span class="county-label">
+            {{
+              formatValue(
+                countyData?.categories.sociodemographics?.measures.Total
+                  ?.value ?? "-",
+              )
+            }}
+          </span>
+          &nbsp;&nbsp;
+          <span class="state-label">
+            {{
+              formatValue(
+                countyData?.categories.sociodemographics?.measures.Total
+                  ?.state_value ?? "-",
+              )
+            }}
+          </span>
+        </p>
+        <div class="charts">
+          <AppBarChart
+            v-for="(chart, key) in chartData"
+            :key="key"
+            :title="chart.title"
+            :data="chart.data"
+            :unit="chart.unit"
+            :enumerated="chart.unit === 'ordinal'"
+          />
+        </div>
+      </template>
 
       <div v-else-if="countyData && filter === 'all'" class="grid">
         <template
@@ -62,7 +84,17 @@
           :key="categoryKey"
         >
           <div class="cell">
-            <div class="heading">{{ category.label }}</div>
+            <div level="2" class="cell-heading">
+              {{ category.label }}
+              <AppLink
+                v-tooltip="'Learn more about this category'"
+                class="cell-heading"
+                :to="learnMoreLink(String(categoryKey))"
+                :new-tab="true"
+                ><font-awesome-icon :icon="faCircleQuestion"
+              /></AppLink>
+            </div>
+
             <template
               v-for="(measure, measureKey) in category.measures"
               :key="measureKey"
@@ -123,15 +155,18 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { fromPairs, mapValues, orderBy, startCase, toPairs } from "lodash";
+import { faCircleQuestion } from "@fortawesome/free-regular-svg-icons";
 import { faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
 import { getCountyData, getGeo } from "@/api";
 import AppBarChart from "@/components/AppBarChart.vue";
 import AppButton from "@/components/AppButton.vue";
 import AppHeading from "@/components/AppHeading.vue";
+import AppLink from "@/components/AppLink.vue";
 import AppMap from "@/components/AppMap.vue";
 import AppSelect from "@/components/AppSelect.vue";
 import AppStatus from "@/components/AppStatus.vue";
 import { appTitle } from "@/meta";
+import { learnMoreLink } from "@/pages/learn-more";
 import { useQuery } from "@/util/composables";
 import { formatValue } from "@/util/math";
 import { waitFor } from "@/util/misc";
@@ -257,8 +292,11 @@ watch(countyData, () => (appTitle.value = [countyData.value?.name ?? ""]));
   gap: 10px 20px;
 }
 
-.heading {
+.cell-heading {
+  display: flex;
   grid-column: 1 / -1;
+  align-items: center;
+  gap: 10px;
   font-weight: var(--bold);
 }
 
