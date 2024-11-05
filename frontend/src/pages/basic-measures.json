@@ -32,13 +32,12 @@
     "measures": [
       ["rfandscreening", "Binge_Drinking"],
       ["rfandscreening", "Currently_Smoke"],
-      ["rfandscreening", "Diabetes_DX"],
       ["rfandscreening", "BMI_Obese"],
       ["rfandscreening", "Physically_Inactive"]
     ]
   },
   {
-    "title": "Adults Recommended for Cancer Screening (%)",
+    "title": "Adults Up-to-Date with Screening",
     "measures": [
       ["rfandscreening", "Met_Breast_Screen"],
       ["rfandscreening", "Met_Cervical_Screen"],
