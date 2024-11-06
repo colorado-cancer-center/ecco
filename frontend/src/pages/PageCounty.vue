@@ -56,15 +56,6 @@
               )
             }}
           </span>
-          &nbsp;&nbsp;
-          <span class="state-label">
-            {{
-              formatValue(
-                countyData?.categories.sociodemographics?.measures.Total
-                  ?.state_value ?? "-",
-              )
-            }}
-          </span>
         </p>
         <div class="charts">
           <AppBarChart
