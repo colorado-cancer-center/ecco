@@ -324,9 +324,9 @@ const scale = computed(() => {
   if (noData.value)
     steps.push({
       value: "",
-      label: "?",
+      label: "ND",
       color: noDataColor,
-      tooltip: "No data",
+      tooltip: "No data, suppressed value, or 0",
     });
 
   /** map specific values to specific colors */

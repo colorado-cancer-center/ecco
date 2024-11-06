@@ -1,5 +1,5 @@
 <template>
-  <component :is="tag" :id="link" ref="heading">
+  <component :is="tag" :id="link" ref="heading" class="heading">
     <slot />
 
     <AppLink
@@ -69,7 +69,7 @@ onUpdated(updateLink);
   opacity: 1;
 }
 
-:is(h1, h2, h3, h4):hover .anchor {
+.heading:hover .anchor {
   opacity: 1;
 }
 </style>

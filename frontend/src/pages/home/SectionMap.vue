@@ -39,7 +39,7 @@
         />
       </div>
 
-      <AppLink :to="learnMoreLink" :new-tab="true">
+      <AppLink :to="learnMoreLink(selectedCategory)" :new-tab="true">
         Learn more about selected data
         <font-awesome-icon :icon="faArrowRight" />
       </AppLink>
@@ -454,7 +454,7 @@
 
           <!-- link to full data for county -->
           <AppButton
-            v-if="selectedLevel === 'county'"
+            v-if="selectedLevel === 'county' && 'county' in feature"
             :icon="faExternalLinkAlt"
             :to="`/county/${feature.id}`"
             :flip="true"
@@ -578,6 +578,7 @@ import AppSelect, { type Entry, type Option } from "@/components/AppSelect.vue";
 import AppSlider from "@/components/AppSlider.vue";
 import { gradientOptions } from "@/components/gradient";
 import { baseOptions } from "@/components/tile-providers";
+import { learnMoreLink } from "@/pages/learn-more";
 import {
   arrayParam,
   numberParam,
@@ -611,27 +612,6 @@ const props = defineProps<Props>();
 const leftPanelElement = ref<HTMLElement>();
 const rightPanelElement = ref<HTMLElement>();
 const map = ref<InstanceType<typeof AppMap>>();
-
-/** get "learn more" link based on selections */
-const learnMoreLink = computed(() => {
-  switch (selectedCategory.value) {
-    case "cancerincidence":
-    case "cancermortality":
-      return "/sources#cancer-incidence-and-mortality";
-    case "sociodemographics":
-    case "economy":
-    case "housingtrans":
-      return "/sources#sociodemographics-economics-insurance-and-housing-transportation";
-    case "rfandscreening":
-      return "/sources#screening-risk-factors-and-other-health-factors";
-    case "environment":
-      return "/sources#environment";
-    case "cancerdisparitiesindex":
-      return "/sources#cancer-disparities-index";
-  }
-
-  return "/sources";
-});
 
 /** select boxes state */
 const selectedLevel = useUrlParam("level", stringParam, "");
@@ -1050,7 +1030,5 @@ debouncedWatch(
 
 .note {
   flex-grow: 1;
-  color: var(--gray);
-  font-style: italic;
 }
 </style>
