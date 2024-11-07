@@ -323,7 +323,7 @@ const scale = computed(() => {
   const gradient = (percent: number) => {
     /** get gradient interpolator function from shorthand id/name */
     const gradient = getGradient(props.gradient);
-    /** reverse percent */
+    /** reverse */
     if (props.flipGradient) percent = 1 - percent;
     /** get color */
     return gradient(percent);
@@ -363,7 +363,8 @@ const scale = computed(() => {
 
     return { steps, getColor };
   } else if (
-    /** continuous scale */
+    /** map continuous values to discrete colors */
+    /** (if we have needed and valid values) */
     !isEmpty(props.values) &&
     typeof props.min === "number" &&
     typeof props.max === "number" &&
@@ -422,7 +423,7 @@ const scale = computed(() => {
     /** get colors (excluding "no data" entry) for scale range */
     const colors = steps.map((step) => step.color);
 
-    /** add "no data" entry to start of list (after reversing performed) */
+    /** add "no data" entry to start of list */
     if (noData.value) steps.unshift(noDataEntry);
 
     /** scale interpolator */
