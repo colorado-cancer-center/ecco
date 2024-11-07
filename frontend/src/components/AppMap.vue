@@ -319,8 +319,15 @@ watch(noData, () => emit("update:no-data", noData.value), { immediate: true });
 
 /** scale object */
 const scale = computed(() => {
-  /** get gradient interpolator function from shorthand id/name */
-  const gradient = getGradient(props.gradient);
+  /** map 0-1 percent to color */
+  const gradient = (percent: number) => {
+    /** get gradient interpolator function from shorthand id/name */
+    const gradient = getGradient(props.gradient);
+    /** reverse percent */
+    if (props.flipGradient) percent = 1 - percent;
+    /** get color */
+    return gradient(percent);
+  };
 
   /** scale steps */
   const steps: ((
@@ -336,7 +343,6 @@ const scale = computed(() => {
     /** explicit steps */
     steps.push(
       ...props.scaleValues.map((value, index, array) => {
-        const percent = index / (array.length - 1);
         const label =
           typeof value === "number"
             ? formatValue(value, props.unit, true)
@@ -344,7 +350,7 @@ const scale = computed(() => {
         return {
           value,
           label,
-          color: gradient(props.flipGradient ? 1 - percent : percent),
+          color: gradient(index / (array.length - 1)),
           tooltip: label,
         };
       }),
@@ -398,22 +404,19 @@ const scale = computed(() => {
 
     /** derive props for each step between points */
     steps.push(
-      ...d3.pairs(bands).map(([lower, upper], index, array) => {
-        const percent = index / (array.length - 1);
-        return {
-          lower,
-          upper,
-          label:
-            /** only add first and last labels */
-            index === 0
-              ? formatValue(min, props.unit, true)
-              : index === array.length - 1
-                ? formatValue(max, props.unit, true)
-                : "",
-          color: gradient(props.flipGradient ? 1 - percent : percent),
-          tooltip: `${formatValue(lower, props.unit)} &ndash; ${formatValue(upper, props.unit)}`,
-        };
-      }),
+      ...d3.pairs(bands).map(([lower, upper], index, array) => ({
+        lower,
+        upper,
+        label:
+          /** only add first and last labels */
+          index === 0
+            ? formatValue(min, props.unit, true)
+            : index === array.length - 1
+              ? formatValue(max, props.unit, true)
+              : "",
+        color: gradient(index / (array.length - 1)),
+        tooltip: `${formatValue(lower, props.unit)} &ndash; ${formatValue(upper, props.unit)}`,
+      })),
     );
 
     /** get colors (excluding "no data" entry) for scale range */
