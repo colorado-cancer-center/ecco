@@ -227,7 +227,7 @@ watch(() => route.params.id, loadCountyData, { immediate: true });
 /** get select chart data from county data */
 const chartData = computed(() =>
   countyData.value
-    ? basicMeasures.map(({ title, measures }) => {
+    ? basicMeasures.map(({ title, showStateLevel, measures }) => {
         /** full value info for each measure */
         const measureValues = Object.fromEntries(
           measures.map(([category, measure]) => [
@@ -243,7 +243,9 @@ const chartData = computed(() =>
           unit: Object.values(measureValues).find((value) => value?.unit)?.unit,
           data: {
             County: mapValues(measureValues, (value) => value?.value),
-            State: mapValues(measureValues, (value) => value?.state_value),
+            ...(showStateLevel && {
+              State: mapValues(measureValues, (value) => value?.state_value),
+            }),
           },
         };
       })

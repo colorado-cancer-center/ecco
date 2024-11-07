@@ -111,21 +111,32 @@ const option = computed(() => {
 
   const symbolSize = 30;
 
-  options.series = Object.entries(props.data).map(([name, data], index) => ({
-    name,
-    type: props.enumerated ? "pictorialBar" : "bar",
-    data: Object.values(data).map((value) => ({
-      value: value ?? (props.enumerated ? "?" : 0),
-      itemStyle: value ? undefined : { color: "#00000020" },
-      noData: value === undefined,
-    })),
-    color: [colorA, colorB][index],
-    barMinHeight: props.enumerated ? 0 : 5,
-    symbol: "diamond",
-    symbolPosition: "end",
-    symbolSize: [symbolSize, symbolSize],
-    symbolOffset: [(index - 0.5) * 125 + "%", "-50%"],
-  }));
+  options.series = Object.entries(props.data).map(
+    ([name, data], index, entries) => ({
+      name,
+      type: props.enumerated ? "pictorialBar" : "bar",
+      data: Object.values(data)
+        .map((value) => ({
+          value: value ?? (props.enumerated ? "?" : 0),
+          itemStyle: value ? undefined : { color: "#00000020" },
+          noData: value === undefined,
+        }))
+        .toSorted((a, b) => {
+          if (a.noData) return -1;
+          if (b.noData) return 1;
+          return 0;
+        }),
+      color: [colorA, colorB][index],
+      barMinHeight: props.enumerated ? 0 : 5,
+      symbol: "diamond",
+      symbolPosition: "end",
+      symbolSize: [symbolSize, symbolSize],
+      symbolOffset: [
+        (index - (entries.length - 1) / 2) * 100 * 1.1 + "%",
+        "-50%",
+      ],
+    }),
+  );
 
   options.tooltip = {};
   options.tooltip.trigger = "item";
