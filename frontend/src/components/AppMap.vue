@@ -398,29 +398,26 @@ const scale = computed(() => {
 
     /** derive props for each step between points */
     steps.push(
-      ...d3.pairs(bands).map(([lower, upper], index, array) => ({
-        lower,
-        upper,
-        label:
-          /** only add first and last labels */
-          index === 0
-            ? formatValue(min, props.unit, true)
-            : index === array.length - 1
-              ? formatValue(max, props.unit, true)
-              : "",
-        color: gradient(index / (array.length - 1)),
-        tooltip: `${formatValue(lower, props.unit)} &ndash; ${formatValue(upper, props.unit)}`,
-      })),
+      ...d3.pairs(bands).map(([lower, upper], index, array) => {
+        const percent = index / (array.length - 1);
+        return {
+          lower,
+          upper,
+          label:
+            /** only add first and last labels */
+            index === 0
+              ? formatValue(min, props.unit, true)
+              : index === array.length - 1
+                ? formatValue(max, props.unit, true)
+                : "",
+          color: gradient(props.flipGradient ? 1 - percent : percent),
+          tooltip: `${formatValue(lower, props.unit)} &ndash; ${formatValue(upper, props.unit)}`,
+        };
+      }),
     );
 
     /** get colors (excluding "no data" entry) for scale range */
     const colors = steps.map((step) => step.color);
-
-    /** reverse gradient colors */
-    if (props.flipGradient) {
-      colors.reverse();
-      steps.forEach((step, index) => (step.color = colors[index] || ""));
-    }
 
     /** add "no data" entry to start of list (after reversing performed) */
     if (noData.value) steps.unshift(noDataEntry);
