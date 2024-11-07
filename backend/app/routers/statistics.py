@@ -310,7 +310,7 @@ async def get_county_measures(county_fips:str, session: AsyncSession = Depends(g
 
         # retrieve state values by querying CCC models
         if model in [SCPIncidenceCounty, SCPDeathsCounty]:
-            state_model = StateCancerIncidenceStats if SCPIncidenceCounty else StateCancerMortalityStats
+            state_model = StateCancerIncidenceStats if model is SCPIncidenceCounty else StateCancerMortalityStats
             state_query = (
                 select(
                     state_model.site.label("measure"),
