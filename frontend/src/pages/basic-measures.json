@@ -1,6 +1,7 @@
 [
   {
     "title": "Demographic Measures",
+    "showStateLevel": false,
     "measures": [
       ["sociodemographics", "Hispanic"],
       ["sociodemographics", "Over 64"],
@@ -9,6 +10,7 @@
   },
   {
     "title": "Cancer Incidence Rates (per 100k)",
+    "showStateLevel": true,
     "measures": [
       ["scpincidence", "All Cancer Sites"],
       ["scpincidence", "Breast (Female)"],
@@ -19,6 +21,7 @@
   },
   {
     "title": "Cancer Mortality Rates (per 100k)",
+    "showStateLevel": true,
     "measures": [
       ["scpdeaths", "All Cancer Sites"],
       ["scpdeaths", "Breast (Female)"],
@@ -29,6 +32,7 @@
   },
   {
     "title": "Presence of Risk Factors (%)",
+    "showStateLevel": true,
     "measures": [
       ["rfandscreening", "Binge_Drinking"],
       ["rfandscreening", "Currently_Smoke"],
@@ -38,6 +42,7 @@
   },
   {
     "title": "Adults Up-to-Date with Screening",
+    "showStateLevel": true,
     "measures": [
       ["rfandscreening", "Met_Breast_Screen"],
       ["rfandscreening", "Met_Cervical_Screen"],
@@ -46,10 +51,12 @@
   },
   {
     "title": "Cancer Incidence Trends",
+    "showStateLevel": false,
     "measures": [
       ["scpincidencetrend", "All Cancer Sites"],
+      ["scpincidencetrend", "Female Breast"],
       ["scpincidencetrend", "Lung & Bronchus"],
-      ["scpincidencetrend", "Non-Hodgkin Lymphoma"]
+      ["scpincidencetrend", "Colon & Rectum"]
     ]
   }
 ]

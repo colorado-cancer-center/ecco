@@ -113,6 +113,14 @@ import { capitalize } from "@/util/string";
 /** "no data" color */
 let noDataColor = "#a0a0a0";
 
+/** "no data scale entry */
+const noDataEntry = {
+  value: "",
+  label: "ND",
+  color: noDataColor,
+  tooltip: "No data, suppressed value, or 0",
+};
+
 /** element refs */
 const scrollElement = ref<HTMLDivElement>();
 const mapElement = ref<HTMLDivElement>();
@@ -306,13 +314,20 @@ const noData = computed(
     ),
 );
 
-/** tell parent about no data */
+/** tell parent about "no data" */
 watch(noData, () => emit("update:no-data", noData.value), { immediate: true });
 
 /** scale object */
 const scale = computed(() => {
-  /** get gradient interpolator function from shorthand id/name */
-  const gradient = getGradient(props.gradient);
+  /** map 0-1 percent to color */
+  const gradient = (percent: number) => {
+    /** get gradient interpolator function from shorthand id/name */
+    const gradient = getGradient(props.gradient);
+    /** reverse */
+    if (props.flipGradient) percent = 1 - percent;
+    /** get color */
+    return gradient(percent);
+  };
 
   /** scale steps */
   const steps: ((
@@ -320,21 +335,14 @@ const scale = computed(() => {
     | { lower: number; upper: number }
   ) & { label: string; color: string; tooltip: string })[] = [];
 
-  /** no-data scale entry */
-  if (noData.value)
-    steps.push({
-      value: "",
-      label: "ND",
-      color: noDataColor,
-      tooltip: "No data, suppressed value, or 0",
-    });
-
   /** map specific values to specific colors */
   if (props.scaleValues) {
+    /** add "no data" entry */
+    if (noData.value) steps.push(noDataEntry);
+
     /** explicit steps */
     steps.push(
       ...props.scaleValues.map((value, index, array) => {
-        const percent = index / (array.length - 1);
         const label =
           typeof value === "number"
             ? formatValue(value, props.unit, true)
@@ -342,7 +350,7 @@ const scale = computed(() => {
         return {
           value,
           label,
-          color: gradient(props.flipGradient ? 1 - percent : percent),
+          color: gradient(index / (array.length - 1)),
           tooltip: label,
         };
       }),
@@ -355,34 +363,32 @@ const scale = computed(() => {
 
     return { steps, getColor };
   } else if (
-    /** if we have valid needed values */
+    /** map continuous values to discrete colors */
+    /** (if we have needed and valid values) */
     !isEmpty(props.values) &&
     typeof props.min === "number" &&
     typeof props.max === "number" &&
     props.min !== props.max
   ) {
-    /** get range of data (accounting for "no data" values) */
+    /** get range of data */
     const min = props.min;
     const max = props.max;
 
-    /** scale bands */
+    /** scale bands (spaced list of points between min and max) */
     let bands = [min, max];
 
     /** "nice", approximate number of steps */
-    const nice = d3.ticks(min, max, props.scaleSteps);
+    if (props.niceSteps) {
+      bands = d3.ticks(min, max, props.scaleSteps);
 
-    /** make sure steps always covers/contains range of values (min/max) */
-    const step = d3.tickStep(min, max, props.scaleSteps);
-    if (nice.at(0)! > min) nice.unshift(nice.at(0)! - step);
-    if (nice.at(-1)! < max) nice.push(nice.at(-1)! + step);
-
-    /** exact number of steps */
-    const exact = d3
-      .range(min, max, (max - min) / props.scaleSteps)
-      .concat([max]);
-
-    /** spaced list of points between min and max */
-    bands = props.niceSteps ? nice : exact;
+      /** make sure steps always covers/contains range of values (min/max) */
+      const step = d3.tickStep(min, max, props.scaleSteps);
+      if (bands.at(0)! > min) bands.unshift(bands.at(0)! - step);
+      if (bands.at(-1)! < max) bands.push(bands.at(-1)! + step);
+    } else {
+      /** exact number of steps */
+      bands = d3.range(min, max, (max - min) / props.scaleSteps).concat([max]);
+    }
 
     /** make sure enough bands */
     if (bands.length < 3) bands = [min, (min + max) / 2, max];
@@ -414,12 +420,11 @@ const scale = computed(() => {
       })),
     );
 
-    /** reverse color values */
+    /** get colors (excluding "no data" entry) for scale range */
     const colors = steps.map((step) => step.color);
-    if (props.flipGradient) {
-      colors.reverse();
-      steps.forEach((step, index) => (step.color = colors[index] || ""));
-    }
+
+    /** add "no data" entry to start of list */
+    if (noData.value) steps.unshift(noDataEntry);
 
     /** scale interpolator */
     const getColor = (value?: number | string) =>
