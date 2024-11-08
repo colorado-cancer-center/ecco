@@ -82,6 +82,17 @@
 
 <script lang="ts">
 type FeatureInfo = Record<string, unknown>;
+
+/** "no data" color */
+const noDataColor = "#a0a0a0";
+
+/** "no data scale entry */
+export const noDataEntry = {
+  value: "",
+  label: "ND",
+  color: noDataColor,
+  tooltip: "No data or suppressed value",
+} as const;
 </script>
 
 <script setup lang="ts">
@@ -109,17 +120,6 @@ import { formatValue, normalizedApply } from "@/util/math";
 import { getBbox, sleep } from "@/util/misc";
 import "leaflet/dist/leaflet.css";
 import { capitalize } from "@/util/string";
-
-/** "no data" color */
-let noDataColor = "#a0a0a0";
-
-/** "no data scale entry */
-const noDataEntry = {
-  value: "",
-  label: "ND",
-  color: noDataColor,
-  tooltip: "No data, suppressed value, or 0",
-};
 
 /** element refs */
 const scrollElement = ref<HTMLDivElement>();

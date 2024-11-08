@@ -23,6 +23,7 @@ import { SVGRenderer } from "echarts/renderers";
 import { uniq } from "lodash";
 import { useElementSize } from "@vueuse/core";
 import type { Unit } from "@/api";
+import { noDataEntry } from "@/components/AppMap.vue";
 import { formatValue } from "@/util/math";
 import { getCssVar } from "@/util/misc";
 
@@ -44,11 +45,14 @@ type Props = {
   data: Record<string, Record<string, Value>>;
   /** y-axis unit */
   unit?: Unit;
-  /** whether data is numbers or enumerated strings */
-  enumerated?: boolean;
+  /** order of y-axis values if data is enumerated strings */
+  order?: (string | number)[];
 };
 
-const props = withDefaults(defineProps<Props>(), { unit: undefined });
+const props = withDefaults(defineProps<Props>(), {
+  unit: undefined,
+  order: undefined,
+});
 
 const chart = ref<ComponentInstance<typeof VChart>>();
 const { width } = useElementSize(() => chart.value?.root);
@@ -67,6 +71,26 @@ const colorB = getCssVar("--accent-b");
 
 /** echarts options */
 const option = computed(() => {
+  /** unique x values */
+  const xValues = uniq(
+    Object.values(props.data)
+      .map((series) => Object.keys(series))
+      .flat(),
+  );
+
+  /** unique y values */
+  const yValues = uniq(
+    Object.values(props.data)
+      .map((series) => Object.values(series))
+      .flat(),
+  ).map((value) => value ?? noDataEntry.label);
+
+  /** put y axis in particular order */
+  if (props.order) {
+    const order = [noDataEntry.label, ...props.order];
+    yValues.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+  }
+
   const options: EChartsOption = {};
 
   options.animation = false;
@@ -86,11 +110,7 @@ const option = computed(() => {
 
   options.xAxis = {
     type: "category",
-    data: uniq(
-      Object.values(props.data)
-        .map((series) => Object.keys(series))
-        .flat(),
-    ),
+    data: xValues,
   };
   options.xAxis.axisLabel = {
     interval: 0,
@@ -100,13 +120,15 @@ const option = computed(() => {
     fontSize: 16,
   };
 
-  options.yAxis = {};
-  options.yAxis.type = props.enumerated ? "category" : "value";
+  options.yAxis = props.order
+    ? { type: "category", data: yValues }
+    : { type: "value" };
   options.yAxis.axisLabel = {
-    interval: props.enumerated ? 0 : undefined,
+    interval: props.order ? 0 : undefined,
     color: "black",
     fontSize: 16,
-    formatter: (value: Value) => formatValue(value ?? "", props.unit, true),
+    formatter: (value: NonNullable<Value>) =>
+      formatValue(value, props.unit, true),
   };
 
   const symbolSize = 30;
@@ -114,14 +136,13 @@ const option = computed(() => {
   options.series = Object.entries(props.data).map(
     ([name, data], index, entries) => ({
       name,
-      type: props.enumerated ? "pictorialBar" : "bar",
+      type: props.order ? "pictorialBar" : "bar",
       data: Object.values(data).map((value) => ({
-        value: value ?? (props.enumerated ? "?" : 0),
-        itemStyle: value ? undefined : { color: "#00000020" },
-        noData: value === undefined,
+        value: value ?? (props.order ? noDataEntry.label : 0),
+        itemStyle: value ? undefined : { color: noDataEntry.color },
       })),
       color: [colorA, colorB][index],
-      barMinHeight: props.enumerated ? 0 : 5,
+      barMinHeight: props.order ? 0 : 5,
       symbol: "diamond",
       symbolPosition: "end",
       symbolSize: [symbolSize, symbolSize],
@@ -136,16 +157,11 @@ const option = computed(() => {
   options.tooltip.trigger = "item";
   options.tooltip.formatter = (params) => {
     if (Array.isArray(params)) return "";
-    let {
-      value,
-      name,
-      seriesName,
-      // @ts-expect-error attaching custom meta field
-      data: { noData },
-    } = params;
+    let { value, name, seriesName } = params;
+    if (value === undefined) return "";
     if (typeof value === "object") return "";
-    if (noData) value = "No Data";
-    else value = formatValue(value ?? "", props.unit);
+    if (value === noDataEntry.label) value = noDataEntry.tooltip;
+    else value = formatValue(value, props.unit);
     return [seriesName, name, value].join("<br>");
   };
   options.tooltip.transitionDuration = 0;
