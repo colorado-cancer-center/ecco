@@ -31,7 +31,7 @@
     ]
   },
   {
-    "title": "Presence of Risk Factors (%)",
+    "title": "Presence of Risk Factors",
     "showStateLevel": true,
     "measures": [
       ["rfandscreening", "Binge_Drinking"],
@@ -54,7 +54,7 @@
     "showStateLevel": false,
     "measures": [
       ["scpincidencetrend", "All Cancer Sites"],
-      ["scpincidencetrend", "Female Breast"],
+      ["scpincidencetrend", "Breast (Female)"],
       ["scpincidencetrend", "Lung & Bronchus"],
       ["scpincidencetrend", "Colon & Rectum"]
     ]

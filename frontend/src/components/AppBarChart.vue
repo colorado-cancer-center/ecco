@@ -115,17 +115,11 @@ const option = computed(() => {
     ([name, data], index, entries) => ({
       name,
       type: props.enumerated ? "pictorialBar" : "bar",
-      data: Object.values(data)
-        .map((value) => ({
-          value: value ?? (props.enumerated ? "?" : 0),
-          itemStyle: value ? undefined : { color: "#00000020" },
-          noData: value === undefined,
-        }))
-        .toSorted((a, b) => {
-          if (a.noData) return -1;
-          if (b.noData) return 1;
-          return 0;
-        }),
+      data: Object.values(data).map((value) => ({
+        value: value ?? (props.enumerated ? "?" : 0),
+        itemStyle: value ? undefined : { color: "#00000020" },
+        noData: value === undefined,
+      })),
       color: [colorA, colorB][index],
       barMinHeight: props.enumerated ? 0 : 5,
       symbol: "diamond",
