@@ -64,7 +64,7 @@
             :title="chart.title"
             :data="chart.data"
             :unit="chart.unit"
-            :enumerated="chart.unit === 'ordinal'"
+            :order="chart.order"
           />
         </div>
       </template>
@@ -241,6 +241,8 @@ const chartData = computed(() =>
         return {
           title,
           unit: Object.values(measureValues).find((value) => value?.unit)?.unit,
+          order: Object.values(measureValues).find((value) => value?.order)
+            ?.order,
           data: {
             County: mapValues(measureValues, (value) => value?.value),
             ...(showStateLevel && {
