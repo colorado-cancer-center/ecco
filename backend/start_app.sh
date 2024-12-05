@@ -21,6 +21,14 @@ ogr2ogr -f "PostgreSQL" PG:"host=${POSTGRES_HOST} dbname=${POSTGRES_DATABASE} us
     /data/geometry/Colorado_County_Boundaries.geojson \
     -nln county -overwrite
 
+# import CDPHE Colorado Health Statistics Regions
+#  the "LAUNDER=NO" option is used to prevent the column names from being converted to lowercase
+ogr2ogr -f "PostgreSQL" PG:"host=${POSTGRES_HOST} dbname=${POSTGRES_DATABASE} user=${POSTGRES_USER} password=${POSTGRES_PASSWORD}" \
+    /data/geometry/CDPHE_Colorado_Health_Statistics_Regions.geojson \
+    -lco LAUNDER=NO \
+    -sql "SELECT hs_region, objectid, counties, hs_region as \"FIPS\", 'Colorado' AS state FROM CDPHE_Colorado_Health_Statistics_Regions" \
+    -nln healthregion -overwrite
+
 if [ ${USE_HIGH_RES_TRACTS} = "1" ]; then
     # import tracts
     ogr2ogr -f "PostgreSQL" PG:"host=${POSTGRES_HOST} dbname=${POSTGRES_DATABASE} user=${POSTGRES_USER} password=${POSTGRES_PASSWORD}" \
