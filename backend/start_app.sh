@@ -26,7 +26,7 @@ ogr2ogr -f "PostgreSQL" PG:"host=${POSTGRES_HOST} dbname=${POSTGRES_DATABASE} us
 ogr2ogr -f "PostgreSQL" PG:"host=${POSTGRES_HOST} dbname=${POSTGRES_DATABASE} user=${POSTGRES_USER} password=${POSTGRES_PASSWORD}" \
     /data/geometry/CDPHE_Colorado_Health_Statistics_Regions.geojson \
     -lco LAUNDER=NO \
-    -sql "SELECT hs_region, objectid, counties, hs_region as \"FIPS\", 'Colorado' AS state FROM CDPHE_Colorado_Health_Statistics_Regions" \
+    -sql "SELECT hs_region, objectid, counties, 'Colorado' AS state FROM CDPHE_Colorado_Health_Statistics_Regions" \
     -nln healthregion -overwrite
 
 if [ ${USE_HIGH_RES_TRACTS} = "1" ]; then

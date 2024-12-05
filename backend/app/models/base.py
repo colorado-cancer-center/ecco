@@ -31,6 +31,9 @@ class MeasuresByCounty(BaseStatsModel):
     measure : str = Field(index=True)
     value : float = Field(nullable=True)
 
+    def get_geom_field(self):
+        return self.FIPS
+
 class CancerStatsByCounty(BaseStatsModel):
     # NOTE: the 'measure' and 'value' columns are named 'Site' and 'AAR' in the
     # original schema, but we rename them here so they can be treated in
@@ -57,10 +60,12 @@ class MeasuresByTract(MeasuresByCounty):
 
 class MeasuresByHealthRegion(BaseStatsModel):
     hs_region : str = Field(index=True)
-    FIPS : str = Field(index=True)
     State : str = Field(index=True, foreign_key="us_state.name")
     measure : str = Field(index=True)
     value : float = Field(nullable=True)
+
+    def get_geom_field(self):
+        return self.hs_region
 
 
 # ---------------------------------------------------------------------------
