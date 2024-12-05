@@ -148,7 +148,7 @@ export type GeoProps = {
 
 /** get geojson from geography data */
 export async function getGeo(
-  type: "counties" | "tracts",
+  type: "counties" | "tracts" | "healthregions",
   idField: string,
 ): Promise<FeatureCollection<Geometry, GeoProps>> {
   const data = await request<_Geo>(`${api}/${type}`);
