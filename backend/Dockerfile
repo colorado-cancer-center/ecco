@@ -8,6 +8,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     pip install -r /tmp/requirements.txt
 
 COPY ./start_app.sh /opt/start_app.sh
+COPY ./scripts/wait-for-it.sh /opt/wait-for-it.sh
 
 WORKDIR /app
 COPY ./app/ /app

@@ -13,6 +13,9 @@ USE_HIGH_RES_TRACTS=${USE_HIGH_RES_TRACTS:-0}
 # === geometry import via ogr2ogr
 # ========================================
 
+# ensure the db is available before trying to import geometry
+/opt/wait-for-it.sh ${POSTGRES_HOST}:${POSTGRES_PORT} --timeout=120
+
 # import counties
 ogr2ogr -f "PostgreSQL" PG:"host=${POSTGRES_HOST} dbname=${POSTGRES_DATABASE} user=${POSTGRES_USER} password=${POSTGRES_PASSWORD}" \
     /data/geometry/Colorado_County_Boundaries.geojson \
