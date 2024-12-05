@@ -26,24 +26,6 @@ from models.vaping import (
 )
 
 
-async def import_measure(model, measure, rows, session):
-    """
-    Imports a table of measurements into 'model' in the database.
-
-    Note that the "rows" object is created in the import_hpv_data function; it's
-    not just the original row from the spreadsheet. We expect that each row
-    object has the following keys: "fips", "county", "value", and "sex".
-    """
-
-    # bulk insert all objects
-    session.add_all([
-        model(**{
-            **row,
-            "measure": measure
-        })
-        for row in rows
-    ])
-
 def dummy_data_generator(hs_regions):
     hs_region_ids = list(hs_regions.keys())
 
@@ -119,12 +101,13 @@ async def import_vaping_data(delete_before_import=True):
             if row["value"] is not None
         ]
         
-        await import_measure(
-            model=VapingHealthRegion,
-            measure=meaure_name,
-            rows=rows,
-            session=session
-        )
+        session.add_all([
+            model(**{
+                **row,
+                "measure": meaure_name
+            })
+            for row in rows
+        ])
 
         # commit session at the end
         await session.commit()
