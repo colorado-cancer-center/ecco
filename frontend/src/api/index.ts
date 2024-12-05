@@ -144,6 +144,8 @@ export type GeoProps = {
   ogc_fid?: number;
   cent_lat?: number;
   cent_long?: number;
+  counties?: string;
+  hs_region?: string;
 };
 
 /** get geojson from geography data */
