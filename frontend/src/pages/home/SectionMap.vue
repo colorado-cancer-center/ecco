@@ -784,6 +784,8 @@ const {
     return await getGeo("counties", "us_fips");
   else if (selectedLevel.value === "tract")
     return await getGeo("tracts", "fips");
+  else if (selectedLevel.value === "healthregion")
+    return await getGeo("healthregions", "hs_region");
 }, undefined);
 
 /** load geometry data to display on map */
