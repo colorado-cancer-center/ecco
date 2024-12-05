@@ -46,7 +46,6 @@ def dummy_data_generator(hs_regions):
         for age, sex, race in itertools.product(ages, sexes, races):
             yield {
                 "hs_region": region_id,
-                "FIPS": region_id,
                 "State": "Colorado",
                 "value": random.random() * 100,
                 "sex": sex,
