@@ -450,6 +450,18 @@
               <span>Notes</span>
               <span>{{ feature.notes }}</span>
             </template>
+
+            <!-- region -->
+            <template v-if="feature.hs_region">
+              <span>Region</span>
+              <span>{{ feature.hs_region }}</span>
+            </template>
+
+            <!-- counties -->
+            <template v-if="feature.counties">
+              <span>Counties</span>
+              <span>{{ feature.counties }}</span>
+            </template>
           </div>
 
           <!-- link to full data for county -->
@@ -686,6 +698,8 @@ const {
     return await getGeo("counties", "us_fips");
   else if (selectedLevel.value === "tract")
     return await getGeo("tracts", "fips");
+  else if (selectedLevel.value === "healthregion")
+    return await getGeo("healthregions", "hs_region");
 }, undefined);
 
 /** load geometry data to display on map */
