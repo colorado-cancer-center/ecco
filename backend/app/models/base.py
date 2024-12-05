@@ -55,6 +55,13 @@ class CancerStatsByCounty(BaseStatsModel):
 class MeasuresByTract(MeasuresByCounty):
     Tract: Optional[str] = Field(index=True, nullable=True)
 
+class MeasuresByHealthRegion(BaseStatsModel):
+    hs_region : str = Field(index=True)
+    FIPS : str = Field(index=True)
+    State : str = Field(index=True, foreign_key="us_state.name")
+    measure : str = Field(index=True)
+    value : float = Field(nullable=True)
+
 
 # ---------------------------------------------------------------------------
 # -- metadata about the models
@@ -109,6 +116,11 @@ from .scp import (
     SCP_FACTOR_DESCRIPTIONS,
     SCP_CANCER_MODELS,
 )
+from .vaping import (
+    VAPING_MODELS,
+    VAPING_MEASURE_DESCRIPTIONS,
+    VAPING_FACTOR_DESCRIPTIONS,
+)
 
 STATS_MODELS = {
     "county": (
@@ -124,7 +136,10 @@ STATS_MODELS = {
         DISPARITY_INDEX_MODELS["tract"] +
         RADON_MODELS["tract"] +
         SCP_MODELS["tract"]
-    )
+    ),
+    "healthregion": (
+        VAPING_MODELS["healthregion"]
+    ),
 }
 
 # to match the input schema, cancer models have columns named "Site" and "AAR"
@@ -141,10 +156,12 @@ MEASURE_DESCRIPTIONS = {
     **RADON_MEASURE_DESCRIPTIONS,
     **UV_MEASURE_DESCRIPTIONS,
     **HPV_MEASURE_DESCRIPTIONS,
+    **VAPING_MEASURE_DESCRIPTIONS,
 }
 
 FACTOR_DESCRIPTIONS = {
     **CIF_FACTOR_DESCRIPTIONS,
     **SCP_FACTOR_DESCRIPTIONS,
     **HPV_FACTOR_DESCRIPTIONS,
+    **VAPING_FACTOR_DESCRIPTIONS,
 }
