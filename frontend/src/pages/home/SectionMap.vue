@@ -482,6 +482,18 @@
               <span>Notes</span>
               <span>{{ feature.notes }}</span>
             </template>
+
+            <!-- region -->
+            <template v-if="feature.hs_region">
+              <span>Region</span>
+              <span>{{ feature.hs_region }}</span>
+            </template>
+
+            <!-- counties -->
+            <template v-if="feature.counties">
+              <span>Counties</span>
+              <span>{{ feature.counties }}</span>
+            </template>
           </div>
 
           <!-- outreach -->

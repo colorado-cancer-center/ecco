@@ -168,6 +168,10 @@ export type GeoProps = {
   cent_lat?: number;
   cent_long?: number;
 
+  /* health statistics region (HSR) addt'l data */
+  counties?: string; // counties within the HSR
+  hs_region?: string; // HSR number
+
   /** outreach */
   fit_kits?: number;
   radon_kits?: number;
