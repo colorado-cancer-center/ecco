@@ -109,7 +109,7 @@ async def get_measures(session: AsyncSession = Depends(get_session)):
 
     for type, models in STATS_MODELS.items():
         all_measures[type] = {
-            "label": type.capitalize(),
+            "label": type.capitalize() if type != "healthregion" else "Health Region",
             "categories": {}
         }
 
