@@ -11,7 +11,7 @@ this model and its inclusion in ECCO.
 
 from sqlmodel import Field
 
-from .base import MeasureUnit, MeasuresByHealthRegion
+from .base import BaseStatsModel, MeasureUnit, MeasuresByHealthRegion
 
 # ===========================================================================
 # === models from the CDPHE disparity index data
@@ -21,14 +21,15 @@ class VapingHealthRegion(MeasuresByHealthRegion, table=True):
     class Config:
         label = "Youth Vaping"
 
-    # pulled out for use as factors
-    sex: str = Field(nullable=True, index=True)
-    race: str = Field(nullable=True, index=True)
-    age: str = Field(nullable=True, index=True)
+    # since we only have data for one factor per measure, we can't compare, e.g.
+    # sex vs race; instead, we define a generic 'factor' field that differs
+    # depending on the measure; e.g., "Percentage of ... used vaping product - Age"
+    # would define the factor as the age group
+    factor: str = Field(nullable=True, index=True)
 
     @classmethod
     def get_factors(cls):
-        return (cls.sex, cls.race, cls.age)
+        return (cls.factor, )
 
 
 # ===========================================================================
@@ -42,28 +43,66 @@ VAPING_MODELS = {
     ]
 }
 
+# the questions from the source data (i.e., "Health_measure" column)
+QUESTIONS = [
+    "Percentage of students who have ever used an electronic vapor product",
+    "Percentage of students who used an electronic vapor product in the past 30 days",
+]
+
+# these are the values of the "Demographic" column in the source data; at
+# import, we create one measure per question+demographic pair.
+# (the special demographic "Total" is expanded into one row per other
+# demographic at the time of import, so we don't deal with it here)
+FACTOR_FIELDS = [
+    "Age",
+    "Gender",
+    "Race",
+]
+
 VAPING_MEASURE_DESCRIPTIONS = {
     "vaping": {
-        "Youth Vaping Rate": {
-            "label": "Youth Vaping Rate",
-            "unit": MeasureUnit.RATE,
+        f"{question} - By {factor}": {
+            "label": f"{question} - By {factor}",
+            "unit": MeasureUnit.PERCENT,
         }
+        for question in QUESTIONS
+        for factor in FACTOR_FIELDS
     }
 }
 
-# for now, deaths and incidence share the same data
 VAPING_FACTOR_DESCRIPTIONS = {
     "vaping": {
-        "sex": {
-            "label": "Sex",
+        "factor": {
+            "label": "Filter",
             "default": "All",
-            "values": {"All": "All", "Female": "Female", "Male": "Male"},
-        },
-        "race": {
-            "label": "Race", "default": "All Races (includes Hispanic)", "values": {}
-        },
-        "age": {
-            "label": "Age", "default": "All Ages", "values": {}
+            "values": {
+                "All": "All",
+                "SE Asian": "Southeast Asian",
+                "SA": "South Asian",
+                "AIAN": "American Indian or Alaska Native",
+                "NHPI": "Native Hawaiian or Pacific Islander",
+            },
         },
     },
 }
+
+# ===========================================================================
+# === state-level data models
+# ===========================================================================
+
+class StateYouthVapingStats(BaseStatsModel, table=True):
+    # measure category, similar to CiF
+    measure_category: str = Field(index=True)
+
+    # measure
+    measure: str = Field(index=True)
+
+    # core statistics
+    state_avg: float = Field()
+    us_avg: float = Field(nullable=True, default=None)
+
+    # metadata
+    source: str = Field(nullable=True, default=None)
+
+    class Config:
+        label = "State Youth Vaping Statistics"
