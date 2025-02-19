@@ -11,8 +11,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted } from "vue";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import { useSessionStorage } from "@vueuse/core";
 import AppButton from "./AppButton.vue";
 
 type Slots = {
@@ -21,7 +22,23 @@ type Slots = {
 
 defineSlots<Slots>();
 
-const dismissed = ref(false);
+/** dismissed state, persisted for duration of browser session */
+const dismissed = useSessionStorage("dismiss", false);
+
+onMounted(() => {
+  /** https://stackoverflow.com/questions/5004978/check-if-page-gets-reloaded-or-refreshed-in-javascript */
+  const refresh = window.performance.navigation
+    ? window.performance.navigation.type ===
+      window.performance.navigation.TYPE_RELOAD
+    : window.performance
+        .getEntriesByType("navigation")
+        .filter((entry) => "type" in entry)
+        .map(({ type }) => type)
+        .includes("reload");
+
+  /** if "soft" refresh, remember dismissal. otherwise, reset to showing alert. */
+  if (!refresh) dismissed.value = false;
+});
 
 function onClick() {
   dismissed.value = true;
