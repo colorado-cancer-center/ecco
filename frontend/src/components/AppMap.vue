@@ -44,6 +44,22 @@
           <Styles.OlStyleFill color="black" />
         </Styles.OlStyle>
       </Interactions.OlInteractionSelect>
+
+      <template v-if="showLegends">
+        <div class="legend top-left">
+          <slot name="top-left-upper" />
+          <slot name="top-left-lower" />
+        </div>
+        <div class="legend top-right">
+          <slot name="top-right" />
+        </div>
+        <div class="legend bottom-right">
+          <slot name="bottom-right" />
+        </div>
+        <div class="legend bottom-left">
+          <slot name="bottom-left" />
+        </div>
+      </template>
     </Map.OlMap>
   </div>
 </template>
@@ -76,7 +92,7 @@ import { type Unit } from "@/api";
 import { gradientOptions } from "@/components/gradient";
 import { backgroundOptions } from "@/components/tile-providers";
 import { downloadPng } from "@/util/download";
-import { waitFor } from "@/util/misc";
+import { getBbox, sleep, waitFor } from "@/util/misc";
 
 const scrollElement = ref<HTMLDivElement>();
 const mapRef = ref<InstanceType<typeof Map.OlMap>>();
@@ -218,13 +234,43 @@ function zoomOut() {
 /** fit view to geometry layer content */
 function fit() {
   if (!viewRef.value || !geometryRef.value) return;
+
+  /** get bounding box of content */
   const extent = geometryRef.value.source.getExtent();
-  if (extent && extent.every((value) => Number.isFinite(value)))
-    viewRef.value.fit(extent);
+
+  /** default fit padding */
+  let padding = { top: 0, left: 0, bottom: 0, right: 0 };
+
+  /** make room for legends */
+  if (props.showLegends) {
+    const mapDimensions = mapElement.value?.getBoundingClientRect()!;
+    /** increase padding based on corner legend panel dimensions */
+    const padCorner = (v: "top" | "bottom", h: "left" | "right") => {
+      const { width, height } = getBbox(`.legend.${v}-${h}`);
+      if (mapDimensions?.width > mapDimensions?.height)
+        padding[h] = Math.max(width, padding[h]);
+      else padding[v] = Math.max(height, padding[v]);
+    };
+    padCorner("top", "left");
+    padCorner("top", "right");
+    padCorner("bottom", "left");
+    padCorner("bottom", "right");
+  }
+
+  /** check if valid extent (can be infinities if no features) */
+  if (extent && extent.every((value) => Number.isFinite(value))) {
+    const { top, right, bottom, left } = padding;
+    viewRef.value.fit(extent, { padding: [top, right, bottom, left] });
+  }
 }
 
 /** auto-fit when props change */
-watch([() => props.showLegends, () => props.locations], fit, { deep: true });
+watch(
+  [() => props.showLegends, () => props.locations],
+  /** wait for legends render */
+  () => sleep().then(fit),
+  { deep: true },
+);
 
 onMounted(async () => {
   /** if no pan/zoom specified */
@@ -293,12 +339,15 @@ defineExpose({
 
 <style scoped>
 .scroll {
+  position: relative;
   overflow: auto;
   box-shadow: var(--shadow);
 }
 
 .legend {
   display: flex;
+  z-index: 9;
+  position: absolute;
   flex-direction: column;
   max-width: 250px;
   padding: 20px;
@@ -306,6 +355,27 @@ defineExpose({
   border-radius: var(--rounded);
   background: var(--white);
   box-shadow: var(--shadow);
+  --spacing: 10px;
+}
+
+.top-left {
+  top: var(--spacing);
+  left: var(--spacing);
+}
+
+.top-right {
+  top: var(--spacing);
+  right: var(--spacing);
+}
+
+.bottom-right {
+  right: var(--spacing);
+  bottom: var(--spacing);
+}
+
+.bottom-left {
+  bottom: var(--spacing);
+  left: var(--spacing);
 }
 
 .legend:empty {

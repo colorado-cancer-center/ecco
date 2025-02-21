@@ -1,14 +1,7 @@
 import { createApp } from "vue";
 import VueGtag from "vue-gtag";
 import VueTippy from "vue-tippy";
-import {
-  Interactions,
-  Layers,
-  Map,
-  MapControls,
-  Sources,
-  Styles,
-} from "vue3-openlayers";
+import { Interactions, Layers, Map, Sources, Styles } from "vue3-openlayers";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { router } from "@/pages";
 import { stop } from "@/stop";
@@ -25,7 +18,6 @@ app.use(Map);
 app.use(Layers);
 app.use(Sources);
 app.use(Styles);
-app.use(MapControls);
 app.use(Interactions);
 
 app.component("font-awesome-icon", FontAwesomeIcon);
