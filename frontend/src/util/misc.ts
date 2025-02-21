@@ -1,3 +1,5 @@
+import * as d3 from "d3";
+
 /** wait ms */
 export function sleep(ms = 0) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
@@ -35,3 +37,13 @@ export const getCssVar = (
   name: `--${string}`,
   element = document.documentElement,
 ) => getComputedStyle(element).getPropertyValue(name);
+
+/** force color to hex format */
+export function toHex(color: string, opacity = 1) {
+  return (
+    (d3.color(color)?.formatHex() || "#000000") +
+    Math.floor(opacity * 255)
+      .toString(16)
+      .padStart(2, "0")
+  );
+}

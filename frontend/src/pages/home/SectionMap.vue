@@ -308,10 +308,7 @@
         class="map"
         :style="
           geometryStatus !== 'success' || valuesStatus !== 'success'
-            ? {
-                opacity: 0.25,
-                filter: 'saturate(0.25)',
-              }
+            ? { opacity: 0.25, filter: 'saturate(0.25)' }
             : undefined
         "
         :geometry="geometry"

@@ -9,6 +9,7 @@
       }"
       :controls="[]"
     >
+      <!-- viewport -->
       <Map.OlView
         ref="viewRef"
         :center="center"
@@ -18,45 +19,84 @@
         @change:resolution="onZoom"
       />
 
+      <!-- background layer -->
       <Layers.OlTileLayer :opacity="backgroundOpacity">
-        <Sources.OlSourceXyz :url="backgroundUrl" />
+        <Sources.OlSourceXyz :url="backgroundUrl" cross-origin="anonymous" />
       </Layers.OlTileLayer>
 
-      <Layers.OlVectorLayer :opacity="geometryOpacity">
+      <!-- geometry layer -->
+      <Layers.OlVectorLayer>
         <Sources.OlSourceVector ref="geometryRef" :features="features">
           <Map.OlFeature
             v-for="(feature, key) in features"
             :key="key"
             :properties="feature.getProperties()"
           >
-            <Styles.OlStyle>
+            <!-- https://github.com/MelihAltintas/vue3-openlayers/issues/410 -->
+            <Styles.OlStyle
+              :key="JSON.stringify(scale.steps) + geometryOpacity"
+            >
               <Styles.OlStyleStroke color="black" />
               <Styles.OlStyleFill
-                :color="feature.get('id') === highlight ? 'black' : noDataColor"
+                :color="
+                  feature.get('id') === highlight
+                    ? getCssVar('--theme')
+                    : scale.getColor(
+                        values?.[feature.get('id')]?.value,
+                        geometryOpacity,
+                      )
+                "
               />
+              <Styles.OlStyleText :text="feature.get('label')" v-bind="font" />
             </Styles.OlStyle>
           </Map.OlFeature>
         </Sources.OlSourceVector>
       </Layers.OlVectorLayer>
 
+      <!-- interactions -->
       <Interactions.OlInteractionSelect :condition="pointerMove">
         <Styles.OlStyle>
-          <Styles.OlStyleFill color="black" />
+          <Styles.OlStyleFill :color="getCssVar('--theme')" />
+          <Styles.OlStyleText text="Click for info" v-bind="font" />
         </Styles.OlStyle>
       </Interactions.OlInteractionSelect>
 
+      <!-- legends -->
       <template v-if="showLegends">
-        <div class="legend top-left">
+        <div
+          v-if="$slots['top-left-upper'] || $slots['top-left-lower']"
+          class="legend top-left"
+        >
           <slot name="top-left-upper" />
+
+          <!-- scale key -->
+          <div class="scale" :style="{ '--cols': scale.steps.length }">
+            <div
+              v-for="(step, key) of scale.steps"
+              :key="key"
+              v-tooltip="step.tooltip"
+              class="scale-color"
+              tabindex="0"
+              :style="{ background: step.color }"
+            />
+            <div
+              v-for="(step, key) of scale.steps"
+              :key="key"
+              class="scale-label"
+            >
+              {{ step.label }}
+            </div>
+          </div>
+
           <slot name="top-left-lower" />
         </div>
-        <div class="legend top-right">
+        <div v-if="$slots['top-right']" class="legend top-right">
           <slot name="top-right" />
         </div>
-        <div class="legend bottom-right">
+        <div v-if="$slots['bottom-right']" class="legend bottom-right">
           <slot name="bottom-right" />
         </div>
-        <div class="legend bottom-left">
+        <div v-if="$slots['bottom-left']" class="legend bottom-left">
           <slot name="bottom-left" />
         </div>
       </template>
@@ -82,17 +122,20 @@ export const noDataEntry = {
 <script setup lang="ts">
 import { computed, onMounted, ref, watch, watchEffect } from "vue";
 import { Interactions, Layers, Map, Sources, Styles } from "vue3-openlayers";
-import domtoimage from "dom-to-image";
+import * as d3 from "d3";
+import domtoimage from "dom-to-image-more";
 import type { FeatureCollection } from "geojson";
+import { capitalize, isEmpty } from "lodash";
 import { pointerMove } from "ol/events/condition";
 import GeoJSON from "ol/format/GeoJSON";
 import type { ObjectEvent } from "ol/Object";
 import { useElementSize, useFullscreen } from "@vueuse/core";
 import { type Unit } from "@/api";
-import { gradientOptions } from "@/components/gradient";
+import { getGradient, gradientOptions } from "@/components/gradient";
 import { backgroundOptions } from "@/components/tile-providers";
 import { downloadPng } from "@/util/download";
-import { getBbox, sleep, waitFor } from "@/util/misc";
+import { formatValue, normalizedApply } from "@/util/math";
+import { getBbox, getCssVar, sleep, toHex, waitFor } from "@/util/misc";
 
 const scrollElement = ref<HTMLDivElement>();
 const mapRef = ref<InstanceType<typeof Map.OlMap>>();
@@ -187,18 +230,8 @@ type Slots = {
 
 defineSlots<Slots>();
 
-/** parse geojson features */
-const features = computed(() => new GeoJSON().readFeatures(props.geometry));
-
 /** combined lat/long coords */
 const center = computed(() => [props.long, props.lat]);
-
-/** background tile url template */
-const backgroundUrl = computed(
-  () =>
-    backgroundOptions.find((option) => option.id === props.background)
-      ?.template ?? "",
-);
 
 /** on center change */
 function onCenter(event: ObjectEvent) {
@@ -212,6 +245,161 @@ function onZoom(event: ObjectEvent) {
   const newZoom = event.target.getZoom();
   if (newZoom) emit("update:zoom", newZoom);
 }
+
+/** parse geojson features */
+const features = computed(() => new GeoJSON().readFeatures(props.geometry));
+
+/** font style attributes */
+const font = {
+  font: "16px 'Roboto Flex'",
+  fill: "black",
+  stroke: { color: "white", width: 2 },
+  declutterMode: "none",
+};
+
+/** background tile url template */
+const backgroundUrl = computed(
+  () =>
+    backgroundOptions.find((option) => option.id === props.background)
+      ?.template ?? "",
+);
+
+/** whether map has any "no data" geometry regions */
+const noData = computed(
+  () =>
+    !props.geometry.features.every(
+      (feature) => (feature.properties?.id ?? "") in props.values,
+    ),
+);
+
+/** scale object */
+const scale = computed(() => {
+  /** map 0-1 percent to color */
+  const gradient = (percent: number) => {
+    /** get gradient interpolator function from shorthand id/name */
+    const gradient = getGradient(props.gradient);
+    /** reverse */
+    if (props.flipGradient) percent = 1 - percent;
+    /** get color */
+    return gradient(percent);
+  };
+
+  /** scale steps */
+  const steps: ((
+    | { value: number | string }
+    | { lower: number; upper: number }
+  ) & { label: string; color: string; tooltip: string })[] = [];
+
+  /** map specific values to specific colors */
+  if (props.scaleValues) {
+    /** add "no data" entry */
+    if (noData.value) steps.push(noDataEntry);
+
+    /** explicit steps */
+    steps.push(
+      ...props.scaleValues.map((value, index, array) => {
+        const label =
+          typeof value === "number"
+            ? formatValue(value, props.unit, true)
+            : capitalize(value);
+        return {
+          value,
+          label,
+          color: gradient(index / (array.length - 1)),
+          tooltip: label,
+        };
+      }),
+    );
+
+    /** explicit color */
+    const getColor = (value?: number | string, opacity?: number) =>
+      toHex(
+        steps.find((step) =>
+          "value" in step ? step.value === value : undefined,
+        )?.color ?? noDataColor,
+        opacity,
+      );
+
+    return { steps, getColor };
+  } else if (
+    /** map continuous values to discrete colors */
+    /** (if we have needed and valid values) */
+    !isEmpty(props.values) &&
+    typeof props.min === "number" &&
+    typeof props.max === "number" &&
+    props.min !== props.max
+  ) {
+    /** get range of data */
+    const min = props.min;
+    const max = props.max;
+
+    /** scale bands (spaced list of points between min and max) */
+    let bands = [min, max];
+
+    /** "nice", approximate number of steps */
+    if (props.niceSteps) {
+      bands = d3.ticks(min, max, props.scaleSteps);
+
+      /** make sure steps always covers/contains range of values (min/max) */
+      const step = d3.tickStep(min, max, props.scaleSteps);
+      if (bands.at(0)! > min) bands.unshift(bands.at(0)! - step);
+      if (bands.at(-1)! < max) bands.push(bands.at(-1)! + step);
+    } else {
+      /** exact number of steps */
+      bands = d3.range(min, max, (max - min) / props.scaleSteps).concat([max]);
+    }
+
+    /** make sure enough bands */
+    if (bands.length < 3) bands = [min, (min + max) / 2, max];
+
+    /** range of bands */
+    const [lower = 0, upper = 1] = d3.extent(bands);
+
+    /** apply power */
+    bands = bands.map((value) =>
+      normalizedApply(value, lower, upper, (value) =>
+        Math.pow(value, props.scalePower),
+      ),
+    );
+
+    /** derive props for each step between points */
+    steps.push(
+      ...d3.pairs(bands).map(([lower, upper], index, array) => ({
+        lower,
+        upper,
+        label:
+          /** only add first and last labels */
+          index === 0
+            ? formatValue(min, props.unit, true)
+            : index === array.length - 1
+              ? formatValue(max, props.unit, true)
+              : "",
+        color: gradient(index / (array.length - 1)),
+        tooltip: `${formatValue(lower, props.unit)} &ndash; ${formatValue(upper, props.unit)}`,
+      })),
+    );
+
+    /** get colors (excluding "no data" entry) for scale range */
+    const colors = steps.map((step) => step.color);
+
+    /** add "no data" entry to start of list */
+    if (noData.value) steps.unshift(noDataEntry);
+
+    /** scale interpolator */
+    const getColor = (value?: number | string, opacity?: number) =>
+      value === undefined || typeof value === "string"
+        ? noDataColor
+        : toHex(
+            d3.scaleQuantile<string>().domain(bands).range(colors)(value),
+            opacity,
+          );
+
+    return { steps, getColor };
+  } else {
+    /** last resort fallback */
+    return { steps: [], getColor: () => noDataColor };
+  }
+});
 
 /** change cursor to indicate click-ability */
 watchEffect(() => {
@@ -273,6 +461,9 @@ watch(
 );
 
 onMounted(async () => {
+  /** if not highlighting specific feature */
+  if (props.highlight) return;
+
   /** if no pan/zoom specified */
   if (!props.lat || !props.long || !props.zoom) {
     /** wait for features to be loaded, rendered,s parsed */
@@ -298,10 +489,7 @@ async function download() {
   const blob = await domtoimage.toBlob(mapElement.value, {
     width: actualWidth.value * scale,
     height: actualHeight.value * scale,
-    style: {
-      transform: `scale(${scale})`,
-      transformOrigin: "top left",
-    },
+    style: { transform: `scale(${scale})`, transformOrigin: "top left" },
   });
 
   downloadPng(blob, props.filename);
