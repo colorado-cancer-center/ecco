@@ -31,7 +31,9 @@
           >
             <Styles.OlStyle>
               <Styles.OlStyleStroke color="black" />
-              <Styles.OlStyleFill :color="noDataColor" />
+              <Styles.OlStyleFill
+                :color="feature.get('id') === highlight ? 'black' : noDataColor"
+              />
             </Styles.OlStyle>
           </Map.OlFeature>
         </Sources.OlSourceVector>
@@ -62,19 +64,23 @@ export const noDataEntry = {
 </script>
 
 <script setup lang="ts">
-import { computed, ref, watchEffect } from "vue";
+import { computed, onMounted, ref, watch, watchEffect } from "vue";
 import { Interactions, Layers, Map, Sources, Styles } from "vue3-openlayers";
+import domtoimage from "dom-to-image";
 import type { FeatureCollection } from "geojson";
 import { pointerMove } from "ol/events/condition";
 import GeoJSON from "ol/format/GeoJSON";
 import type { ObjectEvent } from "ol/Object";
+import { useElementSize, useFullscreen } from "@vueuse/core";
 import { type Unit } from "@/api";
 import { gradientOptions } from "@/components/gradient";
 import { baseOptions } from "@/components/tile-providers";
+import { downloadPng } from "@/util/download";
+import { waitFor } from "@/util/misc";
 
-/** element refs */
 const scrollElement = ref<HTMLDivElement>();
 const mapRef = ref<InstanceType<typeof Map.OlMap>>();
+const mapElement = computed(() => mapRef.value?.map.getTargetElement());
 const viewRef = ref<InstanceType<typeof Map.OlView>>();
 const geometryRef = ref<InstanceType<typeof Sources.OlSourceVector>>();
 
@@ -114,6 +120,8 @@ type Props = {
   height?: number;
   /** filename for download */
   filename?: string | string[];
+  /** id of feature to highlight and zoom in on */
+  highlight?: string;
 };
 
 const props = withDefaults(defineProps<Props>(), {
@@ -125,7 +133,7 @@ const props = withDefaults(defineProps<Props>(), {
   unit: undefined,
   lat: 0,
   long: 0,
-  zoom: 1,
+  zoom: 0,
   showLegends: true,
   backgroundOpacity: 1,
   geometryOpacity: 0.75,
@@ -140,6 +148,7 @@ const props = withDefaults(defineProps<Props>(), {
   width: 0,
   height: 0,
   filename: "map",
+  highlight: "",
 });
 
 type Emits = {
@@ -165,6 +174,32 @@ defineSlots<Slots>();
 /** parse geojson features */
 const features = computed(() => new GeoJSON().readFeatures(props.geometry));
 
+/** combined lat/long coords */
+const center = computed(() => [props.long, props.lat]);
+
+/** on center change */
+function onCenter(event: ObjectEvent) {
+  const [long, lat] = event.target.getCenter();
+  emit("update:lat", lat);
+  emit("update:long", long);
+}
+
+/** on zoom change */
+function onZoom(event: ObjectEvent) {
+  const newZoom = event.target.getZoom();
+  if (newZoom) emit("update:zoom", newZoom);
+}
+
+/** change cursor to indicate clickability */
+watchEffect(() => {
+  const map = mapRef.value?.map;
+  /** https://stackoverflow.com/questions/26022029/how-to-change-the-cursor-on-hover-in-openlayers-3 */
+  map?.on("pointermove", ({ originalEvent }) => {
+    const hit = map.hasFeatureAtPixel(map.getEventPixel(originalEvent));
+    map.getTargetElement().style.cursor = hit ? "pointer" : "";
+  });
+});
+
 function zoomIn() {
   viewRef.value?.adjustZoom(1);
 }
@@ -173,44 +208,79 @@ function zoomOut() {
   viewRef.value?.adjustZoom(-1);
 }
 
+/** fit view to geometry layer content */
 function fit() {
   if (!viewRef.value || !geometryRef.value) return;
   const extent = geometryRef.value.source.getExtent();
-  if (extent) viewRef.value.fit(extent);
+  if (extent && extent.every((value) => Number.isFinite(value)))
+    viewRef.value.fit(extent);
 }
+
+/** auto-fit when props change */
+watch([() => props.showLegends, () => props.locations], fit, { deep: true });
+
+onMounted(async () => {
+  /** if no pan/zoom specified */
+  if (!props.lat || !props.long || !props.zoom) {
+    /** wait for features to be loaded, rendered,s parsed */
+    await waitFor(() => geometryRef.value?.source.getFeatures().length);
+    /** fit view to content */
+    fit();
+  }
+});
+
+/** toggle fullscreen on element */
+const { toggle: fullscreen } = useFullscreen(scrollElement);
+
+/** actual client size */
+const { width: actualWidth, height: actualHeight } = useElementSize(mapElement);
+
+/** download map as png */
+async function download() {
+  if (!mapElement.value) return;
+
+  /** upscale for better quality */
+  const scale = window.devicePixelRatio;
+
+  const blob = await domtoimage.toBlob(mapElement.value, {
+    width: actualWidth.value * scale,
+    height: actualHeight.value * scale,
+    style: {
+      transform: `scale(${scale})`,
+      transformOrigin: "top left",
+    },
+  });
+
+  downloadPng(blob, props.filename);
+}
+
+/** highlight and zoom in on feature */
+watch(
+  [() => props.highlight, () => props.geometry, viewRef],
+  () => {
+    if (!props.highlight || !props.geometry || !viewRef.value) return;
+    /** lookup feature by id */
+    const feature = features.value.find(
+      (feature) => feature.get("id") === props.highlight,
+    );
+    if (!feature) return;
+    /** fit view to feature bounds */
+    const extent = feature.getGeometry()?.getExtent();
+    if (!extent) return;
+    viewRef.value.fit(extent);
+    /** zoom out a bit to give context of surroundings */
+    viewRef.value?.adjustZoom(-1);
+  },
+  { immediate: true, deep: true },
+);
 
 /** allow control from parent */
 defineExpose({
   zoomIn,
   zoomOut,
   fit,
-  download: () => null,
-  fullscreen: () => null,
-  selectFeature: () => null,
-});
-
-function onZoom(event: ObjectEvent) {
-  const newZoom = event.target.getZoom();
-  if (newZoom) emit("update:zoom", newZoom);
-}
-
-const center = computed(() => [props.long, props.lat]);
-
-function onCenter(event: ObjectEvent) {
-  const [long, lat] = event.target.getCenter();
-  emit("update:lat", lat);
-  emit("update:long", long);
-}
-
-/** change cursor to indicate clickability */
-watchEffect(() => {
-  const map = mapRef.value?.map;
-  /** https://stackoverflow.com/questions/26022029/how-to-change-the-cursor-on-hover-in-openlayers-3 */
-  map?.on("pointermove", function (e) {
-    const pixel = map.getEventPixel(e.originalEvent);
-    const hit = map.hasFeatureAtPixel(pixel);
-    map.getViewport().style.cursor = hit ? "pointer" : "";
-  });
+  fullscreen,
+  download,
 });
 </script>
 
@@ -218,10 +288,6 @@ watchEffect(() => {
 .scroll {
   overflow: auto;
   box-shadow: var(--shadow);
-}
-
-.test {
-  background: red;
 }
 
 .legend {
@@ -237,12 +303,6 @@ watchEffect(() => {
 
 .legend:empty {
   display: none;
-}
-
-.controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
 }
 
 .scale {
