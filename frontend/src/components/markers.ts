@@ -1,4 +1,3 @@
-import * as L from "leaflet";
 import { max, sum } from "lodash";
 import { icon } from "@fortawesome/fontawesome-svg-core";
 import {
@@ -173,6 +172,6 @@ export function getMarker(type: "point" | "area") {
     /** icon object url */
     url,
     /** leaflet icon object */
-    icon: L.icon({ iconUrl: url, iconSize: [15, 15] }),
+    icon: null,
   };
 }

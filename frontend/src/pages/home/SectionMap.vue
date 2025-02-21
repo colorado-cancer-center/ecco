@@ -146,11 +146,11 @@
           />
         </div>
 
-        <!-- base layer -->
+        <!-- background layer -->
         <AppSelect
           v-model="selectedBackground"
           label="Background layer"
-          :options="baseOptions"
+          :options="backgroundOptions"
           tooltip="Provider to use for background map layer"
         >
           <template #preview="{ option }">
@@ -577,7 +577,7 @@ import AppNumber from "@/components/AppNumber.vue";
 import AppSelect, { type Entry, type Option } from "@/components/AppSelect.vue";
 import AppSlider from "@/components/AppSlider.vue";
 import { gradientOptions } from "@/components/gradient";
-import { baseOptions } from "@/components/tile-providers";
+import { backgroundOptions } from "@/components/tile-providers";
 import { learnMoreLink } from "@/pages/learn-more";
 import {
   arrayParam,
@@ -625,7 +625,7 @@ const long = useUrlParam("long", numberParam, 0);
 
 /** map style state */
 const showLegends = ref(true);
-const selectedBackground = ref(baseOptions[0]!.id || "");
+const selectedBackground = ref(backgroundOptions[0]!.id || "");
 const selectedGradient = ref(gradientOptions[3]!.id || "");
 const selectedLocations = useUrlParam("locations", arrayParam(stringParam), []);
 const backgroundOpacity = ref(1);
@@ -653,7 +653,7 @@ async function reset() {
   lat.value = 0;
   long.value = 0;
   showLegends.value = true;
-  selectedBackground.value = baseOptions[0]?.id || "";
+  selectedBackground.value = backgroundOptions[0]?.id || "";
   selectedGradient.value = gradientOptions[3]?.id || "";
   backgroundOpacity.value = 1;
   geometryOpacity.value = 0.75;

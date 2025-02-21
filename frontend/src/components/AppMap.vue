@@ -19,7 +19,7 @@
       />
 
       <Layers.OlTileLayer :opacity="backgroundOpacity">
-        <Sources.OlSourceOsm />
+        <Sources.OlSourceXyz :url="backgroundUrl" />
       </Layers.OlTileLayer>
 
       <Layers.OlVectorLayer :opacity="geometryOpacity">
@@ -74,7 +74,7 @@ import type { ObjectEvent } from "ol/Object";
 import { useElementSize, useFullscreen } from "@vueuse/core";
 import { type Unit } from "@/api";
 import { gradientOptions } from "@/components/gradient";
-import { baseOptions } from "@/components/tile-providers";
+import { backgroundOptions } from "@/components/tile-providers";
 import { downloadPng } from "@/util/download";
 import { waitFor } from "@/util/misc";
 
@@ -138,7 +138,7 @@ const props = withDefaults(defineProps<Props>(), {
   backgroundOpacity: 1,
   geometryOpacity: 0.75,
   locationOpacity: 1,
-  background: baseOptions[0]!.id,
+  background: backgroundOptions[0]!.id,
   gradient: gradientOptions[3]!.id,
   flipGradient: false,
   scaleSteps: 5,
@@ -177,6 +177,13 @@ const features = computed(() => new GeoJSON().readFeatures(props.geometry));
 /** combined lat/long coords */
 const center = computed(() => [props.long, props.lat]);
 
+/** background tile url template */
+const backgroundUrl = computed(
+  () =>
+    backgroundOptions.find((option) => option.id === props.background)
+      ?.template ?? "",
+);
+
 /** on center change */
 function onCenter(event: ObjectEvent) {
   const [long, lat] = event.target.getCenter();
@@ -190,7 +197,7 @@ function onZoom(event: ObjectEvent) {
   if (newZoom) emit("update:zoom", newZoom);
 }
 
-/** change cursor to indicate clickability */
+/** change cursor to indicate click-ability */
 watchEffect(() => {
   const map = mapRef.value?.map;
   /** https://stackoverflow.com/questions/26022029/how-to-change-the-cursor-on-hover-in-openlayers-3 */
