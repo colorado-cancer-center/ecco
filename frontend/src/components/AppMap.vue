@@ -47,6 +47,19 @@
                       )
                 "
               />
+            </Styles.OlStyle>
+          </Map.OlFeature>
+        </Sources.OlSourceVector>
+      </Layers.OlVectorLayer>
+
+      <!-- label layer -->
+      <Layers.OlVectorLayer name="labels">
+        <Sources.OlSourceVector>
+          <Map.OlFeature v-for="(feature, key) in features" :key="key">
+            <Geometries.OlGeomPoint
+              :coordinates="[feature.get('cent_long'), feature.get('cent_lat')]"
+            />
+            <Styles.OlStyle>
               <Styles.OlStyleText :text="feature.get('label')" v-bind="font" />
             </Styles.OlStyle>
           </Map.OlFeature>
@@ -54,10 +67,13 @@
       </Layers.OlVectorLayer>
 
       <!-- interactions -->
-      <Interactions.OlInteractionSelect :condition="pointerMove">
+      <Interactions.OlInteractionSelect
+        :key="Math.random()"
+        :condition="pointerMove"
+        :layers="(layer) => layer.get('name') !== 'labels'"
+      >
         <Styles.OlStyle>
           <Styles.OlStyleFill :color="getCssVar('--theme')" />
-          <Styles.OlStyleText text="Click for info" v-bind="font" />
         </Styles.OlStyle>
       </Interactions.OlInteractionSelect>
 
@@ -121,7 +137,14 @@ export const noDataEntry = {
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch, watchEffect } from "vue";
-import { Interactions, Layers, Map, Sources, Styles } from "vue3-openlayers";
+import {
+  Geometries,
+  Interactions,
+  Layers,
+  Map,
+  Sources,
+  Styles,
+} from "vue3-openlayers";
 import * as d3 from "d3";
 import domtoimage from "dom-to-image-more";
 import type { FeatureCollection } from "geojson";
@@ -250,12 +273,15 @@ function onZoom(event: ObjectEvent) {
 const features = computed(() => new GeoJSON().readFeatures(props.geometry));
 
 /** font style attributes */
-const font = {
-  font: "16px 'Roboto Flex'",
-  fill: "black",
-  stroke: { color: "white", width: 2 },
-  declutterMode: "none",
-};
+const font: InstanceType<typeof Styles.OlStyleText>["$props"] = computed(
+  () => ({
+    font: `600 ${props.zoom * 1.5}px 'Roboto Flex'`,
+    fill: "black",
+    stroke: { color: "white", width: 2 },
+    overflow: true,
+    declutterMode: "obstacle",
+  }),
+);
 
 /** background tile url template */
 const backgroundUrl = computed(
@@ -405,8 +431,8 @@ const scale = computed(() => {
 watchEffect(() => {
   const map = mapRef.value?.map;
   /** https://stackoverflow.com/questions/26022029/how-to-change-the-cursor-on-hover-in-openlayers-3 */
-  map?.on("pointermove", ({ originalEvent }) => {
-    const hit = map.hasFeatureAtPixel(map.getEventPixel(originalEvent));
+  map?.on("pointermove", ({ pixel }) => {
+    const hit = map.hasFeatureAtPixel(pixel);
     map.getTargetElement().style.cursor = hit ? "pointer" : "";
   });
 });
