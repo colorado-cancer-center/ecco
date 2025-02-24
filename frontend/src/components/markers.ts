@@ -83,12 +83,15 @@ function getColor() {
 }
 
 /** line stroke dashes for areas */
-const dashes = ["0 0", "10 10", "5 5", "5 5 15 5"];
+const dashes = [
+  [0, 0],
+  [10, 10],
+  [5, 5],
+  [5, 5, 15, 5],
+];
 
 /** total dash length of line symbol in legend */
-const dashSymbolLength = String(
-  max(dashes.map((dash) => sum(dash.split(" ").map(Number))))!,
-);
+const dashSymbolLength = String(max(dashes.map((dash) => sum(dash)))!);
 
 let dashIndex = 0;
 /** get next dash in sequence */
@@ -151,27 +154,27 @@ export function getMarker(type: "point" | "area") {
     svg.style.fill = "none";
     svg.style.stroke = color;
     svg.style.strokeWidth = String(stroke);
-    svg.style.strokeDasharray = dash;
+    svg.style.strokeDasharray = dash.join(" ");
 
     /** fit viewbox to contents */
     svg.setAttribute("viewBox", `0 ${-stroke * 4} ${width} ${stroke * 2 * 4}`);
   }
 
-  /** encode url */
-  const url = URL.createObjectURL(
-    new Blob([svg.outerHTML], { type: "image/svg+xml" }),
-  );
-
   svg.remove();
+
+  /** html source */
+  const html = svg.outerHTML;
+  /** encode to data uri */
+  const url = `data:image/svg+xml;utf8,${window.encodeURIComponent(html)}`;
 
   return {
     /** main color */
     color,
     /** dash pattern */
     dash,
-    /** icon object url */
+    /** icon html */
+    html,
+    /** icon src url */
     url,
-    /** leaflet icon object */
-    icon: null,
   };
 }

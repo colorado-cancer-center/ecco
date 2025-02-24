@@ -20,15 +20,15 @@
       />
 
       <!-- background layer -->
-      <Layers.OlTileLayer :opacity="backgroundOpacity">
+      <Layers.OlTileLayer name="background" :opacity="backgroundOpacity">
         <Sources.OlSourceXyz :url="backgroundUrl" cross-origin="anonymous" />
       </Layers.OlTileLayer>
 
       <!-- geometry layer -->
-      <Layers.OlVectorLayer>
-        <Sources.OlSourceVector ref="geometryRef" :features="features">
+      <Layers.OlVectorLayer name="geometry">
+        <Sources.OlSourceVector ref="geometryRef" :features="geometryFeatures">
           <Map.OlFeature
-            v-for="(feature, key) in features"
+            v-for="(feature, key) in geometryFeatures"
             :key="key"
             :properties="feature.getProperties()"
           >
@@ -52,10 +52,23 @@
         </Sources.OlSourceVector>
       </Layers.OlVectorLayer>
 
+      <!-- geometry interaction -->
+      <Interactions.OlInteractionSelect
+        :key="Math.random()"
+        :condition="pointerMove"
+        :layers="(layer) => layer.get('name') === 'geometry'"
+      >
+        <Styles.OlStyle>
+          <Styles.OlStyleFill
+            :color="toHex(getCssVar('--theme-light'), geometryOpacity)"
+          />
+        </Styles.OlStyle>
+      </Interactions.OlInteractionSelect>
+
       <!-- label layer -->
       <Layers.OlVectorLayer name="labels">
         <Sources.OlSourceVector>
-          <Map.OlFeature v-for="(feature, key) in features" :key="key">
+          <Map.OlFeature v-for="(feature, key) in geometryFeatures" :key="key">
             <Geometries.OlGeomPoint
               :coordinates="[feature.get('cent_long'), feature.get('cent_lat')]"
             />
@@ -66,15 +79,47 @@
         </Sources.OlSourceVector>
       </Layers.OlVectorLayer>
 
-      <!-- interactions -->
+      <!-- locations layer -->
+      <Layers.OlVectorLayer
+        v-for="(location, key) in locationFeatures"
+        :key="key"
+        name="locations"
+        :opacity="locationOpacity"
+      >
+        <Sources.OlSourceVector :features="location">
+          <Styles.OlStyle>
+            <Styles.OlStyleFill color="transparent" />
+            <Styles.OlStyleStroke
+              :color="symbols[key]?.color"
+              :width="3"
+              :line-dash="symbols[key]?.dash"
+            />
+            <Styles.OlStyleIcon>
+              <div class="symbol" v-html="symbols[key]?.html"></div>
+            </Styles.OlStyleIcon>
+          </Styles.OlStyle>
+        </Sources.OlSourceVector>
+      </Layers.OlVectorLayer>
+
+      <!-- location interaction -->
       <Interactions.OlInteractionSelect
         :key="Math.random()"
         :condition="pointerMove"
-        :layers="(layer) => layer.get('name') !== 'labels'"
+        :layers="(layer) => layer.get('name') === 'locations'"
       >
-        <Styles.OlStyle>
-          <Styles.OlStyleFill :color="getCssVar('--theme')" />
-        </Styles.OlStyle>
+        <Styles.OlStyle
+          :override-style-function="
+            (feature, style) => {
+              if (feature.get('type') === 'area')
+                style.setFill(
+                  new Fill({
+                    color: toHex(feature.get('color'), locationOpacity / 2),
+                  }),
+                );
+              return style;
+            }
+          "
+        />
       </Interactions.OlInteractionSelect>
 
       <!-- legends -->
@@ -109,8 +154,21 @@
         <div v-if="$slots['top-right']" class="legend top-right">
           <slot name="top-right" />
         </div>
-        <div v-if="$slots['bottom-right']" class="legend bottom-right">
+        <div
+          v-if="$slots['bottom-right'] || !isEmpty(symbols)"
+          class="legend bottom-right"
+        >
           <slot name="bottom-right" />
+
+          <!-- symbol key -->
+          <div v-if="!isEmpty(symbols)" class="symbols">
+            <template v-for="(symbol, key) of symbols" :key="key">
+              <template v-if="symbol">
+                <div class="symbol" v-html="symbol.html" />
+                <small>{{ symbol?.label }}</small>
+              </template>
+            </template>
+          </div>
         </div>
         <div v-if="$slots['bottom-left']" class="legend bottom-left">
           <slot name="bottom-left" />
@@ -148,10 +206,11 @@ import {
 import * as d3 from "d3";
 import domtoimage from "dom-to-image-more";
 import type { FeatureCollection } from "geojson";
-import { capitalize, isEmpty } from "lodash";
+import { capitalize, isEmpty, mapValues } from "lodash";
 import { pointerMove } from "ol/events/condition";
 import GeoJSON from "ol/format/GeoJSON";
 import type { ObjectEvent } from "ol/Object";
+import { Fill } from "ol/style";
 import { useElementSize, useFullscreen } from "@vueuse/core";
 import { type Unit } from "@/api";
 import { getGradient, gradientOptions } from "@/components/gradient";
@@ -159,6 +218,7 @@ import { backgroundOptions } from "@/components/tile-providers";
 import { downloadPng } from "@/util/download";
 import { formatValue, normalizedApply } from "@/util/math";
 import { getBbox, getCssVar, sleep, toHex, waitFor } from "@/util/misc";
+import { getMarker, resetMarkers } from "./markers";
 
 const scrollElement = ref<HTMLDivElement>();
 const mapRef = ref<InstanceType<typeof Map.OlMap>>();
@@ -269,8 +329,38 @@ function onZoom(event: ObjectEvent) {
   if (newZoom) emit("update:zoom", newZoom);
 }
 
-/** parse geojson features */
-const features = computed(() => new GeoJSON().readFeatures(props.geometry));
+/** parse geometry features */
+const geometryFeatures = computed(() =>
+  new GeoJSON().readFeatures(props.geometry),
+);
+
+/** parse location features */
+const locationFeatures = computed(() => {
+  const reader = new GeoJSON();
+  return mapValues(props.locations, (value, location) => {
+    /** parse geojson */
+    const features = reader.readFeatures(value);
+    /** add extra props */
+    for (const feature of features) {
+      for (const [key, value] of Object.entries(symbols.value[location] ?? {}))
+        feature.set(key, value);
+    }
+    return features;
+  });
+});
+
+/** symbols (icon + label) associated with each location */
+const symbols = computed(() => {
+  resetMarkers();
+
+  return mapValues(props.locations, (location, label) => {
+    const type = location.features[0]?.geometry.type;
+    if (type === "Point")
+      return { ...getMarker("point"), label, type: "point" };
+    if (type === "Polygon")
+      return { ...getMarker("area"), label, type: "area" };
+  });
+});
 
 /** font style attributes */
 const font: InstanceType<typeof Styles.OlStyleText>["$props"] = computed(
@@ -527,7 +617,7 @@ watch(
   () => {
     if (!props.highlight || !props.geometry || !viewRef.value) return;
     /** lookup feature by id */
-    const feature = features.value.find(
+    const feature = geometryFeatures.value.find(
       (feature) => feature.get("id") === props.highlight,
     );
     if (!feature) return;
@@ -623,8 +713,13 @@ defineExpose({
   gap: 10px;
 }
 
-.symbols img {
+.symbol {
+  display: contents;
+}
+
+.symbol > * {
   place-self: center;
+  width: 1em;
   height: 1em;
 }
 </style>
