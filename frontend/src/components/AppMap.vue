@@ -731,13 +731,16 @@ function fit() {
   if (showLegends) {
     /** increase padding based on corner legend panel dimensions */
     const padCorner = (v: "top" | "bottom", h: "left" | "right") => {
-      let { width, height } = getBbox(`.legend.${v}-${h}`);
-      width += 20;
-      height += 20;
+      /** get client size of legend elements */
+      const { width, height } = getBbox(`.legend.${v}-${h}`);
       if (mapWidth.value > mapHeight.value)
+        /** if map landscape aspect ratio */
         padding[h] = Math.max(width, padding[h]);
-      else padding[v] = Math.max(height, padding[v]);
+      else
+        /** if map portrait aspect ratio */
+        padding[v] = Math.max(height, padding[v]);
     };
+    /** pad each corner */
     padCorner("top", "left");
     padCorner("top", "right");
     padCorner("bottom", "left");
@@ -745,7 +748,8 @@ function fit() {
   }
 
   const { top, right, bottom, left } = padding;
-  view.fit(extent, { padding: [top, right, bottom, left] });
+  /** fit view. add some extra padding. */
+  view.fit(extent, { padding: [top, right, bottom, left].map((v) => v + 20) });
 }
 
 /** auto-fit when legends change */
