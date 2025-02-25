@@ -847,30 +847,34 @@ const locationOptions = computed(() => {
 });
 
 /** get location data to pass to map based on selected locations */
-const { query: loadLocations, data: locations } = useQuery(async function () {
-  /** convert locations list to map of id to human-readable label */
-  const idToLabel = Object.fromEntries(
-    Object.values(locationList)
-      .map((value) => Object.entries(value))
-      .flat()
-      .map(([label, id]) => [id, label] as const),
-  );
+const { query: loadLocations, data: locations } = useQuery(
+  async function () {
+    /** convert locations list to map of id to human-readable label */
+    const idToLabel = Object.fromEntries(
+      Object.values(locationList)
+        .map((value) => Object.entries(value))
+        .flat()
+        .map(([label, id]) => [id, label] as const),
+    );
 
-  return Object.fromEntries(
-    /** query for locations in parallel */
-    await Promise.all(
-      selectedLocations.value.map(
-        async (location) =>
-          [
-            /** location id */
-            idToLabel[location] ?? "",
-            /** location geo data */
-            await getLocation(location),
-          ] as const,
+    return Object.fromEntries(
+      /** query for locations in parallel */
+      await Promise.all(
+        selectedLocations.value.map(
+          async (location) =>
+            [
+              /** location id */
+              idToLabel[location] ?? "",
+              /** location geo data */
+              await getLocation(location),
+            ] as const,
+        ),
       ),
-    ),
-  );
-}, undefined);
+    );
+  },
+  undefined,
+  true,
+);
 watch(selectedLocations, loadLocations, { immediate: true });
 
 watchEffect(() => {

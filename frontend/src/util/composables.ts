@@ -121,6 +121,8 @@ export const useQuery = <Data, Args extends unknown[]>(
   func: (...args: Args) => Promise<Data>,
   /** default value used for data before done loading and on error. */
   defaultValue: Data,
+  /** whether we should keep previous data while loading new data */
+  keep = false,
 ) => {
   /** query state */
   const status = ref<"" | "loading" | "error" | "success">("");
@@ -145,7 +147,7 @@ export const useQuery = <Data, Args extends unknown[]>(
     try {
       /** reset state */
       status.value = "loading";
-      data.value = defaultValue;
+      if (!keep) data.value = defaultValue;
 
       /** run provided function */
       const result = await func(...args);

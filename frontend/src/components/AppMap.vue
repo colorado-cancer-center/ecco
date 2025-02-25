@@ -196,6 +196,7 @@ type Emits = {
   "update:zoom": [Props["zoom"]];
   "update:lat": [Props["lat"]];
   "update:long": [Props["long"]];
+  "update:no-data": [boolean];
 };
 
 const emit = defineEmits<Emits>();
@@ -218,6 +219,9 @@ const noData = computed(
       (feature) => (feature.properties?.id ?? "") in values,
     ),
 );
+
+/** tell parent about "no data" */
+watch(noData, () => emit("update:no-data", noData.value), { immediate: true });
 
 /** scale object */
 const scale = computed(() => {
