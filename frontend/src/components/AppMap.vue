@@ -392,7 +392,7 @@ view.on(
 );
 
 /** background source object */
-const backgroundSource = new XYZ();
+const backgroundSource = new XYZ({ crossOrigin: "anonymous" });
 /** background layer object */
 const backgroundLayer = new TileLayer({ source: backgroundSource });
 
