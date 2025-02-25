@@ -980,7 +980,8 @@ debouncedWatch(
   width: 100%;
   height: 100%;
   /* center map on particular place (continental US) */
-  transform: scale(4.9) translate(28%, 15.4%);
+  translate: 140% 70%;
+  scale: 5;
 }
 
 .right-panel {

@@ -8,7 +8,8 @@
       }"
     >
       <!-- map root  -->
-      <div ref="mapElement" class="map" />
+      <!-- eslint-disable-next-line -->
+      <div ref="mapElement" class="map" @mouseout="pointer = [0, 0]" />
 
       <!-- legends -->
       <template v-if="showLegends">
@@ -63,6 +64,13 @@
         </div>
       </template>
 
+      <!-- feature popup -->
+      <div ref="popupElement" v-stop class="legend popup">
+        <template v-if="selectedFeature">
+          <slot :feature="selectedFeature.getProperties()" name="popup" />
+        </template>
+      </div>
+
       <div class="attribution" v-html="attribution" />
     </div>
   </div>
@@ -88,15 +96,16 @@ import { computed, onMounted, onUnmounted, ref, watch, watchEffect } from "vue";
 import * as d3 from "d3";
 import domtoimage from "dom-to-image-more";
 import type { FeatureCollection } from "geojson";
-import { capitalize, isEmpty, mapValues } from "lodash";
-import { Feature, Map, MapBrowserEvent, View } from "ol";
+import { capitalize, debounce, isEmpty, mapValues } from "lodash";
+import { Feature, Map, Overlay, View } from "ol";
 import { pointerMove } from "ol/events/condition";
 import type { FeatureLike } from "ol/Feature";
 import GeoJSON from "ol/format/GeoJSON";
-import { Point } from "ol/geom";
+import { Geometry, Point } from "ol/geom";
 import Select from "ol/interaction/Select";
 import TileLayer from "ol/layer/Tile";
 import VectorLayer from "ol/layer/Vector";
+import type { Pixel } from "ol/pixel";
 import { XYZ } from "ol/source";
 import VectorSource from "ol/source/Vector";
 import { Fill, Icon, Stroke, Style, Text } from "ol/style";
@@ -112,6 +121,7 @@ import { getMarkers } from "./markers";
 const scrollElement = ref<HTMLDivElement>();
 const frameElement = ref<HTMLDivElement>();
 const mapElement = ref<HTMLDivElement>();
+const popupElement = ref<HTMLDivElement>();
 
 const theme = forceHex(getCssVar("--theme"));
 
@@ -352,19 +362,27 @@ watchEffect(() => view.setCenter([props.long, props.lat]));
 watchEffect(() => view.setZoom(props.zoom));
 
 /** on view pan */
-view.on("change:center", () => {
-  const center = view.getCenter();
-  if (!center) return;
-  emit("update:lat", center[1]);
-  emit("update:long", center[0]);
-});
+view.on(
+  "change:center",
+  /** debounce so view animations are preserved */
+  debounce(() => {
+    const center = view.getCenter();
+    if (!center) return;
+    emit("update:lat", center[1]);
+    emit("update:long", center[0]);
+  }, 10),
+);
 
 /** on view zoom */
-view.on("change:resolution", () => {
-  const zoom = view.getZoom();
-  if (!zoom) return;
-  emit("update:zoom", zoom);
-});
+view.on(
+  "change:resolution",
+  /** debounce so view animations are preserved */
+  debounce(() => {
+    const zoom = view.getZoom();
+    if (!zoom) return;
+    emit("update:zoom", zoom);
+  }, 10),
+);
 
 /** background source object */
 const backgroundSource = new XYZ();
@@ -423,7 +441,7 @@ watchEffect((onCleanup) => {
           color:
             feature.get("id") === highlight
               ? theme
-              : getColor(values?.[feature.get("id")]?.value),
+              : getColor(values[feature.get("id")]?.value),
         }),
         zIndex: hover ? 1 : 0,
       });
@@ -448,18 +466,7 @@ watchEffect(() => geometryLayer.setOpacity(props.geometryOpacity));
 /** label source object */
 const labelSource = new VectorSource();
 /** label layer object */
-const labelLayer = new VectorLayer({
-  source: labelSource,
-  style: (feature) =>
-    new Style({
-      text: new Text({
-        text: feature.get("label"),
-        font: `600 ${(view.getZoom() ?? 8) * 2}px 'Roboto Flex'`,
-        stroke: new Stroke({ color: "white", width: 2 }),
-        overflow: true,
-      }),
-    }),
-});
+const labelLayer = new VectorLayer({ source: labelSource });
 
 /** update label layer source */
 watchEffect(() => {
@@ -468,7 +475,9 @@ watchEffect(() => {
     geometryFeatures.value.map(
       (feature) =>
         new Feature({
-          label: feature.get("label"),
+          /** pass through extra props */
+          ...feature.getProperties(),
+          /** make label feature centroid of geometry feature */
           geometry: new Point([
             feature.get("cent_long"),
             feature.get("cent_lat"),
@@ -477,6 +486,21 @@ watchEffect(() => {
     ),
   );
 });
+
+/** update label styles */
+watchEffect(() =>
+  labelLayer.setStyle(
+    (feature) =>
+      new Style({
+        text: new Text({
+          text: feature.get("label"),
+          stroke: new Stroke({ color: "white", width: 3 }),
+          font: `600 ${(view.getZoom() ?? 8) * 2}px 'Roboto Flex'`,
+          overflow: true,
+        }),
+      }),
+  ),
+);
 
 /** update label layer opacity */
 watchEffect(() => labelLayer.setOpacity(props.geometryOpacity));
@@ -519,7 +543,7 @@ watchEffect(() => {
   locationsSource.addFeatures(Object.values(locationFeatures.value).flat());
 });
 
-/** update locations styles */
+/** update location styles */
 watchEffect((onCleanup) => {
   /** generate styles per feature */
   const style =
@@ -564,15 +588,85 @@ const symbols = computed(() =>
   ),
 );
 
+/** current selected feature */
+const selectedFeature = ref<Feature<Geometry>>();
+
+/** reset selected when data changes to avoid showing wrong popup info */
+watch(
+  [() => props.values, () => props.geometry, () => props.locations],
+  () => (selectedFeature.value = undefined),
+  { deep: true },
+);
+
+/** select feature */
+map.on("click", ({ pixel }) => {
+  /** do like this instead of select to avoid double click debounce */
+
+  /** reset selected */
+  selectedFeature.value = undefined;
+
+  /** https://stackoverflow.com/a/50415743/2180570 */
+  map.forEachFeatureAtPixel(pixel, (feature, layer) => {
+    if (
+      /** select first */
+      !selectedFeature.value &&
+      feature instanceof Feature &&
+      /** don't allow selection of e.g. geometry labels */
+      (layer === geometryLayer || layer === locationsLayer)
+    ) {
+      /** set selected */
+      selectedFeature.value = feature;
+
+      /** include data values in properties */
+      const id = feature.get("id");
+      const values = props.values[typeof id === "string" ? id : ""] ?? {};
+      for (const [key, value] of Object.entries(values))
+        selectedFeature.value.set(key, value);
+    }
+  });
+});
+
+/** popup object */
+const popup = new Overlay({ stopEvent: false, positioning: "bottom-center" });
+
+/** add popup to map */
+map.addOverlay(popup);
+
+/** update popup element */
+watchEffect(() => {
+  if (popupElement.value) popup.setElement(popupElement.value);
+});
+
+/** update popup position */
+watchEffect(async () => {
+  if (!selectedFeature.value) return;
+
+  /** get bounds of feature */
+  const extent = selectedFeature.value.getGeometry()?.getExtent();
+  if (!extent) return;
+
+  /** position popup */
+  const [left = 0, bottom = 0, right = 0, top = 0] = extent;
+  popup.setPosition([left + (right - left) * 0.5, top + (bottom - top) * 0.25]);
+
+  /** wait for popup to render */
+  await sleep(0);
+
+  /** move view if needed */
+  popup.panIntoView({ animation: { duration: 100 } });
+});
+
+/** track pointer position */
+const pointer = ref<Pixel>([0, 0]);
+map.on("pointermove", ({ pixel }) => (pointer.value = pixel));
+
 /** change cursor to indicate click-ability */
-watchEffect((onCleanup) => {
+watchEffect(() => {
+  if (!mapElement.value) return;
   /** https://stackoverflow.com/questions/26022029/how-to-change-the-cursor-on-hover-in-openlayers-3 */
-  const listener = ({ pixel }: MapBrowserEvent<any>) => {
-    const hit = map.hasFeatureAtPixel(pixel);
-    map.getTargetElement().style.cursor = hit ? "pointer" : "";
-  };
-  map.on("pointermove", listener);
-  onCleanup(() => map.un("pointermove", listener));
+  mapElement.value.style.cursor = map.hasFeatureAtPixel(pointer.value)
+    ? "pointer"
+    : "";
 });
 
 /** add layers to map */
@@ -586,6 +680,29 @@ const noData = computed(
     !props.geometry.features.every(
       (feature) => (feature.properties?.id ?? "") in props.values,
     ),
+);
+
+/** highlight and zoom in on feature */
+watch(
+  [() => props.highlight, () => props.geometry],
+  async () => {
+    if (!props.highlight || !props.geometry) return;
+    /** lookup feature by id */
+    const feature = geometryFeatures.value.find(
+      (feature) => feature.get("id") === props.highlight,
+    );
+    if (!feature) return;
+    /** get feature bounds */
+    const extent = feature.getGeometry()?.getExtent();
+    if (!extent) return;
+    /** wait for view to be attached to map */
+    await waitFor(() => !!map.getView());
+    /** fit view to feature bounds */
+    view.fit(extent);
+    /** zoom out a bit to give context of surroundings */
+    view.adjustZoom(-1);
+  },
+  { immediate: true, deep: true },
 );
 
 /** programmatic zoom in */
@@ -668,34 +785,11 @@ async function download() {
   const blob = await domtoimage.toBlob(frameElement.value, {
     width: mapWidth.value * scale,
     height: mapHeight.value * scale,
-    style: { transform: `scale(${scale})`, transformOrigin: "top left" },
+    style: { scale, transformOrigin: "top left" },
   });
 
   downloadPng(blob, props.filename);
 }
-
-/** highlight and zoom in on feature */
-watch(
-  [() => props.highlight, () => props.geometry],
-  async () => {
-    if (!props.highlight || !props.geometry) return;
-    /** lookup feature by id */
-    const feature = geometryFeatures.value.find(
-      (feature) => feature.get("id") === props.highlight,
-    );
-    if (!feature) return;
-    /** get feature bounds */
-    const extent = feature.getGeometry()?.getExtent();
-    if (!extent) return;
-    /** wait for view to be attached to map */
-    await waitFor(() => !!map.getView());
-    /** fit view to feature bounds */
-    view.fit(extent);
-    /** zoom out a bit to give context of surroundings */
-    view.adjustZoom(-1);
-  },
-  { immediate: true, deep: true },
-);
 
 /** allow control from parent */
 defineExpose({ zoomIn, zoomOut, fit, fullscreen, download });
@@ -705,7 +799,14 @@ onUnmounted(() => {
   map.dispose();
   view.dispose();
   backgroundLayer.dispose();
+  backgroundSource.dispose();
   geometryLayer.dispose();
+  geometrySource.dispose();
+  labelLayer.dispose();
+  labelSource.dispose();
+  locationsLayer.dispose();
+  locationsSource.dispose();
+  popup.dispose();
 });
 </script>
 
@@ -796,6 +897,28 @@ onUnmounted(() => {
   height: 1em;
 }
 
+.popup {
+  --caret: 10px;
+  position: relative;
+  top: calc(var(--caret) * -1.414);
+  width: 400px;
+  max-width: max-content;
+}
+
+.popup::after {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: var(--caret);
+  height: var(--caret);
+  translate: -50% -50%;
+  rotate: 45deg;
+  background: white;
+  box-shadow: var(--shadow);
+  content: "";
+  clip-path: polygon(200% -100%, 200% 200%, -100% 200%);
+}
+
 .attribution {
   position: absolute;
   bottom: 0;
@@ -805,5 +928,11 @@ onUnmounted(() => {
   background: color-mix(in srgb, var(--white), transparent 25%);
   font-size: 12px;
   text-wrap: balance;
+}
+</style>
+
+<style>
+.ol-overlaycontainer {
+  z-index: 10 !important;
 }
 </style>

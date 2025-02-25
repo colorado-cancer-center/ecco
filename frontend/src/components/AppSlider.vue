@@ -86,7 +86,7 @@ const emit = defineEmits<Emits>();
   position: absolute;
   width: 15px;
   height: 15px;
-  transform: translate(-50%, -50%);
+  translate: -50% -50%;
   border-radius: 999px;
   background: currentColor;
 }
