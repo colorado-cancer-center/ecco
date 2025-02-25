@@ -196,7 +196,6 @@ type Emits = {
   "update:zoom": [Props["zoom"]];
   "update:lat": [Props["lat"]];
   "update:long": [Props["long"]];
-  "update:no-data": [boolean];
 };
 
 const emit = defineEmits<Emits>();
@@ -211,6 +210,14 @@ type Slots = {
 };
 
 defineSlots<Slots>();
+
+/** whether map has any "no data" geometry regions */
+const noData = computed(
+  () =>
+    !geometry.features.every(
+      (feature) => (feature.properties?.id ?? "") in values,
+    ),
+);
 
 /** scale object */
 const scale = computed(() => {
@@ -497,6 +504,16 @@ watchEffect(() =>
 /** update label layer opacity */
 watchEffect(() => labelLayer.setOpacity(geometryOpacity));
 
+/** symbols (icon + label) associated with each location */
+const symbols = computed(() =>
+  getMarkers(
+    Object.entries(locations).map(([label, location]) => [
+      label,
+      location.features[0]?.geometry.type ?? "",
+    ]),
+  ),
+);
+
 /** parse location features */
 const locationFeatures = computed(() => {
   const reader = new GeoJSON();
@@ -569,16 +586,6 @@ watchEffect((onCleanup) => {
 
 /** update locations layer opacity */
 watchEffect(() => locationsLayer.setOpacity(locationOpacity));
-
-/** symbols (icon + label) associated with each location */
-const symbols = computed(() =>
-  getMarkers(
-    Object.entries(locations).map(([label, location]) => [
-      label,
-      location.features[0]?.geometry.type ?? "",
-    ]),
-  ),
-);
 
 /** current selected feature */
 const selectedFeature = ref<Feature<Geometry>>();
@@ -665,14 +672,6 @@ watchEffect(() => {
 /** add layers to map */
 watchEffect(() =>
   map.setLayers([backgroundLayer, geometryLayer, labelLayer, locationsLayer]),
-);
-
-/** whether map has any "no data" geometry regions */
-const noData = computed(
-  () =>
-    !geometry.features.every(
-      (feature) => (feature.properties?.id ?? "") in values,
-    ),
 );
 
 /** highlight and zoom in on feature */
