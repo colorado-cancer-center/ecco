@@ -425,8 +425,7 @@ const attribution = ref("");
 
 /** update background layer url template */
 watchEffect(() => {
-  /** https://openlayers.org/en/latest/examples/reusable-source.html#:~:text=source.refresh */
-  backgroundSource.refresh();
+  backgroundSource.clear();
   /** look up full option details */
   const option = backgroundOptions.find((option) => option.id === background);
   if (!option) return;
@@ -491,7 +490,10 @@ watchEffect((onCleanup) => {
     /** don't count other layers, e.g. labels, in hover */
     layers: [geometryLayer],
   });
+
+  /** add interaction to map */
   map.addInteraction(hover);
+  /** remove interaction from map (avoid memory leak) */
   onCleanup(() => map.removeInteraction(hover));
 });
 
@@ -609,6 +611,7 @@ watchEffect((onCleanup) => {
 
   /** base styles */
   locationsLayer.setStyle(style());
+
   /** hover styles */
   const hover = new Select({
     condition: pointerMove,
@@ -616,7 +619,10 @@ watchEffect((onCleanup) => {
     /** don't count other layers, e.g. labels, in hover */
     layers: [locationsLayer],
   });
+
+  /** add interaction to map */
   map.addInteraction(hover);
+  /** remove interaction from map (avoid memory leak) */
   onCleanup(() => map.removeInteraction(hover));
 });
 
@@ -626,7 +632,7 @@ watchEffect(() => locationsLayer.setOpacity(locationOpacity));
 /** current selected feature */
 const selectedFeature = ref<Feature<Geometry>>();
 
-/** reset selected when data changes to avoid showing wrong popup info */
+/** reset selected feature when data changes to avoid showing wrong popup info */
 watch(
   [() => values, () => geometry, () => locations],
   () => (selectedFeature.value = undefined),
@@ -715,13 +721,12 @@ watch(
   [() => highlight, () => geometry],
   async () => {
     if (!highlight || !geometry) return;
-    /** lookup feature by id */
-    const feature = geometryFeatures.value.find(
-      (feature) => feature.get("id") === highlight,
-    );
-    if (!feature) return;
     /** get feature bounds */
-    const extent = feature.getGeometry()?.getExtent();
+    const extent = geometryFeatures.value
+      /** lookup feature by id */
+      .find((feature) => feature.get("id") === highlight)
+      ?.getGeometry()
+      ?.getExtent();
     if (!extent) return;
     /** wait for view to be attached to map */
     await waitFor(() => !!map.getView());
