@@ -548,11 +548,7 @@ import {
   faMinus,
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
-import {
-  debouncedWatch,
-  useElementBounding,
-  useWindowSize,
-} from "@vueuse/core";
+import { useElementBounding, useWindowSize } from "@vueuse/core";
 import {
   getDownload,
   getGeo,
@@ -891,7 +887,7 @@ watchEffect(() => {
 const autoRightPanelHeight = ref("");
 const { top: rightPanelTop } = useElementBounding(rightPanelElement);
 const { height: windowHeight } = useWindowSize();
-debouncedWatch(
+watch(
   [rightPanelTop, windowHeight],
   () => {
     if (windowHeight.value < 400) return;
@@ -901,10 +897,7 @@ debouncedWatch(
     const max = windowHeight.value - 20;
     autoRightPanelHeight.value = clamp(max - top, 400, max) + "px";
   },
-  {
-    immediate: true,
-    debounce: 100,
-  },
+  { immediate: true },
 );
 </script>
 

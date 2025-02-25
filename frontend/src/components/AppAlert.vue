@@ -23,7 +23,7 @@ type Slots = {
 defineSlots<Slots>();
 
 /** dismissed state, persisted for duration of browser session */
-const dismissed = useSessionStorage("dismiss", true);
+const dismissed = useSessionStorage("dismiss", false);
 
 onMounted(() => {
   /** https://stackoverflow.com/questions/5004978/check-if-page-gets-reloaded-or-refreshed-in-javascript */
@@ -37,7 +37,7 @@ onMounted(() => {
         .includes("reload");
 
   /** if "soft" refresh, remember dismissal. otherwise, reset to showing alert. */
-  if (!refresh) dismissed.value = true;
+  if (!refresh) dismissed.value = false;
 });
 
 function onClick() {
