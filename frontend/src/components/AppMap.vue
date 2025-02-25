@@ -425,7 +425,8 @@ const attribution = ref("");
 
 /** update background layer url template */
 watchEffect(() => {
-  backgroundSource.clear();
+  /** clear tile cache at all zoom levels */
+  backgroundLayer.clearRenderer();
   /** look up full option details */
   const option = backgroundOptions.find((option) => option.id === background);
   if (!option) return;
