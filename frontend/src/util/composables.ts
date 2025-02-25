@@ -128,7 +128,7 @@ export const useQuery = <Data, Args extends unknown[]>(
   const status = ref<"" | "loading" | "error" | "success">("");
 
   /** query results */
-  const data = ref<Data>(defaultValue) as Ref<Data>;
+  const data = shallowRef<Data>(defaultValue);
   /** https://github.com/vuejs/composition-api/issues/483 */
 
   /** latest query id, unique to this useQuery instance */

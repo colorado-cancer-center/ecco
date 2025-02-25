@@ -748,11 +748,18 @@ function fit() {
   view.fit(extent, { padding: [top, right, bottom, left] });
 }
 
-/** auto-fit when props change */
+/** auto-fit when legends change */
 watch(
-  [() => showLegends, () => locations],
-  /** wait for legends render */
+  () => showLegends,
+  /** wait for legends mount/unmount */
   () => sleep().then(fit),
+);
+
+/** auto-fit when locations change */
+watch(
+  () => locations,
+  /** don't fit on first load */
+  (_, prevLocations) => !isEmpty(prevLocations) && fit(),
   { deep: true },
 );
 

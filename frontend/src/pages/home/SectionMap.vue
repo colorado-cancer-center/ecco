@@ -875,7 +875,7 @@ const { query: loadLocations, data: locations } = useQuery(
   undefined,
   true,
 );
-watch(selectedLocations, loadLocations, { immediate: true });
+watch(selectedLocations, loadLocations, { immediate: true, deep: true });
 
 watchEffect(() => {
   /** if manual min/max off */

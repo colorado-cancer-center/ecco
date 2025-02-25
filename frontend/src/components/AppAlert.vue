@@ -26,18 +26,21 @@ defineSlots<Slots>();
 const dismissed = useSessionStorage("dismiss", false);
 
 onMounted(() => {
-  /** https://stackoverflow.com/questions/5004978/check-if-page-gets-reloaded-or-refreshed-in-javascript */
-  const refresh = window.performance.navigation
-    ? window.performance.navigation.type ===
-      window.performance.navigation.TYPE_RELOAD
-    : window.performance
-        .getEntriesByType("navigation")
-        .filter((entry) => "type" in entry)
-        .map(({ type }) => type)
-        .includes("reload");
+  /** always remember dismissal in dev mode */
+  if (import.meta.env.MODE === "development") return;
 
-  /** if "soft" refresh, remember dismissal. otherwise, reset to showing alert. */
-  if (!refresh) dismissed.value = false;
+  /** https://stackoverflow.com/questions/5004978/check-if-page-gets-reloaded-or-refreshed-in-javascript */
+  const refresh = window.performance
+    .getEntriesByType("navigation")
+    .filter((entry) => "type" in entry)
+    .map(({ type }) => type)
+    .includes("reload");
+
+  /** if "soft" refresh, remember dismissal */
+  if (refresh) return;
+
+  /** reset to showing alert */
+  dismissed.value = false;
 });
 
 function onClick() {
