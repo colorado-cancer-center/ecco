@@ -352,10 +352,30 @@ const map = new Map({ controls: [] });
 /** update map root element */
 watchEffect(() => map.setTarget(mapElement.value));
 
+/** mercator https://epsg.io/3857 */
+const xy = "EPSG:3857";
+/** world geodetic system https://epsg.io/4326 */
+const latlong = "EPSG:4326";
+
+/** transform point coordinates */
+function xyToLatlong(x = 0, y = 0) {
+  const [long = 0, lat = 0] = new Point([x, y])
+    .transform(xy, latlong)
+    .getCoordinates();
+  return [lat, long];
+}
+
+/** transform point coordinates */
+function latlongToXy(lat = 0, long = 0) {
+  const [x = 0, y = 0] = new Point([long, lat])
+    .transform(latlong, xy)
+    .getCoordinates();
+  return [x, y];
+}
+
 /** view object */
 const view = new View({
-  projection: "EPSG:4326",
-  /** prevent extra zoom change events from causing recursive update error */
+  projection: xy,
   smoothExtentConstraint: false,
   smoothResolutionConstraint: false,
 });
@@ -364,7 +384,7 @@ const view = new View({
 watchEffect(() => map.setView(view));
 
 /** update view center */
-watchEffect(() => view.setCenter([long, lat]));
+watchEffect(() => view.setCenter(latlongToXy(lat, long)));
 /** update view zoom */
 watchEffect(() => view.setZoom(zoom));
 
@@ -375,8 +395,9 @@ view.on(
   debounce(() => {
     const center = view.getCenter();
     if (!center) return;
-    emit("update:lat", center[1]);
-    emit("update:long", center[0]);
+    const [lat, long] = xyToLatlong(center[0], center[1]);
+    emit("update:lat", lat);
+    emit("update:long", long);
   }, 10),
 );
 
@@ -392,7 +413,10 @@ view.on(
 );
 
 /** background source object */
-const backgroundSource = new XYZ({ crossOrigin: "anonymous" });
+const backgroundSource = new XYZ({
+  projection: xy,
+  crossOrigin: "anonymous",
+});
 /** background layer object */
 const backgroundLayer = new TileLayer({ source: backgroundSource });
 
@@ -418,8 +442,16 @@ const geometrySource = new VectorSource();
 /** geometry layer object */
 const geometryLayer = new VectorLayer({ source: geometrySource });
 
+/** geojson parser */
+const geojson = new GeoJSON({
+  /** source projection */
+  dataProjection: latlong,
+  /** target projection */
+  featureProjection: xy,
+});
+
 /** parse geometry features */
-const geometryFeatures = computed(() => new GeoJSON().readFeatures(geometry));
+const geometryFeatures = computed(() => geojson.readFeatures(geometry));
 
 /** update geometry layer source */
 watchEffect(() => {
@@ -481,10 +513,9 @@ watchEffect(() => {
           /** pass through extra props */
           ...feature.getProperties(),
           /** make label feature centroid of geometry feature */
-          geometry: new Point([
-            feature.get("cent_long"),
-            feature.get("cent_lat"),
-          ]),
+          geometry: new Point(
+            latlongToXy(feature.get("cent_lat"), feature.get("cent_long")),
+          ),
         }),
     ),
   );
@@ -519,11 +550,10 @@ const symbols = computed(() =>
 );
 
 /** parse location features */
-const locationFeatures = computed(() => {
-  const reader = new GeoJSON();
-  return mapValues(locations, (value, location) => {
+const locationFeatures = computed(() =>
+  mapValues(locations, (value, location) => {
     /** parse geojson */
-    const features = reader.readFeatures(value);
+    const features = geojson.readFeatures(value);
 
     for (const feature of features) {
       const symbol = symbols.value[location];
@@ -544,8 +574,8 @@ const locationFeatures = computed(() => {
     }
 
     return features;
-  });
-});
+  }),
+);
 
 /** locations source object */
 const locationsSource = new VectorSource();
