@@ -165,32 +165,32 @@ type Props = {
   highlight?: string;
 };
 
-const props = withDefaults(defineProps<Props>(), {
-  geometry: () => ({ type: "FeatureCollection", features: [] }),
-  locations: () => ({}),
-  values: () => ({}),
-  min: undefined,
-  max: undefined,
-  unit: undefined,
-  lat: 0,
-  long: 0,
-  zoom: 0,
-  showLegends: true,
-  backgroundOpacity: 1,
-  geometryOpacity: 0.75,
-  locationOpacity: 1,
-  background: backgroundOptions[0]!.id,
-  gradient: gradientOptions[3]!.id,
-  flipGradient: false,
-  scaleSteps: 5,
-  niceSteps: false,
-  scalePower: 1,
-  scaleValues: undefined,
-  width: 0,
-  height: 0,
-  filename: "map",
-  highlight: "",
-});
+const {
+  geometry = { type: "FeatureCollection", features: [] },
+  locations = {},
+  values = {},
+  min,
+  max,
+  unit,
+  lat = 0,
+  long = 0,
+  zoom = 0,
+  showLegends = true,
+  backgroundOpacity = 1,
+  geometryOpacity = 0.75,
+  locationOpacity = 1,
+  background = backgroundOptions[0]!.id,
+  gradient = gradientOptions[3]!.id,
+  flipGradient = false,
+  scaleSteps = 5,
+  niceSteps = false,
+  scalePower = 1,
+  scaleValues,
+  width = 0,
+  height = 0,
+  filename = "map",
+  highlight = "",
+} = defineProps<Props>();
 
 type Emits = {
   "update:zoom": [Props["zoom"]];
@@ -215,13 +215,13 @@ defineSlots<Slots>();
 /** scale object */
 const scale = computed(() => {
   /** map 0-1 percent to color */
-  const gradient = (percent: number) => {
+  const gradientFunc = (percent: number) => {
     /** get gradient interpolator function from shorthand id/name */
-    const gradient = getGradient(props.gradient);
+    const gradientFunc = getGradient(gradient);
     /** reverse */
-    if (props.flipGradient) percent = 1 - percent;
+    if (flipGradient) percent = 1 - percent;
     /** get color */
-    return gradient(percent);
+    return gradientFunc(percent);
   };
 
   /** scale steps */
@@ -231,21 +231,21 @@ const scale = computed(() => {
   ) & { label: string; color: string; tooltip: string })[] = [];
 
   /** map specific values to specific colors */
-  if (props.scaleValues) {
+  if (scaleValues) {
     /** add "no data" entry */
     if (noData.value) steps.push(noDataEntry);
 
     /** explicit steps */
     steps.push(
-      ...props.scaleValues.map((value, index, array) => {
+      ...scaleValues.map((value, index, array) => {
         const label =
           typeof value === "number"
-            ? formatValue(value, props.unit, true)
+            ? formatValue(value, unit, true)
             : capitalize(value);
         return {
           value,
           label,
-          color: gradient(index / (array.length - 1)),
+          color: gradientFunc(index / (array.length - 1)),
           tooltip: label,
         };
       }),
@@ -263,29 +263,25 @@ const scale = computed(() => {
   } else if (
     /** map continuous values to discrete colors */
     /** (if we have needed and valid values) */
-    !isEmpty(props.values) &&
-    typeof props.min === "number" &&
-    typeof props.max === "number" &&
-    props.min !== props.max
+    !isEmpty(values) &&
+    typeof min === "number" &&
+    typeof max === "number" &&
+    min !== max
   ) {
-    /** get range of data */
-    const min = props.min;
-    const max = props.max;
-
     /** scale bands (spaced list of points between min and max) */
     let bands = [min, max];
 
     /** "nice", approximate number of steps */
-    if (props.niceSteps) {
-      bands = d3.ticks(min, max, props.scaleSteps);
+    if (niceSteps) {
+      bands = d3.ticks(min, max, scaleSteps);
 
       /** make sure steps always covers/contains range of values (min/max) */
-      const step = d3.tickStep(min, max, props.scaleSteps);
+      const step = d3.tickStep(min, max, scaleSteps);
       if (bands.at(0)! > min) bands.unshift(bands.at(0)! - step);
       if (bands.at(-1)! < max) bands.push(bands.at(-1)! + step);
     } else {
       /** exact number of steps */
-      bands = d3.range(min, max, (max - min) / props.scaleSteps).concat([max]);
+      bands = d3.range(min, max, (max - min) / scaleSteps).concat([max]);
     }
 
     /** make sure enough bands */
@@ -297,7 +293,7 @@ const scale = computed(() => {
     /** apply power */
     bands = bands.map((value) =>
       normalizedApply(value, lower, upper, (value) =>
-        Math.pow(value, props.scalePower),
+        Math.pow(value, scalePower),
       ),
     );
 
@@ -309,12 +305,12 @@ const scale = computed(() => {
         label:
           /** only add first and last labels */
           index === 0
-            ? formatValue(min, props.unit, true)
+            ? formatValue(min, unit, true)
             : index === array.length - 1
-              ? formatValue(max, props.unit, true)
+              ? formatValue(max, unit, true)
               : "",
-        color: gradient(index / (array.length - 1)),
-        tooltip: `${formatValue(lower, props.unit)} &ndash; ${formatValue(upper, props.unit)}`,
+        color: gradientFunc(index / (array.length - 1)),
+        tooltip: `${formatValue(lower, unit)} &ndash; ${formatValue(upper, unit)}`,
       })),
     );
 
@@ -357,9 +353,9 @@ const view = new View({
 watchEffect(() => map.setView(view));
 
 /** update view center */
-watchEffect(() => view.setCenter([props.long, props.lat]));
+watchEffect(() => view.setCenter([long, lat]));
 /** update view zoom */
-watchEffect(() => view.setZoom(props.zoom));
+watchEffect(() => view.setZoom(zoom));
 
 /** on view pan */
 view.on(
@@ -397,16 +393,14 @@ watchEffect(() => {
   /** https://openlayers.org/en/latest/examples/reusable-source.html#:~:text=source.refresh */
   backgroundSource.refresh();
   /** look up full option details */
-  const option = backgroundOptions.find(
-    (option) => option.id === props.background,
-  );
+  const option = backgroundOptions.find((option) => option.id === background);
   if (!option) return;
   backgroundSource.setUrl(option.template ?? "");
   attribution.value = option.attribution;
 });
 
 /** update background layer opacity */
-watchEffect(() => backgroundLayer.setOpacity(props.backgroundOpacity));
+watchEffect(() => backgroundLayer.setOpacity(backgroundOpacity));
 
 /** geometry source object */
 const geometrySource = new VectorSource();
@@ -414,9 +408,7 @@ const geometrySource = new VectorSource();
 const geometryLayer = new VectorLayer({ source: geometrySource });
 
 /** parse geometry features */
-const geometryFeatures = computed(() =>
-  new GeoJSON().readFeatures(props.geometry),
-);
+const geometryFeatures = computed(() => new GeoJSON().readFeatures(geometry));
 
 /** update geometry layer source */
 watchEffect(() => {
@@ -428,8 +420,8 @@ watchEffect(() => {
 watchEffect((onCleanup) => {
   /** get reactive values in root of watch so they can be auto-tracked */
   const getColor = scale.value.getColor;
-  const values = props.values;
-  const highlight = props.highlight;
+  const _values = values;
+  const _highlight = highlight;
 
   /** generate styles per feature */
   const style =
@@ -439,9 +431,9 @@ watchEffect((onCleanup) => {
         stroke: new Stroke({ color: "black", width: hover ? 4 : 1 }),
         fill: new Fill({
           color:
-            feature.get("id") === highlight
+            feature.get("id") === _highlight
               ? theme
-              : getColor(values[feature.get("id")]?.value),
+              : getColor(_values[feature.get("id")]?.value),
         }),
         zIndex: hover ? 1 : 0,
       });
@@ -461,7 +453,7 @@ watchEffect((onCleanup) => {
 });
 
 /** update geometry layer opacity */
-watchEffect(() => geometryLayer.setOpacity(props.geometryOpacity));
+watchEffect(() => geometryLayer.setOpacity(geometryOpacity));
 
 /** label source object */
 const labelSource = new VectorSource();
@@ -503,12 +495,12 @@ watchEffect(() =>
 );
 
 /** update label layer opacity */
-watchEffect(() => labelLayer.setOpacity(props.geometryOpacity));
+watchEffect(() => labelLayer.setOpacity(geometryOpacity));
 
 /** parse location features */
 const locationFeatures = computed(() => {
   const reader = new GeoJSON();
-  return mapValues(props.locations, (value, location) => {
+  return mapValues(locations, (value, location) => {
     /** parse geojson */
     const features = reader.readFeatures(value);
 
@@ -576,12 +568,12 @@ watchEffect((onCleanup) => {
 });
 
 /** update locations layer opacity */
-watchEffect(() => locationsLayer.setOpacity(props.locationOpacity));
+watchEffect(() => locationsLayer.setOpacity(locationOpacity));
 
 /** symbols (icon + label) associated with each location */
 const symbols = computed(() =>
   getMarkers(
-    Object.entries(props.locations).map(([label, location]) => [
+    Object.entries(locations).map(([label, location]) => [
       label,
       location.features[0]?.geometry.type ?? "",
     ]),
@@ -593,7 +585,7 @@ const selectedFeature = ref<Feature<Geometry>>();
 
 /** reset selected when data changes to avoid showing wrong popup info */
 watch(
-  [() => props.values, () => props.geometry, () => props.locations],
+  [() => values, () => geometry, () => locations],
   () => (selectedFeature.value = undefined),
   { deep: true },
 );
@@ -619,8 +611,9 @@ map.on("click", ({ pixel }) => {
 
       /** include data values in properties */
       const id = feature.get("id");
-      const values = props.values[typeof id === "string" ? id : ""] ?? {};
-      for (const [key, value] of Object.entries(values))
+      for (const [key, value] of Object.entries(
+        values[typeof id === "string" ? id : ""] ?? {},
+      ))
         selectedFeature.value.set(key, value);
     }
   });
@@ -677,19 +670,19 @@ watchEffect(() =>
 /** whether map has any "no data" geometry regions */
 const noData = computed(
   () =>
-    !props.geometry.features.every(
-      (feature) => (feature.properties?.id ?? "") in props.values,
+    !geometry.features.every(
+      (feature) => (feature.properties?.id ?? "") in values,
     ),
 );
 
 /** highlight and zoom in on feature */
 watch(
-  [() => props.highlight, () => props.geometry],
+  [() => highlight, () => geometry],
   async () => {
-    if (!props.highlight || !props.geometry) return;
+    if (!highlight || !geometry) return;
     /** lookup feature by id */
     const feature = geometryFeatures.value.find(
-      (feature) => feature.get("id") === props.highlight,
+      (feature) => feature.get("id") === highlight,
     );
     if (!feature) return;
     /** get feature bounds */
@@ -730,7 +723,7 @@ function fit() {
   let padding = { top: 0, left: 0, bottom: 0, right: 0 };
 
   /** make room for legends */
-  if (props.showLegends) {
+  if (showLegends) {
     /** increase padding based on corner legend panel dimensions */
     const padCorner = (v: "top" | "bottom", h: "left" | "right") => {
       let { width, height } = getBbox(`.legend.${v}-${h}`);
@@ -752,7 +745,7 @@ function fit() {
 
 /** auto-fit when props change */
 watch(
-  [() => props.showLegends, () => props.locations],
+  [() => showLegends, () => locations],
   /** wait for legends render */
   () => sleep().then(fit),
   { deep: true },
@@ -760,10 +753,10 @@ watch(
 
 onMounted(async () => {
   /** if not highlighting specific feature */
-  if (props.highlight) return;
+  if (highlight) return;
 
   /** if no pan/zoom specified */
-  if (!props.lat || !props.long || !props.zoom) {
+  if (!lat || !long || !zoom) {
     /** wait for features to be loaded, rendered/parsed */
     await waitFor(() => geometrySource.getFeatures().length);
     /** fit view to content */
@@ -788,7 +781,7 @@ async function download() {
     style: { scale, transformOrigin: "top left" },
   });
 
-  downloadPng(blob, props.filename);
+  downloadPng(blob, filename);
 }
 
 /** allow control from parent */

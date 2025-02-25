@@ -114,10 +114,13 @@ type Props = {
   tooltip?: string;
 };
 
-const props = withDefaults(defineProps<Props>(), {
-  multi: false,
-  tooltip: "",
-});
+const {
+  label,
+  options,
+  multi = false,
+  modelValue,
+  tooltip = "",
+} = defineProps<Props>();
 
 type Emits = {
   "update:modelValue": [Props["modelValue"]];
@@ -159,50 +162,44 @@ function isOption(option: O | Group | undefined): option is O {
 
 /** model value to pass from parent to headlessui */
 const value = computed(() => {
-  let list = toArray(props.modelValue);
-  return props.multi
-    ? props.options
-        .filter(isOption)
-        .filter((option) => list.includes(option.id))
-    : props.options
-        .filter(isOption)
-        .find((option) => list.includes(option.id)) || "";
+  let list = toArray(modelValue);
+  return multi
+    ? options.filter(isOption).filter((option) => list.includes(option.id))
+    : options.filter(isOption).find((option) => list.includes(option.id)) || "";
 });
 
 /** model value to emit from headlessui to parent */
 async function onChange(value: O | O[]) {
   let list = toArray(value);
-  const id = props.multi ? list.map((v) => v.id) : list[0]?.id || "";
+  const id = multi ? list.map((v) => v.id) : list[0]?.id || "";
   emit("update:modelValue", id);
 }
 
 /** full selected option (only relevant in single mode) */
 const selectedOption = computed(() => {
-  let list = toArray(props.modelValue);
-  if (!props.multi)
-    return props.options
-      .filter(isOption)
-      .find((option) => option.id === list[0]);
+  let list = toArray(modelValue);
+  if (!multi)
+    return options.filter(isOption).find((option) => option.id === list[0]);
   else return undefined;
 });
 
 /** label to show as selected value in box */
 const selectedLabel = computed<string>(() => {
-  let list = toArray(props.modelValue);
+  let list = toArray(modelValue);
 
-  if (!props.multi) {
-    const find = props.options
+  if (!multi) {
+    const find = options
       .filter(isOption)
       .find((option) => option.id === list[0]);
     return (isOption(find) && find?.label) || "None selected";
   }
 
-  const value = props.options
+  const value = options
     .filter(isOption)
     .filter((option) => list.includes(option.id));
   if (value.length === 0) return "None selected";
   if (value.length === 1) return value[0]?.label || "1 Selected";
-  if (value.length === props.options.length) return "All selected";
+  if (value.length === options.length) return "All selected";
   return value.length + " selected";
 });
 
@@ -214,25 +211,25 @@ async function onDropdownOpen(node: VNode) {
 
 /** add "quick" arrow key select */
 function onKeypress({ key }: KeyboardEvent) {
-  if (!props.multi && (key === "ArrowLeft" || key === "ArrowRight")) {
-    let index = props.options.findIndex((option) =>
-      isOption(option) ? option.id === props.modelValue : false,
+  if (!multi && (key === "ArrowLeft" || key === "ArrowRight")) {
+    let index = options.findIndex((option) =>
+      isOption(option) ? option.id === modelValue : false,
     );
     if (index === -1) return;
 
     if (key === "ArrowLeft")
       while (index > 0) {
         index--;
-        if (isOption(props.options[index])) break;
+        if (isOption(options[index])) break;
       }
 
     if (key === "ArrowRight")
-      while (index < props.options.length - 1) {
+      while (index < options.length - 1) {
         index++;
-        if (isOption(props.options[index])) break;
+        if (isOption(options[index])) break;
       }
 
-    emit("update:modelValue", (props.options[index] as O).id);
+    emit("update:modelValue", (options[index] as O).id);
   }
 }
 </script>

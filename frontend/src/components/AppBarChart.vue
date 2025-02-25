@@ -49,10 +49,7 @@ type Props = {
   order?: (string | number)[];
 };
 
-const props = withDefaults(defineProps<Props>(), {
-  unit: undefined,
-  order: undefined,
-});
+const { title, data, unit, order } = defineProps<Props>();
 
 const chart = ref<ComponentInstance<typeof VChart>>();
 const { width } = useElementSize(() => chart.value?.root);
@@ -73,22 +70,22 @@ const colorB = getCssVar("--accent-b");
 const option = computed(() => {
   /** unique x values */
   const xValues = uniq(
-    Object.values(props.data)
+    Object.values(data)
       .map((series) => Object.keys(series))
       .flat(),
   );
 
   /** unique y values */
   const yValues = uniq(
-    Object.values(props.data)
+    Object.values(data)
       .map((series) => Object.values(series))
       .flat(),
   ).map((value) => value ?? noDataEntry.label);
 
   /** put y axis in particular order */
-  if (props.order) {
-    const order = [noDataEntry.label, ...props.order];
-    yValues.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+  if (order) {
+    const _order = [noDataEntry.label, ...order];
+    yValues.sort((a, b) => _order.indexOf(a) - _order.indexOf(b));
   }
 
   const options: EChartsOption = {};
@@ -96,7 +93,7 @@ const option = computed(() => {
   options.animation = false;
 
   options.title = {};
-  options.title.text = props.title;
+  options.title.text = title;
   options.title.right = "center";
   options.title.top = 15;
   options.title.textStyle = { fontSize: 18 };
@@ -120,38 +117,35 @@ const option = computed(() => {
     fontSize: 16,
   };
 
-  options.yAxis = props.order
+  options.yAxis = order
     ? { type: "category", data: yValues }
     : { type: "value" };
   options.yAxis.axisLabel = {
-    interval: props.order ? 0 : undefined,
+    interval: order ? 0 : undefined,
     color: "black",
     fontSize: 16,
-    formatter: (value: NonNullable<Value>) =>
-      formatValue(value, props.unit, true),
+    formatter: (value: NonNullable<Value>) => formatValue(value, unit, true),
   };
 
   const symbolSize = 30;
 
-  options.series = Object.entries(props.data).map(
-    ([name, data], index, entries) => ({
-      name,
-      type: props.order ? "pictorialBar" : "bar",
-      data: Object.values(data).map((value) => ({
-        value: value ?? (props.order ? noDataEntry.label : 0),
-        itemStyle: value ? undefined : { color: noDataEntry.color },
-      })),
-      color: [colorA, colorB][index],
-      barMinHeight: props.order ? 0 : 5,
-      symbol: "diamond",
-      symbolPosition: "end",
-      symbolSize: [symbolSize, symbolSize],
-      symbolOffset: [
-        (index - (entries.length - 1) / 2) * 100 * 1.1 + "%",
-        "-50%",
-      ],
-    }),
-  );
+  options.series = Object.entries(data).map(([name, data], index, entries) => ({
+    name,
+    type: order ? "pictorialBar" : "bar",
+    data: Object.values(data).map((value) => ({
+      value: value ?? (order ? noDataEntry.label : 0),
+      itemStyle: value ? undefined : { color: noDataEntry.color },
+    })),
+    color: [colorA, colorB][index],
+    barMinHeight: order ? 0 : 5,
+    symbol: "diamond",
+    symbolPosition: "end",
+    symbolSize: [symbolSize, symbolSize],
+    symbolOffset: [
+      (index - (entries.length - 1) / 2) * 100 * 1.1 + "%",
+      "-50%",
+    ],
+  }));
 
   options.tooltip = {};
   options.tooltip.trigger = "item";
@@ -161,7 +155,7 @@ const option = computed(() => {
     if (value === undefined) return "";
     if (typeof value === "object") return "";
     if (value === noDataEntry.label) value = noDataEntry.tooltip;
-    else value = formatValue(value, props.unit);
+    else value = formatValue(value, unit);
     return [seriesName, name, value].join("<br>");
   };
   options.tooltip.transitionDuration = 0;

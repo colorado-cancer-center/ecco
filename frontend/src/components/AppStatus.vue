@@ -26,7 +26,7 @@ type Props = {
   status: Status;
 };
 
-const props = withDefaults(defineProps<Props>(), { status: "info" });
+const { status = "info" } = defineProps<Props>();
 
 type Slots = {
   default?: () => unknown;
@@ -67,7 +67,7 @@ const codes = {
   },
 };
 
-const code = computed<Code>(() => codes[props.status] || codes.info);
+const code = computed<Code>(() => codes[status] || codes.info);
 </script>
 
 <style scoped>

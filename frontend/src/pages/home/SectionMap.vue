@@ -599,7 +599,7 @@ type FeatureInfo = Expand<
   >
 >;
 
-const props = defineProps<Props>();
+const { facets, locationList } = defineProps<Props>();
 
 /** element refs */
 const leftPanelElement = ref<HTMLElement>();
@@ -685,7 +685,7 @@ const {
 watch(selectedLevel, loadGeometry, { immediate: true });
 
 /** geographic levels from facets data */
-const levels = computed(() => cloneDeep(props.facets));
+const levels = computed(() => cloneDeep(facets));
 
 /** measure categories from geographic level */
 const categories = computed(() =>
@@ -837,7 +837,7 @@ watch(
 /** location dropdown options */
 const locationOptions = computed(() => {
   const entries: Entry[] = [];
-  for (const [group, options] of Object.entries(props.locationList)) {
+  for (const [group, options] of Object.entries(locationList)) {
     entries.push({ group });
     for (const [label, id] of Object.entries(options))
       entries.push({ id, label });
@@ -850,7 +850,7 @@ const locationOptions = computed(() => {
 const { query: loadLocations, data: locations } = useQuery(async function () {
   /** convert locations list to map of id to human-readable label */
   const idToLabel = Object.fromEntries(
-    Object.values(props.locationList)
+    Object.values(locationList)
       .map((value) => Object.entries(value))
       .flat()
       .map(([label, id]) => [id, label] as const),

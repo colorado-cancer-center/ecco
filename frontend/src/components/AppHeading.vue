@@ -26,7 +26,7 @@ type Props = {
   id?: string;
 };
 
-const props = defineProps<Props>();
+const { level, id } = defineProps<Props>();
 
 type Slots = {
   default: () => unknown;
@@ -38,14 +38,14 @@ defineSlots<Slots>();
 const link = ref("");
 
 /** tag of heading */
-const tag = computed(() => "h" + props.level);
+const tag = computed(() => "h" + level);
 
 /** heading ref */
 const heading = ref<HTMLElement>();
 
 /** determine link from text content of heading */
 function updateLink() {
-  link.value = kebabCase(props.id ?? heading.value?.textContent ?? "");
+  link.value = kebabCase(id ?? heading.value?.textContent ?? "");
 }
 
 onMounted(updateLink);
