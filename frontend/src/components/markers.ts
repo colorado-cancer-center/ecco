@@ -81,10 +81,10 @@ type Color = (typeof colors)[number];
 
 /** line stroke dashes for areas */
 const dashes = [
-  [0, 0],
   [10, 10],
   [5, 5],
   [5, 5, 15, 5],
+  [0, 0],
 ];
 
 type Dash = (typeof dashes)[number];
@@ -111,13 +111,19 @@ export const getMarkers = <Value extends string>(values: [Value, Type][]) => {
           type,
           icons[iconIndex++ % icons.length]!,
           colors[colorIndex++ % colors.length]!,
-          dashes[dashIndex++ % dashes.length]!,
+          type === "Point" ? [] : dashes[dashIndex++ % dashes.length]!,
         );
 
   return map;
 };
 
-function getMarker(type: Type, icon: Icon, color: Color, dash: Dash) {
+function getMarker(
+  type: Type,
+  icon: Icon,
+  color: Color,
+  dash: Dash,
+  size = 16,
+) {
   /** svg of icon */
   const ns = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(ns, "svg");
@@ -128,32 +134,50 @@ function getMarker(type: Type, icon: Icon, color: Color, dash: Dash) {
 
   /** use font-awesome point marker */
   if (type === "Point") {
-    const stroke = 50;
-
     /** get html of next icon */
     svg.innerHTML = getHtml(icon).node[0]!.innerHTML;
+
+    /** get bounds */
+    let { x, y, width, height } = svg.getBBox();
+
+    /** scale to size */
+    const sizeWidth = size * (width / height);
+    const sizeHeight = size;
+    const stroke = height / 10;
 
     /** styles */
     svg.style.color = color;
     svg.style.stroke = "black";
     svg.style.strokeWidth = String(stroke * 2);
+    svg.style.strokeLinecap = "round";
+    svg.style.strokeLinejoin = "round";
     svg.style.paintOrder = "stroke";
+    svg.style.overflow = "visible";
 
     /** expand view box to include stroke */
-    let { x, y, width, height } = svg.getBBox();
     x -= stroke;
     y -= stroke;
     width += 2 * stroke;
     height += 2 * stroke;
+
+    /** fit view box */
     svg.setAttribute("viewBox", [x, y, width, height].join(" "));
-    svg.setAttribute("width", String(width));
-    svg.setAttribute("height", String(height));
+
+    /** set explicit dimensions */
+    svg.setAttribute("width", String(sizeWidth));
+    svg.setAttribute("height", String(sizeHeight));
   } else {
-    const stroke = 10;
+    const stroke = 20;
     const x = 0;
-    const y = -stroke * 4;
+    const y = -20;
     const width = 100;
-    const height = stroke * 2 * 4;
+    const height = 40;
+
+    /** styles */
+    svg.style.fill = "none";
+    svg.style.stroke = color;
+    svg.style.strokeWidth = String(stroke);
+    svg.style.strokeDasharray = dash.join(" ");
 
     /** create dash */
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -162,16 +186,12 @@ function getMarker(type: Type, icon: Icon, color: Color, dash: Dash) {
     line.setAttribute("x2", String(width));
     line.setAttribute("pathLength", String(dashSymbolLength));
 
-    /** styles */
-    svg.style.fill = "none";
-    svg.style.stroke = color;
-    svg.style.strokeWidth = String(stroke);
-    svg.style.strokeDasharray = dash.join(" ");
-
-    /** fit view box to contents */
+    /** fit view box */
     svg.setAttribute("viewBox", [x, y, width, height].join(" "));
-    svg.setAttribute("width", String(width));
-    svg.setAttribute("height", String(height));
+
+    /** set explicit dimensions */
+    svg.setAttribute("width", String(size));
+    svg.setAttribute("height", String(size));
   }
 
   svg.remove();
@@ -179,7 +199,7 @@ function getMarker(type: Type, icon: Icon, color: Color, dash: Dash) {
   /** html source */
   const html = svg.outerHTML;
   /** encode to data uri */
-  const url = `data:image/svg+xml;utf8,${window.encodeURIComponent(html)}`;
+  const src = `data:image/svg+xml;utf8,${window.encodeURIComponent(html)}`;
 
   return {
     /** main color */
@@ -189,6 +209,9 @@ function getMarker(type: Type, icon: Icon, color: Color, dash: Dash) {
     /** icon html */
     html,
     /** icon src url */
-    url,
+    src,
+    /** dimensions */
+    width: parseFloat(svg.getAttribute("width") ?? ""),
+    height: parseFloat(svg.getAttribute("height") ?? ""),
   };
 }

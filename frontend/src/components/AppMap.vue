@@ -529,11 +529,13 @@ const locationFeatures = computed(() => {
       for (const [key, value] of Object.entries(symbol))
         feature.set(key, value);
 
+      const { src, width, height } = symbol;
+
       /** define icon object here instead of on more frequent style update */
-      feature.set("icon", new Icon({ src: symbol.url, width: 16, height: 16 }));
+      feature.set("icon", new Icon({ src, width, height }));
       feature.set(
         "iconHover",
-        new Icon({ src: symbol.url, width: 16, height: 16, color: "black" }),
+        new Icon({ src, width, height, color: "black" }),
       );
     }
 
@@ -885,8 +887,6 @@ onUnmounted(() => {
 
 .symbol > * {
   place-self: center;
-  width: 1em;
-  height: 1em;
 }
 
 .popup {
