@@ -101,7 +101,7 @@ import { Feature, Map, Overlay, View } from "ol";
 import { pointerMove } from "ol/events/condition";
 import type { FeatureLike } from "ol/Feature";
 import GeoJSON from "ol/format/GeoJSON";
-import { Geometry, Point } from "ol/geom";
+import { Point, type Geometry } from "ol/geom";
 import Select from "ol/interaction/Select";
 import TileLayer from "ol/layer/Tile";
 import VectorLayer from "ol/layer/Vector";
@@ -719,7 +719,7 @@ function fit() {
   if (!extent || extent.some((value) => !Number.isFinite(value))) return;
 
   /** default fit padding */
-  let padding = { top: 0, left: 0, bottom: 0, right: 0 };
+  const padding = { top: 0, left: 0, bottom: 0, right: 0 };
 
   /** make room for legends */
   if (showLegends) {

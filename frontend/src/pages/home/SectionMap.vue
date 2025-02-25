@@ -528,9 +528,8 @@ import {
   shallowRef,
   watch,
   watchEffect,
-  type ShallowRef,
-  type WatchStopHandle,
 } from "vue";
+import type { ShallowRef, WatchStopHandle } from "vue";
 import { clamp, cloneDeep, isEmpty, mapValues } from "lodash";
 import {
   faComment,
@@ -567,7 +566,8 @@ import AppCheckbox from "@/components/AppCheckbox.vue";
 import AppLink from "@/components/AppLink.vue";
 import AppMap from "@/components/AppMap.vue";
 import AppNumber from "@/components/AppNumber.vue";
-import AppSelect, { type Entry, type Option } from "@/components/AppSelect.vue";
+import AppSelect from "@/components/AppSelect.vue";
+import type { Entry, Option } from "@/components/AppSelect.vue";
 import AppSlider from "@/components/AppSlider.vue";
 import { gradientOptions } from "@/components/gradient";
 import { backgroundOptions } from "@/components/tile-providers";

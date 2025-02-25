@@ -3,13 +3,8 @@
 </template>
 
 <script setup lang="ts">
-import {
-  computed,
-  provide,
-  ref,
-  watchEffect,
-  type ComponentInstance,
-} from "vue";
+import { computed, provide, ref, watchEffect } from "vue";
+import type { ComponentInstance } from "vue";
 import VChart, { THEME_KEY } from "vue-echarts";
 import type { EChartsOption } from "echarts";
 import { BarChart, PictorialBarChart } from "echarts/charts";

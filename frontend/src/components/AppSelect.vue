@@ -76,7 +76,8 @@
 </template>
 
 <script setup lang="ts" generic="O extends Option">
-import { computed, type VNode } from "vue";
+import type { VNode } from "vue";
+import { computed } from "vue";
 import { size } from "@floating-ui/dom";
 import {
   faCaretDown,
@@ -162,7 +163,7 @@ function isOption(option: O | Group | undefined): option is O {
 
 /** model value to pass from parent to headlessui */
 const value = computed(() => {
-  let list = toArray(modelValue);
+  const list = toArray(modelValue);
   return multi
     ? options.filter(isOption).filter((option) => list.includes(option.id))
     : options.filter(isOption).find((option) => list.includes(option.id)) || "";
@@ -170,14 +171,14 @@ const value = computed(() => {
 
 /** model value to emit from headlessui to parent */
 async function onChange(value: O | O[]) {
-  let list = toArray(value);
+  const list = toArray(value);
   const id = multi ? list.map((v) => v.id) : list[0]?.id || "";
   emit("update:modelValue", id);
 }
 
 /** full selected option (only relevant in single mode) */
 const selectedOption = computed(() => {
-  let list = toArray(modelValue);
+  const list = toArray(modelValue);
   if (!multi)
     return options.filter(isOption).find((option) => option.id === list[0]);
   else return undefined;
@@ -185,7 +186,7 @@ const selectedOption = computed(() => {
 
 /** label to show as selected value in box */
 const selectedLabel = computed<string>(() => {
-  let list = toArray(modelValue);
+  const list = toArray(modelValue);
 
   if (!multi) {
     const find = options
