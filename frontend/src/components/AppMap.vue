@@ -1,126 +1,14 @@
 <template>
   <div ref="scrollElement" v-bind="$attrs" class="scroll">
-    <!-- map root -->
-    <Map.OlMap
-      ref="mapRef"
+    <div
+      ref="frameElement"
       :style="{
         width: width ? width + 'px' : '100%',
         height: height ? height + 'px' : '100%',
       }"
-      :controls="[]"
     >
-      <!-- viewport -->
-      <Map.OlView
-        ref="viewRef"
-        :center="center"
-        :zoom="zoom"
-        projection="EPSG:4326"
-        @change:center="onCenter"
-        @change:resolution="onZoom"
-      />
-
-      <!-- background layer -->
-      <Layers.OlTileLayer name="background" :opacity="backgroundOpacity">
-        <Sources.OlSourceXyz :url="backgroundUrl" cross-origin="anonymous" />
-      </Layers.OlTileLayer>
-
-      <!-- geometry layer -->
-      <Layers.OlVectorLayer name="geometry">
-        <Sources.OlSourceVector ref="geometryRef" :features="geometryFeatures">
-          <Map.OlFeature
-            v-for="(feature, key) in geometryFeatures"
-            :key="key"
-            :properties="feature.getProperties()"
-          >
-            <!-- https://github.com/MelihAltintas/vue3-openlayers/issues/410 -->
-            <Styles.OlStyle
-              :key="JSON.stringify(scale.steps) + geometryOpacity"
-            >
-              <Styles.OlStyleStroke color="black" />
-              <Styles.OlStyleFill
-                :color="
-                  feature.get('id') === highlight
-                    ? getCssVar('--theme')
-                    : scale.getColor(
-                        values?.[feature.get('id')]?.value,
-                        geometryOpacity,
-                      )
-                "
-              />
-            </Styles.OlStyle>
-          </Map.OlFeature>
-        </Sources.OlSourceVector>
-      </Layers.OlVectorLayer>
-
-      <!-- geometry interaction -->
-      <Interactions.OlInteractionSelect
-        :key="Math.random()"
-        :condition="pointerMove"
-        :layers="(layer) => layer.get('name') === 'geometry'"
-      >
-        <Styles.OlStyle>
-          <Styles.OlStyleFill
-            :color="toHex(getCssVar('--theme-light'), geometryOpacity)"
-          />
-        </Styles.OlStyle>
-      </Interactions.OlInteractionSelect>
-
-      <!-- label layer -->
-      <Layers.OlVectorLayer name="labels">
-        <Sources.OlSourceVector>
-          <Map.OlFeature v-for="(feature, key) in geometryFeatures" :key="key">
-            <Geometries.OlGeomPoint
-              :coordinates="[feature.get('cent_long'), feature.get('cent_lat')]"
-            />
-            <Styles.OlStyle>
-              <Styles.OlStyleText :text="feature.get('label')" v-bind="font" />
-            </Styles.OlStyle>
-          </Map.OlFeature>
-        </Sources.OlSourceVector>
-      </Layers.OlVectorLayer>
-
-      <!-- locations layer -->
-      <Layers.OlVectorLayer
-        v-for="(location, key) in locationFeatures"
-        :key="key"
-        name="locations"
-        :opacity="locationOpacity"
-      >
-        <Sources.OlSourceVector :features="location">
-          <Styles.OlStyle>
-            <Styles.OlStyleFill color="transparent" />
-            <Styles.OlStyleStroke
-              :color="symbols[key]?.color"
-              :width="3"
-              :line-dash="symbols[key]?.dash"
-            />
-            <Styles.OlStyleIcon>
-              <div class="symbol" v-html="symbols[key]?.html"></div>
-            </Styles.OlStyleIcon>
-          </Styles.OlStyle>
-        </Sources.OlSourceVector>
-      </Layers.OlVectorLayer>
-
-      <!-- location interaction -->
-      <Interactions.OlInteractionSelect
-        :key="Math.random()"
-        :condition="pointerMove"
-        :layers="(layer) => layer.get('name') === 'locations'"
-      >
-        <Styles.OlStyle
-          :override-style-function="
-            (feature, style) => {
-              if (feature.get('type') === 'area')
-                style.setFill(
-                  new Fill({
-                    color: toHex(feature.get('color'), locationOpacity / 2),
-                  }),
-                );
-              return style;
-            }
-          "
-        />
-      </Interactions.OlInteractionSelect>
+      <!-- map root  -->
+      <div ref="mapElement" class="map" />
 
       <!-- legends -->
       <template v-if="showLegends">
@@ -162,10 +50,10 @@
 
           <!-- symbol key -->
           <div v-if="!isEmpty(symbols)" class="symbols">
-            <template v-for="(symbol, key) of symbols" :key="key">
+            <template v-for="(symbol, label) of symbols" :key="label">
               <template v-if="symbol">
                 <div class="symbol" v-html="symbol.html" />
-                <small>{{ symbol?.label }}</small>
+                <small>{{ label }}</small>
               </template>
             </template>
           </div>
@@ -174,7 +62,9 @@
           <slot name="bottom-left" />
         </div>
       </template>
-    </Map.OlMap>
+
+      <div class="attribution" v-html="attribution" />
+    </div>
   </div>
 </template>
 
@@ -194,37 +84,36 @@ export const noDataEntry = {
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, watchEffect } from "vue";
-import {
-  Geometries,
-  Interactions,
-  Layers,
-  Map,
-  Sources,
-  Styles,
-} from "vue3-openlayers";
+import { computed, onMounted, onUnmounted, ref, watch, watchEffect } from "vue";
 import * as d3 from "d3";
 import domtoimage from "dom-to-image-more";
 import type { FeatureCollection } from "geojson";
 import { capitalize, isEmpty, mapValues } from "lodash";
+import { Feature, Map, MapBrowserEvent, View } from "ol";
 import { pointerMove } from "ol/events/condition";
+import type { FeatureLike } from "ol/Feature";
 import GeoJSON from "ol/format/GeoJSON";
-import type { ObjectEvent } from "ol/Object";
-import { Fill } from "ol/style";
+import { Point } from "ol/geom";
+import Select from "ol/interaction/Select";
+import TileLayer from "ol/layer/Tile";
+import VectorLayer from "ol/layer/Vector";
+import { XYZ } from "ol/source";
+import VectorSource from "ol/source/Vector";
+import { Fill, Icon, Stroke, Style, Text } from "ol/style";
 import { useElementSize, useFullscreen } from "@vueuse/core";
 import { type Unit } from "@/api";
 import { getGradient, gradientOptions } from "@/components/gradient";
 import { backgroundOptions } from "@/components/tile-providers";
 import { downloadPng } from "@/util/download";
 import { formatValue, normalizedApply } from "@/util/math";
-import { getBbox, getCssVar, sleep, toHex, waitFor } from "@/util/misc";
-import { getMarker, resetMarkers } from "./markers";
+import { forceHex, getBbox, getCssVar, sleep, waitFor } from "@/util/misc";
+import { getMarkers } from "./markers";
 
 const scrollElement = ref<HTMLDivElement>();
-const mapRef = ref<InstanceType<typeof Map.OlMap>>();
-const mapElement = computed(() => mapRef.value?.map.getTargetElement());
-const viewRef = ref<InstanceType<typeof Map.OlView>>();
-const geometryRef = ref<InstanceType<typeof Sources.OlSourceVector>>();
+const frameElement = ref<HTMLDivElement>();
+const mapElement = ref<HTMLDivElement>();
+
+const theme = forceHex(getCssVar("--theme"));
 
 type Props = {
   /** features */
@@ -313,81 +202,6 @@ type Slots = {
 
 defineSlots<Slots>();
 
-/** combined lat/long coords */
-const center = computed(() => [props.long, props.lat]);
-
-/** on center change */
-function onCenter(event: ObjectEvent) {
-  const [long, lat] = event.target.getCenter();
-  emit("update:lat", lat);
-  emit("update:long", long);
-}
-
-/** on zoom change */
-function onZoom(event: ObjectEvent) {
-  const newZoom = event.target.getZoom();
-  if (newZoom) emit("update:zoom", newZoom);
-}
-
-/** parse geometry features */
-const geometryFeatures = computed(() =>
-  new GeoJSON().readFeatures(props.geometry),
-);
-
-/** parse location features */
-const locationFeatures = computed(() => {
-  const reader = new GeoJSON();
-  return mapValues(props.locations, (value, location) => {
-    /** parse geojson */
-    const features = reader.readFeatures(value);
-    /** add extra props */
-    for (const feature of features) {
-      for (const [key, value] of Object.entries(symbols.value[location] ?? {}))
-        feature.set(key, value);
-    }
-    return features;
-  });
-});
-
-/** symbols (icon + label) associated with each location */
-const symbols = computed(() => {
-  resetMarkers();
-
-  return mapValues(props.locations, (location, label) => {
-    const type = location.features[0]?.geometry.type;
-    if (type === "Point")
-      return { ...getMarker("point"), label, type: "point" };
-    if (type === "Polygon")
-      return { ...getMarker("area"), label, type: "area" };
-  });
-});
-
-/** font style attributes */
-const font: InstanceType<typeof Styles.OlStyleText>["$props"] = computed(
-  () => ({
-    font: `600 ${props.zoom * 1.5}px 'Roboto Flex'`,
-    fill: "black",
-    stroke: { color: "white", width: 2 },
-    overflow: true,
-    declutterMode: "obstacle",
-  }),
-);
-
-/** background tile url template */
-const backgroundUrl = computed(
-  () =>
-    backgroundOptions.find((option) => option.id === props.background)
-      ?.template ?? "",
-);
-
-/** whether map has any "no data" geometry regions */
-const noData = computed(
-  () =>
-    !props.geometry.features.every(
-      (feature) => (feature.properties?.id ?? "") in props.values,
-    ),
-);
-
 /** scale object */
 const scale = computed(() => {
   /** map 0-1 percent to color */
@@ -428,12 +242,11 @@ const scale = computed(() => {
     );
 
     /** explicit color */
-    const getColor = (value?: number | string, opacity?: number) =>
-      toHex(
+    const getColor = (value?: number | string) =>
+      forceHex(
         steps.find((step) =>
           "value" in step ? step.value === value : undefined,
         )?.color ?? noDataColor,
-        opacity,
       );
 
     return { steps, getColor };
@@ -502,12 +315,11 @@ const scale = computed(() => {
     if (noData.value) steps.unshift(noDataEntry);
 
     /** scale interpolator */
-    const getColor = (value?: number | string, opacity?: number) =>
+    const getColor = (value?: number | string) =>
       value === undefined || typeof value === "string"
         ? noDataColor
-        : toHex(
+        : forceHex(
             d3.scaleQuantile<string>().domain(bands).range(colors)(value),
-            opacity,
           );
 
     return { steps, getColor };
@@ -517,41 +329,297 @@ const scale = computed(() => {
   }
 });
 
-/** change cursor to indicate click-ability */
+/** map object */
+const map = new Map({ controls: [] });
+
+/** update map root element */
+watchEffect(() => map.setTarget(mapElement.value));
+
+/** view object */
+const view = new View({
+  projection: "EPSG:4326",
+  /** prevent extra zoom change events from causing recursive update error */
+  smoothExtentConstraint: false,
+  smoothResolutionConstraint: false,
+});
+
+/** add view to map */
+watchEffect(() => map.setView(view));
+
+/** update view center */
+watchEffect(() => view.setCenter([props.long, props.lat]));
+/** update view zoom */
+watchEffect(() => view.setZoom(props.zoom));
+
+/** on view pan */
+view.on("change:center", () => {
+  const center = view.getCenter();
+  if (!center) return;
+  emit("update:lat", center[1]);
+  emit("update:long", center[0]);
+});
+
+/** on view zoom */
+view.on("change:resolution", () => {
+  const zoom = view.getZoom();
+  if (!zoom) return;
+  emit("update:zoom", zoom);
+});
+
+/** background source object */
+const backgroundSource = new XYZ();
+/** background layer object */
+const backgroundLayer = new TileLayer({ source: backgroundSource });
+
+/** attribution html */
+const attribution = ref("");
+
+/** update background layer url template */
 watchEffect(() => {
-  const map = mapRef.value?.map;
-  /** https://stackoverflow.com/questions/26022029/how-to-change-the-cursor-on-hover-in-openlayers-3 */
-  map?.on("pointermove", ({ pixel }) => {
-    const hit = map.hasFeatureAtPixel(pixel);
-    map.getTargetElement().style.cursor = hit ? "pointer" : "";
+  /** https://openlayers.org/en/latest/examples/reusable-source.html#:~:text=source.refresh */
+  backgroundSource.refresh();
+  /** look up full option details */
+  const option = backgroundOptions.find(
+    (option) => option.id === props.background,
+  );
+  if (!option) return;
+  backgroundSource.setUrl(option.template ?? "");
+  attribution.value = option.attribution;
+});
+
+/** update background layer opacity */
+watchEffect(() => backgroundLayer.setOpacity(props.backgroundOpacity));
+
+/** geometry source object */
+const geometrySource = new VectorSource();
+/** geometry layer object */
+const geometryLayer = new VectorLayer({ source: geometrySource });
+
+/** parse geometry features */
+const geometryFeatures = computed(() =>
+  new GeoJSON().readFeatures(props.geometry),
+);
+
+/** update geometry layer source */
+watchEffect(() => {
+  geometrySource.clear();
+  geometrySource.addFeatures(geometryFeatures.value);
+});
+
+/** update geometry styles */
+watchEffect((onCleanup) => {
+  /** get reactive values in root of watch so they can be auto-tracked */
+  const getColor = scale.value.getColor;
+  const values = props.values;
+  const highlight = props.highlight;
+
+  /** generate styles per feature */
+  const style =
+    (hover = false) =>
+    (feature: FeatureLike) =>
+      new Style({
+        stroke: new Stroke({ color: "black", width: hover ? 4 : 1 }),
+        fill: new Fill({
+          color:
+            feature.get("id") === highlight
+              ? theme
+              : getColor(values?.[feature.get("id")]?.value),
+        }),
+        zIndex: hover ? 1 : 0,
+      });
+
+  /** base styles */
+  geometryLayer.setStyle(style());
+
+  /** hover styles */
+  const hover = new Select({
+    condition: pointerMove,
+    style: style(true),
+    /** don't count other layers, e.g. labels, in hover */
+    layers: [geometryLayer],
+  });
+  map.addInteraction(hover);
+  onCleanup(() => map.removeInteraction(hover));
+});
+
+/** update geometry layer opacity */
+watchEffect(() => geometryLayer.setOpacity(props.geometryOpacity));
+
+/** label source object */
+const labelSource = new VectorSource();
+/** label layer object */
+const labelLayer = new VectorLayer({
+  source: labelSource,
+  style: (feature) =>
+    new Style({
+      text: new Text({
+        text: feature.get("label"),
+        font: `600 ${(view.getZoom() ?? 8) * 2}px 'Roboto Flex'`,
+        stroke: new Stroke({ color: "white", width: 2 }),
+        overflow: true,
+      }),
+    }),
+});
+
+/** update label layer source */
+watchEffect(() => {
+  labelSource.clear();
+  labelSource.addFeatures(
+    geometryFeatures.value.map(
+      (feature) =>
+        new Feature({
+          label: feature.get("label"),
+          geometry: new Point([
+            feature.get("cent_long"),
+            feature.get("cent_lat"),
+          ]),
+        }),
+    ),
+  );
+});
+
+/** update label layer opacity */
+watchEffect(() => labelLayer.setOpacity(props.geometryOpacity));
+
+/** parse location features */
+const locationFeatures = computed(() => {
+  const reader = new GeoJSON();
+  return mapValues(props.locations, (value, location) => {
+    /** parse geojson */
+    const features = reader.readFeatures(value);
+
+    for (const feature of features) {
+      const symbol = symbols.value[location];
+      if (!symbol) continue;
+
+      /** add extra props */
+      for (const [key, value] of Object.entries(symbol))
+        feature.set(key, value);
+
+      /** define icon object here instead of on more frequent style update */
+      feature.set("icon", new Icon({ src: symbol.url, width: 16, height: 16 }));
+      feature.set(
+        "iconHover",
+        new Icon({ src: symbol.url, width: 16, height: 16, color: "black" }),
+      );
+    }
+
+    return features;
   });
 });
 
+/** locations source object */
+const locationsSource = new VectorSource();
+/** locations layer object */
+const locationsLayer = new VectorLayer({ source: locationsSource });
+
+/** update locations layer source */
+watchEffect(() => {
+  locationsSource.clear();
+  locationsSource.addFeatures(Object.values(locationFeatures.value).flat());
+});
+
+/** update locations styles */
+watchEffect((onCleanup) => {
+  /** generate styles per feature */
+  const style =
+    (hover = false) =>
+    (feature: FeatureLike) =>
+      new Style({
+        fill: new Fill({
+          color: hover ? feature.get("color") + "20" : "transparent",
+        }),
+        stroke: new Stroke({
+          color: feature.get("color"),
+          width: hover ? 4 : 2,
+          lineDash: feature.get("dash"),
+        }),
+        image: hover ? feature.get("iconHover") : feature.get("icon"),
+        zIndex: hover ? 2 : 1,
+      });
+
+  /** base styles */
+  locationsLayer.setStyle(style());
+  /** hover styles */
+  const hover = new Select({
+    condition: pointerMove,
+    style: style(true),
+    /** don't count other layers, e.g. labels, in hover */
+    layers: [locationsLayer],
+  });
+  map.addInteraction(hover);
+  onCleanup(() => map.removeInteraction(hover));
+});
+
+/** update locations layer opacity */
+watchEffect(() => locationsLayer.setOpacity(props.locationOpacity));
+
+/** symbols (icon + label) associated with each location */
+const symbols = computed(() =>
+  getMarkers(
+    Object.entries(props.locations).map(([label, location]) => [
+      label,
+      location.features[0]?.geometry.type ?? "",
+    ]),
+  ),
+);
+
+/** change cursor to indicate click-ability */
+watchEffect((onCleanup) => {
+  /** https://stackoverflow.com/questions/26022029/how-to-change-the-cursor-on-hover-in-openlayers-3 */
+  const listener = ({ pixel }: MapBrowserEvent<any>) => {
+    const hit = map.hasFeatureAtPixel(pixel);
+    map.getTargetElement().style.cursor = hit ? "pointer" : "";
+  };
+  map.on("pointermove", listener);
+  onCleanup(() => map.un("pointermove", listener));
+});
+
+/** add layers to map */
+watchEffect(() =>
+  map.setLayers([backgroundLayer, geometryLayer, labelLayer, locationsLayer]),
+);
+
+/** whether map has any "no data" geometry regions */
+const noData = computed(
+  () =>
+    !props.geometry.features.every(
+      (feature) => (feature.properties?.id ?? "") in props.values,
+    ),
+);
+
+/** programmatic zoom in */
 function zoomIn() {
-  viewRef.value?.adjustZoom(1);
+  view.adjustZoom(1);
 }
 
+/** programmatic zoom out */
 function zoomOut() {
-  viewRef.value?.adjustZoom(-1);
+  view.adjustZoom(-1);
 }
+
+/** map client size */
+const { width: mapWidth, height: mapHeight } = useElementSize(frameElement);
 
 /** fit view to geometry layer content */
 function fit() {
-  if (!viewRef.value || !geometryRef.value) return;
-
   /** get bounding box of content */
-  const extent = geometryRef.value.source.getExtent();
+  const extent = geometrySource.getExtent();
+
+  /** check if valid extent (can be infinities if no features) */
+  if (!extent || extent.some((value) => !Number.isFinite(value))) return;
 
   /** default fit padding */
   let padding = { top: 0, left: 0, bottom: 0, right: 0 };
 
   /** make room for legends */
   if (props.showLegends) {
-    const mapDimensions = mapElement.value?.getBoundingClientRect()!;
     /** increase padding based on corner legend panel dimensions */
     const padCorner = (v: "top" | "bottom", h: "left" | "right") => {
-      const { width, height } = getBbox(`.legend.${v}-${h}`);
-      if (mapDimensions?.width > mapDimensions?.height)
+      let { width, height } = getBbox(`.legend.${v}-${h}`);
+      width += 20;
+      height += 20;
+      if (mapWidth.value > mapHeight.value)
         padding[h] = Math.max(width, padding[h]);
       else padding[v] = Math.max(height, padding[v]);
     };
@@ -561,11 +629,8 @@ function fit() {
     padCorner("bottom", "right");
   }
 
-  /** check if valid extent (can be infinities if no features) */
-  if (extent && extent.every((value) => Number.isFinite(value))) {
-    const { top, right, bottom, left } = padding;
-    viewRef.value.fit(extent, { padding: [top, right, bottom, left] });
-  }
+  const { top, right, bottom, left } = padding;
+  view.fit(extent, { padding: [top, right, bottom, left] });
 }
 
 /** auto-fit when props change */
@@ -582,8 +647,8 @@ onMounted(async () => {
 
   /** if no pan/zoom specified */
   if (!props.lat || !props.long || !props.zoom) {
-    /** wait for features to be loaded, rendered,s parsed */
-    await waitFor(() => geometryRef.value?.source.getFeatures().length);
+    /** wait for features to be loaded, rendered/parsed */
+    await waitFor(() => geometrySource.getFeatures().length);
     /** fit view to content */
     fit();
   }
@@ -592,19 +657,17 @@ onMounted(async () => {
 /** toggle fullscreen on element */
 const { toggle: fullscreen } = useFullscreen(scrollElement);
 
-/** actual client size */
-const { width: actualWidth, height: actualHeight } = useElementSize(mapElement);
-
 /** download map as png */
 async function download() {
-  if (!mapElement.value) return;
+  if (!frameElement.value) return;
 
   /** upscale for better quality */
   const scale = window.devicePixelRatio;
 
-  const blob = await domtoimage.toBlob(mapElement.value, {
-    width: actualWidth.value * scale,
-    height: actualHeight.value * scale,
+  /** convert to image */
+  const blob = await domtoimage.toBlob(frameElement.value, {
+    width: mapWidth.value * scale,
+    height: mapHeight.value * scale,
     style: { transform: `scale(${scale})`, transformOrigin: "top left" },
   });
 
@@ -613,31 +676,36 @@ async function download() {
 
 /** highlight and zoom in on feature */
 watch(
-  [() => props.highlight, () => props.geometry, viewRef],
-  () => {
-    if (!props.highlight || !props.geometry || !viewRef.value) return;
+  [() => props.highlight, () => props.geometry],
+  async () => {
+    if (!props.highlight || !props.geometry) return;
     /** lookup feature by id */
     const feature = geometryFeatures.value.find(
       (feature) => feature.get("id") === props.highlight,
     );
     if (!feature) return;
-    /** fit view to feature bounds */
+    /** get feature bounds */
     const extent = feature.getGeometry()?.getExtent();
     if (!extent) return;
-    viewRef.value.fit(extent);
+    /** wait for view to be attached to map */
+    await waitFor(() => !!map.getView());
+    /** fit view to feature bounds */
+    view.fit(extent);
     /** zoom out a bit to give context of surroundings */
-    viewRef.value?.adjustZoom(-1);
+    view.adjustZoom(-1);
   },
   { immediate: true, deep: true },
 );
 
 /** allow control from parent */
-defineExpose({
-  zoomIn,
-  zoomOut,
-  fit,
-  fullscreen,
-  download,
+defineExpose({ zoomIn, zoomOut, fit, fullscreen, download });
+
+/** clean up objects */
+onUnmounted(() => {
+  map.dispose();
+  view.dispose();
+  backgroundLayer.dispose();
+  geometryLayer.dispose();
 });
 </script>
 
@@ -646,6 +714,11 @@ defineExpose({
   position: relative;
   overflow: auto;
   box-shadow: var(--shadow);
+}
+
+.map {
+  width: 100%;
+  height: 100%;
 }
 
 .legend {
@@ -721,5 +794,16 @@ defineExpose({
   place-self: center;
   width: 1em;
   height: 1em;
+}
+
+.attribution {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  max-width: 50%;
+  padding: 2px 5px;
+  background: color-mix(in srgb, var(--white), transparent 25%);
+  font-size: 12px;
+  text-wrap: balance;
 }
 </style>

@@ -9,7 +9,7 @@ This project was scaffolded using Vite with the following options:
 
 Notable technologies/packages/etc. used:
 
-- Leaflet and D3, for map visualizations
+- OpenLayers and D3, for map visualizations
 
 ## Requirements
 

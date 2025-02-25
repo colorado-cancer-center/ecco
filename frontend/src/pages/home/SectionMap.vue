@@ -903,7 +903,6 @@ debouncedWatch(
   },
   {
     immediate: true,
-    /** avoid leaflet resize slow-down */
     debounce: 100,
   },
 );

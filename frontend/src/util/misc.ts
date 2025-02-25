@@ -39,11 +39,13 @@ export const getCssVar = (
 ) => getComputedStyle(element).getPropertyValue(name);
 
 /** force color to hex format */
-export function toHex(color: string, opacity = 1) {
-  return (
-    (d3.color(color)?.formatHex() || "#000000") +
-    Math.floor(opacity * 255)
-      .toString(16)
-      .padStart(2, "0")
-  );
+export function forceHex(color: string) {
+  return d3.color(color)?.formatHex() || "#000000";
+}
+
+/** convert [0,1] value to two hex digits */
+export function toHex(value = 0) {
+  return Math.floor(value * 255)
+    .toString(16)
+    .padStart(2, "0");
 }

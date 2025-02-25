@@ -72,5 +72,11 @@ export const backgroundOptions = (
     .replace("{y}", "0")
     .replace("{z}", "0");
 
-  return { id: provider.name, label, image, template } satisfies Option;
+  return {
+    id: provider.name,
+    label,
+    image,
+    template,
+    attribution: provider.html_attribution || provider.attribution,
+  } satisfies Option;
 });

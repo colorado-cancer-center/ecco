@@ -1,5 +1,5 @@
 import { max, sum } from "lodash";
-import { icon } from "@fortawesome/fontawesome-svg-core";
+import { icon as getHtml } from "@fortawesome/fontawesome-svg-core";
 import {
   faBolt,
   faBurst,
@@ -45,11 +45,7 @@ const icons = [
   faLocationCrosshairs,
 ];
 
-let iconIndex = 0;
-/** get next icon in sequence */
-function getIcon() {
-  return icons[iconIndex++ % icons.length]!;
-}
+type Icon = (typeof icons)[number];
 
 /** https://tailwindcss.com/docs/customizing-colors */
 const colors = [
@@ -70,17 +66,18 @@ const colors = [
   "#d946ef",
   "#ec4899",
   "#f43f5e",
-].reverse();
+]
+  .reverse()
+  .map(
+    (_, index, array) =>
+      /**
+       * skip every N colors to space them out visually. don't use N that is
+       * factor of number of colors.
+       */
+      array[(index++ * 3) % array.length]!,
+  );
 
-let colorIndex = 0;
-/** get next color in sequence */
-function getColor() {
-  /**
-   * skip every N colors to space them out visually. don't use N that is factor
-   * of number of colors.
-   */
-  return colors[(colorIndex++ * 3) % colors.length]!;
-}
+type Color = (typeof colors)[number];
 
 /** line stroke dashes for areas */
 const dashes = [
@@ -90,40 +87,51 @@ const dashes = [
   [5, 5, 15, 5],
 ];
 
+type Dash = (typeof dashes)[number];
+
 /** total dash length of line symbol in legend */
 const dashSymbolLength = String(max(dashes.map((dash) => sum(dash)))!);
 
-let dashIndex = 0;
-/** get next dash in sequence */
-function getDash() {
-  return dashes[dashIndex++ % dashes.length]!;
-}
+type Type = GeoJSON.GeoJsonTypes | "";
 
-/** reset marker sequence */
-export function resetMarkers() {
-  iconIndex = 0;
-  colorIndex = 0;
-  dashIndex = 0;
-}
+/** map enumerated values to markers */
+export const getMarkers = <Value extends string>(values: [Value, Type][]) => {
+  /** marker sequence */
+  let iconIndex = 0;
+  let colorIndex = 0;
+  let dashIndex = 0;
 
-/** get next marker in sequence */
-export function getMarker(type: "point" | "area") {
-  /** get next color */
-  const color = getColor();
-  /** get next dash pattern */
-  const dash = getDash();
+  const map = {} as Record<Value, ReturnType<typeof getMarker>>;
+  for (const [value, type] of values)
+    if (value.trim())
+      /** add value to map (if not already defined) */
+      map[value] ??=
+        /** get next marker in sequence */
+        getMarker(
+          type,
+          icons[iconIndex++ % icons.length]!,
+          colors[colorIndex++ % colors.length]!,
+          dashes[dashIndex++ % dashes.length]!,
+        );
 
+  return map;
+};
+
+function getMarker(type: Type, icon: Icon, color: Color, dash: Dash) {
   /** svg of icon */
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("xmlns", ns);
+  svg.setAttribute("width", "16");
+  svg.setAttribute("height", "16");
   document.body.append(svg);
 
   /** use font-awesome point marker */
-  if (type === "point") {
+  if (type === "Point") {
     const stroke = 50;
 
     /** get html of next icon */
-    svg.innerHTML = icon(getIcon()).node[0]!.innerHTML;
+    svg.innerHTML = getHtml(icon).node[0]!.innerHTML;
 
     /** styles */
     svg.style.color = color;
@@ -131,17 +139,21 @@ export function getMarker(type: "point" | "area") {
     svg.style.strokeWidth = String(stroke * 2);
     svg.style.paintOrder = "stroke";
 
-    /** expand viewbox to include stroke */
-    const { x, y, width, height } = svg.getBBox();
-    svg.setAttribute(
-      "viewBox",
-      [x - stroke, y - stroke, width + 2 * stroke, height + 2 * stroke].join(
-        " ",
-      ),
-    );
+    /** expand view box to include stroke */
+    let { x, y, width, height } = svg.getBBox();
+    x -= stroke;
+    y -= stroke;
+    width += 2 * stroke;
+    height += 2 * stroke;
+    svg.setAttribute("viewBox", [x, y, width, height].join(" "));
+    svg.setAttribute("width", String(width));
+    svg.setAttribute("height", String(height));
   } else {
-    const width = 100;
     const stroke = 10;
+    const x = 0;
+    const y = -stroke * 4;
+    const width = 100;
+    const height = stroke * 2 * 4;
 
     /** create dash */
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -156,8 +168,10 @@ export function getMarker(type: "point" | "area") {
     svg.style.strokeWidth = String(stroke);
     svg.style.strokeDasharray = dash.join(" ");
 
-    /** fit viewbox to contents */
-    svg.setAttribute("viewBox", `0 ${-stroke * 4} ${width} ${stroke * 2 * 4}`);
+    /** fit view box to contents */
+    svg.setAttribute("viewBox", [x, y, width, height].join(" "));
+    svg.setAttribute("width", String(width));
+    svg.setAttribute("height", String(height));
   }
 
   svg.remove();
