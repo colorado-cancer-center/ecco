@@ -21,7 +21,11 @@
           <slot name="top-left-upper" />
 
           <!-- scale key -->
-          <div class="scale" :style="{ '--cols': scale.steps.length }">
+          <div
+            v-if="scale.steps.length"
+            class="scale"
+            :style="{ '--cols': scale.steps.length }"
+          >
             <div
               v-for="(step, key) of scale.steps"
               :key="key"
@@ -343,7 +347,7 @@ const scale = computed(() => {
     return { steps, getColor };
   } else {
     /** last resort fallback */
-    return { steps: [], getColor: () => noDataColor };
+    return { steps: [noDataEntry], getColor: () => noDataColor };
   }
 });
 
@@ -929,6 +933,7 @@ onUnmounted(() => {
 
 .scale-color {
   width: 100%;
+  max-width: 50px;
   height: 100%;
 }
 
