@@ -1,12 +1,14 @@
 <template>
-  <div ref="scrollElement" v-bind="$attrs" class="scroll">
-    <div
-      ref="frameElement"
-      :style="{
-        width: width ? width + 'px' : '100%',
-        height: height ? height + 'px' : '100%',
-      }"
-    >
+  <div
+    ref="scrollElement"
+    v-bind="$attrs"
+    class="scroll"
+    :style="{
+      '--width': width ? `${width}px` : '',
+      '--height': height ? `${height}px` : '',
+    }"
+  >
+    <div ref="frameElement" class="frame">
       <!-- map root  -->
       <div ref="mapElement" class="map" />
 
@@ -862,12 +864,16 @@ onUnmounted(() => {
 
 <style scoped>
 .scroll {
+  max-width: var(--width, 100%);
+  max-height: var(--height, 100%);
   overflow: auto;
   box-shadow: var(--shadow);
 }
 
 .frame {
   position: relative;
+  width: var(--width, 100%);
+  height: var(--height, 100%);
 }
 
 .map {
