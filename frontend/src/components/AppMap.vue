@@ -102,6 +102,7 @@ import { pointerMove } from "ol/events/condition";
 import type { FeatureLike } from "ol/Feature";
 import GeoJSON from "ol/format/GeoJSON";
 import { Point, type Geometry } from "ol/geom";
+import MouseWheelZoom from "ol/interaction/MouseWheelZoom";
 import Select from "ol/interaction/Select";
 import TileLayer from "ol/layer/Tile";
 import VectorLayer from "ol/layer/Vector";
@@ -379,6 +380,10 @@ const view = new View({
   smoothExtentConstraint: false,
   smoothResolutionConstraint: false,
 });
+
+/** remove default zoom animation */
+const mouseZoom = new MouseWheelZoom({ duration: 0, timeout: 0 });
+map.addInteraction(mouseZoom);
 
 /** add view to map */
 watchEffect(() => map.setView(view));
@@ -741,12 +746,12 @@ watch(
 
 /** programmatic zoom in */
 function zoomIn() {
-  view.adjustZoom(1);
+  view.animate({ zoom: (view.getZoom() ?? 0) + 1, duration: 100 });
 }
 
 /** programmatic zoom out */
 function zoomOut() {
-  view.adjustZoom(-1);
+  view.animate({ zoom: (view.getZoom() ?? 2) - 1, duration: 100 });
 }
 
 /** map client size */
@@ -785,7 +790,10 @@ function fit() {
 
   const { top, right, bottom, left } = padding;
   /** fit view. add some extra padding. */
-  view.fit(extent, { padding: [top, right, bottom, left].map((v) => v + 20) });
+  view.fit(extent, {
+    padding: [top, right, bottom, left].map((v) => v + 20),
+    duration: 100,
+  });
 }
 
 /** auto-fit when legends change */
