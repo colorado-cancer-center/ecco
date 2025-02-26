@@ -8,8 +8,7 @@
       }"
     >
       <!-- map root  -->
-      <!-- eslint-disable-next-line -->
-      <div ref="mapElement" class="map" @mouseout="pointer = [0, 0]" />
+      <div ref="mapElement" class="map" />
 
       <!-- legends -->
       <template v-if="showLegends">
@@ -106,7 +105,6 @@ import MouseWheelZoom from "ol/interaction/MouseWheelZoom";
 import Select from "ol/interaction/Select";
 import TileLayer from "ol/layer/Tile";
 import VectorLayer from "ol/layer/Vector";
-import type { Pixel } from "ol/pixel";
 import { XYZ } from "ol/source";
 import VectorSource from "ol/source/Vector";
 import { Fill, Icon, Stroke, Style, Text } from "ol/style";
@@ -704,17 +702,16 @@ watchEffect(async () => {
   popup.panIntoView({ animation: { duration: 100 } });
 });
 
-/** track pointer position */
-const pointer = ref<Pixel>([0, 0]);
-map.on("pointermove", ({ pixel }) => (pointer.value = pixel));
-
 /** change cursor to indicate click-ability */
-watchEffect(() => {
-  if (!mapElement.value) return;
+map.on("pointermove", ({ pixel }) => {
+  /**
+   * select canvas element specifically so not everything within map element
+   * (e.g. popups) have their cursor set
+   */
+  const canvas = mapElement.value?.querySelector("canvas");
+  if (!canvas) return;
   /** https://stackoverflow.com/questions/26022029/how-to-change-the-cursor-on-hover-in-openlayers-3 */
-  mapElement.value.style.cursor = map.hasFeatureAtPixel(pointer.value)
-    ? "pointer"
-    : "";
+  canvas.style.cursor = map.hasFeatureAtPixel(pixel) ? "pointer" : "";
 });
 
 /** add layers to map */
@@ -865,9 +862,12 @@ onUnmounted(() => {
 
 <style scoped>
 .scroll {
-  position: relative;
   overflow: auto;
   box-shadow: var(--shadow);
+}
+
+.frame {
+  position: relative;
 }
 
 .map {
