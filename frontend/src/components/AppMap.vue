@@ -403,7 +403,7 @@ view.on(
     const [lat, long] = xyToLatlong(center[0], center[1]);
     emit("update:lat", lat);
     emit("update:long", long);
-  }, 10),
+  }, 100),
 );
 
 /** on view zoom */
@@ -414,7 +414,7 @@ view.on(
     const zoom = view.getZoom();
     if (!zoom) return;
     emit("update:zoom", zoom);
-  }, 10),
+  }, 100),
 );
 
 /** background source object */
