@@ -933,7 +933,7 @@ onUnmounted(() => {
 
 .scale-color {
   width: 100%;
-  max-width: 50px;
+  max-width: 75px;
   height: 100%;
 }
 
