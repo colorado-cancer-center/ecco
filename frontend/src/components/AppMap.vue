@@ -546,7 +546,7 @@ watchEffect(() => {
 });
 
 /** update label styles */
-watchEffect(() =>
+function labelStyles() {
   labelLayer.setStyle(
     (feature) =>
       new Style({
@@ -557,8 +557,10 @@ watchEffect(() =>
           overflow: true,
         }),
       }),
-  ),
-);
+  );
+}
+labelStyles();
+view.on("change:resolution", labelStyles);
 
 /** update label layer opacity */
 watchEffect(() => labelLayer.setOpacity(geometryOpacity));
