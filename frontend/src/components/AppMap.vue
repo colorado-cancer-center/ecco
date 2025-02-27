@@ -70,10 +70,20 @@
       </template>
 
       <!-- feature popup -->
-      <div ref="popupElement" v-stop class="legend popup">
-        <template v-if="selectedFeature">
-          <slot :feature="selectedFeature.getProperties()" name="popup" />
-        </template>
+      <div
+        v-if="$slots['popup'] && selectedFeature"
+        ref="popupElement"
+        v-stop
+        class="legend popup"
+      >
+        <AppButton
+          class="popup-close"
+          aria-label="Close popup"
+          @click="selectedFeature = undefined"
+        >
+          <font-awesome-icon :icon="faXmark" />
+        </AppButton>
+        <slot :feature="selectedFeature.getProperties()" name="popup" />
       </div>
 
       <div class="attribution" v-html="attribution" />
@@ -114,6 +124,7 @@ import VectorLayer from "ol/layer/Vector";
 import { XYZ } from "ol/source";
 import VectorSource from "ol/source/Vector";
 import { Fill, Icon, Stroke, Style, Text } from "ol/style";
+import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useElementSize, useFullscreen } from "@vueuse/core";
 import { type Unit } from "@/api";
 import { getGradient, gradientOptions } from "@/components/gradient";
@@ -121,6 +132,7 @@ import { backgroundOptions } from "@/components/tile-providers";
 import { downloadPng } from "@/util/download";
 import { formatValue, normalizedApply } from "@/util/math";
 import { forceHex, getBbox, getCssVar, sleep, waitFor } from "@/util/misc";
+import AppButton from "./AppButton.vue";
 import { getMarkers } from "./markers";
 
 const scrollElement = ref<HTMLDivElement>();
@@ -979,6 +991,18 @@ onUnmounted(() => {
   box-shadow: var(--shadow);
   content: "";
   clip-path: polygon(200% -100%, 200% 200%, -100% 200%);
+}
+
+.popup-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: none !important;
+  color: var(--gray);
+}
+
+.popup-close:hover {
+  color: var(--theme);
 }
 
 .attribution {
