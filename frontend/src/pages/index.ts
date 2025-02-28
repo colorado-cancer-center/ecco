@@ -39,7 +39,11 @@ export const routes = [
     component: PageContact,
     meta: { header: true },
   },
-  { name: "County", path: "/county/:id", component: PageCounty },
+  {
+    name: "County",
+    path: "/county/:id",
+    component: PageCounty,
+  },
 ];
 
 export const history = createWebHistory();

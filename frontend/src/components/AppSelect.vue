@@ -161,26 +161,33 @@ function isOption(option: O | Group | undefined): option is O {
   return !!option && "id" in option;
 }
 
+/** options excluding groups */
+const optionsOnly = computed(() => options.filter(isOption));
+
+/** lookup option by id */
+const optionLookup = computed(() =>
+  Object.fromEntries(optionsOnly.value.map((option) => [option.id, option])),
+);
+
 /** model value to pass from parent to headlessui */
 const value = computed(() => {
   const list = toArray(modelValue);
   return multi
-    ? options.filter(isOption).filter((option) => list.includes(option.id))
-    : options.filter(isOption).find((option) => list.includes(option.id)) || "";
+    ? list.map((id) => optionLookup.value[id]).filter((option) => !!option)
+    : optionLookup.value[list[0] ?? ""];
 });
 
 /** model value to emit from headlessui to parent */
 async function onChange(value: O | O[]) {
   const list = toArray(value);
-  const id = multi ? list.map((v) => v.id) : list[0]?.id || "";
+  const id = multi ? list.map((option) => option.id) : list[0]?.id || "";
   emit("update:modelValue", id);
 }
 
 /** full selected option (only relevant in single mode) */
 const selectedOption = computed(() => {
   const list = toArray(modelValue);
-  if (!multi)
-    return options.filter(isOption).find((option) => option.id === list[0]);
+  if (!multi) return optionsOnly.value.find((option) => option.id === list[0]);
   else return undefined;
 });
 
@@ -189,15 +196,11 @@ const selectedLabel = computed<string>(() => {
   const list = toArray(modelValue);
 
   if (!multi) {
-    const find = options
-      .filter(isOption)
-      .find((option) => option.id === list[0]);
-    return (isOption(find) && find?.label) || "None selected";
+    const find = optionLookup.value[list[0] ?? ""];
+    return find?.label || "None selected";
   }
 
-  const value = options
-    .filter(isOption)
-    .filter((option) => list.includes(option.id));
+  const value = optionsOnly.value.filter((option) => list.includes(option.id));
   if (value.length === 0) return "None selected";
   if (value.length === 1) return value[0]?.label || "1 Selected";
   if (value.length === options.length) return "All selected";
