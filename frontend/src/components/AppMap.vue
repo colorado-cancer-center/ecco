@@ -109,8 +109,8 @@ export const noDataEntry = {
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch, watchEffect } from "vue";
 import * as d3 from "d3";
-import domtoimage from "dom-to-image-more";
 import type { FeatureCollection } from "geojson";
+import { toBlob } from "html-to-image";
 import { capitalize, debounce, isEmpty, mapValues } from "lodash";
 import { Feature, Map, Overlay, View } from "ol";
 import { pointerMove } from "ol/events/condition";
@@ -848,17 +848,13 @@ const { toggle: fullscreen } = useFullscreen(scrollElement);
 async function download() {
   if (!frameElement.value) return;
 
-  /** upscale for better quality */
-  const scale = window.devicePixelRatio;
-
   /** convert to image */
-  const blob = await domtoimage.toBlob(frameElement.value, {
-    width: mapWidth.value * scale,
-    height: mapHeight.value * scale,
-    style: { scale, transformOrigin: "top left" },
+  const blob = await toBlob(frameElement.value, {
+    width: mapWidth.value,
+    height: mapHeight.value,
   });
 
-  downloadPng(blob, filename);
+  if (blob) downloadPng(blob, filename);
 }
 
 /** allow control from parent */
