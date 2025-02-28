@@ -146,11 +146,11 @@
           />
         </div>
 
-        <!-- base layer -->
+        <!-- background layer -->
         <AppSelect
           v-model="selectedBackground"
           label="Background layer"
-          :options="baseOptions"
+          :options="backgroundOptions"
           tooltip="Provider to use for background map layer"
         >
           <template #preview="{ option }">
@@ -308,10 +308,7 @@
         class="map"
         :style="
           geometryStatus !== 'success' || valuesStatus !== 'success'
-            ? {
-                opacity: 0.25,
-                filter: 'saturate(0.25)',
-              }
+            ? { opacity: 0.25, filter: 'saturate(0.25)' }
             : undefined
         "
         :geometry="geometry"
@@ -531,9 +528,8 @@ import {
   shallowRef,
   watch,
   watchEffect,
-  type ShallowRef,
-  type WatchStopHandle,
 } from "vue";
+import type { ShallowRef, WatchStopHandle } from "vue";
 import { clamp, cloneDeep, isEmpty, mapValues } from "lodash";
 import {
   faComment,
@@ -551,11 +547,7 @@ import {
   faMinus,
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
-import {
-  debouncedWatch,
-  useElementBounding,
-  useWindowSize,
-} from "@vueuse/core";
+import { useElementBounding, useWindowSize } from "@vueuse/core";
 import {
   getDownload,
   getGeo,
@@ -574,10 +566,11 @@ import AppCheckbox from "@/components/AppCheckbox.vue";
 import AppLink from "@/components/AppLink.vue";
 import AppMap from "@/components/AppMap.vue";
 import AppNumber from "@/components/AppNumber.vue";
-import AppSelect, { type Entry, type Option } from "@/components/AppSelect.vue";
+import AppSelect from "@/components/AppSelect.vue";
+import type { Entry, Option } from "@/components/AppSelect.vue";
 import AppSlider from "@/components/AppSlider.vue";
 import { gradientOptions } from "@/components/gradient";
-import { baseOptions } from "@/components/tile-providers";
+import { backgroundOptions } from "@/components/tile-providers";
 import { learnMoreLink } from "@/pages/learn-more";
 import {
   arrayParam,
@@ -606,7 +599,7 @@ type FeatureInfo = Expand<
   >
 >;
 
-const props = defineProps<Props>();
+const { facets, locationList } = defineProps<Props>();
 
 /** element refs */
 const leftPanelElement = ref<HTMLElement>();
@@ -625,7 +618,7 @@ const long = useUrlParam("long", numberParam, 0);
 
 /** map style state */
 const showLegends = ref(true);
-const selectedBackground = ref(baseOptions[0]!.id || "");
+const selectedBackground = ref(backgroundOptions[0]!.id || "");
 const selectedGradient = ref(gradientOptions[3]!.id || "");
 const selectedLocations = useUrlParam("locations", arrayParam(stringParam), []);
 const backgroundOpacity = ref(1);
@@ -653,7 +646,7 @@ async function reset() {
   lat.value = 0;
   long.value = 0;
   showLegends.value = true;
-  selectedBackground.value = baseOptions[0]?.id || "";
+  selectedBackground.value = backgroundOptions[0]?.id || "";
   selectedGradient.value = gradientOptions[3]?.id || "";
   backgroundOpacity.value = 1;
   geometryOpacity.value = 0.75;
@@ -692,7 +685,7 @@ const {
 watch(selectedLevel, loadGeometry, { immediate: true });
 
 /** geographic levels from facets data */
-const levels = computed(() => cloneDeep(props.facets));
+const levels = computed(() => cloneDeep(facets));
 
 /** measure categories from geographic level */
 const categories = computed(() =>
@@ -844,7 +837,7 @@ watch(
 /** location dropdown options */
 const locationOptions = computed(() => {
   const entries: Entry[] = [];
-  for (const [group, options] of Object.entries(props.locationList)) {
+  for (const [group, options] of Object.entries(locationList)) {
     entries.push({ group });
     for (const [label, id] of Object.entries(options))
       entries.push({ id, label });
@@ -854,31 +847,35 @@ const locationOptions = computed(() => {
 });
 
 /** get location data to pass to map based on selected locations */
-const { query: loadLocations, data: locations } = useQuery(async function () {
-  /** convert locations list to map of id to human-readable label */
-  const idToLabel = Object.fromEntries(
-    Object.values(props.locationList)
-      .map((value) => Object.entries(value))
-      .flat()
-      .map(([label, id]) => [id, label] as const),
-  );
+const { query: loadLocations, data: locations } = useQuery(
+  async function () {
+    /** convert locations list to map of id to human-readable label */
+    const idToLabel = Object.fromEntries(
+      Object.values(locationList)
+        .map((value) => Object.entries(value))
+        .flat()
+        .map(([label, id]) => [id, label] as const),
+    );
 
-  return Object.fromEntries(
-    /** query for locations in parallel */
-    await Promise.all(
-      selectedLocations.value.map(
-        async (location) =>
-          [
-            /** location id */
-            idToLabel[location] ?? "",
-            /** location geo data */
-            await getLocation(location),
-          ] as const,
+    return Object.fromEntries(
+      /** query for locations in parallel */
+      await Promise.all(
+        selectedLocations.value.map(
+          async (location) =>
+            [
+              /** location id */
+              idToLabel[location] ?? "",
+              /** location geo data */
+              await getLocation(location),
+            ] as const,
+        ),
       ),
-    ),
-  );
-}, undefined);
-watch(selectedLocations, loadLocations, { immediate: true });
+    );
+  },
+  undefined,
+  true,
+);
+watch(selectedLocations, loadLocations, { immediate: true, deep: true });
 
 watchEffect(() => {
   /** if manual min/max off */
@@ -894,7 +891,7 @@ watchEffect(() => {
 const autoRightPanelHeight = ref("");
 const { top: rightPanelTop } = useElementBounding(rightPanelElement);
 const { height: windowHeight } = useWindowSize();
-debouncedWatch(
+watch(
   [rightPanelTop, windowHeight],
   () => {
     if (windowHeight.value < 400) return;
@@ -904,11 +901,7 @@ debouncedWatch(
     const max = windowHeight.value - 20;
     autoRightPanelHeight.value = clamp(max - top, 400, max) + "px";
   },
-  {
-    immediate: true,
-    /** avoid leaflet resize slow-down */
-    debounce: 100,
-  },
+  { immediate: true },
 );
 </script>
 
@@ -984,7 +977,8 @@ debouncedWatch(
   width: 100%;
   height: 100%;
   /* center map on particular place (continental US) */
-  transform: scale(4.9) translate(28%, 15.4%);
+  translate: 140% 70%;
+  scale: 5;
 }
 
 .right-panel {

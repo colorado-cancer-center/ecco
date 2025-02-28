@@ -121,12 +121,14 @@ export const useQuery = <Data, Args extends unknown[]>(
   func: (...args: Args) => Promise<Data>,
   /** default value used for data before done loading and on error. */
   defaultValue: Data,
+  /** whether we should keep previous data while loading new data */
+  keep = false,
 ) => {
   /** query state */
   const status = ref<"" | "loading" | "error" | "success">("");
 
   /** query results */
-  const data = ref<Data>(defaultValue) as Ref<Data>;
+  const data = shallowRef<Data>(defaultValue);
   /** https://github.com/vuejs/composition-api/issues/483 */
 
   /** latest query id, unique to this useQuery instance */
@@ -145,7 +147,7 @@ export const useQuery = <Data, Args extends unknown[]>(
     try {
       /** reset state */
       status.value = "loading";
-      data.value = defaultValue;
+      if (!keep) data.value = defaultValue;
 
       /** run provided function */
       const result = await func(...args);

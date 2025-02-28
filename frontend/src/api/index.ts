@@ -26,7 +26,7 @@ export async function request<T>(
   /** get response from cache */
   const cached = cache.get(id);
   /** log info */
-  const log = `(${cached ? "cached" : "new"}) ${url}`;
+  const log = `(${cached ? "🗄️ cached" : "✨ new"}) ${url}`;
   console.debug(`📞 Request ${log}`, { request });
   /** make new request */
   const response = cached ?? (await fetch(request));

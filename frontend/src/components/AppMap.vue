@@ -4,80 +4,91 @@
     v-bind="$attrs"
     class="scroll"
     :style="{
-      maxWidth: width ? width + 'px' : '',
-      maxHeight: height ? height + 'px' : '',
+      '--width': width ? `${width}px` : '',
+      '--height': height ? `${height}px` : '',
     }"
   >
-    <!-- map leaflet root -->
-    <div
-      ref="mapElement"
-      :style="{
-        width: width ? width + 'px' : '100%',
-        height: height ? height + 'px' : '100%',
-      }"
-    />
-  </div>
+    <div ref="frameElement" class="frame">
+      <!-- map root  -->
+      <div ref="mapElement" class="map" />
 
-  <!-- top left legend -->
-  <Teleport
-    v-if="showLegends && topLeftLegend && scale.steps.length"
-    :to="topLeftLegend"
-  >
-    <div v-stop class="legend">
-      <slot name="top-left-upper" />
-
-      <!-- scale key -->
-      <div class="scale" :style="{ '--cols': scale.steps.length }">
+      <!-- legends -->
+      <template v-if="showLegends">
         <div
-          v-for="(step, key) of scale.steps"
-          :key="key"
-          v-tooltip="step.tooltip"
-          class="scale-color"
-          tabindex="0"
-          :style="{ background: step.color }"
-        />
-        <div v-for="(step, key) of scale.steps" :key="key" class="scale-label">
-          {{ step.label }}
+          v-if="$slots['top-left-upper'] || $slots['top-left-lower']"
+          class="legend top-left"
+        >
+          <slot name="top-left-upper" />
+
+          <!-- scale key -->
+          <div
+            v-if="scale.steps.length"
+            class="scale"
+            :style="{ '--cols': scale.steps.length }"
+          >
+            <div
+              v-for="(step, key) of scale.steps"
+              :key="key"
+              v-tooltip="step.tooltip"
+              class="scale-color"
+              tabindex="0"
+              :style="{ background: step.color }"
+            />
+            <div
+              v-for="(step, key) of scale.steps"
+              :key="key"
+              class="scale-label"
+            >
+              {{ step.label }}
+            </div>
+          </div>
+
+          <slot name="top-left-lower" />
         </div>
+        <div v-if="$slots['top-right']" class="legend top-right">
+          <slot name="top-right" />
+        </div>
+        <div
+          v-if="$slots['bottom-right'] || !isEmpty(symbols)"
+          class="legend bottom-right"
+        >
+          <slot name="bottom-right" />
+
+          <!-- symbol key -->
+          <div v-if="!isEmpty(symbols)" class="symbols">
+            <template v-for="(symbol, label) of symbols" :key="label">
+              <template v-if="symbol">
+                <div class="symbol" v-html="symbol.html" />
+                <small>{{ label }}</small>
+              </template>
+            </template>
+          </div>
+        </div>
+        <div v-if="$slots['bottom-left']" class="legend bottom-left">
+          <slot name="bottom-left" />
+        </div>
+      </template>
+
+      <!-- feature popup -->
+      <div
+        v-if="$slots['popup'] && selectedFeature"
+        ref="popupElement"
+        v-stop
+        class="legend popup"
+      >
+        <AppButton
+          class="popup-close"
+          aria-label="Close popup"
+          @click="selectedFeature = undefined"
+        >
+          <font-awesome-icon :icon="faXmark" />
+        </AppButton>
+        <slot :feature="selectedFeature.getProperties()" name="popup" />
       </div>
 
-      <slot name="top-left-lower" />
+      <div class="attribution" v-html="attribution" />
     </div>
-  </Teleport>
-
-  <!-- top right legend -->
-  <Teleport v-if="showLegends && topRightLegend" :to="topRightLegend">
-    <div v-stop class="legend">
-      <slot name="top-right" />
-    </div>
-  </Teleport>
-
-  <!-- bottom right legend -->
-  <Teleport v-if="showLegends && bottomRightLegend" :to="bottomRightLegend">
-    <div v-stop class="legend">
-      <slot name="bottom-right" />
-
-      <!-- symbol key -->
-      <div v-if="Object.keys(symbols).length" class="symbols">
-        <template v-for="(symbol, key) of symbols" :key="key">
-          <img :src="symbol?.url" alt="" />
-          <small>{{ symbol?.label }}</small>
-        </template>
-      </div>
-    </div>
-  </Teleport>
-
-  <!-- bottom left legend -->
-  <Teleport v-if="showLegends && bottomLeftLegend" :to="bottomLeftLegend">
-    <div v-stop class="legend">
-      <slot name="bottom-left" />
-    </div>
-  </Teleport>
-
-  <!-- feature popup -->
-  <Teleport v-if="popup && Object.keys(featureInfo).length" :to="popup">
-    <slot :feature="featureInfo" name="popup" />
-  </Teleport>
+  </div>
 </template>
 
 <script lang="ts">
@@ -96,34 +107,40 @@ export const noDataEntry = {
 </script>
 
 <script setup lang="ts">
-import {
-  computed,
-  nextTick,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  watch,
-} from "vue";
+import { computed, onMounted, onUnmounted, ref, watch, watchEffect } from "vue";
 import * as d3 from "d3";
-import domtoimage from "dom-to-image";
-import type { Feature, FeatureCollection, Geometry } from "geojson";
-import L, { type MapOptions } from "leaflet";
-import { cloneDeep, debounce, isEmpty, mapValues } from "lodash";
-import { useElementSize, useFullscreen, useResizeObserver } from "@vueuse/core";
+import type { FeatureCollection } from "geojson";
+import { toBlob } from "html-to-image";
+import { capitalize, debounce, isEmpty, mapValues } from "lodash";
+import { Feature, Map, Overlay, View } from "ol";
+import { pointerMove } from "ol/events/condition";
+import type { FeatureLike } from "ol/Feature";
+import GeoJSON from "ol/format/GeoJSON";
+import { Point, type Geometry } from "ol/geom";
+import MouseWheelZoom from "ol/interaction/MouseWheelZoom";
+import Select from "ol/interaction/Select";
+import TileLayer from "ol/layer/Tile";
+import VectorLayer from "ol/layer/Vector";
+import { XYZ } from "ol/source";
+import VectorSource from "ol/source/Vector";
+import { Fill, Icon, Stroke, Style, Text } from "ol/style";
+import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import { useElementSize, useFullscreen } from "@vueuse/core";
 import { type Unit } from "@/api";
 import { getGradient, gradientOptions } from "@/components/gradient";
-import { getMarker, resetMarkers } from "@/components/markers";
-import { baseOptions } from "@/components/tile-providers";
-import { useScrollable } from "@/util/composables";
+import { backgroundOptions } from "@/components/tile-providers";
 import { downloadPng } from "@/util/download";
 import { formatValue, normalizedApply } from "@/util/math";
-import { getBbox, sleep } from "@/util/misc";
-import "leaflet/dist/leaflet.css";
-import { capitalize } from "@/util/string";
+import { forceHex, getBbox, getCssVar, sleep, waitFor } from "@/util/misc";
+import AppButton from "./AppButton.vue";
+import { getMarkers } from "./markers";
 
-/** element refs */
 const scrollElement = ref<HTMLDivElement>();
+const frameElement = ref<HTMLDivElement>();
 const mapElement = ref<HTMLDivElement>();
+const popupElement = ref<HTMLDivElement>();
+
+const theme = forceHex(getCssVar("--theme"));
 
 type Props = {
   /** features */
@@ -161,33 +178,36 @@ type Props = {
   height?: number;
   /** filename for download */
   filename?: string | string[];
+  /** id of feature to highlight and zoom in on */
+  highlight?: string;
 };
 
-const props = withDefaults(defineProps<Props>(), {
-  geometry: () => ({ type: "FeatureCollection", features: [] }),
-  locations: () => ({}),
-  values: () => ({}),
-  min: undefined,
-  max: undefined,
-  unit: undefined,
-  lat: 0,
-  long: 0,
-  zoom: 1,
-  showLegends: true,
-  backgroundOpacity: 1,
-  geometryOpacity: 0.75,
-  locationOpacity: 1,
-  background: baseOptions[0]!.id,
-  gradient: gradientOptions[3]!.id,
-  flipGradient: false,
-  scaleSteps: 5,
-  niceSteps: false,
-  scalePower: 1,
-  scaleValues: undefined,
-  width: 0,
-  height: 0,
-  filename: "map",
-});
+const {
+  geometry = { type: "FeatureCollection", features: [] },
+  locations = {},
+  values = {},
+  min,
+  max,
+  unit,
+  lat = 0,
+  long = 0,
+  zoom = 0,
+  showLegends = true,
+  backgroundOpacity = 1,
+  geometryOpacity = 0.75,
+  locationOpacity = 1,
+  background = backgroundOptions[0]!.id,
+  gradient = gradientOptions[3]!.id,
+  flipGradient = false,
+  scaleSteps = 5,
+  niceSteps = false,
+  scalePower = 1,
+  scaleValues,
+  width = 0,
+  height = 0,
+  filename = "map",
+  highlight = "",
+} = defineProps<Props>();
 
 type Emits = {
   "update:zoom": [Props["zoom"]];
@@ -209,108 +229,11 @@ type Slots = {
 
 defineSlots<Slots>();
 
-/** elements to teleport legend template content to */
-const topLeftLegend = ref<HTMLElement>();
-const topRightLegend = ref<HTMLElement>();
-const bottomRightLegend = ref<HTMLElement>();
-const bottomLeftLegend = ref<HTMLElement>();
-
-/** element to teleport popup template content to */
-const popup = ref<HTMLElement>();
-
-/** info about selected feature for popup */
-const featureInfo = ref<FeatureInfo>({});
-
-/** https://leafletjs.com/reference.html#map-option */
-const mapOptions: MapOptions = {
-  zoomControl: false,
-  attributionControl: false,
-  trackResize: false,
-};
-
-/** map object */
-let map: L.Map | undefined;
-
-/** create legend panel */
-function createLegend(options: L.ControlOptions) {
-  const Control = L.Control.extend({
-    onAdd: () => document.createElement("div"),
-  });
-  const legend = new Control(options);
-  map?.addControl(legend);
-  return legend.getContainer();
-}
-
-/** set fine level of zoom snap, e.g. for tighter fit-bounds */
-function fineZoom() {
-  if (map) map.options.zoomSnap = 0.1;
-}
-
-/** set coarse level of zoom snap, to make track pad pinch zoom less frustrating */
-async function coarseZoom() {
-  /** wait for any in progress zoom to finish */
-  await sleep();
-  if (map) map.options.zoomSnap = 0.2;
-}
-
-/** get map layers by type */
-function getLayers<T extends L.Layer = L.Layer>(
-  pane: string,
-  type: Function = L.Layer,
-) {
-  const layers: L.Layer[] = [];
-  map?.eachLayer((layer) => {
-    if (layer.options.pane === pane && layer instanceof type)
-      layers.push(layer);
-  });
-  return layers as T[];
-}
-
-/** bind popup to layer */
-function bindPopup(layer: L.Layer) {
-  layer.bindPopup(() => "");
-  layer.on("popupopen", async (event) => {
-    popup.value =
-      event.popup
-        .getElement()
-        ?.querySelector<HTMLElement>(".leaflet-popup-content-wrapper") ||
-      undefined;
-    if (!popup.value) return;
-    /** wait for popup to teleport */
-    await nextTick();
-
-    /**
-     * set info for selected feature. clone to avoid weird proxy linking
-     * effects.
-     */
-    let info: FeatureInfo = cloneDeep(event.sourceTarget.feature.properties);
-    const value = props.values?.[typeof info.id === "string" ? info.id : ""];
-    if (value) info = { ...info, ...value };
-    featureInfo.value = info;
-
-    /** wait for popup to populate to full size before updating position */
-    await nextTick();
-    event.popup.update();
-  });
-  layer.on("popupclose", () => {
-    /** unset popup */
-    popup.value = undefined;
-    featureInfo.value = {};
-  });
-}
-
-/** close popups when data becomes stale */
-watch(
-  [() => props.geometry, () => props.locations, () => props.values],
-  () => map?.closePopup(),
-  { deep: true },
-);
-
 /** whether map has any "no data" geometry regions */
 const noData = computed(
   () =>
-    !props.geometry.features.every(
-      (feature) => (feature.properties?.id ?? "") in props.values,
+    !geometry.features.every(
+      (feature) => (feature.properties?.id ?? "") in values,
     ),
 );
 
@@ -320,13 +243,13 @@ watch(noData, () => emit("update:no-data", noData.value), { immediate: true });
 /** scale object */
 const scale = computed(() => {
   /** map 0-1 percent to color */
-  const gradient = (percent: number) => {
+  const gradientFunc = (percent: number) => {
     /** get gradient interpolator function from shorthand id/name */
-    const gradient = getGradient(props.gradient);
+    const gradientFunc = getGradient(gradient);
     /** reverse */
-    if (props.flipGradient) percent = 1 - percent;
+    if (flipGradient) percent = 1 - percent;
     /** get color */
-    return gradient(percent);
+    return gradientFunc(percent);
   };
 
   /** scale steps */
@@ -336,21 +259,21 @@ const scale = computed(() => {
   ) & { label: string; color: string; tooltip: string })[] = [];
 
   /** map specific values to specific colors */
-  if (props.scaleValues) {
+  if (scaleValues) {
     /** add "no data" entry */
     if (noData.value) steps.push(noDataEntry);
 
     /** explicit steps */
     steps.push(
-      ...props.scaleValues.map((value, index, array) => {
+      ...scaleValues.map((value, index, array) => {
         const label =
           typeof value === "number"
-            ? formatValue(value, props.unit, true)
+            ? formatValue(value, unit, true)
             : capitalize(value);
         return {
           value,
           label,
-          color: gradient(index / (array.length - 1)),
+          color: gradientFunc(index / (array.length - 1)),
           tooltip: label,
         };
       }),
@@ -358,36 +281,35 @@ const scale = computed(() => {
 
     /** explicit color */
     const getColor = (value?: number | string) =>
-      steps.find((step) => ("value" in step ? step.value === value : undefined))
-        ?.color ?? noDataColor;
+      forceHex(
+        steps.find((step) =>
+          "value" in step ? step.value === value : undefined,
+        )?.color ?? noDataColor,
+      );
 
     return { steps, getColor };
   } else if (
     /** map continuous values to discrete colors */
     /** (if we have needed and valid values) */
-    !isEmpty(props.values) &&
-    typeof props.min === "number" &&
-    typeof props.max === "number" &&
-    props.min !== props.max
+    !isEmpty(values) &&
+    typeof min === "number" &&
+    typeof max === "number" &&
+    min !== max
   ) {
-    /** get range of data */
-    const min = props.min;
-    const max = props.max;
-
     /** scale bands (spaced list of points between min and max) */
     let bands = [min, max];
 
     /** "nice", approximate number of steps */
-    if (props.niceSteps) {
-      bands = d3.ticks(min, max, props.scaleSteps);
+    if (niceSteps) {
+      bands = d3.ticks(min, max, scaleSteps);
 
       /** make sure steps always covers/contains range of values (min/max) */
-      const step = d3.tickStep(min, max, props.scaleSteps);
+      const step = d3.tickStep(min, max, scaleSteps);
       if (bands.at(0)! > min) bands.unshift(bands.at(0)! - step);
       if (bands.at(-1)! < max) bands.push(bands.at(-1)! + step);
     } else {
       /** exact number of steps */
-      bands = d3.range(min, max, (max - min) / props.scaleSteps).concat([max]);
+      bands = d3.range(min, max, (max - min) / scaleSteps).concat([max]);
     }
 
     /** make sure enough bands */
@@ -399,7 +321,7 @@ const scale = computed(() => {
     /** apply power */
     bands = bands.map((value) =>
       normalizedApply(value, lower, upper, (value) =>
-        Math.pow(value, props.scalePower),
+        Math.pow(value, scalePower),
       ),
     );
 
@@ -411,12 +333,12 @@ const scale = computed(() => {
         label:
           /** only add first and last labels */
           index === 0
-            ? formatValue(min, props.unit, true)
+            ? formatValue(min, unit, true)
             : index === array.length - 1
-              ? formatValue(max, props.unit, true)
+              ? formatValue(max, unit, true)
               : "",
-        color: gradient(index / (array.length - 1)),
-        tooltip: `${formatValue(lower, props.unit)} &ndash; ${formatValue(upper, props.unit)}`,
+        color: gradientFunc(index / (array.length - 1)),
+        tooltip: `${formatValue(lower, unit)} &ndash; ${formatValue(upper, unit)}`,
       })),
     );
 
@@ -430,346 +352,553 @@ const scale = computed(() => {
     const getColor = (value?: number | string) =>
       value === undefined || typeof value === "string"
         ? noDataColor
-        : d3.scaleQuantile<string>().domain(bands).range(colors)(value);
+        : forceHex(
+            d3.scaleQuantile<string>().domain(bands).range(colors)(value),
+          );
 
     return { steps, getColor };
   } else {
     /** last resort fallback */
-    return { steps: [], getColor: () => noDataColor };
+    return { steps: [noDataEntry], getColor: () => noDataColor };
   }
 });
 
-/** fit view to data layer content */
-const fit = debounce(async () => {
-  /** get bounding box of geojson data */
-  let bounds = getLayers<L.GeoJSON>("geometry", L.GeoJSON)[0]?.getBounds();
-  if (!bounds?.isValid()) return;
+/** map object */
+const map = new Map({ controls: [] });
 
-  /** get tight fit */
-  fineZoom();
-  /** reset zoom snap when zoom animation finishes */
-  map?.once("zoomend", coarseZoom);
+/** update map root element */
+watchEffect(() => map.setTarget(mapElement.value));
+
+/** mercator https://epsg.io/3857 */
+const xy = "EPSG:3857";
+/** world geodetic system https://epsg.io/4326 */
+const latlong = "EPSG:4326";
+
+/** transform point coordinates */
+function xyToLatlong(x = 0, y = 0) {
+  const [long = 0, lat = 0] = new Point([x, y])
+    .transform(xy, latlong)
+    .getCoordinates();
+  return [lat, long];
+}
+
+/** transform point coordinates */
+function latlongToXy(lat = 0, long = 0) {
+  const [x = 0, y = 0] = new Point([long, lat])
+    .transform(latlong, xy)
+    .getCoordinates();
+  return [x, y];
+}
+
+/** view object */
+const view = new View({
+  projection: xy,
+  smoothExtentConstraint: false,
+  smoothResolutionConstraint: false,
+});
+
+/** remove default zoom animation */
+const mouseZoom = new MouseWheelZoom({ duration: 0, timeout: 0 });
+map.addInteraction(mouseZoom);
+
+/** add view to map */
+watchEffect(() => map.setView(view));
+
+/** update view center */
+watchEffect(() => view.setCenter(latlongToXy(lat, long)));
+/** update view zoom */
+watchEffect(() => view.setZoom(zoom));
+
+/** on view pan */
+view.on(
+  "change:center",
+  /** debounce so view animations are preserved */
+  debounce(() => {
+    const center = view.getCenter();
+    if (!center) return;
+    const [lat, long] = xyToLatlong(center[0], center[1]);
+    emit("update:lat", lat);
+    emit("update:long", long);
+  }, 100),
+);
+
+/** on view zoom */
+view.on(
+  "change:resolution",
+  /** debounce so view animations are preserved */
+  debounce(() => {
+    const zoom = view.getZoom();
+    if (!zoom) return;
+    emit("update:zoom", zoom);
+  }, 100),
+);
+
+/** background source object */
+const backgroundSource = new XYZ({
+  projection: xy,
+  crossOrigin: "anonymous",
+});
+/** background layer object */
+const backgroundLayer = new TileLayer({ source: backgroundSource });
+
+/** attribution html */
+const attribution = ref("");
+
+/** update background layer url template */
+watchEffect(() => {
+  /** clear tile cache at all zoom levels */
+  backgroundLayer.clearRenderer();
+  /** look up full option details */
+  const option = backgroundOptions.find((option) => option.id === background);
+  if (!option) return;
+  backgroundSource.setUrl(option.template ?? "");
+  attribution.value = option.attribution;
+});
+
+/** update background layer opacity */
+watchEffect(() => backgroundLayer.setOpacity(backgroundOpacity));
+
+/** geometry source object */
+const geometrySource = new VectorSource();
+/** geometry layer object */
+const geometryLayer = new VectorLayer({ source: geometrySource });
+
+/** geojson parser */
+const geojson = new GeoJSON({
+  /** source projection */
+  dataProjection: latlong,
+  /** target projection */
+  featureProjection: xy,
+});
+
+/** parse geometry features */
+const geometryFeatures = computed(() => geojson.readFeatures(geometry));
+
+/** update geometry layer source */
+watchEffect(() => {
+  geometrySource.clear();
+  geometrySource.addFeatures(geometryFeatures.value);
+});
+
+/** update geometry styles */
+watchEffect((onCleanup) => {
+  /** get reactive values in root of watch so they can be auto-tracked */
+  const getColor = scale.value.getColor;
+  const _values = values;
+  const _highlight = highlight;
+
+  /** generate styles per feature */
+  const style =
+    (hover = false) =>
+    (feature: FeatureLike) =>
+      new Style({
+        stroke: new Stroke({ color: "black", width: hover ? 4 : 1 }),
+        fill: new Fill({
+          color:
+            feature.get("id") === _highlight
+              ? theme
+              : getColor(_values[feature.get("id")]?.value),
+        }),
+        zIndex: hover ? 1 : 0,
+      });
+
+  /** base styles */
+  geometryLayer.setStyle(style());
+
+  /** hover styles */
+  const hover = new Select({
+    condition: pointerMove,
+    style: style(true),
+    /** don't count other layers, e.g. labels, in hover */
+    layers: [geometryLayer],
+  });
+
+  /** add interaction to map */
+  map.addInteraction(hover);
+  /** remove interaction from map (avoid memory leak) */
+  onCleanup(() => map.removeInteraction(hover));
+});
+
+/** update geometry layer opacity */
+watchEffect(() => geometryLayer.setOpacity(geometryOpacity));
+
+/** label source object */
+const labelSource = new VectorSource();
+/** label layer object */
+const labelLayer = new VectorLayer({ source: labelSource });
+
+/** update label layer source */
+watchEffect(() => {
+  labelSource.clear();
+  labelSource.addFeatures(
+    geometryFeatures.value.map(
+      (feature) =>
+        new Feature({
+          /** pass through extra props */
+          ...feature.getProperties(),
+          /** make label feature centroid of geometry feature */
+          geometry: new Point(
+            latlongToXy(feature.get("cent_lat"), feature.get("cent_long")),
+          ),
+        }),
+    ),
+  );
+});
+
+/** update label styles */
+function labelStyles() {
+  labelLayer.setStyle(
+    (feature) =>
+      new Style({
+        text: new Text({
+          text: feature.get("label"),
+          stroke: new Stroke({ color: "white", width: 3 }),
+          font: `600 ${(view.getZoom() ?? 8) * 2}px 'Roboto Flex'`,
+          overflow: true,
+        }),
+      }),
+  );
+}
+labelStyles();
+view.on("change:resolution", labelStyles);
+
+/** update label layer opacity */
+watchEffect(() => labelLayer.setOpacity(geometryOpacity));
+
+/** symbols (icon + label) associated with each location */
+const symbols = computed(() =>
+  getMarkers(
+    Object.entries(locations).map(([label, location]) => [
+      label,
+      location.features[0]?.geometry.type ?? "",
+    ]),
+  ),
+);
+
+/** parse location features */
+const locationFeatures = computed(() =>
+  mapValues(locations, (value, location) => {
+    /** parse geojson */
+    const features = geojson.readFeatures(value);
+
+    for (const feature of features) {
+      const symbol = symbols.value[location];
+      if (!symbol) continue;
+
+      /** add extra props */
+      for (const [key, value] of Object.entries(symbol))
+        feature.set(key, value);
+
+      const { src, width, height } = symbol;
+
+      /** define icon object here instead of on more frequent style update */
+      feature.set("icon", new Icon({ src, width, height }));
+      feature.set(
+        "iconHover",
+        new Icon({ src, width, height, color: "black" }),
+      );
+    }
+
+    return features;
+  }),
+);
+
+/** locations source object */
+const locationsSource = new VectorSource();
+/** locations layer object */
+const locationsLayer = new VectorLayer({ source: locationsSource });
+
+/** update locations layer source */
+watchEffect(() => {
+  locationsSource.clear();
+  locationsSource.addFeatures(Object.values(locationFeatures.value).flat());
+});
+
+/** update location styles */
+watchEffect((onCleanup) => {
+  /** generate styles per feature */
+  const style =
+    (hover = false) =>
+    (feature: FeatureLike) =>
+      new Style({
+        fill: new Fill({
+          color: hover ? feature.get("color") + "20" : "transparent",
+        }),
+        stroke: new Stroke({
+          color: feature.get("color"),
+          width: hover ? 4 : 2,
+          lineDash: feature.get("dash"),
+        }),
+        image: hover ? feature.get("iconHover") : feature.get("icon"),
+        zIndex: hover ? 2 : 1,
+      });
+
+  /** base styles */
+  locationsLayer.setStyle(style());
+
+  /** hover styles */
+  const hover = new Select({
+    condition: pointerMove,
+    style: style(true),
+    /** don't count other layers, e.g. labels, in hover */
+    layers: [locationsLayer],
+  });
+
+  /** add interaction to map */
+  map.addInteraction(hover);
+  /** remove interaction from map (avoid memory leak) */
+  onCleanup(() => map.removeInteraction(hover));
+});
+
+/** update locations layer opacity */
+watchEffect(() => locationsLayer.setOpacity(locationOpacity));
+
+/** current selected feature */
+const selectedFeature = ref<Feature<Geometry>>();
+
+/** reset selected feature when data changes to avoid showing wrong popup info */
+watch(
+  [() => values, () => geometry, () => locations],
+  () => (selectedFeature.value = undefined),
+  { deep: true },
+);
+
+/** select feature */
+map.on("click", ({ pixel }) => {
+  /** do like this instead of select to avoid double click debounce */
+
+  /** reset selected */
+  selectedFeature.value = undefined;
+
+  /** https://stackoverflow.com/a/50415743/2180570 */
+  map.forEachFeatureAtPixel(pixel, (feature, layer) => {
+    if (
+      /** select first */
+      !selectedFeature.value &&
+      feature instanceof Feature &&
+      /** don't allow selection of e.g. geometry labels */
+      (layer === geometryLayer || layer === locationsLayer)
+    ) {
+      /** set selected */
+      selectedFeature.value = feature;
+
+      /** include data values in properties */
+      const id = feature.get("id");
+      for (const [key, value] of Object.entries(
+        values[typeof id === "string" ? id : ""] ?? {},
+      ))
+        selectedFeature.value.set(key, value);
+    }
+  });
+});
+
+/** popup object */
+const popup = new Overlay({ stopEvent: false, positioning: "bottom-center" });
+
+/** add popup to map */
+map.addOverlay(popup);
+
+/** update popup element */
+watchEffect(() => {
+  if (popupElement.value) popup.setElement(popupElement.value);
+});
+
+/** update popup position */
+watchEffect(async () => {
+  if (!selectedFeature.value) return;
+
+  /** get bounds of feature */
+  const extent = selectedFeature.value.getGeometry()?.getExtent();
+  if (!extent) return;
+
+  /** position popup */
+  const [left = 0, bottom = 0, right = 0, top = 0] = extent;
+  popup.setPosition([left + (right - left) * 0.5, top + (bottom - top) * 0.25]);
+
+  /** wait for popup to render */
+  await sleep(0);
+
+  /** move view if needed */
+  popup.panIntoView({ animation: { duration: 100 } });
+});
+
+/** change cursor to indicate click-ability */
+map.on("pointermove", ({ pixel }) => {
+  /**
+   * select canvas element specifically so not everything within map element
+   * (e.g. popups) have their cursor set
+   */
+  const canvas = mapElement.value?.querySelector("canvas");
+  if (!canvas) return;
+  /** https://stackoverflow.com/questions/26022029/how-to-change-the-cursor-on-hover-in-openlayers-3 */
+  canvas.style.cursor = map.hasFeatureAtPixel(pixel) ? "pointer" : "";
+});
+
+/** add layers to map */
+watchEffect(() =>
+  map.setLayers([backgroundLayer, geometryLayer, labelLayer, locationsLayer]),
+);
+
+/** highlight and zoom in on feature */
+watch(
+  [() => highlight, () => geometry],
+  async () => {
+    if (!highlight || !geometry) return;
+    /** get feature bounds */
+    const extent = geometryFeatures.value
+      /** lookup feature by id */
+      .find((feature) => feature.get("id") === highlight)
+      ?.getGeometry()
+      ?.getExtent();
+    if (!extent) return;
+    /** wait for view to be attached to map */
+    await waitFor(() => !!map.getView());
+    /** fit view to feature bounds */
+    view.fit(extent);
+    /** zoom out a bit to give context of surroundings */
+    view.adjustZoom(-1);
+  },
+  { immediate: true, deep: true },
+);
+
+/** programmatic zoom in */
+function zoomIn() {
+  view.animate({ zoom: (view.getZoom() ?? 0) + 1, duration: 100 });
+}
+
+/** programmatic zoom out */
+function zoomOut() {
+  view.animate({ zoom: (view.getZoom() ?? 2) - 1, duration: 100 });
+}
+
+/** map client size */
+const { width: mapWidth, height: mapHeight } = useElementSize(frameElement);
+
+/** fit view to geometry layer content */
+function fit() {
+  /** get bounding box of content */
+  const extent = geometrySource.getExtent();
+
+  /** check if valid extent (can be infinities if no features) */
+  if (!extent || extent.some((value) => !Number.isFinite(value))) return;
 
   /** default fit padding */
-  let padding = { top: 0, left: 0, bottom: 0, right: 0 };
+  const padding = { top: 0, left: 0, bottom: 0, right: 0 };
 
   /** make room for legends */
-  if (props.showLegends) {
-    const mapDimensions = map?.getContainer().getBoundingClientRect()!;
+  if (showLegends) {
     /** increase padding based on corner legend panel dimensions */
     const padCorner = (v: "top" | "bottom", h: "left" | "right") => {
-      const { width, height } = getBbox(
-        `.leaflet-${v}.leaflet-${h} .leaflet-control`,
-      );
-      if (mapDimensions?.width > mapDimensions?.height)
+      /** get client size of legend elements */
+      const { width, height } = getBbox(`.legend.${v}-${h}`);
+      if (mapWidth.value > mapHeight.value)
+        /** if map landscape aspect ratio */
         padding[h] = Math.max(width, padding[h]);
-      else padding[v] = Math.max(height, padding[v]);
+      else
+        /** if map portrait aspect ratio */
+        padding[v] = Math.max(height, padding[v]);
     };
+    /** pad each corner */
     padCorner("top", "left");
     padCorner("top", "right");
     padCorner("bottom", "left");
     padCorner("bottom", "right");
   }
 
-  map?.fitBounds(bounds, {
-    paddingTopLeft: [padding.left + 20, padding.top + 20],
-    paddingBottomRight: [padding.right + 20, padding.bottom + 20],
+  const { top, right, bottom, left } = padding;
+  /** fit view. add some extra padding. */
+  view.fit(extent, {
+    padding: [top, right, bottom, left].map((v) => v + 20),
+    duration: 100,
   });
-}, 200);
-
-/**
- * wait for autopan to finish and wait for spurious moveend events from
- * positioning tooltip to finish
- */
-const onMoveEnd = debounce(() => {
-  if (!map) return;
-  const { lat, lng } = map.getCenter();
-  emit("update:lat", lat);
-  emit("update:long", lng);
-  emit("update:zoom", map.getZoom());
-}, 1000);
-
-/** auto-fit when props change */
-watch([() => props.showLegends, () => props.locations], fit, { deep: true });
-
-/** when map container created */
-onMounted(() => {
-  if (!mapElement.value) return;
-
-  /** init map */
-  map?.remove();
-  map = L.map(mapElement.value, mapOptions);
-
-  /** manually make attribution again to specify position */
-  L.control.attribution({ position: "bottomleft" }).addTo(map);
-
-  /** add panes to map */
-  map.createPane("background").style.zIndex = "0";
-  map.createPane("geometry").style.zIndex = "1";
-  map.createPane("locations").style.zIndex = "2";
-
-  /** add legends to map and set elements to teleport slots into */
-  topLeftLegend.value = createLegend({ position: "topleft" });
-  topRightLegend.value = createLegend({ position: "topright" });
-  bottomRightLegend.value = createLegend({ position: "bottomright" });
-  bottomLeftLegend.value = createLegend({ position: "bottomleft" });
-
-  /** update props from map pan/zoom */
-  map.on("moveend", onMoveEnd);
-
-  /** preserve fine-grain fitted zoom on drag */
-  map.on("dragstart", fineZoom);
-  /** reset zoom snap when done dragging */
-  map.on("dragend", coarseZoom);
-  coarseZoom();
-
-  /** provide zoom level as css variable */
-  map.on("zoomend", ({ target }) =>
-    map?.getContainer().style.setProperty("--zoom", target._zoom),
-  );
-
-  /** update stuff once map init'd */
-  updateBase();
-  updateData();
-  updateLocations();
-});
-
-/** when map container destroyed */
-onBeforeUnmount(() => {
-  /** cleanup map on unmount */
-  fit.cancel();
-  onMoveEnd.cancel();
-});
-
-/** update base layer */
-function updateBase() {
-  getLayers("background").forEach((layer) => layer.remove());
-  const layer = L.tileLayer.provider(props.background, { pane: "background" });
-  map?.addLayer(layer);
 }
 
-/** update base layer when props change */
-watch(() => props.background, updateBase, { immediate: true });
-
-/** update data layers */
-function updateData() {
-  getLayers("geometry").forEach((layer) => layer.remove());
-  const layer = L.geoJSON(undefined, {
-    pane: "geometry",
-    onEachFeature:
-      props.geometry.features.length < 100
-        ? /** add feature labels */
-          (feature: Feature<Geometry, FeatureInfo>) => {
-            /** make sure label props exist */
-            if (typeof feature.properties.label !== "string") return;
-            if (typeof feature.properties.cent_lat !== "number") return;
-            if (typeof feature.properties.cent_long !== "number") return;
-
-            /** create label layer */
-            const layer = L.marker(
-              [feature.properties.cent_lat, feature.properties.cent_long],
-              {
-                pane: "geometry",
-                icon: L.divIcon({
-                  className: "geometry-label",
-                  html: `<div>${feature.properties.label}</div>`,
-                  iconSize: [0, 0],
-                }),
-              },
-            );
-            map?.addLayer(layer);
-          }
-        : undefined,
-  });
-  map?.addLayer(layer);
-  layer.addData(props.geometry);
-
-  /**
-   * set feature static styles. can't use css class due to leaflet bugs.
-   * https://github.com/leaflet/leaflet/issues/2662#issuecomment-2193684759
-   */
-  layer.setStyle({
-    weight: 1,
-    color: "black",
-    fillOpacity: 1,
-  });
-
-  bindPopup(layer);
-
-  /** if no pan/zoom specified, fit view to content, */
-  if (!props.lat && !props.long && !props.zoom) {
-    fit();
-  } else {
-    /** otherwise, set view from props */
-    updateView();
-  }
-
-  /** update stuff once layers init'd */
-  updateColors();
-  updateOpacities();
-}
-
-/** update map data layer when props change */
-watch(() => props.geometry, updateData, { deep: true });
-
-/** symbols (icon + label) associated with each location */
-const symbols = computed(() => {
-  resetMarkers();
-
-  return mapValues(props.locations, (location, label) => {
-    if (location.features[0]?.geometry.type === "Point")
-      return { ...getMarker("point"), label };
-    if (location.features[0]?.geometry.type === "Polygon")
-      return { ...getMarker("area"), label };
-  });
-});
-
-/** update location layers */
-function updateLocations() {
-  const layers = getLayers<L.GeoJSON>("locations", L.GeoJSON);
-  layers.forEach((layer) => layer.remove());
-  for (const [key, features] of Object.entries(props.locations)) {
-    const { color, dash, icon } = symbols.value[key] ?? {};
-    const layer = L.geoJSON(undefined, {
-      pane: "locations",
-      pointToLayer: (feature, coords) =>
-        L.marker(coords, { icon, pane: "locations" }),
-    });
-    bindPopup(layer);
-    map?.addLayer(layer);
-    layer.addData(features);
-    layer.setStyle({
-      weight: 3,
-      color,
-      fillOpacity: 0,
-      dashArray: dash,
-    });
-  }
-}
-
-/** update location layers when props change */
-watch(() => props.locations, updateLocations, { deep: true });
-
-/** when map element changes size */
-useResizeObserver(mapElement, () => {
-  map?.invalidateSize();
-});
-
-/** update map pan/zoom */
-function updateView() {
-  map?.setView([props.lat || 0, props.long || 0], props.zoom || 1);
-}
-
-/** update map view when props change */
-watch([() => props.lat, () => props.long, () => props.zoom], updateView);
-
-/** update data feature colors */
-function updateColors() {
-  getLayers<L.GeoJSON>("geometry", L.GeoJSON).forEach((layer) =>
-    layer.setStyle((feature) => ({
-      fillColor: scale.value.getColor(
-        props.values?.[feature?.properties.id]?.value,
-      ),
-    })),
-  );
-}
-
-/** update colors when data values or color scheme changes */
-watch([() => props.values, scale], updateColors, {});
-
-/** update layer opacities */
-function updateOpacities() {
-  if (!map) return;
-
-  /** get layers */
-  const base = map.getPane("background");
-  const data = map.getPane("geometry");
-  const locations = map.getPane("locations");
-
-  /** set layer opacities */
-  if (base) base.style.opacity = String(props.backgroundOpacity);
-  if (data) data.style.opacity = String(props.geometryOpacity);
-  if (locations) locations.style.opacity = String(props.locationOpacity);
-}
-
-/** update opacities when props change */
+/** auto-fit when legends change */
 watch(
-  [
-    () => props.backgroundOpacity,
-    () => props.geometryOpacity,
-    () => props.locationOpacity,
-  ],
-  updateOpacities,
-  {},
+  () => showLegends,
+  /** wait for legends mount/unmount */
+  () => sleep().then(fit),
 );
 
-/** whether element has scrollbars */
-const scrollable = useScrollable(scrollElement);
+/** auto-fit when locations change */
+watch(
+  () => locations,
+  /** don't fit on first load */
+  (_, prevLocations) => !isEmpty(prevLocations) && fit(),
+  { deep: true },
+);
 
-/** enable/disable zooming by scrolling */
-watch(scrollable, () => {
-  if (!map) return;
-  if (scrollable.value) map.scrollWheelZoom.disable();
-  else map.scrollWheelZoom.enable();
+onMounted(async () => {
+  /** if not highlighting specific feature */
+  if (highlight) return;
+
+  /** if no pan/zoom specified */
+  if (!lat || !long || !zoom) {
+    /** wait for features to be loaded, rendered/parsed */
+    await waitFor(() => geometrySource.getFeatures().length);
+    /** fit view to content */
+    fit();
+  }
 });
 
-/** actual client size */
-const { width: actualWidth, height: actualHeight } = useElementSize(mapElement);
+/** toggle fullscreen on element */
+const { toggle: fullscreen } = useFullscreen(scrollElement);
 
 /** download map as png */
 async function download() {
-  if (!mapElement.value) return;
+  if (!frameElement.value) return;
 
-  /** upscale for better quality */
-  const scale = window.devicePixelRatio;
-
-  const blob = await domtoimage.toBlob(mapElement.value, {
-    width: actualWidth.value * scale,
-    height: actualHeight.value * scale,
-    style: {
-      transform: `scale(${scale})`,
-      transformOrigin: "top left",
-    },
+  /** convert to image */
+  const blob = await toBlob(frameElement.value, {
+    width: mapWidth.value,
+    height: mapHeight.value,
   });
 
-  downloadPng(blob, props.filename);
-}
-
-/** toggle fullscreen on element */
-const { toggle: fullscreen } = useFullscreen(mapElement);
-
-/** highlight and zoom in on feature */
-async function selectFeature(id: string) {
-  if (!map) return;
-  const layer = getLayers<L.Polygon>("geometry", L.Polygon).find(
-    (layer) => layer.feature?.properties.id === id,
-  );
-  if (!layer) return;
-  map.fitBounds(layer.getBounds());
-  layer.setStyle({ fillColor: "var(--theme)" });
-  /** zoom out a bit to give context of surroundings */
-  map.zoomOut(1);
+  if (blob) downloadPng(blob, filename);
 }
 
 /** allow control from parent */
-defineExpose({
-  download,
-  zoomIn: () => map?.zoomIn(),
-  zoomOut: () => map?.zoomOut(),
-  fit,
-  fullscreen,
-  selectFeature,
+defineExpose({ zoomIn, zoomOut, fit, fullscreen, download });
+
+/** clean up objects */
+onUnmounted(() => {
+  map.dispose();
+  view.dispose();
+  backgroundLayer.dispose();
+  backgroundSource.dispose();
+  geometryLayer.dispose();
+  geometrySource.dispose();
+  labelLayer.dispose();
+  labelSource.dispose();
+  locationsLayer.dispose();
+  locationsSource.dispose();
+  popup.dispose();
 });
 </script>
 
 <style scoped>
 .scroll {
+  max-width: var(--width, 100%);
+  max-height: var(--height, 100%);
   overflow: auto;
   box-shadow: var(--shadow);
 }
 
+.frame {
+  position: relative;
+  width: var(--width, 100%);
+  height: var(--height, 100%);
+}
+
+.map {
+  width: 100%;
+  height: 100%;
+}
+
 .legend {
   display: flex;
+  z-index: 9;
+  position: absolute;
   flex-direction: column;
   max-width: 250px;
   padding: 20px;
@@ -777,16 +906,31 @@ defineExpose({
   border-radius: var(--rounded);
   background: var(--white);
   box-shadow: var(--shadow);
+  --spacing: 10px;
+}
+
+.top-left {
+  top: var(--spacing);
+  left: var(--spacing);
+}
+
+.top-right {
+  top: var(--spacing);
+  right: var(--spacing);
+}
+
+.bottom-right {
+  right: var(--spacing);
+  bottom: var(--spacing);
+}
+
+.bottom-left {
+  bottom: var(--spacing);
+  left: var(--spacing);
 }
 
 .legend:empty {
   display: none;
-}
-
-.controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
 }
 
 .scale {
@@ -799,6 +943,7 @@ defineExpose({
 
 .scale-color {
   width: 100%;
+  max-width: 75px;
   height: 100%;
 }
 
@@ -816,99 +961,62 @@ defineExpose({
   gap: 10px;
 }
 
-.symbols img {
+.symbol {
+  display: contents;
+}
+
+.symbol > * {
   place-self: center;
-  height: 1em;
+}
+
+.popup {
+  --caret: 10px;
+  position: relative;
+  top: calc(var(--caret) * -1.414);
+  width: 400px;
+  max-width: max-content;
+}
+
+.popup::after {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: var(--caret);
+  height: var(--caret);
+  translate: -50% -50%;
+  rotate: 45deg;
+  background: white;
+  box-shadow: var(--shadow);
+  content: "";
+  clip-path: polygon(200% -100%, 200% 200%, -100% 200%);
+}
+
+.popup-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: none !important;
+  color: var(--gray);
+}
+
+.popup-close:hover {
+  color: var(--theme);
+}
+
+.attribution {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  max-width: 50%;
+  padding: 2px 5px;
+  background: color-mix(in srgb, var(--white), transparent 25%);
+  font-size: 12px;
+  text-wrap: balance;
 }
 </style>
 
 <style>
-.leaflet-container {
-  font: inherit;
-}
-
-.leaflet-interactive {
-  transition: fill-opacity var(--fast);
-}
-
-.leaflet-interactive:hover {
-  fill-opacity: 0.25;
-}
-
-.leaflet-marker-icon {
-  transition: opacity var(--fast);
-}
-
-.leaflet-marker-icon:hover {
-  opacity: 0.25;
-}
-
-.leaflet-control-attribution {
-  max-width: 500px;
-  padding: 0.25em 0.5em;
-  border-radius: var(--rounded) 0 0 0;
-  background: var(--white);
-  box-shadow: var(--shadow);
-  font: inherit;
-  font-size: 0.8rem;
-}
-
-.leaflet-popup-content-wrapper {
-  display: flex;
-  flex-direction: column;
-  width: max-content;
-  max-width: 400px;
-  padding: 20px 25px;
-  gap: 10px;
-  border-radius: var(--rounded);
-  box-shadow: var(--shadow);
-  font: inherit;
-}
-
-.leaflet-popup-content {
-  display: none;
-}
-
-.leaflet-popup-tip {
-  width: 10px;
-  height: 10px;
-  margin: -5px auto 0 auto;
-  padding: 0;
-  box-shadow: unset;
-}
-
-.leaflet-control {
-  transition: opacity 0.5s;
-}
-
-.leaflet-container:has(.leaflet-popup)
-  :is(.leaflet-control-container, .leaflet-control-container *) {
-  pointer-events: none;
-}
-
-.leaflet-container:has(.leaflet-popup) .leaflet-control {
-  opacity: 0;
-}
-
-/* https://github.com/Leaflet/Leaflet/issues/3994 */
-.leaflet-fade-anim .leaflet-popup {
-  transition: none !important;
-}
-
-.geometry-label {
-  z-index: 999 !important;
-}
-
-.geometry-label > div {
-  -webkit-text-stroke: calc(0.01 * pow(2, var(--zoom)) * 1px) white;
-  paint-order: stroke;
-  width: min-content;
-  height: min-content;
-  transform: translate(-50%, -50%);
-  font-weight: var(--bold);
-  font-size: calc(0.075 * pow(2, var(--zoom)) * 1px);
-  line-height: 1;
-  text-align: center;
-  pointer-events: none;
+.ol-overlaycontainer {
+  z-index: 10 !important;
 }
 </style>

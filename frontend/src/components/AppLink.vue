@@ -14,10 +14,7 @@ type Props = {
   newTab?: boolean;
 };
 
-const props = withDefaults(defineProps<Props>(), {
-  external: undefined,
-  newTab: undefined,
-});
+const { to, newTab } = defineProps<Props>();
 
 type Slots = {
   default?: () => unknown;
@@ -27,18 +24,16 @@ defineSlots<Slots>();
 
 /** is link to internal route or external url */
 const external = computed(() =>
-  ["https:", "http:", "mailto:"].some((prefix) => props.to.startsWith(prefix)),
+  ["https:", "http:", "mailto:"].some((prefix) => to.startsWith(prefix)),
 );
 
 const component = computed(() =>
-  props.to ? (external.value ? "a" : "router-link") : "span",
+  to ? (external.value ? "a" : "router-link") : "span",
 );
 
 const toAttr = computed(() => (external.value ? "href" : "to"));
 
-const target = computed(() =>
-  (props.newTab ?? external.value) ? "_blank" : "",
-);
+const target = computed(() => ((newTab ?? external.value) ? "_blank" : ""));
 </script>
 
 <style scoped>

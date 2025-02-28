@@ -35,7 +35,13 @@ type Props = {
   step?: number;
 };
 
-withDefaults(defineProps<Props>(), { min: 0, max: 1, step: 0.1 });
+const {
+  label,
+  modelValue,
+  min = 0,
+  max = 1,
+  step = 0.1,
+} = defineProps<Props>();
 
 type Emits = {
   "update:modelValue": [Props["modelValue"]];
@@ -86,7 +92,6 @@ const emit = defineEmits<Emits>();
   position: absolute;
   width: 15px;
   height: 15px;
-  transform: translate(-50%, -50%);
   border-radius: 999px;
   background: currentColor;
 }

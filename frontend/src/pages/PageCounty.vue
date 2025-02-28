@@ -15,7 +15,7 @@
     </template>
 
     <template v-else>
-      <AppMap ref="map" class="map" :geometry="geometry">
+      <AppMap ref="map" class="map" :geometry="geometry" :highlight="id">
         <template #popup="{ feature }">
           <!-- link to full data -->
           <AppButton
@@ -160,7 +160,6 @@ import { appTitle } from "@/meta";
 import { learnMoreLink } from "@/pages/learn-more";
 import { useQuery } from "@/util/composables";
 import { formatValue } from "@/util/math";
-import { waitFor } from "@/util/misc";
 import basicMeasures from "./basic-measures.json";
 
 const route = useRoute();
@@ -188,15 +187,6 @@ const {
 }, undefined);
 
 onMounted(loadGeometry);
-
-/** select county feature on map */
-watch(
-  geometry,
-  async () => {
-    (await waitFor(() => map.value))?.selectFeature(id.value);
-  },
-  { deep: true },
-);
 
 /** get data for selected county */
 const {
