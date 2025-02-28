@@ -447,6 +447,74 @@
               <span>Notes</span>
               <span>{{ feature.notes }}</span>
             </template>
+
+            <!-- outreach data -->
+            <template v-if="feature.fit">
+              <template v-if="feature.any_activity">
+                <span>Any outreach activity</span>
+                <span class="check">
+                  <font-awesome-icon :icon="faCheckCircle" />
+                </span>
+              </template>
+              <span>FIT kits</span>
+              <span class="check">
+                <font-awesome-icon :icon="faCheckCircle" />
+              </span>
+            </template>
+            <template v-if="feature.radon">
+              <span>Radon kits</span>
+              <span class="check">
+                <font-awesome-icon :icon="faCheckCircle" />
+              </span>
+            </template>
+            <template v-if="feature['2m']">
+              <span>2M</span>
+              <span class="check">
+                <font-awesome-icon :icon="faCheckCircle" />
+              </span>
+            </template>
+            <template v-if="feature.wwc">
+              <span>Women's Wellness Connection</span>
+              <span class="check">
+                <font-awesome-icon :icon="faCheckCircle" />
+              </span>
+            </template>
+            <template v-if="feature.num_fit">
+              <span>FIT kits</span>
+              <span>{{ formatValue(feature.num_fit) }}</span>
+            </template>
+            <template v-if="feature.num_radon">
+              <span>Radon kits</span>
+              <span>{{ formatValue(feature.num_radon) }}</span>
+            </template>
+            <template v-if="feature.total_kits">
+              <span>Total kits</span>
+              <span>{{ formatValue(feature.total_kits) }}</span>
+            </template>
+            <template v-if="feature.num_com_event">
+              <span>Community events</span>
+              <span>{{ formatValue(feature.num_com_event) }}</span>
+            </template>
+            <template v-if="feature.num_hf">
+              <span>Health fairs</span>
+              <span>{{ formatValue(feature.num_hf) }}</span>
+            </template>
+            <template v-if="feature.num_educ">
+              <span>Educational talks</span>
+              <span>{{ formatValue(feature.num_educ) }}</span>
+            </template>
+            <template v-if="feature.num_radio">
+              <span>Radio talks</span>
+              <span>{{ formatValue(feature.num_radio) }}</span>
+            </template>
+            <template v-if="feature.num_school">
+              <span>School/church events</span>
+              <span>{{ formatValue(feature.num_school) }}</span>
+            </template>
+            <template v-if="feature.total_events">
+              <span>Total Events</span>
+              <span>{{ formatValue(feature.total_events) }}</span>
+            </template>
           </div>
 
           <!-- link to full data for county -->
@@ -532,6 +600,7 @@ import {
 import type { ShallowRef, WatchStopHandle } from "vue";
 import { clamp, cloneDeep, isEmpty, mapValues } from "lodash";
 import {
+  faCheckCircle,
   faComment,
   faHandPointer,
   faQuestionCircle,
@@ -1024,5 +1093,9 @@ watch(
 
 .note {
   flex-grow: 1;
+}
+
+.check {
+  color: #00c950;
 }
 </style>

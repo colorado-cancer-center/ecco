@@ -259,6 +259,10 @@ blockquote {
   content: "No Info";
 }
 
+.mini-table > hr {
+  grid-column: 1 / -1;
+}
+
 .charts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr));
