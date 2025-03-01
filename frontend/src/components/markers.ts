@@ -56,7 +56,7 @@ export const colors = [
   "#06b6d4",
   // "#22c55e",
   "#f59e0b",
-];
+] as const;
 
 type Color = (typeof colors)[number];
 

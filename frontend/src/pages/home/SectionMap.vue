@@ -988,27 +988,27 @@ const showOutreach = computed(() =>
 const outreachFields = {
   fit: {
     label: "FIT kits" as const,
-    color: colors[0]!,
+    color: colors[0],
     link: "https://medlineplus.gov/ency/patientinstructions/000704.htm",
   },
   radon: {
     label: "Radon kits" as const,
-    color: colors[1]!,
+    color: colors[1],
     link: "https://cdphe.colorado.gov/hm/testing-your-home-radon",
   },
   wwc: {
     label: "WWC" as const,
-    color: colors[2]!,
+    color: colors[2],
     link: "https://cdphe.colorado.gov/wwc",
   },
   "2m": {
     label: "2Morrow" as const,
-    color: colors[3]!,
+    color: colors[3],
     link: "https://medschool.cuanschutz.edu/colorado-cancer-center/community/CommunityOutreachEngagement/projects-and-activities/2morrow-health-app",
   },
   any_activity: {
     label: "Any Events" as const,
-    color: colors[4]!,
+    color: colors[4],
   },
 };
 </script>
