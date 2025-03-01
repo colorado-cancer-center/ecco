@@ -373,7 +373,7 @@
 
         <!-- geometry feature label -->
         <template
-          v-if="outreachOn"
+          v-if="showOutreach"
           #geometry-label="{ feature }: { feature: FeatureInfo }"
         >
           <div>
@@ -484,7 +484,7 @@
           </div>
 
           <!-- outreach data -->
-          <template v-if="outreachOn">
+          <template v-if="showOutreach">
             <hr />
 
             <div class="mini-table">
@@ -911,6 +911,11 @@ const locationOptions = computed(() => {
       entries.push({ id, label });
   }
 
+  entries.unshift(
+    { group: "Outreach" },
+    { id: "outreach", label: "CU Cancer Center" },
+  );
+
   return entries;
 });
 
@@ -975,7 +980,9 @@ watch(
 );
 
 /** is outreach info enabled */
-const outreachOn = computed(() => selectedLocations.value.includes("outreach"));
+const showOutreach = computed(() =>
+  selectedLocations.value.includes("outreach"),
+);
 
 /** outreach info fields */
 const outreachFields = {

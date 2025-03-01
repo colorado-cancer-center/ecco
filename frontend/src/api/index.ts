@@ -115,7 +115,7 @@ type _LocationList = {
 /** get listing/metadata of locations */
 export async function getLocationList() {
   const data = await request<_LocationList>(`${api}/locations`);
-  return { Outreach: { Outreach: "outreach" }, ...data };
+  return data;
 }
 
 export type LocationList = Awaited<ReturnType<typeof getLocationList>>;
