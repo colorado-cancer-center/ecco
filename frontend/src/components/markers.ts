@@ -38,34 +38,25 @@ const icons = [
 type Icon = (typeof icons)[number];
 
 /** https://tailwindcss.com/docs/customizing-colors */
-const colors = [
-  "#ef4444",
-  "#f97316",
-  "#f59e0b",
-  "#eab308",
-  "#84cc16",
-  "#22c55e",
-  "#10b981",
-  "#14b8a6",
-  "#06b6d4",
-  "#0ea5e9",
-  "#3b82f6",
-  "#6366f1",
-  "#8b5cf6",
-  "#a855f7",
-  "#d946ef",
-  "#ec4899",
+export const colors = [
   "#f43f5e",
-]
-  .reverse()
-  .map(
-    (_, index, array) =>
-      /**
-       * skip every N colors to space them out visually. don't use N that is
-       * factor of number of colors.
-       */
-      array[(index++ * 3) % array.length]!,
-  );
+  "#a855f7",
+  "#3b82f6",
+  "#14b8a6",
+  // "#84cc16",
+  "#f97316",
+  "#ec4899",
+  "#8b5cf6",
+  "#0ea5e9",
+  // "#10b981",
+  "#eab308",
+  "#ef4444",
+  "#d946ef",
+  "#6366f1",
+  "#06b6d4",
+  // "#22c55e",
+  "#f59e0b",
+];
 
 type Color = (typeof colors)[number];
 

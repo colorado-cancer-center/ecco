@@ -210,7 +210,7 @@ const selectedLabel = computed<string>(() => {
 /** when dropdown opened */
 async function onDropdownOpen(node: VNode) {
   await frame();
-  (node.el as Element).scrollIntoView();
+  (node.el as Element).scrollIntoView({ block: "nearest" });
 }
 
 /** add "quick" arrow key select */

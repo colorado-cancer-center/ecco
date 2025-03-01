@@ -1,5 +1,5 @@
-import type { FeatureCollection, Geometry, Point } from "geojson";
-import { mapValues } from "lodash";
+import type { FeatureCollection, Geometry } from "geojson";
+import { find, mapValues } from "lodash";
 import outreach1 from "./outreach-1.json";
 import outreach2 from "./outreach-2.json";
 
@@ -137,6 +137,7 @@ type _Geo = {
 
 /** data geojson properties fields */
 export type GeoProps = {
+  /** base */
   id?: string | number;
   name?: string;
   label?: string;
@@ -146,6 +147,24 @@ export type GeoProps = {
   ogc_fid?: number;
   cent_lat?: number;
   cent_long?: number;
+
+  /** outreach */
+  num_fit?: number;
+  num_radon?: number;
+  total_kits?: number;
+  num_com_event?: number;
+  num_hf?: number;
+  num_educ?: number;
+  num_radio?: number;
+  num_school?: number;
+  total_events?: number;
+  fit?: boolean;
+  radon?: boolean;
+  both_kits?: boolean;
+  any_activity?: boolean;
+  "2m"?: boolean;
+  wwc?: boolean;
+  all?: boolean;
 };
 
 /** get geojson from geography data */
@@ -170,6 +189,11 @@ export async function getGeo(
           id: d[idField],
           name,
           label: name.replace(/county/i, ""),
+
+          /** include per-county outreach data */
+          /** temporary, should eventually come from backend */
+          ...(find(outreach1, ["county", name]) ?? {}),
+          ...(find(outreach2, ["county", name]) ?? {}),
         },
       };
     }),
@@ -239,8 +263,6 @@ type _Location = {
 
 /** get locations (markers, highlighted areas, etc) */
 export async function getLocation(id: string) {
-  if (id === "outreach") return await getOutreach();
-
   const data = await request<_Location>(`${api}/locations/${id}`);
   return data.geometry_json;
 }
@@ -272,22 +294,6 @@ export type LocationProps = {
   representative?: string;
   party?: string;
   fips?: string;
-  num_fit?: number;
-  num_radon?: number;
-  total_kits?: number;
-  num_com_event?: number;
-  num_hf?: number;
-  num_educ?: number;
-  num_radio?: number;
-  num_school?: number;
-  total_events?: number;
-  fit?: boolean;
-  radon?: boolean;
-  both_kits?: boolean;
-  any_activity?: boolean;
-  "2m"?: boolean;
-  wwc?: boolean;
-  all?: boolean;
 };
 
 /** response from county data api endpoint */
@@ -315,38 +321,3 @@ type _CountyData = {
 /** get all data for particular county */
 export const getCountyData = (id: string) =>
   request<_CountyData>(`${api}/stats/by-county/${id}`);
-
-/** get per-county ecco outreach data */
-/** temporary, should eventually come from backend */
-export const getOutreach = async (): Promise<
-  FeatureCollection<Point, LocationProps>
-> => {
-  /** get county geo data */
-  const geo = (await getGeo("counties", "us_fips")).features;
-
-  /** outreach data lookup */
-  const outreach: Record<string, LocationProps> =
-    /** initialize with county names from geo data */
-    Object.fromEntries(geo.map((feature) => [feature.properties.name, {}]));
-
-  /** combine outreach tables */
-  for (const file of [outreach1, outreach2])
-    for (const { county, ...rest } of file)
-      if (county in outreach)
-        /** assign county outreach props */
-        outreach[county] = { ...outreach[county], ...rest };
-
-  return {
-    type: "FeatureCollection",
-    features: geo.map(({ properties, ...feature }) => ({
-      ...feature,
-      geometry: {
-        /** use county centroid point instead of county boundary polygon */
-        type: "Point",
-        coordinates: [properties.cent_long ?? 0, properties.cent_lat ?? 0],
-      },
-      /** get all outreach props for county */
-      properties: properties.name ? (outreach[properties.name] ?? {}) : {},
-    })),
-  };
-};
