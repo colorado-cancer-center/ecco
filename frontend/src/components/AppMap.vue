@@ -989,7 +989,7 @@ onUnmounted(() => {
   gap: 3px;
   border-radius: var(--rounded);
   color: white;
-  font-size: calc(var(--zoom) * 2px);
+  font-size: calc(var(--zoom) * 1.75px);
   text-align: center;
   opacity: calc(var(--label-opacity) * 2);
   pointer-events: none;

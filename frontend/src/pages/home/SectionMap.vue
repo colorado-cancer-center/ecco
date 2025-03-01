@@ -355,7 +355,7 @@
           </div>
         </template>
 
-        <template #top-right>
+        <template v-if="showOutreach" #top-right>
           <div class="mini-table">
             <template v-for="(field, key) of outreachFields" :key="key">
               <font-awesome-icon
