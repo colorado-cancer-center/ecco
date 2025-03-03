@@ -395,12 +395,12 @@
             <strong>{{ feature.name }}</strong>
           </template>
 
-          <hr />
-
           <!-- id -->
           <template v-if="feature.fips">
             <strong>Census Tract<br />{{ feature.fips }}</strong>
           </template>
+
+          <hr />
 
           <!-- district -->
           <template v-if="feature.district">
@@ -484,40 +484,39 @@
           </div>
 
           <!-- outreach data -->
-          <template v-if="showOutreach">
-            <hr />
+          <hr />
 
-            <div class="mini-table">
-              <template v-if="feature.num_fit">
-                <AppLink :to="outreachFields.fit.link">
-                  {{ outreachFields.fit.label }}
-                </AppLink>
-                <span>
-                  {{ formatValue(feature.num_fit) }}
-                </span>
-              </template>
-              <template v-if="feature.num_radon">
-                <AppLink :to="outreachFields.radon.link">
-                  {{ outreachFields.radon.label }}
-                </AppLink>
-                <span>
-                  {{ formatValue(feature.num_radon) }}
-                </span>
-              </template>
-              <template v-if="feature.total_kits">
-                <span>Total kits</span>
-                <span>{{ formatValue(feature.total_kits) }}</span>
-              </template>
-              <template v-if="feature.total_events">
-                <span>Total events</span>
-                <span>{{ formatValue(feature.total_events) }}</span>
-              </template>
-            </div>
-          </template>
+          <div v-if="showOutreach" class="mini-table">
+            <template v-if="feature.num_fit">
+              <AppLink :to="outreachFields.fit.link">
+                {{ outreachFields.fit.label }}
+              </AppLink>
+              <span>
+                {{ formatValue(feature.num_fit) }}
+              </span>
+            </template>
+            <template v-if="feature.num_radon">
+              <AppLink :to="outreachFields.radon.link">
+                {{ outreachFields.radon.label }}
+              </AppLink>
+              <span>
+                {{ formatValue(feature.num_radon) }}
+              </span>
+            </template>
+            <template v-if="feature.total_kits">
+              <span>Total kits</span>
+              <span>{{ formatValue(feature.total_kits) }}</span>
+            </template>
+            <template v-if="feature.total_events">
+              <span>Total events</span>
+              <span>{{ formatValue(feature.total_events) }}</span>
+            </template>
+          </div>
 
           <hr />
 
           <!-- link to full data for county -->
+
           <AppButton
             v-if="selectedLevel === 'county' && 'county' in feature"
             :icon="faExternalLinkAlt"
@@ -980,8 +979,10 @@ watch(
 );
 
 /** is outreach info enabled */
-const showOutreach = computed(() =>
-  selectedLocations.value.includes("outreach"),
+const showOutreach = computed(
+  () =>
+    selectedLevel.value === "county" &&
+    selectedLocations.value.includes("outreach"),
 );
 
 /** outreach info fields */

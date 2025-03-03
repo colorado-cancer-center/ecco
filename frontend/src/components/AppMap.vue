@@ -73,7 +73,7 @@
 
       <!-- geometry labels -->
       <div
-        v-for="(feature, key) of geometryFeatures"
+        v-for="(feature, key) of geometryLabels"
         :key="key"
         ref="geometryLabelElements"
         class="label"
@@ -638,13 +638,20 @@ watchEffect((onCleanup) => {
 /** update locations layer opacity */
 watchEffect(() => locationsLayer.setOpacity(locationOpacity));
 
+/** geometry features that have a position for a label */
+const geometryLabels = computed(() =>
+  geometryFeatures.value.filter(
+    (feature) => feature.get("cent_lat") && feature.get("cent_long"),
+  ),
+);
+
 /** update geometry feature labels */
 watch(
   /**
    * can't use watchEffect
    * https://stackoverflow.com/questions/79031309/usetemplateref-is-not-reactive-for-arrays
    */
-  [geometryFeatures, geometryLabelElements],
+  [geometryLabels, geometryLabelElements],
   async (value, old, onCleanup) => {
     await nextTick();
     for (
@@ -656,7 +663,7 @@ watch(
       const element = geometryLabelElements.value?.[index];
       if (!element) continue;
       /** feature associated with element */
-      const feature = geometryFeatures.value[index];
+      const feature = geometryLabels.value[index];
       if (!feature) continue;
       const { cent_lat, cent_long } = feature.getProperties() ?? {};
       /** don't create overlay if cent position not defined */
@@ -1020,9 +1027,9 @@ onUnmounted(() => {
 .popup {
   --caret: 10px;
   position: relative;
-  top: calc(var(--caret) * -1.414);
   width: 400px;
   max-width: max-content;
+  translate: 0 calc(var(--caret) * -1.414);
 }
 
 .popup::after {
@@ -1049,6 +1056,16 @@ onUnmounted(() => {
 
 .popup-close:hover {
   color: var(--theme);
+}
+
+.popup > :nth-child(2) {
+  max-width: calc(100% - 10px);
+}
+
+:deep(.popup .popup-close + hr),
+:deep(.popup hr:last-child),
+:deep(.popup hr:has(+ hr)) {
+  display: none;
 }
 
 .attribution {
