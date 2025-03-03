@@ -73,7 +73,7 @@
 
       <!-- geometry labels -->
       <div
-        v-for="(feature, key) of geometryLabels"
+        v-for="(feature, key) of geometryFeaturesWLabels"
         :key="key"
         ref="geometryLabelElements"
         class="label"
@@ -639,49 +639,45 @@ watchEffect((onCleanup) => {
 watchEffect(() => locationsLayer.setOpacity(locationOpacity));
 
 /** geometry features that have a position for a label */
-const geometryLabels = computed(() =>
+const geometryFeaturesWLabels = computed(() =>
   geometryFeatures.value.filter(
     (feature) => feature.get("cent_lat") && feature.get("cent_long"),
   ),
 );
 
 /** update geometry feature labels */
-watch(
-  /**
-   * can't use watchEffect
-   * https://stackoverflow.com/questions/79031309/usetemplateref-is-not-reactive-for-arrays
-   */
-  [geometryLabels, geometryLabelElements],
-  async (value, old, onCleanup) => {
-    await nextTick();
-    for (
-      let index = 0;
-      index < (geometryLabelElements.value?.length ?? 0);
-      index++
-    ) {
-      /** element */
-      const element = geometryLabelElements.value?.[index];
-      if (!element) continue;
-      /** feature associated with element */
-      const feature = geometryLabels.value[index];
-      if (!feature) continue;
-      const { cent_lat, cent_long } = feature.getProperties() ?? {};
-      /** don't create overlay if cent position not defined */
-      if (!cent_lat || !cent_long) continue;
-      /** overlay object */
-      const overlay = new Overlay({
-        element,
-        position: latlongToXy(cent_lat, cent_long),
-        positioning: "center-center",
-      });
-      map.addOverlay(overlay);
-      onCleanup(() => {
-        map.removeOverlay(overlay);
-        overlay.dispose();
-      });
-    }
-  },
-);
+watchEffect(async (onCleanup) => {
+  /** get reactive values before async so they can be auto-tracked */
+  /** https://github.com/vuejs/core/issues/2093 */
+  const elements = geometryLabelElements.value ?? [];
+  const features = geometryFeaturesWLabels.value;
+
+  /** https://stackoverflow.com/questions/79031309/usetemplateref-is-not-reactive-for-arrays */
+  await nextTick();
+
+  for (let index = 0; index < elements.length; index++) {
+    /** element */
+    const element = elements[index]!;
+    if (!element) continue;
+    /** feature associated with element */
+    const feature = features[index];
+    if (!feature) continue;
+    const { cent_lat, cent_long } = feature.getProperties() ?? {};
+    /** don't create overlay if cent position not defined */
+    if (!cent_lat || !cent_long) continue;
+    /** overlay object */
+    const overlay = new Overlay({
+      element,
+      position: latlongToXy(cent_lat, cent_long),
+      positioning: "center-center",
+    });
+    map.addOverlay(overlay);
+    onCleanup(() => {
+      map.removeOverlay(overlay);
+      overlay.dispose();
+    });
+  }
+});
 
 /** current selected feature */
 const selectedFeature = ref<Feature<Geometry>>();
