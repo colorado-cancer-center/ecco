@@ -1055,7 +1055,7 @@ onUnmounted(() => {
 }
 
 .popup > :nth-child(2) {
-  max-width: calc(100% - 10px);
+  margin-right: 10px;
 }
 
 :deep(.popup .popup-close + hr),
