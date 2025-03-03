@@ -658,7 +658,9 @@ watch(
       /** feature associated with element */
       const feature = geometryFeatures.value[index];
       if (!feature) continue;
-      const { cent_lat = 0, cent_long = 0 } = feature.getProperties() ?? {};
+      const { cent_lat, cent_long } = feature.getProperties() ?? {};
+      /** don't create overlay if cent position not defined */
+      if (!cent_lat || !cent_long) continue;
       /** overlay object */
       const overlay = new Overlay({
         element,
