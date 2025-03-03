@@ -115,6 +115,7 @@
                 :viewBox="`0 0 10 1`"
                 preserveAspectRatio="none"
                 class="gradient-preview"
+                :style="{ scale: flipGradient ? '-1 1' : '' }"
               >
                 <defs>
                   <linearGradient :id="option?.id">
