@@ -1,5 +1,7 @@
 import type { FeatureCollection, Geometry } from "geojson";
-import { mapValues } from "lodash";
+import { find, mapValues } from "lodash";
+import outreach1 from "./outreach-1.json";
+import outreach2 from "./outreach-2.json";
 
 /** api root (no trailing slash) */
 const api = import.meta.env.VITE_API;
@@ -135,6 +137,7 @@ type _Geo = {
 
 /** data geojson properties fields */
 export type GeoProps = {
+  /** base */
   id?: string | number;
   name?: string;
   label?: string;
@@ -144,6 +147,24 @@ export type GeoProps = {
   ogc_fid?: number;
   cent_lat?: number;
   cent_long?: number;
+
+  /** outreach */
+  num_fit?: number;
+  num_radon?: number;
+  total_kits?: number;
+  num_com_event?: number;
+  num_hf?: number;
+  num_educ?: number;
+  num_radio?: number;
+  num_school?: number;
+  total_events?: number;
+  fit?: boolean;
+  radon?: boolean;
+  both_kits?: boolean;
+  any_activity?: boolean;
+  "2m"?: boolean;
+  wwc?: boolean;
+  all?: boolean;
 };
 
 /** get geojson from geography data */
@@ -168,6 +189,11 @@ export async function getGeo(
           id: d[idField],
           name,
           label: name.replace(/county/i, ""),
+
+          /** include per-county outreach data */
+          /** temporary, should eventually come from backend */
+          ...(find(outreach1, ["county", name]) ?? {}),
+          ...(find(outreach2, ["county", name]) ?? {}),
         },
       };
     }),

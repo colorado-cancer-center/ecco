@@ -87,8 +87,7 @@
         label="Locations"
         :options="locationOptions"
         :multi="true"
-        tooltip="Locations to show on map, e.g. screening centers, clinics,
-      specialists"
+        tooltip="Locations and extra info to show on map, e.g. screening centers, clinics, specialists"
       />
 
       <hr />
@@ -116,6 +115,7 @@
                 :viewBox="`0 0 10 1`"
                 preserveAspectRatio="none"
                 class="gradient-preview"
+                :style="{ scale: flipGradient ? '-1 1' : '' }"
               >
                 <defs>
                   <linearGradient :id="option?.id">
@@ -356,6 +356,39 @@
           </div>
         </template>
 
+        <template v-if="showOutreach" #top-right>
+          <div class="mini-table">
+            <template v-for="(field, key) of outreachFields" :key="key">
+              <font-awesome-icon
+                :icon="faCheck"
+                class="check"
+                :style="{ '--color': field.color }"
+              />
+              <AppLink v-if="'link' in field" :to="field.link">
+                {{ field.label }}
+              </AppLink>
+              <div v-else>{{ field.label }}</div>
+            </template>
+          </div>
+        </template>
+
+        <!-- geometry feature label -->
+        <template
+          v-if="showOutreach"
+          #geometry-label="{ feature }: { feature: FeatureInfo }"
+        >
+          <div>
+            <template v-for="(field, key) of outreachFields" :key="key">
+              <font-awesome-icon
+                v-if="feature[key]"
+                :icon="faCheck"
+                class="check"
+                :style="{ '--color': field.color }"
+              />
+            </template>
+          </div>
+        </template>
+
         <!-- feature popup -->
         <template #popup="{ feature }: { feature: FeatureInfo }">
           <!-- name -->
@@ -367,6 +400,8 @@
           <template v-if="feature.fips">
             <strong>Census Tract<br />{{ feature.fips }}</strong>
           </template>
+
+          <hr />
 
           <!-- district -->
           <template v-if="feature.district">
@@ -449,14 +484,47 @@
             </template>
           </div>
 
+          <!-- outreach data -->
+          <hr />
+
+          <div v-if="showOutreach" class="mini-table">
+            <template v-if="feature.num_fit">
+              <AppLink :to="outreachFields.fit.link">
+                {{ outreachFields.fit.label }}
+              </AppLink>
+              <span>
+                {{ formatValue(feature.num_fit) }}
+              </span>
+            </template>
+            <template v-if="feature.num_radon">
+              <AppLink :to="outreachFields.radon.link">
+                {{ outreachFields.radon.label }}
+              </AppLink>
+              <span>
+                {{ formatValue(feature.num_radon) }}
+              </span>
+            </template>
+            <template v-if="feature.total_kits">
+              <span>Total kits</span>
+              <span>{{ formatValue(feature.total_kits) }}</span>
+            </template>
+            <template v-if="feature.total_events">
+              <span>Total events</span>
+              <span>{{ formatValue(feature.total_events) }}</span>
+            </template>
+          </div>
+
+          <hr />
+
           <!-- link to full data for county -->
+
           <AppButton
             v-if="selectedLevel === 'county' && 'county' in feature"
             :icon="faExternalLinkAlt"
             :to="`/county/${feature.id}`"
             :flip="true"
             :new-tab="true"
-            >See All Data</AppButton
+            >See All</AppButton
           >
         </template>
       </AppMap>
@@ -526,6 +594,7 @@ import {
   onUnmounted,
   ref,
   shallowRef,
+  useTemplateRef,
   watch,
   watchEffect,
 } from "vue";
@@ -539,6 +608,7 @@ import {
 import {
   faArrowRight,
   faArrowsRotate,
+  faCheck,
   faCropSimple,
   faDownload,
   faExpand,
@@ -548,18 +618,15 @@ import {
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import { useElementBounding, useWindowSize } from "@vueuse/core";
-import {
-  getDownload,
-  getGeo,
-  getLocation,
-  getValues,
-  type Facet,
-  type Facets,
-  type GeoProps,
-  type LocationList,
-  type LocationProps,
-  type Values,
+import type {
+  Facet,
+  Facets,
+  GeoProps,
+  LocationList,
+  LocationProps,
+  Values,
 } from "@/api";
+import { getDownload, getGeo, getLocation, getValues } from "@/api";
 import AppAccordion from "@/components/AppAccordion.vue";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
@@ -570,6 +637,7 @@ import AppSelect from "@/components/AppSelect.vue";
 import type { Entry, Option } from "@/components/AppSelect.vue";
 import AppSlider from "@/components/AppSlider.vue";
 import { gradientOptions } from "@/components/gradient";
+import { colors } from "@/components/markers";
 import { backgroundOptions } from "@/components/tile-providers";
 import { learnMoreLink } from "@/pages/learn-more";
 import {
@@ -602,8 +670,8 @@ type FeatureInfo = Expand<
 const { facets, locationList } = defineProps<Props>();
 
 /** element refs */
-const leftPanelElement = ref<HTMLElement>();
-const rightPanelElement = ref<HTMLElement>();
+const leftPanelElement = useTemplateRef("leftPanelElement");
+const rightPanelElement = useTemplateRef("rightPanelElement");
 const map = ref<InstanceType<typeof AppMap>>();
 
 /** select boxes state */
@@ -843,6 +911,11 @@ const locationOptions = computed(() => {
       entries.push({ id, label });
   }
 
+  entries.unshift(
+    { group: "Outreach" },
+    { id: "outreach", label: "CU Cancer Center" },
+  );
+
   return entries;
 });
 
@@ -860,15 +933,17 @@ const { query: loadLocations, data: locations } = useQuery(
     return Object.fromEntries(
       /** query for locations in parallel */
       await Promise.all(
-        selectedLocations.value.map(
-          async (location) =>
-            [
-              /** location id */
-              idToLabel[location] ?? "",
-              /** location geo data */
-              await getLocation(location),
-            ] as const,
-        ),
+        selectedLocations.value
+          .filter((entry) => !entry.includes("outreach"))
+          .map(
+            async (location) =>
+              [
+                /** location id */
+                idToLabel[location] ?? "",
+                /** location geo data */
+                await getLocation(location),
+              ] as const,
+          ),
       ),
     );
   },
@@ -903,6 +978,41 @@ watch(
   },
   { immediate: true },
 );
+
+/** is outreach info enabled */
+const showOutreach = computed(
+  () =>
+    selectedLevel.value === "county" &&
+    selectedLocations.value.includes("outreach"),
+);
+
+/** outreach info fields */
+const outreachFields = {
+  fit: {
+    label: "FIT kits" as const,
+    color: colors[0],
+    link: "https://medlineplus.gov/ency/patientinstructions/000704.htm",
+  },
+  radon: {
+    label: "Radon kits" as const,
+    color: colors[1],
+    link: "https://cdphe.colorado.gov/hm/testing-your-home-radon",
+  },
+  wwc: {
+    label: "WWC" as const,
+    color: colors[2],
+    link: "https://cdphe.colorado.gov/wwc",
+  },
+  "2m": {
+    label: "2Morrow" as const,
+    color: colors[3],
+    link: "https://medschool.cuanschutz.edu/colorado-cancer-center/community/CommunityOutreachEngagement/projects-and-activities/2morrow-health-app",
+  },
+  any_activity: {
+    label: "Any Events" as const,
+    color: colors[4],
+  },
+};
 </script>
 
 <style scoped>
@@ -1024,5 +1134,20 @@ watch(
 
 .note {
   flex-grow: 1;
+}
+
+.check {
+  align-self: center;
+  width: 7px;
+  height: 7px;
+  padding: 2px;
+  border: solid 1px black;
+  border-radius: 999px;
+  background: var(--color);
+  color: white;
+  stroke: white;
+  stroke-width: 50;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
 }
 </style>

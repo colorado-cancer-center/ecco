@@ -14,7 +14,7 @@ type Props = {
   newTab?: boolean;
 };
 
-const { to, newTab } = defineProps<Props>();
+const { to, newTab = undefined } = defineProps<Props>();
 
 type Slots = {
   default?: () => unknown;
