@@ -10,7 +10,8 @@ from db import get_session
 
 from models import (
     County,
-    Tract
+    Tract,
+    HealthRegion,
 )
 from fastapi import APIRouter
 
@@ -41,6 +42,17 @@ async def get_tracts(session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(Tract))
     tracts = result.scalars().all()
     return tracts
+
+@router.get("/healthregions", response_model=list[HealthRegion])
+async def get_healthregions(session: AsyncSession = Depends(get_session)):
+    """
+    Returns metadata and geometry for health regions, combinations of counties
+    for which specific data is tracked. The geometry itself is in the
+    `wkb_geometry` subkey and is in JSON-encoded GeoJSON format.
+    """
+    result = await session.execute(select(HealthRegion))
+    healthregions = result.scalars().all()
+    return healthregions
 
 # @router.get("/edds", response_model=list[Tract])
 # async def get_tracts(session: AsyncSession = Depends(get_session)):
