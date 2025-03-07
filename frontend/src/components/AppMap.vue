@@ -605,16 +605,10 @@ watchEffect((onCleanup) => {
   const style =
     (hover = false) =>
     (feature: FeatureLike) => {
-      const {
-        color,
-        icon,
-        iconHover,
-        value = 1,
-        dash,
-      } = feature.getProperties();
+      const { color, icon, iconHover, count, dash } = feature.getProperties();
       return new Style({
         text: new Text({
-          text: value,
+          text: count,
           font: "12px Roboto",
           fill: new Fill({ color: "white" }),
           stroke: new Stroke({ color: "black", width: 2 }),
