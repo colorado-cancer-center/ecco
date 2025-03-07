@@ -7,6 +7,11 @@ COPY ./requirements.txt /tmp/requirements.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install -r /tmp/requirements.txt
 
+# set our TZ to American/Denver, with the option
+# to override it at build time via the arg 'TZ'
+ARG TZ=America/Denver
+ENV TZ=${TZ}
+
 COPY ./start_app.sh /opt/start_app.sh
 
 WORKDIR /app
