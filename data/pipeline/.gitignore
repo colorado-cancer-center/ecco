@@ -1,0 +1,4 @@
+# ignore snakemake's environment and run-tracking metadata
+.snakemake
+# ignore the local cache of geocoding requests
+.geocoding

@@ -1,0 +1,364 @@
+import os
+from datetime import datetime
+
+
+# =============================================================================
+# === Reference variable definitions
+# =============================================================================
+
+# NOTE: the URLs below are stable as of March 7th 2025, but may need to be
+# reviewed from time to time to update them or fix broken links
+
+# URLs
+CIF_STATS_URL = "https://cancerinfocus.org/public-data/Current/us.zip"
+CIF_CODEBOOK_URL = "https://cancerinfocus.org/public-data/cif_variable_codebook.xlsx"
+CCRM_URL = "https://ucdamc-geo.maps.arcgis.com/sharing/rest/content/items/5ab17916dd07440f98f9bb35988cd434/data?f=json"
+HOUSE_SENATE_MEMBERS_XLSX_URL = "https://leg.colorado.gov/sites/default/files/memberdirectory_3_1_1.xlsx"
+CONGRESS_MEMBERS_URL = "https://clerk.house.gov/Members/ViewMemberList"
+
+# URLs for colorado geometry data
+COUNTY_BOUNDARIES_GEOJSON_URL = 'https://opendata.arcgis.com/api/v3/datasets/66c2642209684b90af84afcc559a5a02_5/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1' 
+TRACT_BOUNDARIES_GEOJSON_URL = 'https://opendata.arcgis.com/api/v3/datasets/a9f5b1a67bd74b2fa22279d141625335_3/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1'
+
+# URLs and metadata for CO legislative district maps
+LEG_MAPS_TO_URL = {
+    "2021_Approved_House_Plan_w_Final_Adjustments": {
+        "url": "https://redistricting.colorado.gov/rails/active_storage/blobs/redirect/"
+               "eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBBcjhEIiwiZXhwIjpudWxsLCJwdXIiOiJibG9iX2lkIn19"
+               "--ce9e9fcf6b39c1f7d8ea318e727d1e0ca8f19a92/2021_Approved_House_Plan_w_Final_Adjustments.zip",
+        "friendly_name": "house-map"
+    },
+    "2021_Approved_Senate_Plan_w_Final_Adjustments": {
+        "url": "https://redistricting.colorado.gov/rails/active_storage/blobs/redirect/"
+               "eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBBc0VEIiwiZXhwIjpudWxsLCJwdXIiOiJibG9iX2lkIn19"
+               "--3e163d6928a7c388874e81cb0dda49ee2b644d33/2021_Approved_Senate_Plan_w_Final_Adjustments.zip",
+        "friendly_name": "senate-map"
+    },
+    "2021_Approved_Congressional_Plan_with_Final_Adjustments": {
+        "url": "https://redistricting.colorado.gov/rails/active_storage/blobs/redirect/"
+               "eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBBcjBEIiwiZXhwIjpudWxsLCJwdXIiOiJibG9iX2lkIn19"
+               "--e091bab0fdcc0944ce431ca5708665efb8263228/2021_Approved_Congressional_Plan_with_Final_Adjustments.zip",
+        "friendly_name": "congressional-map"
+    }
+}
+
+# these files are expected to exist in cif/stats/; the actual filenames will be
+# of the form cif/stats/<sheet_name>_long_<MM-dd-YYYY>.csv
+# we normalize these to cif/stats/<sheet_name>_long_DATE.csv in the
+# 'extract_cif_stats' rule so that they can be used as snakemake inputs/outputs.
+# (to explain a bit: since we don't know what dates they'll have until we
+# download them, we can't declare them as inputs or outputs.)
+CIF_EXPECTED_SHEETS = [
+    "us_cancer_incidence_county",
+    "us_cancer_mortality_county",
+    "us_economy_county",
+    "us_environment_county",
+    "us_housing_trans_county",
+    "us_rf_and_screening_county",
+    "us_sociodemographics_county",
+    "us_disparity_county",
+    "us_economy_tract",
+    "us_environment_tract",
+    "us_food_desert_tract",
+    "us_housing_trans_tract",
+    "us_rf_and_screening_tract",
+    "us_sociodemographics_tract",
+    "us_disparity_tract",
+]
+
+# ------------
+# --- Paths
+# ------------
+
+# this folder contains the pipeline implementation (this file) as well as the
+# scripts folder.
+# (it's hardcoded to be a path inside the backend container at the moment, but
+# we should try to find a way to detect it robustly in the future.)
+PIPELINE_DIR = "/data/pipeline"
+
+# this is the /data folder, where we can find, e.g. reference files in
+# /data/reference as well as the staging folder under /data/staging
+DATA_ROOT = os.path.realpath(os.path.join(PIPELINE_DIR, ".."))
+
+# we construct a staging folder with the current date
+STAGING_TIMESTAMP = datetime.now().strftime("%Y-%m-%d")
+
+# this is the root folder where new release data is staged
+TARGET_DIR = os.path.join(DATA_ROOT, "staging", STAGING_TIMESTAMP)
+
+# geometry doesn't change much, so unless the user explicitly requests it
+# by setting INCLUDE_GEOMETRY=1, we don't download it again.
+INCLUDE_GEOMETRY = int(os.getenv("INCLUDE_GEOMETRY", 0))
+
+# Create output directories
+os.makedirs(TARGET_DIR, exist_ok=True)
+
+
+# =============================================================================
+# === Rules
+# =============================================================================
+
+# this rule is the entrypoint of the pipeline. it requests all the artifacts we
+# know we'll need when we import the staging data into the database via the
+# backend management commands.
+# snakemake uses this terminal 'all' rule to get all the other rules in this
+# file to run; you can think of it as defining the 'leaves' of the tree of
+# rules. any rule that declares a file listed here as an output will be
+# executed, unless the file already exists. this also applies to all other
+# input/output chains, which effectively implements caching of resources that
+# have already been acquired or processed (a really nice thing to have!)
+rule all:
+    input:
+        [ f"{TARGET_DIR}/cif/stats/{sheet}_long_DATE.csv" for sheet in CIF_EXPECTED_SHEETS ],
+        f"{TARGET_DIR}/cif/cif_variable_codebook.xlsx",
+        f"{TARGET_DIR}/cif/cif_meta.json",
+        f"{TARGET_DIR}/scp/state_cancer_profiles_incidence.csv",
+        f"{TARGET_DIR}/scp/state_cancer_profiles_mortality.csv",
+        f"{TARGET_DIR}/locations/ccrm/ccrm_locations.json",
+        f"{TARGET_DIR}/locations/legislative/memberdirectory_3_1_1.xlsx",
+        f"{TARGET_DIR}/locations/legislative/co_congress_members.csv",
+        [ f"{TARGET_DIR}/locations/legislative/{map_name}/{map_name}.geojson" for map_name in LEG_MAPS_TO_URL ],
+        f"{TARGET_DIR}/locations/locations-data.json",
+        *( 
+            [
+                f"{TARGET_DIR}/geom/Colorado_County_Boundaries.json",
+                f"{TARGET_DIR}/geom/Colorado_Census_Tract_Boundaries.geojson"
+            ] if INCLUDE_GEOMETRY else []
+        )
+
+# get the CiF codebook; this is mostly for manual reference, e.g. if we need to
+# check what's changed between releases
+rule download_cif_codebook:
+    output:
+        f"{TARGET_DIR}/cif/cif_variable_codebook.xlsx",
+    shell:
+        """
+        mkdir -p {TARGET_DIR}/cif
+        curl -L -o {TARGET_DIR}/cif/cif_variable_codebook.xlsx '{CIF_CODEBOOK_URL}'
+        """
+
+rule download_cif_archive:
+    output:
+        f"{TARGET_DIR}/cif/us.zip",
+    shell:
+        """
+        mkdir -p {TARGET_DIR}/cif
+        curl -L -o {TARGET_DIR}/cif/us.zip '{CIF_STATS_URL}'
+        """
+
+# given the CiF stats archive, extract the files and rename them to
+# have a consistent DATE suffix so that they can be used as snakemake inputs/outputs
+rule extract_cif_stats:
+    input:
+        f"{TARGET_DIR}/cif/us.zip",
+    output:
+        f"{TARGET_DIR}/cif/stats/measure_dictionary_v5-2.csv",
+        f"{TARGET_DIR}/cif/stats/RELEASE.txt",
+        [ f"{TARGET_DIR}/cif/stats/{sheet}_long_DATE.csv" for sheet in CIF_EXPECTED_SHEETS ],
+        f"{TARGET_DIR}/cif/stats/us_facilities_and_providers_DATE.csv",
+    shell:
+        """
+        mkdir -p {TARGET_DIR}/cif/stats
+        cd {TARGET_DIR}/cif/stats
+        unzip -o {TARGET_DIR}/cif/us.zip
+
+        # extract the date portion from one of the filenames
+        ACTUAL_DATE=$( ls us_*_long_*.csv | head -n 1 | sed -n 's/.*_long_\(.*\).csv/\1/p' )
+        # write it to a file named RELEASE.txt
+        echo "CIF files for release date ${{ACTUAL_DATE}}" > RELEASE.txt
+
+        # replace the variable date suffix for all the CSVs in cif/stats/
+        # so that they can be declared as ordinary snakemake inputs/outputs
+        for sheet in {CIF_EXPECTED_SHEETS}; do
+            mv ${{sheet}}_long_*.csv ${{sheet}}_long_DATE.csv
+        done
+
+        # move the facilities and providers file to a predictable location, too
+        mv us_facilities_and_providers_*.csv us_facilities_and_providers_DATE.csv
+
+        # remove the version suffix from the measure dictionary, too
+        # mv measure_dictionary_*.csv measure_dictionary_.csv
+        """
+
+# given the CiF stats files and the measure dictionary distributed with them,
+# extract metadata and write it as JSON to cif_meta.json.
+# (right now, the process of importing this metadata requires manually copying
+# the metadata into the backend.app.models.cif_meta.CIF_MEASURE_DESCRIPTIONS
+# variable with some light reformatting, but we'll soon automate that as well.)
+rule extract_cif_metadata:
+    input:
+        [ f"{TARGET_DIR}/cif/stats/{sheet}_long_DATE.csv" for sheet in CIF_EXPECTED_SHEETS ],
+        f"{TARGET_DIR}/cif/stats/measure_dictionary_v5-2.csv",
+    output:
+        f"{TARGET_DIR}/cif/cif_meta.json"
+    shell:
+        "python3 {PIPELINE_DIR}/scripts/cif/extract_cif_metadata.py {TARGET_DIR}/cif/stats/ -o {output}"
+
+# download the latest release of the State Cancer Profiles (SCP) data
+rule download_scp:
+    output:
+        f"{TARGET_DIR}/scp/state_cancer_profiles_incidence.csv",
+        f"{TARGET_DIR}/scp/state_cancer_profiles_mortality.csv"
+    shell:
+        """
+        mkdir -p {TARGET_DIR}/scp
+        cd {TARGET_DIR}/scp
+        RELEASE_TAG=$(curl -s https://api.github.com/repos/seandavi/state-cancer-profile-scraper/releases/latest | jq -r '.tag_name')
+        # mkdir -p ${{RELEASE_TAG}}
+        # cd ${{RELEASE_TAG}}
+        echo "SCP files for release tag ${{RELEASE_TAG}}" > RELEASE.txt
+        curl -LO https://github.com/seandavi/state-cancer-profile-scraper/releases/download/${{RELEASE_TAG}}/state_cancer_profiles_incidence.csv.gz
+        curl -LO https://github.com/seandavi/state-cancer-profile-scraper/releases/download/${{RELEASE_TAG}}/state_cancer_profiles_mortality.csv.gz
+        gunzip *.gz
+        """
+
+# download the Colorado Cancer Resource Map (CCRM) locations
+rule download_ccrm:
+    output:
+        f"{TARGET_DIR}/locations/ccrm/ccrm_locations.json"
+    shell:
+        """
+        mkdir -p {TARGET_DIR}/locations/ccrm
+        curl -L -o {TARGET_DIR}/locations/ccrm/ccrm_locations.json '{CCRM_URL}'
+        """
+
+# download the house and senate members Excel sheets for merging into
+# the house and senate map GeoJSON files
+rule download_house_senate_members:
+    output:
+        f"{TARGET_DIR}/locations/legislative/memberdirectory_3_1_1.xlsx",
+    shell:
+        """
+        mkdir -p {TARGET_DIR}/locations/legislative
+        curl -L -o {TARGET_DIR}/locations/legislative/memberdirectory_3_1_1.xlsx\
+            '{HOUSE_SENATE_MEMBERS_XLSX_URL}'
+        """
+
+# scrape the members of each congressional district and format the result
+# as a CSV for merging into the congressional district map GeoJSON file
+rule download_congress_district_members:
+    output:
+        f"{TARGET_DIR}/locations/legislative/co_congress_members.csv",
+    shell:
+        """
+        mkdir -p {TARGET_DIR}/locations/legislative
+        
+        curl -L '{CONGRESS_MEMBERS_URL}' \
+            | {PIPELINE_DIR}/scripts/locations/parse_congress_districts.sh \
+            > {TARGET_DIR}/locations/legislative/co_congress_members.csv
+        """
+
+# acquire the house, senate, and congressional district geometries and convert
+# them to GeoJSON for import
+rule download_legislative_maps:
+    output:
+        [ f"{TARGET_DIR}/locations/legislative/{map_name}/{map_name}.geojson" for map_name in LEG_MAPS_TO_URL ]
+    run:
+        shell("mkdir -p {TARGET_DIR}/locations/legislative")
+
+        for map_name in LEG_MAPS_TO_URL:
+            cur_map_url = LEG_MAPS_TO_URL[map_name]["url"]
+            cur_map_friendly = LEG_MAPS_TO_URL[map_name]["friendly_name"]
+
+            shell("""
+                curl -L -o {TARGET_DIR}/locations/legislative/{map_name}.zip '{cur_map_url}'
+                unzip -o {TARGET_DIR}/locations/legislative/{map_name}.zip -d {TARGET_DIR}/locations/legislative
+                SHP_FILE=$(find {TARGET_DIR}/locations/legislative/{map_name}/ -type f -name '*.shp')
+                PRJ_FILE=$(find {TARGET_DIR}/locations/legislative/{map_name}/ -type f -name '*.prj')
+                ogr2ogr -f GeoJSON \
+                    -s_srs $PRJ_FILE -t_srs EPSG:4326 \
+                    {TARGET_DIR}/locations/legislative/{map_name}/{map_name}.geojson $SHP_FILE
+            """)
+
+# use jq to reformat the legislative district maps' GeoJSON to be human readable
+# and to not have a giant filename.
+# (we may merge this step with the download_legislative_maps rule in the future)
+rule format_friendly_legislative_maps:
+    input:
+        [ f"{TARGET_DIR}/locations/legislative/{map_name}/{map_name}.geojson" for map_name in LEG_MAPS_TO_URL ],
+    output:
+        [ f"{TARGET_DIR}/locations/legislative/{entry['friendly_name']}.geojson" for entry in LEG_MAPS_TO_URL.values() ]
+    run:
+        for map_name in LEG_MAPS_TO_URL:
+            cur_map_friendly = LEG_MAPS_TO_URL[map_name]["friendly_name"]
+
+            shell("""
+            # reformat the geojson to be nicer
+            jq '.' {TARGET_DIR}/locations/legislative/{map_name}/{map_name}.geojson \
+                > {TARGET_DIR}/locations/legislative/{cur_map_friendly}.geojson
+            """
+            )
+
+# given the following sources, produces a locations-data.json file
+# that is fed to the backend to allow locations to be plotted on the map.
+# sources:
+# - CiF stats, specifically the US facilities and providers list
+# - Colorado Cancer Resource Map (CCRM) locations
+# - Legislative (House, Senate, Congressional) district maps
+# - Members of each legislative district
+rule create_locations_json:
+    input:
+        f"{DATA_ROOT}/reference/locations/locations.json",
+        f"{TARGET_DIR}/locations/ccrm/ccrm_locations.json",
+        f"{TARGET_DIR}/cif/stats/us_facilities_and_providers_DATE.csv",
+        [ f"{TARGET_DIR}/locations/legislative/{map_name}/{map_name}.geojson" for map_name in LEG_MAPS_TO_URL ],
+        f"{TARGET_DIR}/locations/legislative/memberdirectory_3_1_1.xlsx",
+        f"{TARGET_DIR}/locations/legislative/co_congress_members.csv",
+    output:
+        f"{TARGET_DIR}/locations/locations-data.json"
+    shell:
+        """
+        python3 {PIPELINE_DIR}/scripts/locations/sources_to_locdata.py \
+            {DATA_ROOT}/reference/locations/locations.json \
+            {TARGET_DIR}/locations/ccrm/ccrm_locations.json \
+            {TARGET_DIR}/cif/stats/us_facilities_and_providers_DATE.csv \
+            {TARGET_DIR}/locations/legislative/2021_Approved_House_Plan_w_Final_Adjustments/2021_Approved_House_Plan_w_Final_Adjustments.geojson \
+            {TARGET_DIR}/locations/legislative/2021_Approved_Senate_Plan_w_Final_Adjustments/2021_Approved_Senate_Plan_w_Final_Adjustments.geojson \
+            {TARGET_DIR}/locations/legislative/2021_Approved_Congressional_Plan_with_Final_Adjustments/2021_Approved_Congressional_Plan_with_Final_Adjustments.geojson \
+            {TARGET_DIR}/locations/legislative/memberdirectory_3_1_1.xlsx \
+            {TARGET_DIR}/locations/legislative/co_congress_members.csv \
+            --output {output}
+        """
+
+# acquires Colorado county and tract geomety
+# (since this data rarely changes, the pipeline config currently doesn't
+# download the geometry, and the backend doesn't import from this staging folder
+# anyway; instead the backend loads it from /data/geometry every time the
+# backend container boots. if we do find the need to pull the geometry for
+# releases, we'll have to change the backend to not load it from /data/geometry
+# but instead update the data loading part to load it at db dump generation
+# time.)
+rule download_co_geometry:
+    output:
+        f"{TARGET_DIR}/geom/Colorado_County_Boundaries.json",
+        f"{TARGET_DIR}/geom/Colorado_Census_Tract_Boundaries.geojson"
+    shell:
+        """
+        mkdir -p {TARGET_DIR}/geom
+        curl -L -o {TARGET_DIR}/geom/Colorado_County_Boundaries.json \
+            '{COUNTY_BOUNDARIES_GEOJSON_URL}'
+        curl -L -o {TARGET_DIR}/geom/Colorado_Census_Tract_Boundaries.geojson \
+            '{TRACT_BOUNDARIES_GEOJSON_URL}'
+        """
+
+# acquires econonomic development districts (EDDs) for Colorado
+# (currently unused, but we have it here for reference should we need it)
+rule download_co_edds:
+    output:
+        f"{TARGET_DIR}/geom/Colorado_2023_Economic_Development_Regions.geojson"
+    shell:
+        """
+        mkdir -p {TARGET_DIR}/geom
+        cd {TARGET_DIR}/geom
+
+        echo "* Downloading economic development districts (EDDs), Jan-2023 version, from statsamerica.org..."
+
+        curl -L -o 'edds.xlsx' \
+            'https://www.statsamerica.org/geography/Economic-Development-Districts-Jan-2023.xlsx'
+
+        echo "* Generating EDD geometry..."
+
+        ogr2ogr -f GeoJSON -t_srs EPSG:4326 \
+            {TARGET_DIR}/geom/Colorado_2023_Economic_Development_Regions.geojson \
+            edds.xlsx -nln edds -nlt MultiPolygon
+        """
