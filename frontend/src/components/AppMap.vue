@@ -145,7 +145,7 @@ import TileLayer from "ol/layer/Tile";
 import VectorLayer from "ol/layer/Vector";
 import { XYZ } from "ol/source";
 import VectorSource from "ol/source/Vector";
-import { Fill, Icon, Stroke, Style } from "ol/style";
+import { Fill, Icon, Stroke, Style, Text } from "ol/style";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useElementSize, useFullscreen } from "@vueuse/core";
 import { type Unit } from "@/api";
@@ -604,19 +604,28 @@ watchEffect((onCleanup) => {
   /** generate styles per feature */
   const style =
     (hover = false) =>
-    (feature: FeatureLike) =>
-      new Style({
-        fill: new Fill({
-          color: hover ? feature.get("color") + "20" : "transparent",
+    (feature: FeatureLike) => {
+      const {
+        color,
+        icon,
+        iconHover,
+        value = 1,
+        dash,
+      } = feature.getProperties();
+      return new Style({
+        text: new Text({
+          text: value,
+          font: "12px Roboto",
+          fill: new Fill({ color: "white" }),
+          stroke: new Stroke({ color: "black", width: 2 }),
+          offsetY: 1,
         }),
-        stroke: new Stroke({
-          color: feature.get("color"),
-          width: hover ? 4 : 2,
-          lineDash: feature.get("dash"),
-        }),
-        image: hover ? feature.get("iconHover") : feature.get("icon"),
+        fill: new Fill({ color: hover ? color + "20" : "transparent" }),
+        stroke: new Stroke({ color, width: hover ? 4 : 2, lineDash: dash }),
+        image: hover ? iconHover : icon,
         zIndex: hover ? 2 : 1,
       });
+    };
 
   /** base styles */
   locationsLayer.setStyle(style());
