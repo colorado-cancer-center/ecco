@@ -1,38 +1,94 @@
-name: Create Monthly ECCO Release
+name: Create Monthly ECCO Database
 
-# run both every month on the 3rd and also
-# via the workflow_dispatch event
+# run every month on the 3rd
+# and also manually via the workflow_dispatch event
 on:
   workflow_dispatch:
+    inputs:
+      create_release:
+        type: boolean
+        description: 'Publish the ECCO database dump as a GH release'
+        required: false
+        default: false
+      create_release_pr:
+        type: boolean
+        description: 'Create a PR that includes the new dump'
+        required: false
+        default: true
+      # debug_enabled:
+      #   type: boolean
+      #   description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+      #   required: false
+      #   default: false
   schedule:
     - cron: '0 0 3 * *'
+
 
 jobs:
   create_release:
     runs-on: 'ubuntu-latest'
+    env:
+      NONINTERACTIVE: 1
+      FORCE_ACQUIRE_RELEASE: 1
+      FORCE_DELETE_DB_BEFORE_IMPORT: 1
+      POSTGRES_DATABASE: "ecco"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PORT: "5432"
+      POSTGRES_HOST: "db"
+      MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+      CURDATE: ""
 
-    # the pipeline needs to do the following:
-    # 1. check out the repo
-    # 2. set up docker with docker compose
-    # 3. set the following env vars:
-    #    - NONINTERACTIVE=1
-    #    - FORCE_ACQUIRE_RELEASE=1
-    #    - FORCE_DELETE_DB_BEFORE_IMPORT=1
-    # 3. run the script ./data/pipeline/produce_release.sh
-    # 4. copy the latest dump from /db-exports/ to /releases/
-    # 5. create a new release on the repo with the dump as an asset
+    # we need to be able to publish GH images, releases, and to create PRs
+    # in this workflow
+    permissions:
+      packages: write
+      contents: write
+      pull-requests: write
 
     steps:
     - uses: 'actions/checkout@v4'
 
+    - name: Add YYYY-mm-dd to the environment as CURDATE
+      run: |
+        export TZ=America/Denver
+        echo "CURDATE=$( date +%Y-%m-%d )" >> $GITHUB_ENV
+
+    - name: Write .env file with random pg password, other essentials
+      run: |-
+          # since we just need a shared pg secret, we'll randomly generate
+          # one here
+          export POSTGRES_PASSWORD=$( LC_ALL=C tr -dc '[a-zA-Z0-9]' < /dev/urandom | head -c 13; echo )
+
+          # write it all out to .env
+          cat <<EOF > .env
+          POSTGRES_DATABASE="${POSTGRES_DATABASE}"
+          POSTGRES_USER="${POSTGRES_USER}"
+          POSTGRES_PASSWORD="${POSTGRES_PASSWORD}"
+          POSTGRES_PORT="${POSTGRES_PORT}"
+          POSTGRES_HOST="${POSTGRES_HOST}"
+          MAPS_API_KEY="${MAPS_API_KEY}"
+          EOF
+
     - name: Set up Docker Compose
       uses: docker/setup-compose-action@v1
 
-    - name: Set up env vars
-      run: |-
-          echo "NONINTERACTIVE=1" >> $GITHUB_ENV
-          echo "FORCE_ACQUIRE_RELEASE=1" >> $GITHUB_ENV
-          echo "FORCE_DELETE_DB_BEFORE_IMPORT=1" >> $GITHUB_ENV
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Cache Docker layers
+      uses: docker/bake-action@v6
+      with:
+        push: false
+        load: true
+        targets: backend,db
+        files: |-
+          docker-compose.yml
+          docker-compose-cache.json
+
+    # # Enable tmate debugging of manually-triggered workflows if the input option was provided
+    # - name: Setup tmate session
+    #   uses: mxschmitt/action-tmate@v3
+    #   if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
     - name: Produce release
       run: |-
@@ -43,8 +99,30 @@ jobs:
       run: |-
           # list the /db-exports folder and sort
           # by date, taking the most recent file
-          cp $( ls -t /db-exports/ | head -n 1 ) /tmp/release/
+          mkdir -p /tmp/release/
+          cd ./db-exports/
+          export RELEASE_DB_DUMP=$( ls -t . | head -n 1 )
+          cp ${RELEASE_DB_DUMP} /tmp/release/
 
-    - name: Create release
+          # write out the RELEASE_DB_DUMP to the environment
+          echo "RELEASE_DB_DUMP=${RELEASE_DB_DUMP}" >> $GITHUB_ENV
+
+    - name: Create GH release containing dumpfile
+      if: ${{ github.event.inputs.create_release == 'true' }}
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |-
-          gh release create $( date +%Y-%m-%d ) /tmp/release/
+          gh release create ${{ env.CURDATE }} /tmp/release/${RELEASE_DB_DUMP}
+
+    - name: Create Pull Request
+      if: ${{ github.event.inputs.create_release_pr == 'true' }}
+      # uses: peter-evans/create-pull-request@v7.0.8
+      uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e
+      with:
+        commit-message: 'Add database dump for ${{ env.CURDATE }} release'
+        title: 'Release database dump for ${{ env.CURDATE }}'
+        body: 'This PR contains the database dump for the ${{ env.CURDATE }} release.'
+        branch: 'release-dump-${{ env.CURDATE }}'
+        labels: 'release'
+        draft: true
+        add-paths: "./db-exports/"

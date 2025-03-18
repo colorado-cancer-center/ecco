@@ -1,0 +1,37 @@
+{
+    "target": {
+      "backend": {
+        "cache-from": [
+          "type=gha,scope=colorado-cancer-center/ecco/backend"
+        ],
+        "cache-to": [
+          "type=gha,mode=max,scope=colorado-cancer-center/ecco/backend"
+        ],
+        "output": [
+          "type=docker"
+        ]
+      },
+      "db": {
+        "cache-from": [
+          "type=gha,scope=colorado-cancer-center/ecco/db"
+        ],
+        "cache-to": [
+          "type=gha,mode=max,scope=colorado-cancer-center/ecco/db"
+        ],
+        "output": [
+          "type=docker"
+        ]
+      },
+      "frontend": {
+        "cache-from": [
+          "type=gha,scope=colorado-cancer-center/ecco/frontend"
+        ],
+        "cache-to": [
+          "type=gha,mode=max,scope=colorado-cancer-center/ecco/frontend"
+        ],
+        "output": [
+          "type=docker"
+        ]
+      }
+   }
+}
