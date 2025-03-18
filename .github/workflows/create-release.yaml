@@ -15,6 +15,11 @@ on:
         description: 'Create a PR that includes the new dump'
         required: false
         default: true
+      disable_staging_cache:
+        type: boolean
+        description: "Disable using today's staged data cache for this run"
+        required: false
+        default: false
       # debug_enabled:
       #   type: boolean
       #   description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
@@ -90,10 +95,29 @@ jobs:
     #   uses: mxschmitt/action-tmate@v3
     #   if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
+    # retrieve the ./data/staging/ folder from the cache if possible
+    - name: Retrieve current date's staging data from cache
+      id: cache-staging-restore
+      if: ${{ !github.event.inputs.disable_staging_cache }}
+      uses: actions/cache/restore@v4
+      with:
+        path: ./data/staging/${{ env.CURDATE }}
+        key: staging-${{ env.CURDATE }}-data
+
     - name: Produce release
       run: |-
           cd ./data/pipeline
           ./produce_release.sh
+
+    # write the staging data back into the cache
+    # (always run this, even if the produce release step failed)
+    - name: Cache staging data
+      continue-on-error: true
+      id: cache-staging-store
+      uses: actions/cache/save@v4
+      with:
+        path: ./data/staging/${{ env.CURDATE }}
+        key: ${{ steps.cache-staging-restore.outputs.cache-primary-key }}
 
     - name: Copy dump to releases
       run: |-
