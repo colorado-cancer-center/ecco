@@ -121,8 +121,26 @@ jobs:
       with:
         commit-message: 'Add database dump for ${{ env.CURDATE }} release'
         title: 'Release database dump for ${{ env.CURDATE }}'
-        body: 'This PR contains the database dump for the ${{ env.CURDATE }} release.'
+        body: |
+          This PR contains the database dump for the ${{ env.CURDATE }} release.
+
+          ## Review Instructions
+
+          Check out this branch on your local machine, then bring up the stack
+          by running:
+
+          ```bash
+          ./run_stack.sh
+          ```
+
+          The database dump in this PR will automatically be loaded, and
+          the stack, including the frontend, will eventually boot.
+
+          Browse the site at http://localhost:8001 and verify the new data.
+
+          If you're satisfied, merge this PR to main; if not, comment
+          on the PR with any issues found in the release.
+          
         branch: 'release-dump-${{ env.CURDATE }}'
         labels: 'release'
-        draft: true
         add-paths: "./db-exports/"
