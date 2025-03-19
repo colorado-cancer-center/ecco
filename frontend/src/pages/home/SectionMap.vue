@@ -357,6 +357,7 @@
         </template>
 
         <template v-if="countyWide.length" #top-right>
+          <b>County Outreach</b>
           <div class="mini-table">
             <template v-for="(field, key) of countyWide" :key="key">
               <div class="check" :style="{ '--color': field.color }">
@@ -942,7 +943,7 @@ const countyWide = computed(() => {
   if (selectedLevel.value !== "county") return [];
 
   /** get selected overview fields */
-  let selected = Object.entries(extraLocationList["Outreach (county overview)"])
+  let selected = Object.entries(extraLocationList["Outreach (county)"])
     .filter(([, id]) => selectedLocations.value.includes(id))
     .map(([label, id]) => ({ id, label }));
 
@@ -1192,10 +1193,9 @@ watch(
   align-items: center;
   align-self: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
-  border: solid 2px var(--black);
-  border-radius: 999px;
+  width: 20px;
+  height: 20px;
+  border: solid 1px var(--black);
   background: var(--color);
   color: var(--white);
   font-size: 12px;

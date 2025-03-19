@@ -123,7 +123,7 @@ type _LocationList = {
 /** extra hard-coded location list entries */
 /** TEMPORARY: should eventually come from backend */
 export const extraLocationList = {
-  "Outreach (county overview)": {
+  "Outreach (county)": {
     "FIT Kits": "county-outreach-fit-kits",
     "Radon Kits": "county-outreach-radon-kits",
     "Women's Wellness Centers": "county-outreach-wwc",

@@ -122,7 +122,7 @@ function getMarker(
     /** scale to size */
     const sizeWidth = size * (width / height);
     const sizeHeight = size;
-    const stroke = 2 * (height / size);
+    const stroke = 1 * (height / size);
 
     /** styles */
     svg.style.color = color;
@@ -130,7 +130,7 @@ function getMarker(
     svg.style.strokeWidth = String(stroke * 2);
     svg.style.strokeLinecap = "round";
     svg.style.strokeLinejoin = "round";
-    svg.style.paintOrder = "stroke";
+    svg.style.paintOrder = "stroke fill";
     svg.style.overflow = "visible";
 
     /** expand view box to include stroke */
