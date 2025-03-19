@@ -256,8 +256,8 @@ blockquote {
   overflow-wrap: anywhere;
 }
 
-.mini-table:empty::before {
-  content: "No Info";
+.mini-table:empty {
+  display: none;
 }
 
 .charts {

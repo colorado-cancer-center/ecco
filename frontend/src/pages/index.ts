@@ -1,10 +1,10 @@
 import { createRouter, createWebHistory } from "vue-router";
-import PageContact from "@/pages/PageContact.vue";
-import PageCounty from "@/pages/PageCounty.vue";
-import PageSources from "@/pages/PageSources.vue";
+import PageContact from "@/pages/contact/PageContact.vue";
+import PageCounty from "@/pages/county/PageCounty.vue";
+import PageSources from "@/pages/sources/PageSources.vue";
 import { waitFor } from "@/util/misc";
-import PageAbout from "./PageAbout.vue";
-import PageHome from "./PageHome.vue";
+import PageAbout from "./about/PageAbout.vue";
+import PageHome from "./home/PageHome.vue";
 
 export const routes = [
   {

@@ -356,60 +356,60 @@
           </div>
         </template>
 
-        <template v-if="showOutreach" #top-right>
+        <template v-if="countyWide.length" #top-right>
           <div class="mini-table">
-            <template v-for="(field, key) of outreachFields" :key="key">
-              <font-awesome-icon
-                :icon="faCheck"
-                class="check"
-                :style="{ '--color': field.color }"
-              />
-              <AppLink v-if="'link' in field" :to="field.link">
+            <template v-for="(field, key) of countyWide" :key="key">
+              <div class="check" :style="{ '--color': field.color }">
+                <font-awesome-icon :icon="faCheck" />
+              </div>
+              <AppLink v-if="field.link" :to="field.link">
                 {{ field.label }}
               </AppLink>
-              <div v-else>{{ field.label }}</div>
+              <span v-else>{{ field.label }}</span>
             </template>
           </div>
         </template>
 
         <!-- geometry feature label -->
         <template
-          v-if="showOutreach"
+          v-if="countyWide.length"
           #geometry-label="{ feature }: { feature: FeatureInfo }"
         >
           <div>
-            <template v-for="(field, key) of outreachFields" :key="key">
-              <font-awesome-icon
-                v-if="feature[key]"
-                :icon="faCheck"
+            <template v-for="(field, key) of countyWide" :key="key">
+              <div
+                v-if="feature[field.checkKey]"
                 class="check"
                 :style="{ '--color': field.color }"
-              />
+              >
+                <span v-if="field.countKey && feature[field.countKey]">
+                  {{ feature[field.countKey] }}
+                </span>
+                <font-awesome-icon v-else :icon="faCheck" />
+              </div>
             </template>
           </div>
         </template>
 
         <!-- feature popup -->
         <template #popup="{ feature }: { feature: FeatureInfo }">
-          <!-- name -->
-          <template v-if="feature.name">
-            <strong>{{ feature.name }}</strong>
-          </template>
+          <!-- main name/identifier -->
 
-          <!-- id -->
-          <template v-if="feature.fips">
-            <strong>Census Tract<br />{{ feature.fips }}</strong>
-          </template>
+          <strong v-if="feature.name">{{ feature.name }}</strong>
 
-          <hr />
+          <span v-if="feature.type">{{ feature.type }}</span>
 
-          <!-- district -->
-          <template v-if="feature.district">
-            <strong>District {{ feature.district }}</strong>
-          </template>
+          <strong v-if="feature.fips">
+            Census Tract<br />{{ feature.fips }}
+          </strong>
+
+          <strong v-if="feature.district">
+            District {{ feature.district }}
+          </strong>
+
+          <!-- main value -->
 
           <div class="mini-table">
-            <!-- primary "value" for feature -->
             <template
               v-if="
                 typeof feature.value === 'number' ||
@@ -422,7 +422,6 @@
               <span>{{ formatValue(feature.value, values?.unit) }}</span>
             </template>
 
-            <!-- average annual count -->
             <template
               v-if="
                 typeof feature.aac === 'number' ||
@@ -433,13 +432,20 @@
               <span>{{ formatValue(feature.aac, values?.unit) }}</span>
             </template>
 
-            <!-- organization -->
+            <template v-if="feature.count">
+              <span>Count</span>
+              <span>{{ formatValue(feature.count) }}</span>
+            </template>
+          </div>
+
+          <!-- extra info -->
+
+          <div class="mini-table">
             <template v-if="feature.org">
               <span>Org</span>
               <span>{{ feature.org }}</span>
             </template>
 
-            <!-- link -->
             <template v-if="typeof feature.link === 'string'">
               <span>Link</span>
               <AppLink :to="feature.link">
@@ -447,76 +453,87 @@
               </AppLink>
             </template>
 
-            <!-- representative -->
             <template v-if="feature.representative">
               <span>Representative</span>
               <span>{{ feature.representative }}</span>
             </template>
 
-            <!-- party -->
             <template v-if="feature.party">
               <span>Party</span>
               <span>{{ feature.party }}</span>
             </template>
 
-            <!-- email -->
             <template v-if="feature.email">
               <span>Email</span>
               <span>{{ feature.email }}</span>
             </template>
 
-            <!-- address -->
             <template v-if="feature.address">
               <span>Address</span>
               <span>{{ feature.address }}</span>
             </template>
 
-            <!-- phone -->
             <template v-if="feature.phone">
               <span>Phone</span>
               <span>{{ feature.phone }}</span>
             </template>
 
-            <!-- notes -->
             <template v-if="feature.notes">
               <span>Notes</span>
               <span>{{ feature.notes }}</span>
             </template>
           </div>
 
-          <!-- outreach data -->
-          <hr />
+          <!-- outreach -->
 
-          <div v-if="showOutreach" class="mini-table">
-            <template v-if="feature.num_fit">
-              <AppLink :to="outreachFields.fit.link">
-                {{ outreachFields.fit.label }}
-              </AppLink>
-              <span>
-                {{ formatValue(feature.num_fit) }}
-              </span>
+          <div v-if="countyWide.length" class="mini-table">
+            <template v-if="feature.fit_kits">
+              <span>FIT Kits</span>
+              <span>{{ formatValue(feature.fit_kits) }}</span>
             </template>
-            <template v-if="feature.num_radon">
-              <AppLink :to="outreachFields.radon.link">
-                {{ outreachFields.radon.label }}
-              </AppLink>
-              <span>
-                {{ formatValue(feature.num_radon) }}
-              </span>
+            <template v-if="feature.radon_kits">
+              <span>Radon Kits</span>
+              <span>{{ formatValue(feature.radon_kits) }}</span>
             </template>
-            <template v-if="feature.total_kits">
-              <span>Total kits</span>
+            <!-- <template v-if="feature.total_kits">
+              <span>Total Kits</span>
               <span>{{ formatValue(feature.total_kits) }}</span>
+            </template> -->
+            <template v-if="feature.community_events">
+              <span>Community Events</span>
+              <span>{{ formatValue(feature.community_events) }}</span>
             </template>
-            <template v-if="feature.total_events">
-              <span>Total events</span>
+            <template v-if="feature.health_fairs">
+              <span>Health Fairs</span>
+              <span>{{ formatValue(feature.health_fairs) }}</span>
+            </template>
+            <template v-if="feature.educational_talks">
+              <span>Educational Talks</span>
+              <span>{{ formatValue(feature.educational_talks) }}</span>
+            </template>
+            <template v-if="feature.radio_talks">
+              <span>Radio Talks</span>
+              <span>{{ formatValue(feature.radio_talks) }}</span>
+            </template>
+            <template v-if="feature.school_church_events">
+              <span>School/Church Events</span>
+              <span>{{ formatValue(feature.school_church_events) }}</span>
+            </template>
+            <!-- <template v-if="feature.total_events">
+              <span>Total Events</span>
               <span>{{ formatValue(feature.total_events) }}</span>
+            </template> -->
+            <template v-if="feature.womens_wellness_centers">
+              <span>Women's Wellness Centers</span>
+              <span>{{ formatValue(feature.womens_wellness_centers) }}</span>
+            </template>
+            <template v-if="feature['2morrow_signups']">
+              <span>2morrow Signups</span>
+              <span>{{ formatValue(feature["2morrow_signups"]) }}</span>
             </template>
           </div>
 
-          <hr />
-
-          <!-- link to full data for county -->
+          <!-- actions -->
 
           <AppButton
             v-if="selectedLevel === 'county' && 'county' in feature"
@@ -599,7 +616,7 @@ import {
   watchEffect,
 } from "vue";
 import type { ShallowRef, WatchStopHandle } from "vue";
-import { clamp, cloneDeep, isEmpty, mapValues } from "lodash";
+import { clamp, cloneDeep, isEmpty, mapValues, orderBy } from "lodash";
 import {
   faComment,
   faHandPointer,
@@ -626,7 +643,13 @@ import type {
   LocationProps,
   Values,
 } from "@/api";
-import { getDownload, getGeo, getLocation, getValues } from "@/api";
+import {
+  extraLocationList,
+  getDownload,
+  getGeo,
+  getLocation,
+  getValues,
+} from "@/api";
 import AppAccordion from "@/components/AppAccordion.vue";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
@@ -911,13 +934,72 @@ const locationOptions = computed(() => {
       entries.push({ id, label });
   }
 
-  entries.unshift(
-    { group: "Outreach" },
-    { id: "outreach", label: "CU Cancer Center" },
-  );
-
   return entries;
 });
+
+/** county overview outreach data */
+const countyWide = computed(() => {
+  if (selectedLevel.value !== "county") return [];
+
+  /** get selected overview fields */
+  let selected = Object.entries(extraLocationList["Outreach (county overview)"])
+    .filter(([, id]) => selectedLocations.value.includes(id))
+    .map(([label, id]) => ({ id, label }));
+
+  /** preserve selected order */
+  selected = orderBy(selected, ({ id }) => selectedLocations.value.indexOf(id));
+
+  /** set field props */
+  const fields = selected.map(({ label, id }, index) => ({
+    /** actual location "id" (for url, getLocation, etc) */
+    id,
+    /** key to access on feature to determine if checked or not */
+    checkKey: (
+      {
+        "county-outreach-fit-kits": "has_fit_kits",
+        "county-outreach-radon-kits": "has_radon_kits",
+        "county-outreach-wwc": "has_womens_wellness_center",
+        "county-outreach-2morrow": "has_2morrow",
+        "county-outreach-any-activity": "has_any_activity",
+      } as const
+    )[id] satisfies keyof GeoProps,
+    /** key to access on feature to determine count */
+    countKey: (
+      {
+        "county-outreach-fit-kits": "fit_kits",
+        "county-outreach-radon-kits": "radon_kits",
+        "county-outreach-wwc": "womens_wellness_centers",
+        "county-outreach-2morrow": "2morrow_signups",
+        "county-outreach-any-activity": null,
+      } as const
+    )[id] satisfies keyof GeoProps | null,
+    /** human-readable label */
+    label,
+    /** icon color */
+    color: colors[index] ?? "",
+    /** relevant link */
+    link: {
+      "county-outreach-fit-kits":
+        "https://medlineplus.gov/ency/patientinstructions/000704.htm",
+      "county-outreach-radon-kits":
+        "https://cdphe.colorado.gov/hm/testing-your-home-radon",
+      "county-outreach-wwc": "https://cdphe.colorado.gov/wwc",
+      "county-outreach-2morrow":
+        "https://medschool.cuanschutz.edu/colorado-cancer-center/community/CommunityOutreachEngagement/projects-and-activities/2morrow-health-app",
+      "county-outreach-any-activity": "",
+    }[id],
+  }));
+
+  return fields;
+});
+
+/**
+ * locations that are in location dropdown, but aren't real "locations" in
+ * backend and shouldn't be queried for
+ */
+const fakeLocations = computed<string[]>(() => [
+  ...countyWide.value.map(({ id }) => id),
+]);
 
 /** get location data to pass to map based on selected locations */
 const { query: loadLocations, data: locations } = useQuery(
@@ -934,7 +1016,8 @@ const { query: loadLocations, data: locations } = useQuery(
       /** query for locations in parallel */
       await Promise.all(
         selectedLocations.value
-          .filter((entry) => !entry.includes("outreach"))
+          /** skip locations that shouldn't actually be queried for */
+          .filter((entry) => !fakeLocations.value.includes(entry))
           .map(
             async (location) =>
               [
@@ -950,7 +1033,10 @@ const { query: loadLocations, data: locations } = useQuery(
   undefined,
   true,
 );
-watch(selectedLocations, loadLocations, { immediate: true, deep: true });
+watch([selectedLocations, fakeLocations], loadLocations, {
+  immediate: true,
+  deep: true,
+});
 
 watchEffect(() => {
   /** if manual min/max off */
@@ -978,41 +1064,6 @@ watch(
   },
   { immediate: true },
 );
-
-/** is outreach info enabled */
-const showOutreach = computed(
-  () =>
-    selectedLevel.value === "county" &&
-    selectedLocations.value.includes("outreach"),
-);
-
-/** outreach info fields */
-const outreachFields = {
-  fit: {
-    label: "FIT kits" as const,
-    color: colors[0],
-    link: "https://medlineplus.gov/ency/patientinstructions/000704.htm",
-  },
-  radon: {
-    label: "Radon kits" as const,
-    color: colors[1],
-    link: "https://cdphe.colorado.gov/hm/testing-your-home-radon",
-  },
-  wwc: {
-    label: "WWC" as const,
-    color: colors[2],
-    link: "https://cdphe.colorado.gov/wwc",
-  },
-  "2m": {
-    label: "2Morrow" as const,
-    color: colors[3],
-    link: "https://medschool.cuanschutz.edu/colorado-cancer-center/community/CommunityOutreachEngagement/projects-and-activities/2morrow-health-app",
-  },
-  any_activity: {
-    label: "Any Events" as const,
-    color: colors[4],
-  },
-};
 </script>
 
 <style scoped>
@@ -1137,17 +1188,26 @@ const outreachFields = {
 }
 
 .check {
+  display: flex;
+  align-items: center;
   align-self: center;
-  width: 7px;
-  height: 7px;
-  padding: 2px;
-  border: solid 1px black;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: solid 2px var(--black);
   border-radius: 999px;
   background: var(--color);
-  color: white;
-  stroke: white;
-  stroke-width: 50;
-  stroke-linejoin: round;
+  color: var(--white);
+  font-size: 12px;
+  -webkit-text-stroke: 2px var(--black);
   paint-order: stroke fill;
+}
+
+.check > svg {
+  height: 0.75em;
+  stroke: currentColor;
+  stroke-width: 50px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 </style>

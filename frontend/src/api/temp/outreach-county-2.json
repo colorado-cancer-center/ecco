@@ -1,0 +1,154 @@
+[
+  {
+    "county": "Adams County",
+    "womens_wellness_centers": 5
+  },
+  {
+    "county": "Alamosa County",
+    "womens_wellness_centers": 2
+  },
+  {
+    "county": "Arapahoe County",
+    "womens_wellness_centers": 5
+  },
+  {
+    "county": "Archuleta County",
+    "womens_wellness_centers": 1
+  },
+  {
+    "county": "Bent County",
+    "womens_wellness_centers": 1
+  },
+  {
+    "county": "Boulder County",
+    "womens_wellness_centers": 1
+  },
+  {
+    "county": "Chaffee County",
+    "womens_wellness_centers": 3
+  },
+  {
+    "county": "Conejos County",
+    "womens_wellness_centers": 1
+  },
+  {
+    "county": "Costilla County",
+    "womens_wellness_centers": 1
+  },
+  {
+    "county": "Crowley County",
+    "womens_wellness_centers": 1
+  },
+  {
+    "county": "Custer County",
+    "womens_wellness_centers": 1
+  },
+  {
+    "county": "Delta County",
+    "womens_wellness_centers": 1
+  },
+  {
+    "county": "Denver County",
+    "womens_wellness_centers": 10
+  },
+  {
+    "county": "Douglas County",
+    "womens_wellness_centers": 1
+  },
+  {
+    "county": "El Paso County",
+    "womens_wellness_centers": 3
+  },
+  {
+    "county": "Fremont County",
+    "womens_wellness_centers": 1
+  },
+  {
+    "county": "Garfield County",
+    "womens_wellness_centers": 3
+  },
+  {
+    "county": "Gunnison County",
+    "womens_wellness_centers": 1
+  },
+  {
+    "county": "Jefferson County",
+    "womens_wellness_centers": 6
+  },
+  {
+    "county": "Kit Carson County",
+    "womens_wellness_centers": 3
+  },
+  {
+    "county": "La Plata County",
+    "womens_wellness_centers": 1
+  },
+  {
+    "county": "Lake County",
+    "womens_wellness_centers": 2
+  },
+  {
+    "county": "Larimer County",
+    "womens_wellness_centers": 1
+  },
+  {
+    "county": "Lincoln County",
+    "womens_wellness_centers": 1
+  },
+  {
+    "county": "Mesa County",
+    "womens_wellness_centers": 3
+  },
+  {
+    "county": "Moffat County",
+    "womens_wellness_centers": 1
+  },
+  {
+    "county": "Montrose County",
+    "womens_wellness_centers": 3
+  },
+  {
+    "county": "Otero County",
+    "womens_wellness_centers": 2
+  },
+  {
+    "county": "Park County",
+    "womens_wellness_centers": 2
+  },
+  {
+    "county": "Pitkin County",
+    "womens_wellness_centers": 1
+  },
+  {
+    "county": "Prowers County",
+    "womens_wellness_centers": 2
+  },
+  {
+    "county": "Rio Grande County",
+    "womens_wellness_centers": 1
+  },
+  {
+    "county": "Routt County",
+    "womens_wellness_centers": 1
+  },
+  {
+    "county": "Saguache County",
+    "womens_wellness_centers": 3
+  },
+  {
+    "county": "San Miguel County",
+    "womens_wellness_centers": 1
+  },
+  {
+    "county": "Summit County",
+    "womens_wellness_centers": 6
+  },
+  {
+    "county": "Teller County",
+    "womens_wellness_centers": 2
+  },
+  {
+    "county": "Weld County",
+    "womens_wellness_centers": 5
+  }
+]

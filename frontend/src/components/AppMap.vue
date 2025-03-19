@@ -615,7 +615,7 @@ watchEffect((onCleanup) => {
           offsetY: 1,
         }),
         fill: new Fill({ color: hover ? color + "20" : "transparent" }),
-        stroke: new Stroke({ color, width: hover ? 4 : 2, lineDash: dash }),
+        stroke: new Stroke({ color, width: hover ? 6 : 2, lineDash: dash }),
         image: hover ? iconHover : icon,
         zIndex: hover ? 2 : 1,
       });
@@ -996,7 +996,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 3px;
   border-radius: var(--rounded);
-  color: white;
+  color: var(--white);
   font-size: calc(var(--zoom) * 1.75px);
   text-align: center;
   opacity: calc(var(--label-opacity) * 2);
@@ -1010,10 +1010,10 @@ onUnmounted(() => {
 }
 
 .label > :first-child {
-  -webkit-text-stroke: 3px black;
-  paint-order: stroke fill;
   width: min-content;
   line-height: 1;
+  -webkit-text-stroke: 3px black;
+  paint-order: stroke fill;
 }
 
 .label > :not(:first-child) {
@@ -1021,6 +1021,7 @@ onUnmounted(() => {
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
+  gap: 1px;
 }
 
 .popup {
@@ -1063,7 +1064,8 @@ onUnmounted(() => {
 
 :deep(.popup .popup-close + hr),
 :deep(.popup hr:last-child),
-:deep(.popup hr:has(+ hr)) {
+:deep(.popup hr:has(+ hr)),
+:deep(.popup hr + .mini-table:empty + hr) {
   display: none;
 }
 

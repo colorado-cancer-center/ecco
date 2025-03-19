@@ -14,6 +14,7 @@ import {
   faStarOfLife,
   faThumbTack,
 } from "@fortawesome/free-solid-svg-icons";
+import palette from "./colors.json";
 
 /**
  * choose shapes from font-awesome that look neutral (don't imply any good/bad
@@ -39,23 +40,22 @@ type Icon = (typeof icons)[number];
 
 /** https://tailwindcss.com/docs/customizing-colors */
 export const colors = [
-  "#f43f5e",
-  "#a855f7",
-  "#3b82f6",
-  "#14b8a6",
-  // "#84cc16",
-  "#f97316",
-  "#ec4899",
-  "#8b5cf6",
-  "#0ea5e9",
-  // "#10b981",
-  "#eab308",
-  "#ef4444",
-  "#d946ef",
-  "#6366f1",
-  "#06b6d4",
-  // "#22c55e",
-  "#f59e0b",
+  palette.rose["600"],
+  palette.purple["600"],
+  palette.blue["600"],
+  palette.teal["600"],
+  palette.orange["600"],
+  palette.pink["600"],
+  palette.violet["600"],
+  palette.sky["600"],
+  palette.emerald["600"],
+  palette.yellow["600"],
+  palette.red["600"],
+  palette.fuchsia["600"],
+  palette.indigo["600"],
+  palette.cyan["600"],
+  palette.green["600"],
+  palette.amber["600"],
 ] as const;
 
 type Color = (typeof colors)[number];
@@ -109,8 +109,6 @@ function getMarker(
   const ns = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(ns, "svg");
   svg.setAttribute("xmlns", ns);
-  svg.setAttribute("width", "16");
-  svg.setAttribute("height", "16");
   document.body.append(svg);
 
   /** use font-awesome point marker */
@@ -124,7 +122,7 @@ function getMarker(
     /** scale to size */
     const sizeWidth = size * (width / height);
     const sizeHeight = size;
-    const stroke = height / 10;
+    const stroke = 2 * (height / size);
 
     /** styles */
     svg.style.color = color;
