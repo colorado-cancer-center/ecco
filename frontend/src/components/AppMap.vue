@@ -6,6 +6,8 @@
     :style="{
       '--width': width ? `${width}px` : '',
       '--height': height ? `${height}px` : '',
+      '--zoom': immediateZoom,
+      '--label-opacity': geometryOpacity,
     }"
   >
     <div ref="frameElement" class="frame">
@@ -55,7 +57,7 @@
           <slot name="bottom-right" />
 
           <!-- symbol key -->
-          <div v-if="!isEmpty(symbols)" class="symbols">
+          <div v-if="!isEmpty(symbols)" class="mini-table">
             <template v-for="(symbol, label) of symbols" :key="label">
               <template v-if="symbol">
                 <div class="symbol" v-html="symbol.html" />
@@ -68,6 +70,17 @@
           <slot name="bottom-left" />
         </div>
       </template>
+
+      <!-- geometry labels -->
+      <div
+        v-for="(feature, key) of geometryFeaturesWLabels"
+        :key="key"
+        ref="geometryLabelElements"
+        class="label"
+      >
+        <div>{{ feature.get("label") }}</div>
+        <slot name="geometry-label" :feature="feature.getProperties()" />
+      </div>
 
       <!-- feature popup -->
       <div
@@ -83,7 +96,7 @@
         >
           <font-awesome-icon :icon="faXmark" />
         </AppButton>
-        <slot :feature="selectedFeature.getProperties()" name="popup" />
+        <slot name="popup" :feature="selectedFeature.getProperties()" />
       </div>
 
       <div class="attribution" v-html="attribution" />
@@ -107,7 +120,16 @@ export const noDataEntry = {
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch, watchEffect } from "vue";
+import {
+  computed,
+  nextTick,
+  onMounted,
+  onUnmounted,
+  ref,
+  useTemplateRef,
+  watch,
+  watchEffect,
+} from "vue";
 import * as d3 from "d3";
 import type { FeatureCollection } from "geojson";
 import { toBlob } from "html-to-image";
@@ -131,14 +153,15 @@ import { getGradient, gradientOptions } from "@/components/gradient";
 import { backgroundOptions } from "@/components/tile-providers";
 import { downloadPng } from "@/util/download";
 import { formatValue, normalizedApply } from "@/util/math";
-import { forceHex, getBbox, getCssVar, sleep, waitFor } from "@/util/misc";
+import { forceHex, getBbox, getCssVar, waitFor } from "@/util/misc";
 import AppButton from "./AppButton.vue";
 import { getMarkers } from "./markers";
 
-const scrollElement = ref<HTMLDivElement>();
-const frameElement = ref<HTMLDivElement>();
-const mapElement = ref<HTMLDivElement>();
-const popupElement = ref<HTMLDivElement>();
+const scrollElement = useTemplateRef("scrollElement");
+const frameElement = useTemplateRef("frameElement");
+const mapElement = useTemplateRef("mapElement");
+const popupElement = useTemplateRef("popupElement");
+const geometryLabelElements = useTemplateRef("geometryLabelElements");
 
 const theme = forceHex(getCssVar("--theme"));
 
@@ -219,12 +242,13 @@ type Emits = {
 const emit = defineEmits<Emits>();
 
 type Slots = {
-  "top-left-upper": () => unknown;
-  "top-left-lower": () => unknown;
-  "top-right": () => unknown;
-  "bottom-right": () => unknown;
-  "bottom-left": () => unknown;
-  popup: ({ feature }: { feature: FeatureInfo }) => unknown;
+  "top-left-upper"?: () => unknown;
+  "top-left-lower"?: () => unknown;
+  "top-right"?: () => unknown;
+  "bottom-right"?: () => unknown;
+  "bottom-left"?: () => unknown;
+  "geometry-label"?: ({ feature }: { feature: FeatureInfo }) => unknown;
+  popup?: ({ feature }: { feature: FeatureInfo }) => unknown;
 };
 
 defineSlots<Slots>();
@@ -367,7 +391,7 @@ const scale = computed(() => {
 const map = new Map({ controls: [] });
 
 /** update map root element */
-watchEffect(() => map.setTarget(mapElement.value));
+watchEffect(() => map.setTarget(mapElement.value ?? undefined));
 
 /** mercator https://epsg.io/3857 */
 const xy = "EPSG:3857";
@@ -432,6 +456,10 @@ view.on(
     emit("update:zoom", zoom);
   }, 100),
 );
+
+/** on immediate view zoom */
+const immediateZoom = ref(view.getZoom());
+view.on("change:resolution", () => (immediateZoom.value = view.getZoom()));
 
 /** background source object */
 const backgroundSource = new XYZ({
@@ -522,49 +550,6 @@ watchEffect((onCleanup) => {
 /** update geometry layer opacity */
 watchEffect(() => geometryLayer.setOpacity(geometryOpacity));
 
-/** label source object */
-const labelSource = new VectorSource();
-/** label layer object */
-const labelLayer = new VectorLayer({ source: labelSource });
-
-/** update label layer source */
-watchEffect(() => {
-  labelSource.clear();
-  labelSource.addFeatures(
-    geometryFeatures.value.map(
-      (feature) =>
-        new Feature({
-          /** pass through extra props */
-          ...feature.getProperties(),
-          /** make label feature centroid of geometry feature */
-          geometry: new Point(
-            latlongToXy(feature.get("cent_lat"), feature.get("cent_long")),
-          ),
-        }),
-    ),
-  );
-});
-
-/** update label styles */
-function labelStyles() {
-  labelLayer.setStyle(
-    (feature) =>
-      new Style({
-        text: new Text({
-          text: feature.get("label"),
-          stroke: new Stroke({ color: "white", width: 3 }),
-          font: `600 ${(view.getZoom() ?? 8) * 2}px 'Roboto Flex'`,
-          overflow: true,
-        }),
-      }),
-  );
-}
-labelStyles();
-view.on("change:resolution", labelStyles);
-
-/** update label layer opacity */
-watchEffect(() => labelLayer.setOpacity(geometryOpacity));
-
 /** symbols (icon + label) associated with each location */
 const symbols = computed(() =>
   getMarkers(
@@ -619,19 +604,22 @@ watchEffect((onCleanup) => {
   /** generate styles per feature */
   const style =
     (hover = false) =>
-    (feature: FeatureLike) =>
-      new Style({
-        fill: new Fill({
-          color: hover ? feature.get("color") + "20" : "transparent",
+    (feature: FeatureLike) => {
+      const { color, icon, iconHover, count, dash } = feature.getProperties();
+      return new Style({
+        text: new Text({
+          text: count,
+          font: "12px Roboto",
+          fill: new Fill({ color: "white" }),
+          stroke: new Stroke({ color: "black", width: 2 }),
+          offsetY: 1,
         }),
-        stroke: new Stroke({
-          color: feature.get("color"),
-          width: hover ? 4 : 2,
-          lineDash: feature.get("dash"),
-        }),
-        image: hover ? feature.get("iconHover") : feature.get("icon"),
+        fill: new Fill({ color: hover ? color + "20" : "transparent" }),
+        stroke: new Stroke({ color, width: hover ? 6 : 2, lineDash: dash }),
+        image: hover ? iconHover : icon,
         zIndex: hover ? 2 : 1,
       });
+    };
 
   /** base styles */
   locationsLayer.setStyle(style());
@@ -652,6 +640,47 @@ watchEffect((onCleanup) => {
 
 /** update locations layer opacity */
 watchEffect(() => locationsLayer.setOpacity(locationOpacity));
+
+/** geometry features that have a position for a label */
+const geometryFeaturesWLabels = computed(() =>
+  geometryFeatures.value.filter(
+    (feature) => feature.get("cent_lat") && feature.get("cent_long"),
+  ),
+);
+
+/** update geometry feature labels */
+watchEffect(async (onCleanup) => {
+  /** get reactive values before async so they can be auto-tracked */
+  /** https://github.com/vuejs/core/issues/2093 */
+  const elements = geometryLabelElements.value ?? [];
+  const features = geometryFeaturesWLabels.value;
+
+  /** https://stackoverflow.com/questions/79031309/usetemplateref-is-not-reactive-for-arrays */
+  await nextTick();
+
+  for (let index = 0; index < elements.length; index++) {
+    /** element */
+    const element = elements[index]!;
+    if (!element) continue;
+    /** feature associated with element */
+    const feature = features[index];
+    if (!feature) continue;
+    const { cent_lat, cent_long } = feature.getProperties() ?? {};
+    /** don't create overlay if cent position not defined */
+    if (!cent_lat || !cent_long) continue;
+    /** overlay object */
+    const overlay = new Overlay({
+      element,
+      position: latlongToXy(cent_lat, cent_long),
+      positioning: "center-center",
+    });
+    map.addOverlay(overlay);
+    onCleanup(() => {
+      map.removeOverlay(overlay);
+      overlay.dispose();
+    });
+  }
+});
 
 /** current selected feature */
 const selectedFeature = ref<Feature<Geometry>>();
@@ -716,7 +745,7 @@ watchEffect(async () => {
   popup.setPosition([left + (right - left) * 0.5, top + (bottom - top) * 0.25]);
 
   /** wait for popup to render */
-  await sleep(0);
+  await nextTick();
 
   /** move view if needed */
   popup.panIntoView({ animation: { duration: 100 } });
@@ -736,7 +765,7 @@ map.on("pointermove", ({ pixel }) => {
 
 /** add layers to map */
 watchEffect(() =>
-  map.setLayers([backgroundLayer, geometryLayer, labelLayer, locationsLayer]),
+  map.setLayers([backgroundLayer, geometryLayer, locationsLayer]),
 );
 
 /** highlight and zoom in on feature */
@@ -817,7 +846,7 @@ function fit() {
 watch(
   () => showLegends,
   /** wait for legends mount/unmount */
-  () => sleep().then(fit),
+  () => nextTick().then(fit),
 );
 
 /** auto-fit when locations change */
@@ -868,8 +897,6 @@ onUnmounted(() => {
   backgroundSource.dispose();
   geometryLayer.dispose();
   geometrySource.dispose();
-  labelLayer.dispose();
-  labelSource.dispose();
   locationsLayer.dispose();
   locationsSource.dispose();
   popup.dispose();
@@ -955,12 +982,6 @@ onUnmounted(() => {
   overflow-wrap: break-word;
 }
 
-.symbols {
-  display: grid;
-  grid-template-columns: auto auto;
-  gap: 10px;
-}
-
 .symbol {
   display: contents;
 }
@@ -969,12 +990,46 @@ onUnmounted(() => {
   place-self: center;
 }
 
+.label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  border-radius: var(--rounded);
+  color: var(--white);
+  font-size: calc(var(--zoom) * 1.75px);
+  text-align: center;
+  opacity: calc(var(--label-opacity) * 2);
+  pointer-events: none;
+  user-select: none;
+}
+
+:deep(*:has(> .label)) {
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+.label > :first-child {
+  width: min-content;
+  line-height: 1;
+  -webkit-text-stroke: 3px black;
+  paint-order: stroke fill;
+}
+
+.label > :not(:first-child) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+
 .popup {
   --caret: 10px;
   position: relative;
-  top: calc(var(--caret) * -1.414);
   width: 400px;
   max-width: max-content;
+  translate: 0 calc(var(--caret) * -1.414);
 }
 
 .popup::after {
@@ -1001,6 +1056,17 @@ onUnmounted(() => {
 
 .popup-close:hover {
   color: var(--theme);
+}
+
+.popup > :nth-child(2) {
+  margin-right: 15px;
+}
+
+:deep(.popup .popup-close + hr),
+:deep(.popup hr:last-child),
+:deep(.popup hr:has(+ hr)),
+:deep(.popup hr + .mini-table:empty + hr) {
+  display: none;
 }
 
 .attribution {

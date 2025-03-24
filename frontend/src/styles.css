@@ -16,7 +16,8 @@
   --accent-b-light: hsl(80, 50%, 85%);
 
   /* font weights */
-  --regular: 300;
+  --regular: 400;
+  --semi-bold: 500;
   --bold: 600;
   --extra-bold: 800;
 
@@ -42,7 +43,7 @@ html {
   font-weight: var(--regular);
   font-size: 13pt;
   line-height: var(--compact);
-  font-family: "Roboto Flex", sans-serif;
+  font-family: "Roboto", sans-serif;
   text-underline-offset: 2px;
 }
 
@@ -255,8 +256,8 @@ blockquote {
   overflow-wrap: anywhere;
 }
 
-.mini-table:empty::before {
-  content: "No Info";
+.mini-table:empty {
+  display: none;
 }
 
 .charts {

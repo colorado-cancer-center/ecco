@@ -14,6 +14,7 @@ import {
   faStarOfLife,
   faThumbTack,
 } from "@fortawesome/free-solid-svg-icons";
+import palette from "./colors.json";
 
 /**
  * choose shapes from font-awesome that look neutral (don't imply any good/bad
@@ -38,34 +39,24 @@ const icons = [
 type Icon = (typeof icons)[number];
 
 /** https://tailwindcss.com/docs/customizing-colors */
-const colors = [
-  "#ef4444",
-  "#f97316",
-  "#f59e0b",
-  "#eab308",
-  "#84cc16",
-  "#22c55e",
-  "#10b981",
-  "#14b8a6",
-  "#06b6d4",
-  "#0ea5e9",
-  "#3b82f6",
-  "#6366f1",
-  "#8b5cf6",
-  "#a855f7",
-  "#d946ef",
-  "#ec4899",
-  "#f43f5e",
-]
-  .reverse()
-  .map(
-    (_, index, array) =>
-      /**
-       * skip every N colors to space them out visually. don't use N that is
-       * factor of number of colors.
-       */
-      array[(index++ * 3) % array.length]!,
-  );
+export const colors = [
+  palette.rose["600"],
+  palette.purple["600"],
+  palette.blue["600"],
+  palette.teal["600"],
+  palette.orange["600"],
+  palette.pink["600"],
+  palette.violet["600"],
+  palette.sky["600"],
+  palette.emerald["600"],
+  palette.yellow["600"],
+  palette.red["600"],
+  palette.fuchsia["600"],
+  palette.indigo["600"],
+  palette.cyan["600"],
+  palette.green["600"],
+  palette.amber["600"],
+] as const;
 
 type Color = (typeof colors)[number];
 
@@ -118,8 +109,6 @@ function getMarker(
   const ns = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(ns, "svg");
   svg.setAttribute("xmlns", ns);
-  svg.setAttribute("width", "16");
-  svg.setAttribute("height", "16");
   document.body.append(svg);
 
   /** use font-awesome point marker */
@@ -133,7 +122,7 @@ function getMarker(
     /** scale to size */
     const sizeWidth = size * (width / height);
     const sizeHeight = size;
-    const stroke = height / 10;
+    const stroke = 1 * (height / size);
 
     /** styles */
     svg.style.color = color;
@@ -141,7 +130,7 @@ function getMarker(
     svg.style.strokeWidth = String(stroke * 2);
     svg.style.strokeLinecap = "round";
     svg.style.strokeLinejoin = "round";
-    svg.style.paintOrder = "stroke";
+    svg.style.paintOrder = "stroke fill";
     svg.style.overflow = "visible";
 
     /** expand view box to include stroke */

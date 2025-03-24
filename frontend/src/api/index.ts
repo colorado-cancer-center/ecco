@@ -1,5 +1,15 @@
 import type { FeatureCollection, Geometry } from "geojson";
-import { mapValues } from "lodash";
+import { find, findKey, mapValues } from "lodash";
+import type { ValueOf } from "type-fest";
+import outreachCounty1 from "./temp/outreach-county-1.json";
+import outreachCounty2 from "./temp/outreach-county-2.json";
+import outreachCounty3 from "./temp/outreach-county-3.json";
+import outreachCounty4 from "./temp/outreach-county-4.json";
+import outreachEvents from "./temp/outreach-events.json";
+import outreachFitKits from "./temp/outreach-fit-kits.json";
+import outreachNewspapers from "./temp/outreach-newspapers.json";
+import outreachRadonKits from "./temp/outreach-radon-kits.json";
+import zipCodeLookup from "./temp/zip-code-lookup.json";
 
 /** api root (no trailing slash) */
 const api = import.meta.env.VITE_API;
@@ -110,10 +120,28 @@ type _LocationList = {
   [key: string]: { [key: string]: string };
 };
 
+/** extra hard-coded location list entries */
+/** TEMPORARY: should eventually come from backend */
+export const extraLocationList = {
+  "Outreach (county)": {
+    "FIT Kits": "county-outreach-fit-kits",
+    "Radon Kits": "county-outreach-radon-kits",
+    "Women's Wellness Centers": "county-outreach-wwc",
+    "2morrow": "county-outreach-2morrow",
+    "Any Activity": "county-outreach-any-activity",
+  },
+  Outreach: {
+    Events: "outreach-events",
+    Newspapers: "outreach-newspapers",
+    "FIT Kits": "outreach-fit-kits",
+    "Radon Kits": "outreach-radon-kits",
+  },
+} as const;
+
 /** get listing/metadata of locations */
 export async function getLocationList() {
   const data = await request<_LocationList>(`${api}/locations`);
-  return data;
+  return { ...extraLocationList, ...data };
 }
 
 export type LocationList = Awaited<ReturnType<typeof getLocationList>>;
@@ -135,6 +163,7 @@ type _Geo = {
 
 /** data geojson properties fields */
 export type GeoProps = {
+  /** base */
   id?: string | number;
   name?: string;
   label?: string;
@@ -144,6 +173,26 @@ export type GeoProps = {
   ogc_fid?: number;
   cent_lat?: number;
   cent_long?: number;
+
+  /** outreach */
+  fit_kits?: number;
+  radon_kits?: number;
+  total_kits?: number;
+  community_events?: number;
+  health_fairs?: number;
+  educational_talks?: number;
+  radio_talks?: number;
+  school_church_events?: number;
+  total_events?: number;
+  womens_wellness_centers?: number;
+  "2morrow_signups"?: number;
+  has_fit_kits?: boolean;
+  has_radon_kits?: boolean;
+  has_both_kits?: boolean;
+  has_any_activity?: boolean;
+  has_2morrow?: boolean;
+  has_womens_wellness_center?: boolean;
+  has_all?: boolean;
 };
 
 /** get geojson from geography data */
@@ -168,6 +217,13 @@ export async function getGeo(
           id: d[idField],
           name,
           label: name.replace(/county/i, ""),
+
+          /** include extra per-county data */
+          /** TEMPORARY: should eventually come from backend */
+          ...(find(outreachCounty1, ["county", name]) ?? {}),
+          ...(find(outreachCounty2, ["county", name]) ?? {}),
+          ...(find(outreachCounty3, ["county", name]) ?? {}),
+          ...(find(outreachCounty4, ["county", name]) ?? {}),
         },
       };
     }),
@@ -235,9 +291,50 @@ type _Location = {
   geometry_json: FeatureCollection<Geometry, LocationProps>;
 };
 
+/** extra hard-coded location data */
+/** TEMPORARY: should eventually come from backend */
+const extraLocation = {
+  "outreach-events": outreachEvents,
+  "outreach-newspapers": outreachNewspapers,
+  "outreach-fit-kits": outreachFitKits,
+  "outreach-radon-kits": outreachRadonKits,
+} satisfies Record<ValueOf<(typeof extraLocationList)["Outreach"]>, unknown>;
+
 /** get locations (markers, highlighted areas, etc) */
-export async function getLocation(id: string) {
+export async function getLocation(
+  id: string,
+): Promise<FeatureCollection<Geometry, LocationProps>> {
+  /** include extra location data */
+  /** TEMPORARY: should eventually come from backend */
+  if (id in extraLocation) {
+    /** get label version of id */
+    const type =
+      findKey(extraLocationList.Outreach, (value) => value === id) ?? "";
+
+    return {
+      type: "FeatureCollection",
+      features: extraLocation[id as keyof typeof extraLocation].map(
+        ({ zip, count }) => {
+          const { lat = 99999, lng = 99999 } =
+            zipCodeLookup[zip as keyof typeof zipCodeLookup];
+          return {
+            type: "Feature",
+            geometry: { type: "Point", coordinates: [lng, lat] },
+            properties: { type, zip, count },
+          };
+        },
+      ),
+    };
+  }
+
   const data = await request<_Location>(`${api}/locations/${id}`);
+
+  /** add type of location, i.e. label version of id */
+  const type = data.name;
+  data.geometry_json.features.forEach(
+    (feature) => (feature.properties.type = type),
+  );
+
   return data.geometry_json;
 }
 
@@ -257,6 +354,7 @@ export function getDownloadAll() {
 
 /** location geojson properties fields */
 export type LocationProps = {
+  type?: string;
   name?: string;
   org?: string;
   link?: string;
@@ -268,6 +366,8 @@ export type LocationProps = {
   representative?: string;
   party?: string;
   fips?: string;
+  zip?: string;
+  count?: number;
 };
 
 /** response from county data api endpoint */

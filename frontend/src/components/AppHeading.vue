@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUpdated, ref } from "vue";
+import { computed, onMounted, onUpdated, ref, useTemplateRef } from "vue";
 import { kebabCase } from "lodash";
 import { faLink } from "@fortawesome/free-solid-svg-icons";
 import AppLink from "@/components/AppLink.vue";
@@ -41,7 +41,7 @@ const link = ref("");
 const tag = computed(() => "h" + level);
 
 /** heading ref */
-const heading = ref<HTMLElement>();
+const heading = useTemplateRef<HTMLHeadingElement>("heading");
 
 /** determine link from text content of heading */
 function updateLink() {
