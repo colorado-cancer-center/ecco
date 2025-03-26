@@ -117,7 +117,7 @@ jobs:
       uses: actions/cache/save@v4
       with:
         path: ./data/staging/${{ env.CURDATE }}
-        key: ${{ steps.cache-staging-restore.outputs.cache-primary-key }}
+        key: staging-${{ env.CURDATE }}-data
 
     - name: Copy dump to releases
       run: |-
