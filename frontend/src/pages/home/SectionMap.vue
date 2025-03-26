@@ -484,7 +484,7 @@
 
           <!-- outreach -->
 
-          <div v-if="countyWide.length" class="mini-table">
+          <div class="mini-table">
             <template v-if="feature.fit_kits">
               <AppLink
                 to="https://medlineplus.gov/ency/patientinstructions/000704.htm"
