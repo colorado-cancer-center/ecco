@@ -123,18 +123,12 @@ type _LocationList = {
 /** extra hard-coded location list entries */
 /** TEMPORARY: should eventually come from backend */
 export const extraLocationList = {
-  "Outreach (county)": {
-    "FIT Kits": "county-outreach-fit-kits",
-    "Radon Kits": "county-outreach-radon-kits",
-    "Women's Wellness Centers": "county-outreach-wwc",
-    "2morrow": "county-outreach-2morrow",
-    "Any Activity": "county-outreach-any-activity",
-  },
-  Outreach: {
+  "Outreach and Interventions": {
     Events: "outreach-events",
     Newspapers: "outreach-newspapers",
     "FIT Kits": "outreach-fit-kits",
     "Radon Kits": "outreach-radon-kits",
+    "2morrow": "outreach-2morrow-county",
   },
 } as const;
 
@@ -293,12 +287,17 @@ type _Location = {
 
 /** extra hard-coded location data */
 /** TEMPORARY: should eventually come from backend */
-const extraLocation = {
+const extraLocationData = {
   "outreach-events": outreachEvents,
   "outreach-newspapers": outreachNewspapers,
   "outreach-fit-kits": outreachFitKits,
   "outreach-radon-kits": outreachRadonKits,
-} satisfies Record<ValueOf<(typeof extraLocationList)["Outreach"]>, unknown>;
+} satisfies Partial<
+  Record<
+    ValueOf<(typeof extraLocationList)["Outreach and Interventions"]>,
+    unknown
+  >
+>;
 
 /** get locations (markers, highlighted areas, etc) */
 export async function getLocation(
@@ -306,14 +305,14 @@ export async function getLocation(
 ): Promise<FeatureCollection<Geometry, LocationProps>> {
   /** include extra location data */
   /** TEMPORARY: should eventually come from backend */
-  if (id in extraLocation) {
+  if (id in extraLocationData) {
     /** get label version of id */
     const type =
-      findKey(extraLocationList.Outreach, (value) => value === id) ?? "";
+      findKey(extraLocationList["Outreach and Interventions"], id) ?? "";
 
     return {
       type: "FeatureCollection",
-      features: extraLocation[id as keyof typeof extraLocation].map(
+      features: extraLocationData[id as keyof typeof extraLocationData].map(
         ({ zip, count }) => {
           const { lat = 99999, lng = 99999 } =
             zipCodeLookup[zip as keyof typeof zipCodeLookup];
