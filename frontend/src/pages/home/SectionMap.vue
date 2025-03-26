@@ -357,16 +357,13 @@
         </template>
 
         <template v-if="countyWide.length" #top-right>
-          <b>County Outreach</b>
+          <b>Outreach (county-level)</b>
           <div class="mini-table">
             <template v-for="(field, key) of countyWide" :key="key">
               <div class="check" :style="{ '--color': field.color }">
                 <font-awesome-icon :icon="faCheck" />
               </div>
-              <AppLink v-if="field.link" :to="field.link">
-                {{ field.label }}
-              </AppLink>
-              <span v-else>{{ field.label }}</span>
+              <span>{{ field.label }}</span>
             </template>
           </div>
         </template>
@@ -379,7 +376,7 @@
           <div>
             <template v-for="(field, key) of countyWide" :key="key">
               <div
-                v-if="feature[field.checkKey]"
+                v-if="field.checkKey && feature[field.checkKey]"
                 class="check"
                 :style="{ '--color': field.color }"
               >
@@ -489,11 +486,19 @@
 
           <div v-if="countyWide.length" class="mini-table">
             <template v-if="feature.fit_kits">
-              <span>FIT Kits</span>
+              <AppLink
+                to="https://medlineplus.gov/ency/patientinstructions/000704.htm"
+              >
+                FIT Kits
+              </AppLink>
               <span>{{ formatValue(feature.fit_kits) }}</span>
             </template>
             <template v-if="feature.radon_kits">
-              <span>Radon Kits</span>
+              <AppLink
+                to="https://cdphe.colorado.gov/hm/testing-your-home-radon"
+              >
+                Radon Kits
+              </AppLink>
               <span>{{ formatValue(feature.radon_kits) }}</span>
             </template>
             <!-- <template v-if="feature.total_kits">
@@ -525,11 +530,17 @@
               <span>{{ formatValue(feature.total_events) }}</span>
             </template> -->
             <template v-if="feature.womens_wellness_centers">
-              <span>Women's Wellness Centers</span>
+              <AppLink to="https://cdphe.colorado.gov/wwc">
+                Women's Wellness Centers
+              </AppLink>
               <span>{{ formatValue(feature.womens_wellness_centers) }}</span>
             </template>
             <template v-if="feature['2morrow_signups']">
-              <span>2morrow Signups</span>
+              <AppLink
+                to="https://medschool.cuanschutz.edu/colorado-cancer-center/community/CommunityOutreachEngagement/projects-and-activities/2morrow-health-app"
+              >
+                2morrow Signups
+              </AppLink>
               <span>{{ formatValue(feature["2morrow_signups"]) }}</span>
             </template>
           </div>
@@ -617,7 +628,7 @@ import {
   watchEffect,
 } from "vue";
 import type { ShallowRef, WatchStopHandle } from "vue";
-import { clamp, cloneDeep, isEmpty, mapValues, orderBy } from "lodash";
+import { clamp, cloneDeep, isEmpty, mapValues, orderBy, pick } from "lodash";
 import {
   faComment,
   faHandPointer,
@@ -943,7 +954,9 @@ const countyWide = computed(() => {
   if (selectedLevel.value !== "county") return [];
 
   /** get selected overview fields */
-  let selected = Object.entries(extraLocationList["Outreach (county)"])
+  let selected = Object.entries(
+    pick(extraLocationList["Outreach and Interventions"], ["2morrow"]),
+  )
     .filter(([, id]) => selectedLocations.value.includes(id))
     .map(([label, id]) => ({ id, label }));
 
@@ -957,38 +970,19 @@ const countyWide = computed(() => {
     /** key to access on feature to determine if checked or not */
     checkKey: (
       {
-        "county-outreach-fit-kits": "has_fit_kits",
-        "county-outreach-radon-kits": "has_radon_kits",
-        "county-outreach-wwc": "has_womens_wellness_center",
-        "county-outreach-2morrow": "has_2morrow",
-        "county-outreach-any-activity": "has_any_activity",
-      } as const
-    )[id] satisfies keyof GeoProps,
+        "outreach-2morrow-county": "has_2morrow",
+      } satisfies Partial<Record<typeof id, keyof GeoProps>>
+    )[id as string],
     /** key to access on feature to determine count */
     countKey: (
       {
-        "county-outreach-fit-kits": "fit_kits",
-        "county-outreach-radon-kits": "radon_kits",
-        "county-outreach-wwc": "womens_wellness_centers",
-        "county-outreach-2morrow": "2morrow_signups",
-        "county-outreach-any-activity": null,
-      } as const
-    )[id] satisfies keyof GeoProps | null,
+        "outreach-2morrow-county": "2morrow_signups",
+      } satisfies Partial<Record<typeof id, keyof GeoProps>>
+    )[id as string],
     /** human-readable label */
     label,
     /** icon color */
     color: colors[index] ?? "",
-    /** relevant link */
-    link: {
-      "county-outreach-fit-kits":
-        "https://medlineplus.gov/ency/patientinstructions/000704.htm",
-      "county-outreach-radon-kits":
-        "https://cdphe.colorado.gov/hm/testing-your-home-radon",
-      "county-outreach-wwc": "https://cdphe.colorado.gov/wwc",
-      "county-outreach-2morrow":
-        "https://medschool.cuanschutz.edu/colorado-cancer-center/community/CommunityOutreachEngagement/projects-and-activities/2morrow-health-app",
-      "county-outreach-any-activity": "",
-    }[id],
   }));
 
   return fields;
