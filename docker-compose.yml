@@ -13,7 +13,7 @@ services:
     volumes:
       - ./data:/data
     healthcheck:
-      test: ["CMD-SHELL", "curl -o /dev/null -sf http://localhost:8000/stats/measures || exit 1"]
+      test: ["CMD-SHELL", "curl -o /dev/null -sf http://localhost:8000/healthz || exit 1"]
       interval: 15s
       timeout: 30s
       retries: 5
