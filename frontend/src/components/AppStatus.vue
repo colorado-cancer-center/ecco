@@ -16,17 +16,14 @@ import {
   faCheckCircle,
   faXmarkCircle,
 } from "@fortawesome/free-regular-svg-icons";
-import {
-  faGear,
-  faInfoCircle,
-  type IconDefinition,
-} from "@fortawesome/free-solid-svg-icons";
+import { faGear, faInfoCircle } from "@fortawesome/free-solid-svg-icons";
+import type { IconDefinition } from "@fortawesome/free-solid-svg-icons";
 
 type Props = {
   status: Status;
 };
 
-const props = withDefaults(defineProps<Props>(), { status: "info" });
+const { status = "info" } = defineProps<Props>();
 
 type Slots = {
   default?: () => unknown;
@@ -67,7 +64,7 @@ const codes = {
   },
 };
 
-const code = computed<Code>(() => codes[props.status] || codes.info);
+const code = computed<Code>(() => codes[status] || codes.info);
 </script>
 
 <style scoped>

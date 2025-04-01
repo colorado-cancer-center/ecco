@@ -1,25 +1,20 @@
-import * as L from "leaflet";
 import { max, sum } from "lodash";
-import { icon } from "@fortawesome/fontawesome-svg-core";
+import { icon as getHtml } from "@fortawesome/fontawesome-svg-core";
 import {
-  faBolt,
-  faBurst,
-  faCertificate,
   faCircle,
-  faCloud,
   faClover,
   faDiamond,
+  faFlag,
   faLocationArrow,
   faLocationCrosshairs,
   faLocationPin,
   faMapPin,
-  faMound,
-  faSplotch,
   faSquare,
   faStar,
   faStarOfLife,
   faThumbTack,
 } from "@fortawesome/free-solid-svg-icons";
+import palette from "./colors.json";
 
 /**
  * choose shapes from font-awesome that look neutral (don't imply any good/bad
@@ -31,115 +26,137 @@ const icons = [
   faSquare,
   faDiamond,
   faLocationPin,
-  faStarOfLife,
-  faSplotch,
-  faMound,
-  faBurst,
-  faClover,
-  faCertificate,
   faStar,
-  faCloud,
-  faBolt,
+  faStarOfLife,
+  faFlag,
+  faClover,
   faLocationArrow,
   faMapPin,
   faThumbTack,
   faLocationCrosshairs,
 ];
 
-let iconIndex = 0;
-/** get next icon in sequence */
-function getIcon() {
-  return icons[iconIndex++ % icons.length]!;
-}
+type Icon = (typeof icons)[number];
 
 /** https://tailwindcss.com/docs/customizing-colors */
-const colors = [
-  "#ef4444",
-  "#f97316",
-  "#f59e0b",
-  "#eab308",
-  "#84cc16",
-  "#22c55e",
-  "#10b981",
-  "#14b8a6",
-  "#06b6d4",
-  "#0ea5e9",
-  "#3b82f6",
-  "#6366f1",
-  "#8b5cf6",
-  "#a855f7",
-  "#d946ef",
-  "#ec4899",
-  "#f43f5e",
-].reverse();
+export const colors = [
+  palette.rose["600"],
+  palette.purple["600"],
+  palette.blue["600"],
+  palette.teal["600"],
+  palette.orange["600"],
+  palette.pink["600"],
+  palette.violet["600"],
+  palette.sky["600"],
+  palette.emerald["600"],
+  palette.yellow["600"],
+  palette.red["600"],
+  palette.fuchsia["600"],
+  palette.indigo["600"],
+  palette.cyan["600"],
+  palette.green["600"],
+  palette.amber["600"],
+] as const;
 
-let colorIndex = 0;
-/** get next color in sequence */
-function getColor() {
-  /**
-   * skip every N colors to space them out visually. don't use N that is factor
-   * of number of colors.
-   */
-  return colors[(colorIndex++ * 3) % colors.length]!;
-}
+type Color = (typeof colors)[number];
 
 /** line stroke dashes for areas */
-const dashes = ["0 0", "10 10", "5 5", "5 5 15 5"];
+const dashes = [
+  [10, 10],
+  [5, 5],
+  [5, 5, 15, 5],
+  [0, 0],
+];
+
+type Dash = (typeof dashes)[number];
 
 /** total dash length of line symbol in legend */
-const dashSymbolLength = String(
-  max(dashes.map((dash) => sum(dash.split(" ").map(Number))))!,
-);
+const dashSymbolLength = String(max(dashes.map((dash) => sum(dash)))!);
 
-let dashIndex = 0;
-/** get next dash in sequence */
-function getDash() {
-  return dashes[dashIndex++ % dashes.length]!;
-}
+type Type = GeoJSON.GeoJsonTypes | "";
 
-/** reset marker sequence */
-export function resetMarkers() {
-  iconIndex = 0;
-  colorIndex = 0;
-  dashIndex = 0;
-}
+/** map enumerated values to markers */
+export const getMarkers = <Value extends string>(values: [Value, Type][]) => {
+  /** marker sequence */
+  let iconIndex = 0;
+  let colorIndex = 0;
+  let dashIndex = 0;
 
-/** get next marker in sequence */
-export function getMarker(type: "point" | "area") {
-  /** get next color */
-  const color = getColor();
-  /** get next dash pattern */
-  const dash = getDash();
+  const map = {} as Record<Value, ReturnType<typeof getMarker>>;
+  for (const [value, type] of values)
+    if (value.trim())
+      /** add value to map (if not already defined) */
+      map[value] ??=
+        /** get next marker in sequence */
+        getMarker(
+          type,
+          icons[iconIndex++ % icons.length]!,
+          colors[colorIndex++ % colors.length]!,
+          type === "Point" ? [] : dashes[dashIndex++ % dashes.length]!,
+        );
 
+  return map;
+};
+
+function getMarker(
+  type: Type,
+  icon: Icon,
+  color: Color,
+  dash: Dash,
+  size = 16,
+) {
   /** svg of icon */
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("xmlns", ns);
   document.body.append(svg);
 
   /** use font-awesome point marker */
-  if (type === "point") {
-    const stroke = 50;
-
+  if (type === "Point") {
     /** get html of next icon */
-    svg.innerHTML = icon(getIcon()).node[0]!.innerHTML;
+    svg.innerHTML = getHtml(icon).node[0]!.innerHTML;
+
+    /** get bounds */
+    let { x, y, width, height } = svg.getBBox();
+
+    /** scale to size */
+    const sizeWidth = size * (width / height);
+    const sizeHeight = size;
+    const stroke = 1 * (height / size);
 
     /** styles */
     svg.style.color = color;
     svg.style.stroke = "black";
     svg.style.strokeWidth = String(stroke * 2);
-    svg.style.paintOrder = "stroke";
+    svg.style.strokeLinecap = "round";
+    svg.style.strokeLinejoin = "round";
+    svg.style.paintOrder = "stroke fill";
+    svg.style.overflow = "visible";
 
-    /** expand viewbox to include stroke */
-    const { x, y, width, height } = svg.getBBox();
-    svg.setAttribute(
-      "viewBox",
-      [x - stroke, y - stroke, width + 2 * stroke, height + 2 * stroke].join(
-        " ",
-      ),
-    );
+    /** expand view box to include stroke */
+    x -= stroke;
+    y -= stroke;
+    width += 2 * stroke;
+    height += 2 * stroke;
+
+    /** fit view box */
+    svg.setAttribute("viewBox", [x, y, width, height].join(" "));
+
+    /** set explicit dimensions */
+    svg.setAttribute("width", String(sizeWidth));
+    svg.setAttribute("height", String(sizeHeight));
   } else {
+    const stroke = 20;
+    const x = 0;
+    const y = -20;
     const width = 100;
-    const stroke = 10;
+    const height = 40;
+
+    /** styles */
+    svg.style.fill = "none";
+    svg.style.stroke = color;
+    svg.style.strokeWidth = String(stroke);
+    svg.style.strokeDasharray = dash.join(" ");
 
     /** create dash */
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -148,31 +165,32 @@ export function getMarker(type: "point" | "area") {
     line.setAttribute("x2", String(width));
     line.setAttribute("pathLength", String(dashSymbolLength));
 
-    /** styles */
-    svg.style.fill = "none";
-    svg.style.stroke = color;
-    svg.style.strokeWidth = String(stroke);
-    svg.style.strokeDasharray = dash;
+    /** fit view box */
+    svg.setAttribute("viewBox", [x, y, width, height].join(" "));
 
-    /** fit viewbox to contents */
-    svg.setAttribute("viewBox", `0 ${-stroke * 4} ${width} ${stroke * 2 * 4}`);
+    /** set explicit dimensions */
+    svg.setAttribute("width", String(size));
+    svg.setAttribute("height", String(size));
   }
 
-  /** encode url */
-  const url = URL.createObjectURL(
-    new Blob([svg.outerHTML], { type: "image/svg+xml" }),
-  );
-
   svg.remove();
+
+  /** html source */
+  const html = svg.outerHTML;
+  /** encode to data uri */
+  const src = `data:image/svg+xml;utf8,${window.encodeURIComponent(html)}`;
 
   return {
     /** main color */
     color,
     /** dash pattern */
     dash,
-    /** icon object url */
-    url,
-    /** leaflet icon object */
-    icon: L.icon({ iconUrl: url, iconSize: [15, 15] }),
+    /** icon html */
+    html,
+    /** icon src url */
+    src,
+    /** dimensions */
+    width: parseFloat(svg.getAttribute("width") ?? ""),
+    height: parseFloat(svg.getAttribute("height") ?? ""),
   };
 }

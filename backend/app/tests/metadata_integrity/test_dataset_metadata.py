@@ -21,7 +21,13 @@ def test_cif_metadata_data_agreement():
     matches the spreadsheets for a specific CIF dataset distribution.
     """
 
-    CIF_DATASHEETS = "/data/staging/2024-10/stats/*_long*.csv"
+    # identify the most recent timestamp in the staging folder
+    LATEST_STAGING = max(
+        glob.glob("/data/staging/*"),
+        key=os.path.getmtime
+    )
+
+    CIF_DATASHEETS = f"{LATEST_STAGING}/cif/stats/*_long*.csv"
 
     sheets = glob.glob(CIF_DATASHEETS)
 

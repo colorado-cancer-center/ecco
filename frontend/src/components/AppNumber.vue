@@ -26,12 +26,14 @@ type Props = {
   hideLabel?: boolean;
 };
 
-const props = withDefaults(defineProps<Props>(), {
-  min: 0,
-  max: 1,
-  step: 0.01,
-  hideLabel: false,
-});
+const {
+  label,
+  modelValue,
+  min = 0,
+  max = 1,
+  step = 0.01,
+  hideLabel = false,
+} = defineProps<Props>();
 
 type Emits = {
   "update:modelValue": [Props["modelValue"]];
@@ -42,7 +44,7 @@ const emit = defineEmits<Emits>();
 /** emit model value to parent */
 function onChange(event: Event) {
   let value = Number((event.target as HTMLInputElement).value);
-  value = clamp(value, props.min, props.max);
+  value = clamp(value, min, max);
   emit("update:modelValue", value);
 }
 </script>

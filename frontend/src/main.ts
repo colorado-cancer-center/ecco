@@ -11,18 +11,22 @@ import "./styles.css";
 
 console.debug(import.meta);
 
-createApp(App)
-  .component("font-awesome-icon", FontAwesomeIcon)
-  .use(router)
-  .use(
-    VueGtag,
-    {
-      config: { id: "G-XESEVBEL2X" },
-      enabled:
-        window.location.hostname === new URL(import.meta.env.VITE_URL).hostname,
-    },
-    router,
-  )
-  .use(VueTippy, tippyOptions)
-  .directive("stop", stop)
-  .mount("#app");
+const app = createApp(App);
+
+app.component("FontAwesomeIcon", FontAwesomeIcon);
+
+app.use(router);
+app.use(VueTippy, tippyOptions);
+app.directive("stop", stop);
+
+app.use(
+  VueGtag,
+  {
+    config: { id: "G-XESEVBEL2X" },
+    enabled:
+      window.location.hostname === new URL(import.meta.env.VITE_URL).hostname,
+  },
+  router,
+);
+
+app.mount("#app");

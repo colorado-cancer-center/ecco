@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUpdated, ref } from "vue";
+import { computed, onMounted, onUpdated, ref, useTemplateRef } from "vue";
 import { kebabCase } from "lodash";
 import { faLink } from "@fortawesome/free-solid-svg-icons";
 import AppLink from "@/components/AppLink.vue";
@@ -26,7 +26,7 @@ type Props = {
   id?: string;
 };
 
-const props = defineProps<Props>();
+const { level, id } = defineProps<Props>();
 
 type Slots = {
   default: () => unknown;
@@ -38,14 +38,14 @@ defineSlots<Slots>();
 const link = ref("");
 
 /** tag of heading */
-const tag = computed(() => "h" + props.level);
+const tag = computed(() => "h" + level);
 
 /** heading ref */
-const heading = ref<HTMLElement>();
+const heading = useTemplateRef<HTMLHeadingElement>("heading");
 
 /** determine link from text content of heading */
 function updateLink() {
-  link.value = kebabCase(props.id ?? heading.value?.textContent ?? "");
+  link.value = kebabCase(id ?? heading.value?.textContent ?? "");
 }
 
 onMounted(updateLink);

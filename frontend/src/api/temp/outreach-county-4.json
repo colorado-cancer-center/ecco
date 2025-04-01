@@ -1,0 +1,492 @@
+[
+  {
+    "county": "Adams County",
+    "has_fit_kits": true,
+    "has_radon_kits": true,
+    "has_2morrow": true,
+    "has_womens_wellness_center": true,
+    "has_both_kits": true,
+    "has_any_activity": true,
+    "has_all": true
+  },
+  {
+    "county": "Chaffee County",
+    "has_fit_kits": true,
+    "has_radon_kits": true,
+    "has_2morrow": false,
+    "has_womens_wellness_center": true,
+    "has_both_kits": true,
+    "has_any_activity": true,
+    "has_all": false
+  },
+  {
+    "county": "Denver County",
+    "has_fit_kits": true,
+    "has_radon_kits": true,
+    "has_2morrow": true,
+    "has_womens_wellness_center": true,
+    "has_both_kits": true,
+    "has_any_activity": true,
+    "has_all": true
+  },
+  {
+    "county": "Kit Carson County",
+    "has_fit_kits": true,
+    "has_radon_kits": true,
+    "has_2morrow": true,
+    "has_womens_wellness_center": true,
+    "has_both_kits": true,
+    "has_any_activity": true,
+    "has_all": true
+  },
+  {
+    "county": "Morgan County",
+    "has_fit_kits": true,
+    "has_radon_kits": true,
+    "has_2morrow": true,
+    "has_womens_wellness_center": false,
+    "has_both_kits": true,
+    "has_any_activity": true,
+    "has_all": false
+  },
+  {
+    "county": "Pitkin County",
+    "has_fit_kits": true,
+    "has_radon_kits": true,
+    "has_2morrow": false,
+    "has_womens_wellness_center": true,
+    "has_both_kits": true,
+    "has_any_activity": true,
+    "has_all": false
+  },
+  {
+    "county": "Rio Blanco County",
+    "has_fit_kits": true,
+    "has_radon_kits": true,
+    "has_2morrow": false,
+    "has_womens_wellness_center": false,
+    "has_both_kits": true,
+    "has_any_activity": true,
+    "has_all": false
+  },
+  {
+    "county": "Routt County",
+    "has_fit_kits": true,
+    "has_radon_kits": true,
+    "has_2morrow": false,
+    "has_womens_wellness_center": true,
+    "has_both_kits": true,
+    "has_any_activity": true,
+    "has_all": false
+  },
+  {
+    "county": "El Paso County",
+    "has_fit_kits": false,
+    "has_radon_kits": true,
+    "has_2morrow": true,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": true,
+    "has_all": false
+  },
+  {
+    "county": "Lake County",
+    "has_fit_kits": false,
+    "has_radon_kits": true,
+    "has_2morrow": false,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": true,
+    "has_all": false
+  },
+  {
+    "county": "Broomfield County",
+    "has_fit_kits": true,
+    "has_radon_kits": false,
+    "has_2morrow": true,
+    "has_womens_wellness_center": false,
+    "has_both_kits": false,
+    "has_any_activity": true,
+    "has_all": false
+  },
+  {
+    "county": "Jackson County",
+    "has_fit_kits": true,
+    "has_radon_kits": false,
+    "has_2morrow": false,
+    "has_womens_wellness_center": false,
+    "has_both_kits": false,
+    "has_any_activity": true,
+    "has_all": false
+  },
+  {
+    "county": "Jefferson County",
+    "has_fit_kits": true,
+    "has_radon_kits": false,
+    "has_2morrow": true,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": true,
+    "has_all": false
+  },
+  {
+    "county": "Larimer County",
+    "has_fit_kits": true,
+    "has_radon_kits": false,
+    "has_2morrow": true,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": true,
+    "has_all": false
+  },
+  {
+    "county": "Baca County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": false,
+    "has_womens_wellness_center": false,
+    "has_both_kits": false,
+    "has_any_activity": true,
+    "has_all": false
+  },
+  {
+    "county": "Boulder County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": true,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": true,
+    "has_all": false
+  },
+  {
+    "county": "Eagle County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": false,
+    "has_womens_wellness_center": false,
+    "has_both_kits": false,
+    "has_any_activity": true,
+    "has_all": false
+  },
+  {
+    "county": "Fremont County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": false,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": true,
+    "has_all": false
+  },
+  {
+    "county": "Garfield County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": true,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": true,
+    "has_all": false
+  },
+  {
+    "county": "Grand County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": false,
+    "has_womens_wellness_center": false,
+    "has_both_kits": false,
+    "has_any_activity": true,
+    "has_all": false
+  },
+  {
+    "county": "Logan County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": false,
+    "has_womens_wellness_center": false,
+    "has_both_kits": false,
+    "has_any_activity": true,
+    "has_all": false
+  },
+  {
+    "county": "Mesa County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": true,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": true,
+    "has_all": false
+  },
+  {
+    "county": "Moffat County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": true,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": true,
+    "has_all": false
+  },
+  {
+    "county": "Otero County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": true,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": true,
+    "has_all": false
+  },
+  {
+    "county": "Summit County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": false,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": true,
+    "has_all": false
+  },
+  {
+    "county": "Teller County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": true,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": true,
+    "has_all": false
+  },
+  {
+    "county": "Alamosa County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": false,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": false,
+    "has_all": false
+  },
+  {
+    "county": "Arapahoe County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": true,
+    "has_womens_wellness_center": false,
+    "has_both_kits": false,
+    "has_any_activity": false,
+    "has_all": false
+  },
+  {
+    "county": "Archuleta County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": false,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": false,
+    "has_all": false
+  },
+  {
+    "county": "Bent County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": true,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": false,
+    "has_all": false
+  },
+  {
+    "county": "Conejos County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": false,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": false,
+    "has_all": false
+  },
+  {
+    "county": "Costilla County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": false,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": false,
+    "has_all": false
+  },
+  {
+    "county": "Crowley County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": true,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": false,
+    "has_all": false
+  },
+  {
+    "county": "Clear Creek County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": true,
+    "has_womens_wellness_center": false,
+    "has_both_kits": false,
+    "has_any_activity": false,
+    "has_all": false
+  },
+  {
+    "county": "Custer County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": false,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": false,
+    "has_all": false
+  },
+  {
+    "county": "Douglas County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": true,
+    "has_womens_wellness_center": false,
+    "has_both_kits": false,
+    "has_any_activity": false,
+    "has_all": false
+  },
+  {
+    "county": "Delta",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": false,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": false,
+    "has_all": false
+  },
+  {
+    "county": "Elbert County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": true,
+    "has_womens_wellness_center": false,
+    "has_both_kits": false,
+    "has_any_activity": false,
+    "has_all": false
+  },
+  {
+    "county": "Gunnison County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": false,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": false,
+    "has_all": false
+  },
+  {
+    "county": "Gilpin County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": true,
+    "has_womens_wellness_center": false,
+    "has_both_kits": false,
+    "has_any_activity": false,
+    "has_all": false
+  },
+  {
+    "county": "La Plata County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": false,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": false,
+    "has_all": false
+  },
+  {
+    "county": "Lincoln County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": false,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": false,
+    "has_all": false
+  },
+  {
+    "county": "Montrose County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": true,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": false,
+    "has_all": false
+  },
+  {
+    "county": "Park County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": true,
+    "has_womens_wellness_center": false,
+    "has_both_kits": false,
+    "has_any_activity": false,
+    "has_all": false
+  },
+  {
+    "county": "Pueblo County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": true,
+    "has_womens_wellness_center": false,
+    "has_both_kits": false,
+    "has_any_activity": false,
+    "has_all": false
+  },
+  {
+    "county": "Rio Grande County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": false,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": false,
+    "has_all": false
+  },
+  {
+    "county": "San Miguel",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": false,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": false,
+    "has_all": false
+  },
+  {
+    "county": "Weld County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": true,
+    "has_womens_wellness_center": true,
+    "has_both_kits": false,
+    "has_any_activity": false,
+    "has_all": false
+  },
+  {
+    "county": "Yuma County",
+    "has_fit_kits": false,
+    "has_radon_kits": false,
+    "has_2morrow": true,
+    "has_womens_wellness_center": false,
+    "has_both_kits": false,
+    "has_any_activity": false,
+    "has_all": false
+  }
+]

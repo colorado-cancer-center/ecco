@@ -1,5 +1,5 @@
 import type { TippyOptions } from "vue-tippy";
-import { type Instance } from "tippy.js";
+import type { Instance } from "tippy.js";
 import { makeLabel } from "@/util/string";
 
 export const tippyOptions: {

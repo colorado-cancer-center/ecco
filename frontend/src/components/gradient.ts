@@ -36,8 +36,11 @@ export const gradientOptions = (
     "interpolatePRGn",
   ] satisfies Extract<keyof typeof d3, `interpolate${string}`>[]
 ).map((key) => {
+  /** get interpolate func */
   const func = d3[key];
+  /** nice human-readable label */
   const label = key.replace("interpolate", "");
+  /** unique id, e.g. for syncing selected gradient with url */
   const id = label.toLowerCase();
   /** concat 1 to include end of range */
   const colors = range(0, 1, 0.1).concat([1]).map(func);

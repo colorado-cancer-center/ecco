@@ -22,7 +22,7 @@ type Props = {
   accent?: boolean;
 };
 
-const props = defineProps<Props>();
+const { to } = defineProps<Props>();
 
 type Slots = {
   default?: () => unknown;
@@ -30,7 +30,7 @@ type Slots = {
 
 defineSlots<Slots>();
 
-const component = computed(() => (props.to ? AppLink : "button"));
+const component = computed(() => (to ? AppLink : "button"));
 </script>
 
 <style scoped>
