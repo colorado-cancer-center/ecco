@@ -13,7 +13,7 @@ from datetime import datetime
 CIF_STATS_URL = "https://cancerinfocus.org/public-data/Current/us.zip"
 CIF_CODEBOOK_URL = "https://cancerinfocus.org/public-data/cif_variable_codebook.xlsx"
 CCRM_URL = "https://ucdamc-geo.maps.arcgis.com/sharing/rest/content/items/5ab17916dd07440f98f9bb35988cd434/data?f=json"
-HOUSE_SENATE_MEMBERS_XLSX_URL = "https://leg.colorado.gov/sites/default/files/memberdirectory_3_1_1.xlsx"
+HOUSE_SENATE_MEMBERS_XLSX_URL = "https://leg.colorado.gov/sites/default/files/memberdirectory_3_3.xlsx"
 CONGRESS_MEMBERS_URL = "https://clerk.house.gov/Members/ViewMemberList"
 
 # URLs for colorado geometry data
