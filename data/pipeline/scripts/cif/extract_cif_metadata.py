@@ -16,7 +16,7 @@ ENDC = '\033[0m'
 
 # whether to skip merging cancer data into the metadata
 # (we get cancer incidence and mortality from SCP now so it's a bit redundant to include it in the CiF metadata, but the
-# current hardcoded CiF meta includes it, and i could imagine wanting to compare againt the SCP data in the future...)
+# current hardcoded CiF meta includes it, and i could imagine wanting to compare against the SCP data in the future...)
 SKIP_CANCER_MEASURE_CATEGORIES = False
 
 # whether to skip "SVI"(?) measure categories
