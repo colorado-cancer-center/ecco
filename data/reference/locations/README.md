@@ -14,7 +14,7 @@ Data originally copied in by FA from the frontend on July 18th, 2024.
 
 ## Sources:
 
-First, the file `locations.json` in the is folder consists of hand-labeled
+First, the file `locations.json` in this folder consists of hand-labeled
 categories and key references into the location data from our various sources.
 This file was created by VR with ECCO leadership's guidance.
 
