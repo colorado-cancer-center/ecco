@@ -211,6 +211,7 @@ export async function getGeo(
           id: d[idField],
           name,
           label: name.replace(/county/i, ""),
+          hatch: Math.random() > 0.5,
 
           /** include extra per-county data */
           /** TEMPORARY: should eventually come from backend */
