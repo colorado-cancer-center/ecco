@@ -1,0 +1,196 @@
+county,hpv_category,percent_utd
+Colorado,hpv_overall,0.585
+Colorado,hpv_female,0.596
+Colorado,hpv_male,0.576
+Adams,hpv_overall,0.631
+Adams,hpv_female,0.634
+Adams,hpv_male,0.628
+Alamosa,hpv_overall,0.536
+Alamosa,hpv_female,0.549
+Alamosa,hpv_male,0.525
+Arapahoe,hpv_overall,0.642
+Arapahoe,hpv_female,0.653
+Arapahoe,hpv_male,0.633
+Archuleta,hpv_overall,0.367
+Archuleta,hpv_female,0.373
+Archuleta,hpv_male,0.36
+Baca,hpv_overall,0.585
+Baca,hpv_female,0.602
+Baca,hpv_male,0.569
+Bent,hpv_overall,0.609
+Bent,hpv_female,0.595
+Bent,hpv_male,0.624
+Boulder,hpv_overall,0.622
+Boulder,hpv_female,0.627
+Boulder,hpv_male,0.617
+Broomfield,hpv_overall,0.668
+Broomfield,hpv_female,0.676
+Broomfield,hpv_male,0.661
+Chaffee,hpv_overall,0.382
+Chaffee,hpv_female,0.408
+Chaffee,hpv_male,0.355
+Cheyenne,hpv_overall,0.336
+Cheyenne,hpv_female,0.273
+Cheyenne,hpv_male,0.407
+Clear Creek,hpv_overall,0.562
+Clear Creek,hpv_female,0.577
+Clear Creek,hpv_male,0.553
+Conejos,hpv_overall,0.471
+Conejos,hpv_female,0.477
+Conejos,hpv_male,0.466
+Costilla,hpv_overall,0.593
+Costilla,hpv_female,0.617
+Costilla,hpv_male,0.57
+Crowley,hpv_overall,0.531
+Crowley,hpv_female,0.59
+Crowley,hpv_male,0.471
+Custer,hpv_overall,0.381
+Custer,hpv_female,0.433
+Custer,hpv_male,0.328
+Delta,hpv_overall,0.509
+Delta,hpv_female,0.491
+Delta,hpv_male,0.53
+Denver,hpv_overall,0.673
+Denver,hpv_female,0.678
+Denver,hpv_male,0.669
+Dolores,hpv_overall,0.571
+Dolores,hpv_female,0.481
+Dolores,hpv_male,0.639
+Douglas,hpv_overall,0.619
+Douglas,hpv_female,0.627
+Douglas,hpv_male,0.611
+Eagle,hpv_overall,0.423
+Eagle,hpv_female,0.444
+Eagle,hpv_male,0.404
+El Paso,hpv_overall,0.435
+El Paso,hpv_female,0.451
+El Paso,hpv_male,0.419
+Elbert,hpv_overall,0.556
+Elbert,hpv_female,0.563
+Elbert,hpv_male,0.549
+Fremont,hpv_overall,0.42
+Fremont,hpv_female,0.435
+Fremont,hpv_male,0.405
+Garfield,hpv_overall,0.578
+Garfield,hpv_female,0.601
+Garfield,hpv_male,0.557
+Gilpin,hpv_overall,0.525
+Gilpin,hpv_female,0.504
+Gilpin,hpv_male,0.544
+Grand,hpv_overall,0.454
+Grand,hpv_female,0.5
+Grand,hpv_male,0.406
+Gunnison,hpv_overall,0.506
+Gunnison,hpv_female,0.503
+Gunnison,hpv_male,0.511
+Hinsdale,hpv_overall,0.182
+Hinsdale,hpv_female,0.273
+Hinsdale,hpv_male,0.091
+Huerfano,hpv_overall,0.381
+Huerfano,hpv_female,0.389
+Huerfano,hpv_male,0.374
+Jackson,hpv_overall,0.567
+Jackson,hpv_female,0.577
+Jackson,hpv_male,0.559
+Jefferson,hpv_overall,0.654
+Jefferson,hpv_female,0.656
+Jefferson,hpv_male,0.653
+Kiowa,hpv_overall,0.699
+Kiowa,hpv_female,0.571
+Kiowa,hpv_male,0.871
+Kit Carson,hpv_overall,0.199
+Kit Carson,hpv_female,0.224
+Kit Carson,hpv_male,0.172
+La Plata,hpv_overall,0.57
+La Plata,hpv_female,0.588
+La Plata,hpv_male,0.554
+Lake,hpv_overall,0.519
+Lake,hpv_female,0.531
+Lake,hpv_male,0.511
+Larimer,hpv_overall,0.586
+Larimer,hpv_female,0.605
+Larimer,hpv_male,0.57
+Las Animas,hpv_overall,0.499
+Las Animas,hpv_female,0.471
+Las Animas,hpv_male,0.525
+Lincoln,hpv_overall,0.426
+Lincoln,hpv_female,0.48
+Lincoln,hpv_male,0.386
+Logan,hpv_overall,0.492
+Logan,hpv_female,0.511
+Logan,hpv_male,0.474
+Mesa,hpv_overall,0.528
+Mesa,hpv_female,0.549
+Mesa,hpv_male,0.508
+Mineral,hpv_overall,0.367
+Mineral,hpv_female,0.357
+Mineral,hpv_male,0.333
+Moffat,hpv_overall,0.449
+Moffat,hpv_female,0.462
+Moffat,hpv_male,0.439
+Montezuma,hpv_overall,0.43
+Montezuma,hpv_female,0.464
+Montezuma,hpv_male,0.4
+Montrose,hpv_overall,0.521
+Montrose,hpv_female,0.538
+Montrose,hpv_male,0.506
+Morgan,hpv_overall,0.543
+Morgan,hpv_female,0.573
+Morgan,hpv_male,0.515
+Otero,hpv_overall,0.545
+Otero,hpv_female,0.56
+Otero,hpv_male,0.527
+Ouray,hpv_overall,0.452
+Ouray,hpv_female,0.491
+Ouray,hpv_male,0.402
+Park,hpv_overall,0.523
+Park,hpv_female,0.506
+Park,hpv_male,0.535
+Phillips,hpv_overall,0.427
+Phillips,hpv_female,0.486
+Phillips,hpv_male,0.362
+Pitkin,hpv_overall,0.429
+Pitkin,hpv_female,0.438
+Pitkin,hpv_male,0.423
+Prowers,hpv_overall,0.758
+Prowers,hpv_female,0.786
+Prowers,hpv_male,0.734
+Pueblo,hpv_overall,0.551
+Pueblo,hpv_female,0.568
+Pueblo,hpv_male,0.535
+Rio Blanco,hpv_overall,0.475
+Rio Blanco,hpv_female,0.518
+Rio Blanco,hpv_male,0.435
+Rio Grande,hpv_overall,0.561
+Rio Grande,hpv_female,0.559
+Rio Grande,hpv_male,0.565
+Routt,hpv_overall,0.59
+Routt,hpv_female,0.623
+Routt,hpv_male,0.558
+Saguache,hpv_overall,0.517
+Saguache,hpv_female,0.542
+Saguache,hpv_male,0.496
+San Juan,hpv_overall,0.75
+San Juan,hpv_female,0.737
+San Juan,hpv_male,0.762
+San Miguel,hpv_overall,0.557
+San Miguel,hpv_female,0.569
+San Miguel,hpv_male,0.549
+Sedgwick,hpv_overall,0.229
+Sedgwick,hpv_female,0.23
+Sedgwick,hpv_male,0.228
+Summit,hpv_overall,0.507
+Summit,hpv_female,0.544
+Summit,hpv_male,0.473
+Teller,hpv_overall,0.331
+Teller,hpv_female,0.348
+Teller,hpv_male,0.316
+Washington,hpv_overall,0.519
+Washington,hpv_female,0.573
+Washington,hpv_male,0.476
+Weld,hpv_overall,0.574
+Weld,hpv_female,0.583
+Weld,hpv_male,0.565
+Yuma,hpv_overall,0.271
+Yuma,hpv_female,0.306
+Yuma,hpv_male,0.232

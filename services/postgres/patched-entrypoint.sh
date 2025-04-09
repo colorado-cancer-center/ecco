@@ -322,6 +322,10 @@ _main() {
 			exec gosu postgres "$BASH_SOURCE" "$@"
 		fi
 
+		# remove the sentinel file /tmp/initialized, since we just
+		# started initialization and so we clearly aren't already init'd
+		rm /tmp/initialized 2>/dev/null || true
+
 		# only run initialization on an empty data directory
 		if [ -z "$DATABASE_ALREADY_EXISTS" ]; then
 			docker_verify_minimum_env
@@ -379,6 +383,11 @@ _main() {
 		else
 			echo "No post-init files found; ready for startup."
 		fi
+
+		# assumedly if we're here we've finished all init and post-init tasks
+		# so we create the /tmp/initialized file to signal that we're ready
+		# to the healthcheck script
+		touch /tmp/initialized
 	fi
 
 	exec "$@"
