@@ -59,6 +59,18 @@ class Tract(GeometryTable, table=True):
     fips: str = Field(index=True)
 
 
+class HealthRegion(GeometryTable, table=True):
+    __tablename__ = "healthregion"
+
+    # an identifier for the health region
+    # (it's technically an int, but we keep it a string to match the other
+    # geometry tables, in which the identifiers should absolutely be strings)
+    hs_region: str = Field(index=True)
+
+    # a comma-delimited list of counties that are in this health region
+    counties: str = Field(index=True)
+
+
 # ===========================================================================
 # === reference tables
 # ===========================================================================
