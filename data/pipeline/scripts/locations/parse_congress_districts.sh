@@ -1,17 +1,16 @@
 #!/usr/bin/env bash
 
-# takes congress_members.html from stdin, and writes to stdout a CSV of Colorado
-# congress members.
-# each row includes the district number, member name, affiliation, and website
-# (website is derived from the member's name)
+# takes congress members HTML from stdin, and writes to stdout a CSV of Colorado
+# congress members. each row includes the district number, member name,
+# affiliation, and website
 
-# use hq to extract table with CSS class name "library-table"
-# then use jq (in several steps; optimize later?) to extract the data, annotate
-# with some computed fields, and format it as CSV
+# use hq to extract the table then use jq (in several steps; optimize later?) to
+# extract the data, annotate with some computed fields, and format it as CSV
 hq 'array {
-    //table//tr ->
+    //tbody//tr ->
     hash {
         member: $_/td[1]//span[1] | text,
+        member_url: $_/td[1]//a/@href,
         affiliation: $_/td[2] | text,
         state: $_/td[3] | text,
         district: $_/td[4] | text
@@ -25,7 +24,7 @@ hq 'array {
                 .district,
                 .member,
                 .affiliation,
-                "https://\(.member | split(", ") | .[0] | ascii_downcase ).house.gov/"
+                "https://clerk.house.gov\( .member_url )"
             ]
         )
     ) | @csv'
