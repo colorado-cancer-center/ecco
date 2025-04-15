@@ -1,4 +1,4 @@
-name: Publish Monthly ECCO Database Release
+name: Publish ECCO DB as Release
 
 on:
   # trigger on merge into main
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  create_release:
+  publish_release:
     runs-on: 'ubuntu-latest'
 
     # we need to be able to create GH releases in this workflow
@@ -20,7 +20,7 @@ jobs:
     steps:
     - uses: 'actions/checkout@v4'
 
-    - name: Create GH release containing dumpfile
+    - name: Publish GH release containing dumpfile
       env:
         GH_TOKEN: ${{ github.token }}
       run: |-
@@ -29,4 +29,4 @@ jobs:
           cd ./db-exports/
           export RELEASE_DB_DUMP=$( ls -t . | head -n 1 )
 
-          gh release create ${{ env.CURDATE }} ./db-exports/${RELEASE_DB_DUMP}
+          gh release create ${CURDATE} ./db-exports/${RELEASE_DB_DUMP}
