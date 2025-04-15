@@ -385,8 +385,8 @@ _main() {
 		fi
 
 		# assumedly if we're here we've finished all init and post-init tasks
-		# so we create the /tmp/initialized file to signal that we're ready
-		# to the healthcheck script
+		# so we create the /tmp/initialized file to signal to the healthcheck script
+		# that the database is ready to accept connections.
 		touch /tmp/initialized
 	fi
 
