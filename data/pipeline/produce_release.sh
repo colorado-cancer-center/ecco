@@ -44,7 +44,7 @@ wait_for_container_healthy() {
     RETRIES=${3:-60}
     RETRIES_LEFT=${RETRIES}
 
-    if [ -z "${CONTAINER_ID}" ]; then
+    if [[ -z "${CONTAINER_ID}" ]]; then
         echo "Container ${CONTAINER_NAME} not found in the stack"
         exit 1
     fi
@@ -56,7 +56,7 @@ wait_for_container_healthy() {
         sleep ${POLL_SECS}
 
         # check if we've exceeded the number of retries
-        if [ ${RETRIES_LEFT} = "0" ]; then
+        if [[ "${RETRIES_LEFT}" = "0" ]]; then
             echo "Container ${CONTAINER_NAME} did not become healthy in time"
             exit 1
         fi
@@ -71,7 +71,7 @@ wait_for_container_healthy() {
 # -----------------------------------------------------------------------------
 
 # if we haven't been forced to create a release, ask the user if they'd like to
-if [ "${ACQUIRE_RELEASE}" = "0" ] && [ "${NONINTERACTIVE}" = "0" ]; then
+if [[ "${ACQUIRE_RELEASE}" = "0" ]] && [[ "${NONINTERACTIVE}" = "0" ]]; then
     read -p "Do you want to obtain a new release before importing data? (y/n) " -n 1 -r ; echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         ACQUIRE_RELEASE=1
@@ -79,7 +79,7 @@ if [ "${ACQUIRE_RELEASE}" = "0" ] && [ "${NONINTERACTIVE}" = "0" ]; then
 fi
 
 # create the new release in the staging folder
-if [ "${ACQUIRE_RELEASE}" = "1" ]; then
+if [[ "${ACQUIRE_RELEASE}" = "1" ]]; then
     # ensure the backend is up and running
     docker compose up -d backend && \
     wait_for_container_healthy backend
@@ -105,7 +105,7 @@ echo "  - Latest staging folder date: ${LATEST_STAGING}"
 
 # if they haven't forced it already, ask the user if they want to purge the
 # database before import
-if [ "${DELETE_DB_BEFORE_IMPORT}" = "0" ] && [" ${NONINTERACTIVE}" = "0" ]; then
+if [[ "${DELETE_DB_BEFORE_IMPORT}" = "0" ]] && [[ "${NONINTERACTIVE}" = "0" ]]; then
     read -p "Do you want to purge the database before importing data? (y/n) " -n 1 -r ; echo
 
     if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -113,7 +113,7 @@ if [ "${DELETE_DB_BEFORE_IMPORT}" = "0" ] && [" ${NONINTERACTIVE}" = "0" ]; then
     fi
 fi
 
-if [ "${DELETE_DB_BEFORE_IMPORT}" = "1" ]; then
+if [[ "${DELETE_DB_BEFORE_IMPORT}" = "1" ]]; then
     # bring down the stack
     docker compose down
 
