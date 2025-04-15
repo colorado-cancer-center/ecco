@@ -29,4 +29,4 @@ jobs:
           cd ./db-exports/
           export RELEASE_DB_DUMP=$( ls -t . | head -n 1 )
 
-          gh release create ${CURDATE} ./db-exports/${RELEASE_DB_DUMP}
+          gh release create ${CURDATE} ./${RELEASE_DB_DUMP}
