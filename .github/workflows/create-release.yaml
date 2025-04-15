@@ -3,31 +3,20 @@ name: Create Monthly ECCO Database
 # run every month on the 3rd
 # and also manually via the workflow_dispatch event
 on:
+  schedule:
+    - cron: '0 0 3 * *'
   workflow_dispatch:
     inputs:
-      create_release:
-        type: boolean
-        description: 'Publish the ECCO database dump as a GH release'
-        required: false
-        default: false
-      create_release_pr:
-        type: boolean
-        description: 'Create a PR that includes the new dump'
-        required: false
-        default: true
       disable_staging_cache:
         type: boolean
         description: "Disable using today's staged data cache for this run"
         required: false
         default: false
-      # debug_enabled:
-      #   type: boolean
-      #   description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
-      #   required: false
-      #   default: false
-  schedule:
-    - cron: '0 0 3 * *'
-
+      disable_geocoding_cache:
+        type: boolean
+        description: "Disable saving and restoring the geocoding cache for this run"
+        required: false
+        default: false
 
 jobs:
   create_release:
@@ -43,11 +32,9 @@ jobs:
       MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
       CURDATE: ""
 
-    # we need to be able to publish GH images, releases, and to create PRs
-    # in this workflow
+    # we need to be able to publish GH images and to create PRs in this workflow
     permissions:
       packages: write
-      contents: write
       pull-requests: write
 
     steps:
@@ -90,11 +77,6 @@ jobs:
           docker-compose.yml
           docker-compose-cache.json
 
-    # # Enable tmate debugging of manually-triggered workflows if the input option was provided
-    # - name: Setup tmate session
-    #   uses: mxschmitt/action-tmate@v3
-    #   if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
-
     # retrieve the ./data/staging/ folder from the cache if possible
     - name: Retrieve current date's staging data from cache
       id: cache-staging-restore
@@ -104,6 +86,17 @@ jobs:
         path: ./data/staging/${{ env.CURDATE }}
         key: staging-${{ env.CURDATE }}-data
 
+    # to alleviate hitting Google's Geocoding API more frequently than we need
+    # to, we cache the geocoding data in the ./data/pipeline/.geocoding folder.
+    # we attempt to retrieve it here, if possible
+    - name: Retrieve geocoding cache from GH cache
+      id: cache-geocoding-restore
+      if: ${{ !github.event.inputs.disable_geocoding_cache }}
+      uses: actions/cache/restore@v4
+      with:
+        path: ./data/pipeline/.geocoding
+        key: staging-geocoding-data
+      
     - name: Produce release
       run: |-
           cd ./data/pipeline
@@ -114,32 +107,24 @@ jobs:
     - name: Cache staging data
       continue-on-error: true
       id: cache-staging-store
+      if: ${{ !github.event.inputs.disable_staging_cache }}
       uses: actions/cache/save@v4
       with:
         path: ./data/staging/${{ env.CURDATE }}
         key: staging-${{ env.CURDATE }}-data
 
-    - name: Copy dump to releases
-      run: |-
-          # list the /db-exports folder and sort
-          # by date, taking the most recent file
-          mkdir -p /tmp/release/
-          cd ./db-exports/
-          export RELEASE_DB_DUMP=$( ls -t . | head -n 1 )
-          cp ${RELEASE_DB_DUMP} /tmp/release/
-
-          # write out the RELEASE_DB_DUMP to the environment
-          echo "RELEASE_DB_DUMP=${RELEASE_DB_DUMP}" >> $GITHUB_ENV
-
-    - name: Create GH release containing dumpfile
-      if: ${{ github.event.inputs.create_release == 'true' }}
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: |-
-          gh release create ${{ env.CURDATE }} /tmp/release/${RELEASE_DB_DUMP}
+    # also write the geocoding cache to the GH cache
+    # (always run this, even if the produce release step failed)
+    - name: Cache geocoding data
+      continue-on-error: true
+      id: cache-geocoding-store
+      if: ${{ !github.event.inputs.disable_geocoding_cache }}
+      uses: actions/cache/save@v4
+      with:
+        path: ./data/pipeline/.geocoding
+        key: staging-geocoding-data
 
     - name: Create Pull Request
-      if: ${{ github.event.inputs.create_release_pr == 'true' }}
       # uses: peter-evans/create-pull-request@v7.0.8
       uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e
       with:
@@ -166,5 +151,4 @@ jobs:
           on the PR with any issues found in the release.
           
         branch: 'release-dump-${{ env.CURDATE }}'
-        labels: 'release'
         add-paths: "./db-exports/"
