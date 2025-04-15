@@ -37,6 +37,7 @@ services:
 
   db:
     build: ./services/postgres
+    platform: linux/amd64
     # image: postgis/postgis:15-3.3
     env_file:
       - .env
