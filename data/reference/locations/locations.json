@@ -1,0 +1,57 @@
+{
+  "Cancer Care": {
+    "Lung Cancer Screening": "lung-cancer-screening",
+    "Mammography": "mammography",
+    "Colon & Rectal Surgeon": "colon-rectal-surgeon",
+    "All Treatment Sites": "all-treatment-15-jun-2021",
+    "Medical Oncology Sites": "med-onc-15-jun-2021",
+    "Surgical Oncology Sites": "surg-onc-15-jun-2021",
+    "Radiation Oncology Sites": "rad-onc-15-jun-2021",
+    "Pediatric Oncology Sites": "ped-onc-15-jun-2021",
+    "Clinical Trials": "trials-15-jun-2021",
+    "Colorado Cancer Screening Program Site": "ccsp-15-jun-2021",
+    "Cancer Support Groups": "support-grp-15-jun-2021",
+    "Survivorship Program Sites": "survivorship-15-jun-2021",
+    "Palliative Care": "palliative-15-jun-2021",
+    "Hospice Care": "hospice-15-jun-2021",
+    "Cancer Education": "cancer-ed-29-jul-221",
+    "Radiology Centers": "radiology",
+    "Women's Wellness Connection Site": "wwc-15-jun-2021"
+  },
+  "Primary Care": {
+    "FQHC": "fqhc",
+    "Gastroenterology": "gastroenterology",
+    "HPSA Correctional Facility": "hpsa-correctional-facility",
+    "HPSA Federally Qualified Health Center Look A Like": "hpsa-federally-qualified-health-center-look-a-like",
+    "HPSA Indian Health Service, Tribal Health, and Urban Indian Health Organizations": "hpsa-indian-health-service-tribal-health-and-urban-indian-health-organizations",
+    "HPSA Other Facility": "hpsa-other-facility",
+    "HPSA Rural Health Clinic": "hpsa-rural-health-clinic",
+    "Obstetrics & Gynecology": "obstetrics-gynecology",
+    "Family Planning Clinics": "title-x-15-jun-2021",
+    "Community Health Centers": "chc-15-jun-2021",
+    "Rural Health Centers": "rhc-15-jun-2021",
+    "Indian Health Services": "ihs-15-jun-2021"
+  },
+  "Specialty Resources": {
+    "Genetic Counseling Services": "genetic-coun-15-jun-2021",
+    "All Support Services": "all-support-services-15-jun-2021",
+    "Patient Rehabilitation Sites": "pt-rehab-15-jun-2021",
+    "Nutrition Services": "nutrition-15-jun-2021",
+    "Lodging": "lodging-15-jun-2021",
+    "Financial Assistance": "financial-coun-15-jun-2021",
+    "Accessories & Aids": "accessories-aids-29-jul-21",
+    "Program and Events": "programs-events-29-jul-21",
+    "Fitness and Wellness": "fitness-29-jul-21",
+    "Home Healthcare": "home-family-care-29-jul-21",
+    "Transportation Services": "transportation-29-jul-21"
+  },
+  "Environmental Exposures": {
+    "Superfund Site": "superfund-site",
+    "Toxic Release Inventory Facility": "toxic-release-inventory-facility"
+  },
+  "Legislative": {
+    "Senate Districts": "senate-districts",
+    "House Districts": "house-districts",
+    "Congressional Districts": "congressional-districts"
+  }
+}

@@ -1,0 +1,154 @@
+name: Create Monthly ECCO Database
+
+# run every month on the 3rd
+# and also manually via the workflow_dispatch event
+on:
+  schedule:
+    - cron: '0 0 3 * *'
+  workflow_dispatch:
+    inputs:
+      disable_staging_cache:
+        type: boolean
+        description: "Disable using today's staged data cache for this run"
+        required: false
+        default: false
+      disable_geocoding_cache:
+        type: boolean
+        description: "Disable saving and restoring the geocoding cache for this run"
+        required: false
+        default: false
+
+jobs:
+  create_release:
+    runs-on: 'ubuntu-latest'
+    env:
+      NONINTERACTIVE: 1
+      FORCE_ACQUIRE_RELEASE: 1
+      FORCE_DELETE_DB_BEFORE_IMPORT: 1
+      POSTGRES_DATABASE: "ecco"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PORT: "5432"
+      POSTGRES_HOST: "db"
+      MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+      CURDATE: ""
+
+    # we need to be able to publish GH images and to create PRs in this workflow
+    permissions:
+      packages: write
+      pull-requests: write
+
+    steps:
+    - uses: 'actions/checkout@v4'
+
+    - name: Add YYYY-mm-dd to the environment as CURDATE
+      run: |
+        export TZ=America/Denver
+        echo "CURDATE=$( date +%Y-%m-%d )" >> $GITHUB_ENV
+
+    - name: Write .env file with random pg password, other essentials
+      run: |-
+          # since we just need a shared pg secret, we'll randomly generate
+          # one here
+          export POSTGRES_PASSWORD=$( LC_ALL=C tr -dc '[a-zA-Z0-9]' < /dev/urandom | head -c 13; echo )
+
+          # write it all out to .env
+          cat <<EOF > .env
+          POSTGRES_DATABASE="${POSTGRES_DATABASE}"
+          POSTGRES_USER="${POSTGRES_USER}"
+          POSTGRES_PASSWORD="${POSTGRES_PASSWORD}"
+          POSTGRES_PORT="${POSTGRES_PORT}"
+          POSTGRES_HOST="${POSTGRES_HOST}"
+          MAPS_API_KEY="${MAPS_API_KEY}"
+          EOF
+
+    - name: Set up Docker Compose
+      uses: docker/setup-compose-action@v1
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Cache Docker layers
+      uses: docker/bake-action@v6
+      with:
+        push: false
+        load: true
+        targets: backend,db
+        files: |-
+          docker-compose.yml
+          docker-compose-cache.json
+
+    # retrieve the ./data/staging/ folder from the cache if possible
+    - name: Retrieve current date's staging data from cache
+      id: cache-staging-restore
+      if: ${{ !github.event.inputs.disable_staging_cache }}
+      uses: actions/cache/restore@v4
+      with:
+        path: ./data/staging/${{ env.CURDATE }}
+        key: staging-${{ env.CURDATE }}-data
+
+    # to alleviate hitting Google's Geocoding API more frequently than we need
+    # to, we cache the geocoding data in the ./data/pipeline/.geocoding folder.
+    # we attempt to retrieve it here, if possible
+    - name: Retrieve geocoding cache from GH cache
+      id: cache-geocoding-restore
+      if: ${{ !github.event.inputs.disable_geocoding_cache }}
+      uses: actions/cache/restore@v4
+      with:
+        path: ./data/pipeline/.geocoding
+        key: staging-geocoding-data
+      
+    - name: Produce release
+      run: |-
+          cd ./data/pipeline
+          ./produce_release.sh
+
+    # write the staging data back into the cache
+    # (always run this, even if the produce release step failed)
+    - name: Cache staging data
+      continue-on-error: true
+      id: cache-staging-store
+      if: ${{ !github.event.inputs.disable_staging_cache }}
+      uses: actions/cache/save@v4
+      with:
+        path: ./data/staging/${{ env.CURDATE }}
+        key: staging-${{ env.CURDATE }}-data
+
+    # also write the geocoding cache to the GH cache
+    # (always run this, even if the produce release step failed)
+    - name: Cache geocoding data
+      continue-on-error: true
+      id: cache-geocoding-store
+      if: ${{ !github.event.inputs.disable_geocoding_cache }}
+      uses: actions/cache/save@v4
+      with:
+        path: ./data/pipeline/.geocoding
+        key: staging-geocoding-data
+
+    - name: Create Pull Request
+      # uses: peter-evans/create-pull-request@v7.0.8
+      uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e
+      with:
+        commit-message: 'Add database dump for ${{ env.CURDATE }} release'
+        title: 'Release database dump for ${{ env.CURDATE }}'
+        body: |
+          This PR contains the database dump for the ${{ env.CURDATE }} release.
+
+          ## Review Instructions
+
+          Check out this branch on your local machine, then bring up the stack
+          by running:
+
+          ```bash
+          ./run_stack.sh
+          ```
+
+          The database dump in this PR will automatically be loaded, and
+          the stack, including the frontend, will eventually boot.
+
+          Browse the site at http://localhost:8001 and verify the new data.
+
+          If you're satisfied, merge this PR to main; if not, comment
+          on the PR with any issues found in the release.
+          
+        branch: 'release-dump-${{ env.CURDATE }}'
+        add-paths: "./db-exports/"

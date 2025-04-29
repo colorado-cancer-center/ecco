@@ -21,8 +21,3 @@ services:
   db:
     ports:
       - 5435:5432
-    environment:
-      - SKIP_DB_LOAD=0 # if enabled, stops the db from loading the latest dump
-    volumes:
-      - ./services/postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
-      - ./db-exports:/db-exports
