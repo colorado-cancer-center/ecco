@@ -952,9 +952,9 @@ const locationOptions = computed(() => {
 /** are outreach locations selected */
 const outreachSelected = computed(() =>
   selectedLocations.value.filter((location) =>
-    Object.values(extraLocationList["Outreach and Interventions"]).includes(
-      location,
-    ),
+    (
+      Object.values(extraLocationList["Outreach and Interventions"]) as string[]
+    ).includes(location),
   ),
 );
 
