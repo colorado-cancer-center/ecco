@@ -34,6 +34,7 @@ jobs:
 
     # we need to be able to publish GH images and to create PRs in this workflow
     permissions:
+      contents: write
       packages: write
       pull-requests: write
 
