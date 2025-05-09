@@ -484,7 +484,7 @@
 
           <!-- outreach -->
 
-          <div class="mini-table">
+          <div v-if="outreachSelected.length" class="mini-table">
             <template v-if="feature.fit_kits">
               <AppLink
                 to="https://medlineplus.gov/ency/patientinstructions/000704.htm"
@@ -948,6 +948,15 @@ const locationOptions = computed(() => {
 
   return entries;
 });
+
+/** are outreach locations selected */
+const outreachSelected = computed(() =>
+  selectedLocations.value.filter((location) =>
+    (
+      Object.values(extraLocationList["Outreach and Interventions"]) as string[]
+    ).includes(location),
+  ),
+);
 
 /** county overview outreach data */
 const countyWide = computed(() => {
