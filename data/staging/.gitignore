@@ -1,0 +1,3 @@
+# ignore all staging data, since it's an intermediate used to create
+# a database dump. the final artifacts are checked in at `/db-exports/`
+*

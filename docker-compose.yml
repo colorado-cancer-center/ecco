@@ -12,6 +12,12 @@ services:
       - .env
     volumes:
       - ./data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -o /dev/null -sf http://localhost:8000/healthz || exit 1"]
+      interval: 15s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
     depends_on:
       memcached:
         condition: service_started
@@ -31,12 +37,14 @@ services:
 
   db:
     build: ./services/postgres
+    platform: linux/amd64
     # image: postgis/postgis:15-3.3
     env_file:
       - .env
     environment:
       - POSTGRES_DB=${POSTGRES_DATABASE}
       - PGUSER=${POSTGRES_USER}
+      - SKIP_DB_LOAD=${SKIP_DB_LOAD:-0}
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./services/postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d

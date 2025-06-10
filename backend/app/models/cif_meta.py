@@ -179,6 +179,13 @@ CIF_MEASURE_DESCRIPTIONS = {
       "unit": MeasureUnit.PERCENT,
       "county_only": True
     },
+    "pctBB_1000_100": {
+      "label": "Housing Units with 1000/100 Mbps Broadband Service",
+      "source": "FCC, December 2023",
+      "source_url": "https://www.fcc.gov/",
+      "unit": MeasureUnit.PERCENT,
+      "county_only": True
+    },
     "pct5G_7_1": {
       "label": "Area with 7/1 Mbps Mobile 5G Coverage",
       "source": "FCC, December 2023",
