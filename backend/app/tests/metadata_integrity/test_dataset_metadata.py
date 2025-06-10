@@ -14,6 +14,11 @@ needs_cif_staging = pytest.mark.skipif(
     reason="Path /data/staging doesn't exist, so can't test CiF data agreement"
 )
 
+
+# ignores the new SVI measure metadata that we're not including in ECCO
+# FIXME: should we include svi in the future?
+IGNORE_SVI = True
+
 @needs_cif_staging
 def test_cif_metadata_data_agreement():
     """
@@ -38,15 +43,21 @@ def test_cif_metadata_data_agreement():
     # check if that unique set is the same length as the measure descs)
     # match filenames like this: us_food_desert_tract_long_07-01-2024.csv
     # to extract "food_desert"
+    expected_names = set(
+        re.match(r"us_(.*)_(county|tract)_long_.*\.csv", os.path.split(x)[1]).groups()[0]
+        for x in sheets
+    )
+
+    # remove 'svi' from the expected names
+    if IGNORE_SVI:
+        expected_names.discard('svi')
+
     assert (
         len(
-            set(
-                re.match(r"us_(.*)_(county|tract)_long_.*\.csv", os.path.split(x)[1]).groups()[0]
-                for x in sheets
-            )
+            expected_names
         ) ==
         len(CIF_MEASURE_DESCRIPTIONS)
-    )
+    ), f"Expected {CIF_MEASURE_DESCRIPTIONS.keys()} unique measure names, but found {expected_names} in {sheets}"
 
     SHEETS_TO_MEASURES = {
         "us_cancer_incidence_county": "cancerincidence",
@@ -80,6 +91,10 @@ def test_cif_metadata_data_agreement():
     for sheet in sheets:
         # isolate just the filename of the sheet using os.path.split
         filename = os.path.split(sheet)[1]
+
+        # ignore SVI sheets if IGNORE_SVI is set
+        if IGNORE_SVI and "svi" in filename:
+                continue
 
         # if we're looking at tract data, we ignore measure metadata
         # that has the 'county_only' field set to true
