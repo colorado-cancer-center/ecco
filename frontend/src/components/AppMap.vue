@@ -149,6 +149,7 @@ import { Fill, Icon, Stroke, Style, Text } from "ol/style";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useElementSize, useFullscreen } from "@vueuse/core";
 import { type Unit } from "@/api";
+import hatch from "@/assets/hatch.svg?url";
 import { getGradient, gradientOptions } from "@/components/gradient";
 import { backgroundOptions } from "@/components/tile-providers";
 import { downloadPng } from "@/util/download";
@@ -518,17 +519,19 @@ watchEffect((onCleanup) => {
   /** generate styles per feature */
   const style =
     (hover = false) =>
-    (feature: FeatureLike) =>
-      new Style({
+    (feature: FeatureLike) => {
+      const color =
+        feature.get("id") === _highlight
+          ? theme
+          : getColor(_values[feature.get("id")]?.value);
+      return new Style({
         stroke: new Stroke({ color: "black", width: hover ? 4 : 1 }),
         fill: new Fill({
-          color:
-            feature.get("id") === _highlight
-              ? theme
-              : getColor(_values[feature.get("id")]?.value),
+          color: feature.get("hatch") ? { color, src: hatch } : color,
         }),
         zIndex: hover ? 1 : 0,
       });
+    };
 
   /** base styles */
   geometryLayer.setStyle(style());
