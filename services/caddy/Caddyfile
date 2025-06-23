@@ -1,0 +1,9 @@
+{$API_DOMAIN} {
+    reverse_proxy backend:8000
+
+    # gzip-compress level 3 the following types: text/plain application/xml application/json
+    encode gzip {
+        level 3
+        types text/plain application/xml application/json
+    }
+}

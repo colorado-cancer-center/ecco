@@ -1,7 +1,9 @@
 volumes:
-  pgdata:
   built_frontend:
-  certbot:
+  # certbot:
+  caddy_data:
+  caddy_config:
+
 
 services:
   frontend:
@@ -14,17 +16,29 @@ services:
       - "VITE_URL=https://ecco.cu-dbmi.dev"
       - "VITE_API=https://ecco.cu-dbmi.dev/api"
 
-  nginx-certbot:
-    # image: nginx:1.19.6-alpine
-    build: ./services/nginx-certbot/
+  # nginx-certbot:
+  #   # image: nginx:1.19.6-alpine
+  #   build: ./services/nginx-certbot/
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   env_file:
+  #     - .env
+  #   volumes:
+  #     - built_frontend:/usr/share/nginx/html
+  #     - certbot:/etc/letsencrypt/
+  #     - ./services/nginx-certbot/config/templates/:/etc/nginx/templates/
+  #   depends_on:
+  #     - backend
+
+  caddy:
+    image: caddy:2.10
+    env_file:
+      - .env
     ports:
       - "80:80"
       - "443:443"
-    env_file:
-      - .env
     volumes:
-      - built_frontend:/usr/share/nginx/html
-      - certbot:/etc/letsencrypt/
-      - ./services/nginx-certbot/config/templates/:/etc/nginx/templates/
-    depends_on:
-      - backend
+      - ./services/caddy/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
