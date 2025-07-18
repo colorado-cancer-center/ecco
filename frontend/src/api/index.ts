@@ -273,8 +273,6 @@ export async function getValues(
     { measure, ...(filtersString && { filters: filtersString }) },
   );
 
-  console.log(data.state);
-
   return data;
 }
 
