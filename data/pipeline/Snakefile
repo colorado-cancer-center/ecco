@@ -241,7 +241,7 @@ rule download_house_senate_members:
         )
 
         curl -L -o {TARGET_DIR}/locations/legislative/member_directory.xlsx\
-            "${HOUSE_SENATE_MEMBERS_XLSX_URL}"
+            "${{HOUSE_SENATE_MEMBERS_XLSX_URL}}"
         """
 
 # scrape the members of each congressional district and format the result
