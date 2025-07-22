@@ -273,6 +273,10 @@ def extract_legislative_features(
         house_geojson, senate_geojson, congressional_geojson,
         house_senate_reps_excel, congressional_reps_csv
 ):
+    # ensure house_senate_reps_excel is a valid file
+    if not os.path.isfile(house_senate_reps_excel):
+        raise FileNotFoundError(f"House and Senate representatives Excel file not found: {house_senate_reps_excel}")
+
     # collect all features into a dict of the form {location_type: [features]}
     features = defaultdict(list)
 
@@ -292,6 +296,7 @@ def extract_legislative_features(
     }
 
     # use openpyxl to load in the excel sheet
+    wb = None
     try:
         # DATA NOTES:
         # - there's a field named 'Committee Membership' in the sheet, but
@@ -328,7 +333,8 @@ def extract_legislative_features(
                     "email": rep["Email"],
                 }
     finally:
-        wb.close()
+        if wb is not None:
+            wb.close()
 
     # read in the congressional reps CSV file and create a dict
     # that maps district numbers to the representative's info
