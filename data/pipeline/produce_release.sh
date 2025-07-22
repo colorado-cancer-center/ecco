@@ -80,6 +80,9 @@ fi
 
 # create the new release in the staging folder
 if [[ "${ACQUIRE_RELEASE}" = "1" ]]; then
+    # ensure all dependent images exist locally
+    docker compose build backend db
+
     # ensure the backend is up and running
     docker compose up -d backend && \
     wait_for_container_healthy backend
