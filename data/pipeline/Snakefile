@@ -230,7 +230,7 @@ rule download_house_senate_members:
     output:
         f"{TARGET_DIR}/locations/legislative/member_directory.xlsx",
     shell:
-        """
+        r"""
         mkdir -p {TARGET_DIR}/locations/legislative
 
         # use curl and sed to identify the URL for the members spreadsheet
