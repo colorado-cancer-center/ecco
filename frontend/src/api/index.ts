@@ -244,6 +244,7 @@ type _Values = {
   min: number | string;
   /** "global" value */
   state?: number | string;
+  state_source?: string;
   /** map of feature id to measure value */
   values: {
     [key: string]: { value: number | string; aac?: number | string };

@@ -344,7 +344,6 @@
                 .join(", ")
             }}
           </div>
-          <div v-if="values?.state">State-wide: {{ values?.state }}</div>
         </template>
 
         <template #top-left-lower>
@@ -353,6 +352,9 @@
             <AppLink :to="values?.source_url ?? ''">
               {{ values?.source ?? "source" }}
             </AppLink>
+          </div>
+          <div v-if="values?.state">
+            State-wide: {{ formatValue(values.state, values.unit) }}
           </div>
         </template>
 

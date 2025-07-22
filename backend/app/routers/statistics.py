@@ -63,6 +63,8 @@ class FIPSValue(BaseModel):
 class FIPSMeasureResponse(BaseModel):
     min: Optional[float|str]
     max: Optional[float|str]
+    state: Optional[float|str]
+    state_source: Optional[str]
     unit: Optional[MeasureUnit]
     source: Optional[str]
     source_url: Optional[str]
@@ -221,6 +223,83 @@ class ByCountyResponse(BaseModel):
 # CCC models for state statistics.
 AUTOGENERATE_STATE_STATS = False
 
+async def _query_state_stats(session, model, factor_constraints, measure_label=None):
+    """
+    Queries the state-level statistics for a given model. If measure_label is
+    unspecified, returns a dict of measure names to state values, where each
+    value is a dict containing the value and the source of the statistic. If
+    measure_label is specified, returns a single dict with the state value and
+    source.
+
+    Notes:
+    - The factor_constraints argument is only used when querying cancer models,
+      since only the state-level cancer models have factors defined. (As of this
+      writing, many combinations of factors don't have state-level statistics in
+      the database, especially for mortality stats.)
+    - The source returned by this method will always be "ccc", i.e. "Colorado
+      Cancer Center", since this method just queries the Colorado Cancer Center
+      models for state-level statistics.
+
+    :param session: a database session
+    :param model: the model class to query
+    :param factor_constraints: a dict of factor constraints to apply to the query; this is only used for cancer models
+    :param measure_label: an optional label for the measure to filter by
+    :return: a dict of measure names to state values + sources, or if measure_label is specified,
+        a single dict with the information for that measure.
+    """
+    # retrieve state values by querying CCC models
+    if model in [SCPIncidenceCounty, SCPDeathsCounty]:
+        state_model = StateCancerIncidenceStats if model is SCPIncidenceCounty else StateCancerMortalityStats
+
+        # if we've specified a measure, we need to remap the value in such a way
+        # that it can be passed to factor_default_clauses(), which expects a dict
+        # of measures, then factor values for each measure
+        if measure_label is not None:
+            factor_constraints = {
+                measure_label: factor_constraints
+            }
+
+        state_query = (
+            select(
+                state_model.site.label("measure"),
+                state_model.state_avg.label("value"),
+            ).where(
+                factor_default_clauses(factor_constraints, state_model, state_model.site)
+            )
+        )
+
+         # if a measure (really, a site in this case) was specified, filter the query to that site
+        if measure_label is not None:
+            state_query = state_query.where(state_model.site == measure_label)
+
+    else:
+        state_model = StateSociodemographicStats
+        state_query = (
+            select(
+                state_model.measure.label("measure"),
+                state_model.state_avg.label("value"),
+            ).where(
+                state_model.measure_category == model.Config.label
+            )
+        )
+
+        # if a measure was specified, filter the query to that measure
+        if measure_label is not None:
+            state_query = state_query.where(state_model.measure == measure_label)
+
+    # query and produce a dict of state values
+    result = await session.execute(state_query)
+    state_values = {
+        x["measure"]: {**x, **{"stat_source": "ccc"}} for x in result.mappings().all()
+    }
+
+    # again, if only a specific measure was requested, return just that measure
+    # (note that rather than returning {measure: value}, we return just the value and its source)
+    if measure_label is not None and measure_label in state_values:
+        return state_values.get(measure_label)
+
+    return state_values
+
 @router.get("/by-county/{county_fips}", response_model=ByCountyResponse)
 @cache()
 async def get_county_measures(county_fips:str, session: AsyncSession = Depends(get_session)):
@@ -309,33 +388,7 @@ async def get_county_measures(county_fips:str, session: AsyncSession = Depends(g
         # =========================================================================
 
         # retrieve state values by querying CCC models
-        if model in [SCPIncidenceCounty, SCPDeathsCounty]:
-            state_model = StateCancerIncidenceStats if model is SCPIncidenceCounty else StateCancerMortalityStats
-            state_query = (
-                select(
-                    state_model.site.label("measure"),
-                    state_model.state_avg.label("value"),
-                ).where(
-                    factor_default_clauses(factor_constraints, state_model, state_model.site)
-                )
-            )
-
-        else:
-            state_model = StateSociodemographicStats
-            state_query = (
-                select(
-                    state_model.measure.label("measure"),
-                    state_model.state_avg.label("value"),
-                ).where(
-                    state_model.measure_category == model.Config.label
-                )
-            )
-
-        # query and produce a dict of state values
-        result = await session.execute(state_query)
-        state_values = {
-            x["measure"]: {**x, **{"stat_source": "ccc"}} for x in result.mappings().all()
-        }
+        state_values = await _query_state_stats(session, model, factor_constraints)
 
         # if AUTOGENERATE_STATE_STATS is true, we'll compute the state values
         # and merge them with the CCC-suplied values, preferring given values
@@ -643,9 +696,16 @@ for type, family in STATS_MODELS.items():
                         .get(measure, {})
                 )
 
+                # retrieve state values, if available, by querying CCC models
+                state_values = await _query_state_stats(
+                    session, model, factor_constraints=filter_factors, measure_label=measure_meta['label']
+                )
+
                 return FIPSMeasureResponse(
                     min=stats[0] if model not in SCP_TRENDS_MODELS else INVERTED_TREND_MAP.get(stats[0], stats[0]),
                     max=stats[1] if model not in SCP_TRENDS_MODELS else INVERTED_TREND_MAP.get(stats[1], stats[1]),
+                    state=state_values.get("value", None),
+                    state_source=state_values.get("stat_source", None),
                     source=measure_meta.get("source", None),
                     source_url=measure_meta.get("source_url", None),
                     unit=measure_meta.get("unit", None),
