@@ -13,7 +13,9 @@ from datetime import datetime
 CIF_STATS_URL = "https://cancerinfocus.org/public-data/Current/us.zip"
 CIF_CODEBOOK_URL = "https://cancerinfocus.org/public-data/cif_variable_codebook.xlsx"
 CCRM_URL = "https://ucdamc-geo.maps.arcgis.com/sharing/rest/content/items/5ab17916dd07440f98f9bb35988cd434/data?f=json"
-HOUSE_SENATE_MEMBERS_XLSX_URL = "https://leg.colorado.gov/sites/default/files/memberdirectory_3_3.xlsx"
+# the page searched for "Member Directory" to find the latest URL for the
+# CO house and senate members Excel sheet
+HOUSE_SENATE_MEMBERS_LIST_PAGE = "https://leg.colorado.gov/legislators"
 CONGRESS_MEMBERS_URL = "https://clerk.house.gov/Members/ViewMemberList"
 
 # URLs for colorado geometry data
@@ -115,7 +117,7 @@ rule all:
         f"{TARGET_DIR}/scp/state_cancer_profiles_incidence.csv",
         f"{TARGET_DIR}/scp/state_cancer_profiles_mortality.csv",
         f"{TARGET_DIR}/locations/ccrm/ccrm_locations.json",
-        f"{TARGET_DIR}/locations/legislative/memberdirectory_3_1_1.xlsx",
+        f"{TARGET_DIR}/locations/legislative/member_directory.xlsx",
         f"{TARGET_DIR}/locations/legislative/co_congress_members.csv",
         [ f"{TARGET_DIR}/locations/legislative/{map_name}/{map_name}.geojson" for map_name in LEG_MAPS_TO_URL ],
         f"{TARGET_DIR}/locations/locations-data.json",
@@ -226,12 +228,20 @@ rule download_ccrm:
 # the house and senate map GeoJSON files
 rule download_house_senate_members:
     output:
-        f"{TARGET_DIR}/locations/legislative/memberdirectory_3_1_1.xlsx",
+        f"{TARGET_DIR}/locations/legislative/member_directory.xlsx",
     shell:
         """
         mkdir -p {TARGET_DIR}/locations/legislative
-        curl -L -o {TARGET_DIR}/locations/legislative/memberdirectory_3_1_1.xlsx\
-            '{HOUSE_SENATE_MEMBERS_XLSX_URL}'
+
+        # use curl and sed to identify the URL for the members spreadsheet
+        HOUSE_SENATE_MEMBERS_XLSX_URL=$(
+            curl -L -s '{HOUSE_SENATE_MEMBERS_LIST_PAGE}' | \
+                grep 'Member Directory' | \
+                sed -n 's/.*href="\([^"]*\)".*/\1/p'
+        )
+
+        curl -L -o {TARGET_DIR}/locations/legislative/member_directory.xlsx\
+            "${HOUSE_SENATE_MEMBERS_XLSX_URL}"
         """
 
 # scrape the members of each congressional district and format the result
@@ -302,7 +312,7 @@ rule create_locations_json:
         f"{TARGET_DIR}/locations/ccrm/ccrm_locations.json",
         f"{TARGET_DIR}/cif/stats/us_facilities_and_providers_DATE.csv",
         [ f"{TARGET_DIR}/locations/legislative/{map_name}/{map_name}.geojson" for map_name in LEG_MAPS_TO_URL ],
-        f"{TARGET_DIR}/locations/legislative/memberdirectory_3_1_1.xlsx",
+        f"{TARGET_DIR}/locations/legislative/member_directory.xlsx",
         f"{TARGET_DIR}/locations/legislative/co_congress_members.csv",
     output:
         f"{TARGET_DIR}/locations/locations-data.json"
@@ -315,7 +325,7 @@ rule create_locations_json:
             {TARGET_DIR}/locations/legislative/2021_Approved_House_Plan_w_Final_Adjustments/2021_Approved_House_Plan_w_Final_Adjustments.geojson \
             {TARGET_DIR}/locations/legislative/2021_Approved_Senate_Plan_w_Final_Adjustments/2021_Approved_Senate_Plan_w_Final_Adjustments.geojson \
             {TARGET_DIR}/locations/legislative/2021_Approved_Congressional_Plan_with_Final_Adjustments/2021_Approved_Congressional_Plan_with_Final_Adjustments.geojson \
-            {TARGET_DIR}/locations/legislative/memberdirectory_3_1_1.xlsx \
+            {TARGET_DIR}/locations/legislative/member_directory.xlsx \
             {TARGET_DIR}/locations/legislative/co_congress_members.csv \
             --output {output}
         """
