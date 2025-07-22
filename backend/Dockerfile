@@ -13,6 +13,7 @@ ARG TZ=America/Denver
 ENV TZ=${TZ}
 
 COPY ./start_app.sh /opt/start_app.sh
+COPY ./scripts/wait-for-it.sh /opt/wait-for-it.sh
 
 WORKDIR /app
 COPY ./app/ /app
