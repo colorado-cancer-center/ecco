@@ -274,7 +274,8 @@ def extract_legislative_features(
         house_senate_reps_excel, congressional_reps_csv
 ):
     # ensure house_senate_reps_excel is a valid file
-    if not os.path.isfile(house_senate_reps_excel):
+    # (note that house_senate_reps_excel is a click.File)
+    if not house_senate_reps_excel or not house_senate_reps_excel.name:
         raise FileNotFoundError(f"House and Senate representatives Excel file not found: {house_senate_reps_excel}")
 
     # collect all features into a dict of the form {location_type: [features]}
