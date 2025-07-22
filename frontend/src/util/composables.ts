@@ -49,11 +49,11 @@ export const arrayParam = <T>(param: Param<T>): Param<T[]> => ({
 /** reactive variable synced with a specific url param */
 /** no good third party solution exists for this, so write our own basic version */
 /** see https://github.com/vueuse/vueuse/issues/3398 */
-export function useUrlParam<T>(
+export const useUrlParam = <T>(
   name: string,
   { parse, stringify }: Param<T>,
   initialValue: T,
-) {
+) => {
   /** https://github.com/vuejs/composition-api/issues/483 */
   const variable = shallowRef(initialValue);
 
@@ -83,10 +83,10 @@ export function useUrlParam<T>(
   watch(variable, updateUrl);
 
   return variable;
-}
+};
 
 /** style element with gradients at edges to indicate scroll-ability */
-export function useScrollable(element: Ref<HTMLElement | undefined>) {
+export const useScrollable = (element: Ref<HTMLElement | undefined>) => {
   const { arrivedState } = useScroll(element);
 
   /** whether any scrolling is possible */
@@ -96,17 +96,17 @@ export function useScrollable(element: Ref<HTMLElement | undefined>) {
   });
 
   /** force scroll to update */
-  async function update() {
+  const update = async () => {
     await nextTick();
     element.value?.dispatchEvent(new Event("scroll"));
-  }
+  };
   /** update scroll on some events that might affect element's scrollWidth/Height */
   onMounted(update);
   useResizeObserver(element, update);
   useMutationObserver(element, update, { childList: true, subtree: true });
 
   return scrollable;
-}
+};
 
 /**
  * inspired by tanstack-query. simple query manager/wrapper for making queries
@@ -135,7 +135,7 @@ export const useQuery = <Data, Args extends unknown[]>(
   let latest: Symbol;
 
   /** wrapped query function */
-  async function query(...args: Args): Promise<void> {
+  const query = async (...args: Args): Promise<void> => {
     /** unique id for current run */
     const current = Symbol();
     latest = current;
@@ -163,7 +163,7 @@ export const useQuery = <Data, Args extends unknown[]>(
         status.value = "error";
       }
     }
-  }
+  };
 
   return { query, data, status };
 };

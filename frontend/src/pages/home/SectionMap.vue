@@ -746,7 +746,7 @@ const noData = ref(false);
 const renderMap = ref(true);
 
 /** reset customizations and map to defaults */
-async function reset() {
+const reset = async () => {
   zoom.value = 0;
   lat.value = 0;
   long.value = 0;
@@ -772,14 +772,14 @@ async function reset() {
   renderMap.value = false;
   await sleep(100);
   renderMap.value = true;
-}
+};
 
 /** load geometry data to display on map */
 const {
   query: loadGeometry,
   data: geometry,
   status: geometryStatus,
-} = useQuery(async function () {
+} = useQuery(async () => {
   if (selectedLevel.value === "county")
     return await getGeo("counties", "us_fips");
   else if (selectedLevel.value === "tract")
@@ -803,7 +803,7 @@ const {
   status: valuesStatus,
 } = useQuery(
   /** load map values data */
-  async function () {
+  async () => {
     if (
       !selectedLevel.value ||
       !selectedCategory.value ||
@@ -900,9 +900,8 @@ watch(
 );
 
 /** turn facet into list of select box options */
-function facetToOptions(facet: Facet): Option[] {
-  return Object.values(facet).map(({ id, label }) => ({ id, label }));
-}
+const facetToOptions = (facet: Facet): Option[] =>
+  Object.values(facet).map(({ id, label }) => ({ id, label }));
 
 /** auto-select level option */
 watch(
@@ -1009,7 +1008,7 @@ const fakeLocations = computed<string[]>(() => [
 
 /** get location data to pass to map based on selected locations */
 const { query: loadLocations, data: locations } = useQuery(
-  async function () {
+  async () => {
     /** convert locations list to map of id to human-readable label */
     const idToLabel = Object.fromEntries(
       Object.values(locationList)

@@ -133,7 +133,7 @@ import {
 import * as d3 from "d3";
 import type { FeatureCollection } from "geojson";
 import { toBlob } from "html-to-image";
-import { capitalize, debounce, isEmpty, mapValues } from "lodash";
+import { debounce, isEmpty, mapValues, upperFirst } from "lodash";
 import { Feature, Map, Overlay, View } from "ol";
 import { pointerMove } from "ol/events/condition";
 import type { FeatureLike } from "ol/Feature";
@@ -294,7 +294,7 @@ const scale = computed(() => {
         const label =
           typeof value === "number"
             ? formatValue(value, unit, true)
-            : capitalize(value);
+            : upperFirst(value);
         return {
           value,
           label,
@@ -400,20 +400,20 @@ const xy = "EPSG:3857";
 const latlong = "EPSG:4326";
 
 /** transform point coordinates */
-function xyToLatlong(x = 0, y = 0) {
+const xyToLatlong = (x = 0, y = 0) => {
   const [long = 0, lat = 0] = new Point([x, y])
     .transform(xy, latlong)
     .getCoordinates();
   return [lat, long];
-}
+};
 
 /** transform point coordinates */
-function latlongToXy(lat = 0, long = 0) {
+const latlongToXy = (lat = 0, long = 0) => {
   const [x = 0, y = 0] = new Point([long, lat])
     .transform(latlong, xy)
     .getCoordinates();
   return [x, y];
-}
+};
 
 /** view object */
 const view = new View({
@@ -794,20 +794,18 @@ watch(
 );
 
 /** programmatic zoom in */
-function zoomIn() {
+const zoomIn = () =>
   view.animate({ zoom: (view.getZoom() ?? 0) + 1, duration: 100 });
-}
 
 /** programmatic zoom out */
-function zoomOut() {
+const zoomOut = () =>
   view.animate({ zoom: (view.getZoom() ?? 2) - 1, duration: 100 });
-}
 
 /** map client size */
 const { width: mapWidth, height: mapHeight } = useElementSize(frameElement);
 
 /** fit view to geometry layer content */
-function fit() {
+const fit = () => {
   /** get bounding box of content */
   const extent = geometrySource.getExtent();
 
@@ -843,7 +841,7 @@ function fit() {
     padding: [top, right, bottom, left].map((v) => v + 20),
     duration: 100,
   });
-}
+};
 
 /** auto-fit when legends change */
 watch(
@@ -877,7 +875,7 @@ onMounted(async () => {
 const { toggle: fullscreen } = useFullscreen(scrollElement);
 
 /** download map as png */
-async function download() {
+const download = async () => {
   if (!frameElement.value) return;
 
   /** convert to image */
@@ -887,7 +885,7 @@ async function download() {
   });
 
   if (blob) downloadPng(blob, filename);
-}
+};
 
 /** allow control from parent */
 defineExpose({ zoomIn, zoomOut, fit, fullscreen, download });
