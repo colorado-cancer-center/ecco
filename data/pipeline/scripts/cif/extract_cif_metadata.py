@@ -17,7 +17,7 @@ ENDC = '\033[0m'
 # whether to skip merging cancer data into the metadata
 # (we get cancer incidence and mortality from SCP now so it's a bit redundant to include it in the CiF metadata, but the
 # current hardcoded CiF meta includes it, and i could imagine wanting to compare against the SCP data in the future...)
-SKIP_CANCER_MEASURE_CATEGORIES = False
+SKIP_CANCER_MEASURE_CATEGORIES = True
 
 # whether to skip "SVI"(?) measure categories
 # these were introduced in sometime before february 2025; we'll see about including
@@ -25,11 +25,11 @@ SKIP_CANCER_MEASURE_CATEGORIES = False
 SKIP_SVI_MEASURE_CATEGORIES = True
 
 # canonical ordering of categories, to be retained in output:
+# (we dynamically add in the cancer categories if they're present)
 CANONICAL_CATEGORY_ORDER = [
     'sociodemographics', 'economy', 'environment', 'housingtrans',
     'rfandscreening', 'fooddesert', 'disparities',
-    'cancerincidence', 'cancermortality'
-]
+] + ([] if SKIP_CANCER_MEASURE_CATEGORIES else ['cancerincidence', 'cancermortality'])
 
 SOURCES_TO_URLS = {
     'ACS': 'https://data.census.gov/',
