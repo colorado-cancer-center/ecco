@@ -98,13 +98,13 @@ export const getMarkers = <Value extends string>(values: [Value, Type][]) => {
   return map;
 };
 
-function getMarker(
+const getMarker = (
   type: Type,
   icon: Icon,
   color: Color,
   dash: Dash,
   size = 16,
-) {
+) => {
   /** svg of icon */
   const ns = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(ns, "svg");
@@ -193,4 +193,4 @@ function getMarker(
     width: parseFloat(svg.getAttribute("width") ?? ""),
     height: parseFloat(svg.getAttribute("height") ?? ""),
   };
-}
+};

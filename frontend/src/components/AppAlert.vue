@@ -43,12 +43,12 @@ onMounted(() => {
   dismissed.value = false;
 });
 
-function onClick() {
+const onClick = () => {
   dismissed.value = true;
   /** force map auto-height re-adjust */
   window.scrollBy({ top: 1 });
   window.scrollBy({ top: -1 });
-}
+};
 </script>
 
 <style scoped>

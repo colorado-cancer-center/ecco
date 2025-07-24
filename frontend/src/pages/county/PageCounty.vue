@@ -182,9 +182,7 @@ const {
   query: loadGeometry,
   data: geometry,
   status: geometryStatus,
-} = useQuery(async function () {
-  return await getGeo("counties", "us_fips");
-}, undefined);
+} = useQuery(() => getGeo("counties", "us_fips"), undefined);
 
 onMounted(loadGeometry);
 
@@ -194,7 +192,7 @@ const {
   data: countyData,
   status: countyDataStatus,
 } = useQuery(
-  async function () {
+  async () => {
     if (!id.value) return;
     const results = await getCountyData(id.value);
 

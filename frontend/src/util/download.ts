@@ -1,9 +1,9 @@
 /** download blob as file */
-export function download(
+export const download = (
   data: BlobPart,
   filename: string | string[],
   type: string,
-) {
+) => {
   const blob = new Blob([data], { type });
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -15,9 +15,8 @@ export function download(
     .replaceAll(/\s+/g, "-");
   link.click();
   window.URL.revokeObjectURL(url);
-}
+};
 
 /** download blob as png */
-export function downloadPng(data: BlobPart, filename: string | string[]) {
+export const downloadPng = (data: BlobPart, filename: string | string[]) =>
   download(data, filename, "image/png");
-}

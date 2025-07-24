@@ -2,6 +2,25 @@ import type { TippyOptions } from "vue-tippy";
 import type { Instance } from "tippy.js";
 import { makeLabel } from "@/util/string";
 
+/** create or update tooltip instance */
+const update = ({ reference, props: { content } }: Instance) => {
+  /** don't show if content blank */
+  if (!content) return false;
+
+  if (
+    (reference instanceof HTMLElement || reference instanceof SVGElement) &&
+    window.getComputedStyle(reference).cursor === "auto"
+  )
+    reference.style.cursor = "help";
+
+  /** set aria label to content */
+  if (
+    (reference instanceof HTMLElement && !reference.innerText.trim()) ||
+    reference instanceof SVGElement
+  )
+    reference.setAttribute("aria-label", makeLabel(String(content)));
+};
+
 export const tippyOptions: {
   [key: string]: unknown;
   defaultProps: TippyOptions;
@@ -18,22 +37,3 @@ export const tippyOptions: {
     // onHide: () => false,
   },
 };
-
-/** create or update tooltip instance */
-function update({ reference, props: { content } }: Instance) {
-  /** don't show if content blank */
-  if (!content) return false;
-
-  if (
-    (reference instanceof HTMLElement || reference instanceof SVGElement) &&
-    window.getComputedStyle(reference).cursor === "auto"
-  )
-    reference.style.cursor = "help";
-
-  /** set aria label to content */
-  if (
-    (reference instanceof HTMLElement && !reference.innerText.trim()) ||
-    reference instanceof SVGElement
-  )
-    reference.setAttribute("aria-label", makeLabel(String(content)));
-}

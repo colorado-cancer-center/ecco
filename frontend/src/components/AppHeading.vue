@@ -44,9 +44,8 @@ const tag = computed(() => "h" + level);
 const heading = useTemplateRef<HTMLHeadingElement>("heading");
 
 /** determine link from text content of heading */
-function updateLink() {
-  link.value = kebabCase(id ?? heading.value?.textContent ?? "");
-}
+const updateLink = () =>
+  (link.value = kebabCase(id ?? heading.value?.textContent ?? ""));
 
 onMounted(updateLink);
 onUpdated(updateLink);
