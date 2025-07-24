@@ -46,6 +46,12 @@ export const arrayParam = <T>(param: Param<T>): Param<T[]> => ({
   stringify: (value) => value.map(param.stringify).join(","),
 });
 
+/** param treated as json */
+export const jsonParam = <T>(): Param<T> => ({
+  parse: (value) => (value ? JSON.parse(value) : null),
+  stringify: (value) => JSON.stringify(value),
+});
+
 /** reactive variable synced with a specific url param */
 /** no good third party solution exists for this, so write our own basic version */
 /** see https://github.com/vueuse/vueuse/issues/3398 */
@@ -55,7 +61,7 @@ export const useUrlParam = <T>(
   initialValue: T,
 ) => {
   /** https://github.com/vuejs/composition-api/issues/483 */
-  const variable = shallowRef(initialValue);
+  const variable = ref(initialValue);
 
   /** when url changes, update variable */
   watch(
@@ -80,7 +86,7 @@ export const useUrlParam = <T>(
     if (value) params[name] = value;
     else delete params[name];
   }, 200);
-  watch(variable, updateUrl);
+  watch(variable, updateUrl, { deep: true });
 
   return variable;
 };

@@ -53,8 +53,6 @@
         <font-awesome-icon :icon="faQuestionCircle" />
       </AppLink>
 
-      <hr />
-
       <!-- factors -->
       <template v-if="!isEmpty(factors)">
         <div class="factors">
@@ -77,8 +75,6 @@
             />
           </template>
         </div>
-
-        <hr />
       </template>
 
       <!-- locations -->
@@ -90,7 +86,24 @@
         tooltip="Locations and extra info to show on map, e.g. screening centers, clinics, specialists"
       />
 
-      <hr />
+      <div class="side-control">
+        <AppButton
+          v-tooltip="
+            comparing
+              ? 'Remove map from compare group'
+              : 'Compare this map with others'
+          "
+          :icon="faLayerGroup"
+          @click="toggleCompare"
+        >
+          {{ comparing ? "Uncompare" : "Compare" }}
+        </AppButton>
+        <AppButton
+          v-tooltip="'Clear all compared maps'"
+          :icon="faXmark"
+          @click="compare = []"
+        />
+      </div>
 
       <AppAccordion label="Customization">
         <!-- legend -->
@@ -160,41 +173,39 @@
           </template>
         </AppSelect>
 
-        <!-- hide controls that are irrelevant with ordinal unit -->
-        <template v-if="values?.unit !== 'ordinal'">
-          <div class="control-row">
-            <!-- scale min/max -->
-            <AppCheckbox
-              v-model="manualMinMax"
-              v-tooltip="'Manually set scale min/max'"
-              label="Manual min/max"
-            />
-            <template v-if="manualMinMax">
-              <AppNumber
-                v-model="manualMin"
-                v-tooltip="'Manual scale min'"
-                :min="-Infinity"
-                :max="Infinity"
-                :step="0.01"
-                label="Min"
-              />
-              <AppNumber
-                v-model="manualMax"
-                v-tooltip="'Manual scale max'"
-                :min="-Infinity"
-                :max="Infinity"
-                :step="0.01"
-                label="Max"
-              />
-            </template>
-          </div>
-
-          <!-- scale steps -->
-          <div class="control-row">
+        <div class="control-row">
+          <!-- scale min/max -->
+          <AppCheckbox
+            v-model="manualMinMax"
+            v-tooltip="'Manually set scale min/max'"
+            label="Manual min/max"
+          />
+          <template v-if="manualMinMax">
             <AppNumber
-              v-model="scalePower"
-              v-tooltip="
-                `
+              v-model="manualMin"
+              v-tooltip="'Manual scale min'"
+              :min="-Infinity"
+              :max="Infinity"
+              :step="0.01"
+              label="Min"
+            />
+            <AppNumber
+              v-model="manualMax"
+              v-tooltip="'Manual scale max'"
+              :min="-Infinity"
+              :max="Infinity"
+              :step="0.01"
+              label="Max"
+            />
+          </template>
+        </div>
+
+        <!-- scale steps -->
+        <div class="control-row">
+          <AppNumber
+            v-model="scalePower"
+            v-tooltip="
+              `
                 Power to raise step ranges by. Only affects which colors are assigned to which values.
                 <br />
                 <br />
@@ -204,33 +215,32 @@
                 <br />
                 < 1 exaggerates differences at high values
               `
-              "
-              :min="scalePower < 1 ? 0.05 : 0"
-              :max="10"
-              :step="scalePower < 1 ? 0.05 : 0.5"
-              label="Scale power"
-            />
+            "
+            :min="scalePower < 1 ? 0.05 : 0"
+            :max="10"
+            :step="scalePower < 1 ? 0.05 : 0.5"
+            label="Scale power"
+          />
 
-            <AppNumber
-              v-model="scaleSteps"
-              v-tooltip="
-                'Number of bins to divide data into for coloring. If &quot;nice steps&quot; on, only approximate.'
-              "
-              :min="2"
-              :max="10"
-              :step="1"
-              label="Scale steps"
-            />
+          <AppNumber
+            v-model="scaleSteps"
+            v-tooltip="
+              'Number of bins to divide data into for coloring. If &quot;nice steps&quot; on, only approximate.'
+            "
+            :min="2"
+            :max="10"
+            :step="1"
+            label="Scale steps"
+          />
 
-            <AppCheckbox
-              v-model="niceSteps"
-              v-tooltip="
-                'Adjust number of scale steps to get nice, round intervals (when power = 1)'
-              "
-              label="Nice steps"
-            />
-          </div>
-        </template>
+          <AppCheckbox
+            v-model="niceSteps"
+            v-tooltip="
+              'Adjust number of scale steps to get nice, round intervals (when power = 1)'
+            "
+            label="Nice steps"
+          />
+        </div>
 
         <!-- layer opacities -->
         <div class="control-row">
@@ -298,267 +308,270 @@
       :style="{ height: autoRightPanelHeight }"
     >
       <!-- map -->
-      <AppMap
-        v-if="renderMap"
-        ref="map"
-        v-model:zoom="zoom"
-        v-model:lat="lat"
-        v-model:long="long"
-        v-model:no-data="noData"
-        class="map"
-        :style="
-          geometryStatus !== 'success' || valuesStatus !== 'success'
-            ? { opacity: 0.25, filter: 'saturate(0.25)' }
-            : undefined
-        "
-        :geometry="geometry"
-        :locations="locations"
-        :values="values?.values"
-        :min="manualMinMax ? manualMin : values?.min"
-        :max="manualMinMax ? manualMax : values?.max"
-        :unit="values?.unit"
-        :show-legends="showLegends"
-        :background-opacity="backgroundOpacity"
-        :geometry-opacity="geometryOpacity"
-        :location-opacity="locationOpacity"
-        :background="selectedBackground"
-        :gradient="selectedGradient"
-        :flip-gradient="flipGradient"
-        :scale-steps="scaleSteps"
-        :nice-steps="niceSteps"
-        :scale-power="scalePower"
-        :scale-values="values?.order"
-        :width="mapWidth"
-        :height="mapHeight"
-        :filename="[selectedMeasure, selectedLevel]"
-      >
-        <!-- main legend -->
-        <template #top-left-upper>
-          <strong>{{ measures[selectedMeasure]?.label }}</strong>
-          <div>{{ categories[selectedCategory]?.label }}</div>
-          <div>
-            {{
-              Object.values(selectedFactors)
-                .map((factor) => factor.value)
-                .filter((factor) => !factor.match(/(^|\s)all($|\s)/i))
-                .join(", ")
-            }}
-          </div>
-        </template>
-
-        <template #top-left-lower>
-          <div v-if="values?.source || values?.source_url">
-            Source:
-            <AppLink :to="values?.source_url ?? ''">
-              {{ values?.source ?? "source" }}
-            </AppLink>
-          </div>
-          <div v-if="values?.state">
-            State-wide: {{ formatValue(values.state, values.unit) }}
-          </div>
-        </template>
-
-        <template v-if="countyWide.length" #top-right>
-          <b>Outreach (county-level)</b>
-          <div class="mini-table">
-            <template v-for="(field, key) of countyWide" :key="key">
-              <div class="check" :style="{ '--color': field.color }">
-                <font-awesome-icon :icon="faCheck" />
-              </div>
-              <span>{{ field.label }}</span>
-            </template>
-          </div>
-        </template>
-
-        <!-- geometry feature label -->
-        <template
-          v-if="countyWide.length"
-          #geometry-label="{ feature }: { feature: FeatureInfo }"
+      <template v-if="renderMap">
+        <AppMap
+          v-for="({ geometry, locations, values }, index) in mapData"
+          :key="index"
+          ref="map"
+          v-model:zoom="zoom"
+          v-model:lat="lat"
+          v-model:long="long"
+          v-model:no-data="noData"
+          class="map"
+          :style="
+            mapDataStatus !== 'success'
+              ? { opacity: 0.25, filter: 'saturate(0.25)' }
+              : undefined
+          "
+          :geometry="geometry"
+          :locations="locations"
+          :values="values?.values"
+          :min="manualMinMax ? manualMin : values?.min"
+          :max="manualMinMax ? manualMax : values?.max"
+          :unit="values?.unit"
+          :show-legends="showLegends"
+          :background-opacity="backgroundOpacity"
+          :geometry-opacity="geometryOpacity"
+          :location-opacity="locationOpacity"
+          :background="selectedBackground"
+          :gradient="selectedGradient"
+          :flip-gradient="flipGradient"
+          :scale-steps="scaleSteps"
+          :nice-steps="niceSteps"
+          :scale-power="scalePower"
+          :scale-values="values?.order"
+          :width="mapWidth"
+          :height="mapHeight"
+          :filename="[selectedMeasure, selectedLevel]"
         >
-          <div>
-            <template v-for="(field, key) of countyWide" :key="key">
-              <div
-                v-if="field.checkKey && feature[field.checkKey]"
-                class="check"
-                :style="{ '--color': field.color }"
+          <!-- main legend -->
+          <template #top-left-upper>
+            <strong>{{ measures[selectedMeasure]?.label }}</strong>
+            <div>{{ categories[selectedCategory]?.label }}</div>
+            <div>
+              {{
+                Object.values(selectedFactors)
+                  .map((factor) => factor.value)
+                  .filter((factor) => !factor.match(/(^|\s)all($|\s)/i))
+                  .join(", ")
+              }}
+            </div>
+          </template>
+
+          <template #top-left-lower>
+            <div v-if="values?.source || values?.source_url">
+              Source:
+              <AppLink :to="values?.source_url ?? ''">
+                {{ values?.source ?? "source" }}
+              </AppLink>
+            </div>
+            <div v-if="values?.state">
+              State-wide: {{ formatValue(values.state, values.unit) }}
+            </div>
+          </template>
+
+          <template v-if="countyWide.length" #top-right>
+            <b>Outreach (county-level)</b>
+            <div class="mini-table">
+              <template v-for="(field, key) of countyWide" :key="key">
+                <div class="check" :style="{ '--color': field.color }">
+                  <font-awesome-icon :icon="faCheck" />
+                </div>
+                <span>{{ field.label }}</span>
+              </template>
+            </div>
+          </template>
+
+          <!-- geometry feature label -->
+          <template
+            v-if="countyWide.length"
+            #geometry-label="{ feature }: { feature: FeatureInfo }"
+          >
+            <div>
+              <template v-for="(field, key) of countyWide" :key="key">
+                <div
+                  v-if="field.checkKey && feature[field.checkKey]"
+                  class="check"
+                  :style="{ '--color': field.color }"
+                >
+                  <span v-if="field.countKey && feature[field.countKey]">
+                    {{ feature[field.countKey] }}
+                  </span>
+                  <font-awesome-icon v-else :icon="faCheck" />
+                </div>
+              </template>
+            </div>
+          </template>
+
+          <!-- feature popup -->
+          <template #popup="{ feature }: { feature: FeatureInfo }">
+            <!-- main name/identifier -->
+
+            <strong v-if="feature.name">{{ feature.name }}</strong>
+
+            <span v-if="feature.type">{{ feature.type }}</span>
+
+            <strong v-if="feature.fips">
+              Census Tract<br />{{ feature.fips }}
+            </strong>
+
+            <strong v-if="feature.district">
+              District {{ feature.district }}
+            </strong>
+
+            <!-- main value -->
+
+            <div class="mini-table">
+              <template
+                v-if="
+                  typeof feature.value === 'number' ||
+                  typeof feature.value === 'string'
+                "
               >
-                <span v-if="field.countKey && feature[field.countKey]">
-                  {{ feature[field.countKey] }}
+                <span>
+                  {{ feature.aac ? "Rate" : "Value" }}
                 </span>
-                <font-awesome-icon v-else :icon="faCheck" />
-              </div>
-            </template>
-          </div>
-        </template>
+                <span>{{ formatValue(feature.value, values?.unit) }}</span>
+              </template>
 
-        <!-- feature popup -->
-        <template #popup="{ feature }: { feature: FeatureInfo }">
-          <!-- main name/identifier -->
-
-          <strong v-if="feature.name">{{ feature.name }}</strong>
-
-          <span v-if="feature.type">{{ feature.type }}</span>
-
-          <strong v-if="feature.fips">
-            Census Tract<br />{{ feature.fips }}
-          </strong>
-
-          <strong v-if="feature.district">
-            District {{ feature.district }}
-          </strong>
-
-          <!-- main value -->
-
-          <div class="mini-table">
-            <template
-              v-if="
-                typeof feature.value === 'number' ||
-                typeof feature.value === 'string'
-              "
-            >
-              <span>
-                {{ feature.aac ? "Rate" : "Value" }}
-              </span>
-              <span>{{ formatValue(feature.value, values?.unit) }}</span>
-            </template>
-
-            <template
-              v-if="
-                typeof feature.aac === 'number' ||
-                typeof feature.aac === 'string'
-              "
-            >
-              <span>Avg. Annual Count</span>
-              <span>{{ formatValue(feature.aac, values?.unit) }}</span>
-            </template>
-
-            <template v-if="feature.count">
-              <span>Count</span>
-              <span>{{ formatValue(feature.count) }}</span>
-            </template>
-          </div>
-
-          <!-- extra info -->
-
-          <div class="mini-table">
-            <template v-if="feature.org">
-              <span>Org</span>
-              <span>{{ feature.org }}</span>
-            </template>
-
-            <template v-if="typeof feature.link === 'string'">
-              <span>Link</span>
-              <AppLink :to="feature.link">
-                {{ feature.link.replace(/(https?:\/\/)?(www\.)?/, "") }}
-              </AppLink>
-            </template>
-
-            <template v-if="feature.representative">
-              <span>Representative</span>
-              <span>{{ feature.representative }}</span>
-            </template>
-
-            <template v-if="feature.party">
-              <span>Party</span>
-              <span>{{ feature.party }}</span>
-            </template>
-
-            <template v-if="feature.email">
-              <span>Email</span>
-              <span>{{ feature.email }}</span>
-            </template>
-
-            <template v-if="feature.address">
-              <span>Address</span>
-              <span>{{ feature.address }}</span>
-            </template>
-
-            <template v-if="feature.phone">
-              <span>Phone</span>
-              <span>{{ feature.phone }}</span>
-            </template>
-
-            <template v-if="feature.notes">
-              <span>Notes</span>
-              <span>{{ feature.notes }}</span>
-            </template>
-          </div>
-
-          <!-- outreach -->
-
-          <div v-if="outreachSelected.length" class="mini-table">
-            <template v-if="feature.fit_kits">
-              <AppLink
-                to="https://medlineplus.gov/ency/patientinstructions/000704.htm"
+              <template
+                v-if="
+                  typeof feature.aac === 'number' ||
+                  typeof feature.aac === 'string'
+                "
               >
-                FIT Kits
-              </AppLink>
-              <span>{{ formatValue(feature.fit_kits) }}</span>
-            </template>
-            <template v-if="feature.radon_kits">
-              <AppLink
-                to="https://cdphe.colorado.gov/hm/testing-your-home-radon"
-              >
-                Radon Kits
-              </AppLink>
-              <span>{{ formatValue(feature.radon_kits) }}</span>
-            </template>
-            <!-- <template v-if="feature.total_kits">
+                <span>Avg. Annual Count</span>
+                <span>{{ formatValue(feature.aac, values?.unit) }}</span>
+              </template>
+
+              <template v-if="feature.count">
+                <span>Count</span>
+                <span>{{ formatValue(feature.count) }}</span>
+              </template>
+            </div>
+
+            <!-- extra info -->
+
+            <div class="mini-table">
+              <template v-if="feature.org">
+                <span>Org</span>
+                <span>{{ feature.org }}</span>
+              </template>
+
+              <template v-if="typeof feature.link === 'string'">
+                <span>Link</span>
+                <AppLink :to="feature.link">
+                  {{ feature.link.replace(/(https?:\/\/)?(www\.)?/, "") }}
+                </AppLink>
+              </template>
+
+              <template v-if="feature.representative">
+                <span>Representative</span>
+                <span>{{ feature.representative }}</span>
+              </template>
+
+              <template v-if="feature.party">
+                <span>Party</span>
+                <span>{{ feature.party }}</span>
+              </template>
+
+              <template v-if="feature.email">
+                <span>Email</span>
+                <span>{{ feature.email }}</span>
+              </template>
+
+              <template v-if="feature.address">
+                <span>Address</span>
+                <span>{{ feature.address }}</span>
+              </template>
+
+              <template v-if="feature.phone">
+                <span>Phone</span>
+                <span>{{ feature.phone }}</span>
+              </template>
+
+              <template v-if="feature.notes">
+                <span>Notes</span>
+                <span>{{ feature.notes }}</span>
+              </template>
+            </div>
+
+            <!-- outreach -->
+
+            <div v-if="outreachSelected.length" class="mini-table">
+              <template v-if="feature.fit_kits">
+                <AppLink
+                  to="https://medlineplus.gov/ency/patientinstructions/000704.htm"
+                >
+                  FIT Kits
+                </AppLink>
+                <span>{{ formatValue(feature.fit_kits) }}</span>
+              </template>
+              <template v-if="feature.radon_kits">
+                <AppLink
+                  to="https://cdphe.colorado.gov/hm/testing-your-home-radon"
+                >
+                  Radon Kits
+                </AppLink>
+                <span>{{ formatValue(feature.radon_kits) }}</span>
+              </template>
+              <!-- <template v-if="feature.total_kits">
               <span>Total Kits</span>
               <span>{{ formatValue(feature.total_kits) }}</span>
             </template> -->
-            <template v-if="feature.community_events">
-              <span>Community Events</span>
-              <span>{{ formatValue(feature.community_events) }}</span>
-            </template>
-            <template v-if="feature.health_fairs">
-              <span>Health Fairs</span>
-              <span>{{ formatValue(feature.health_fairs) }}</span>
-            </template>
-            <template v-if="feature.educational_talks">
-              <span>Educational Talks</span>
-              <span>{{ formatValue(feature.educational_talks) }}</span>
-            </template>
-            <template v-if="feature.radio_talks">
-              <span>Radio Talks</span>
-              <span>{{ formatValue(feature.radio_talks) }}</span>
-            </template>
-            <template v-if="feature.school_church_events">
-              <span>School/Church Events</span>
-              <span>{{ formatValue(feature.school_church_events) }}</span>
-            </template>
-            <!-- <template v-if="feature.total_events">
+              <template v-if="feature.community_events">
+                <span>Community Events</span>
+                <span>{{ formatValue(feature.community_events) }}</span>
+              </template>
+              <template v-if="feature.health_fairs">
+                <span>Health Fairs</span>
+                <span>{{ formatValue(feature.health_fairs) }}</span>
+              </template>
+              <template v-if="feature.educational_talks">
+                <span>Educational Talks</span>
+                <span>{{ formatValue(feature.educational_talks) }}</span>
+              </template>
+              <template v-if="feature.radio_talks">
+                <span>Radio Talks</span>
+                <span>{{ formatValue(feature.radio_talks) }}</span>
+              </template>
+              <template v-if="feature.school_church_events">
+                <span>School/Church Events</span>
+                <span>{{ formatValue(feature.school_church_events) }}</span>
+              </template>
+              <!-- <template v-if="feature.total_events">
               <span>Total Events</span>
               <span>{{ formatValue(feature.total_events) }}</span>
             </template> -->
-            <template v-if="feature.womens_wellness_centers">
-              <AppLink to="https://cdphe.colorado.gov/wwc">
-                Women's Wellness Centers
-              </AppLink>
-              <span>{{ formatValue(feature.womens_wellness_centers) }}</span>
-            </template>
-            <template v-if="feature['2morrow_signups']">
-              <AppLink
-                to="https://medschool.cuanschutz.edu/colorado-cancer-center/community/CommunityOutreachEngagement/projects-and-activities/2morrow-health-app"
-              >
-                2morrow Signups
-              </AppLink>
-              <span>{{ formatValue(feature["2morrow_signups"]) }}</span>
-            </template>
-          </div>
+              <template v-if="feature.womens_wellness_centers">
+                <AppLink to="https://cdphe.colorado.gov/wwc">
+                  Women's Wellness Centers
+                </AppLink>
+                <span>{{ formatValue(feature.womens_wellness_centers) }}</span>
+              </template>
+              <template v-if="feature['2morrow_signups']">
+                <AppLink
+                  to="https://medschool.cuanschutz.edu/colorado-cancer-center/community/CommunityOutreachEngagement/projects-and-activities/2morrow-health-app"
+                >
+                  2morrow Signups
+                </AppLink>
+                <span>{{ formatValue(feature["2morrow_signups"]) }}</span>
+              </template>
+            </div>
 
-          <!-- actions -->
+            <!-- actions -->
 
-          <AppButton
-            v-if="selectedLevel === 'county' && 'county' in feature"
-            :icon="faExternalLinkAlt"
-            :to="`/county/${feature.id}`"
-            :flip="true"
-            :new-tab="true"
-            >See All</AppButton
-          >
-        </template>
-      </AppMap>
+            <AppButton
+              v-if="selectedLevel === 'county' && 'county' in feature"
+              :icon="faExternalLinkAlt"
+              :to="`/county/${feature.id}`"
+              :flip="true"
+              :new-tab="true"
+              >See All</AppButton
+            >
+          </template>
+        </AppMap>
+      </template>
 
       <!-- actions -->
       <div class="actions">
@@ -625,6 +638,7 @@ import {
   onUnmounted,
   ref,
   shallowRef,
+  unref,
   useTemplateRef,
   watch,
   watchEffect,
@@ -645,8 +659,10 @@ import {
   faExpand,
   faExternalLinkAlt,
   faFeatherPointed,
+  faLayerGroup,
   faMinus,
   faPlus,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { useElementBounding, useWindowSize } from "@vueuse/core";
 import type {
@@ -679,6 +695,7 @@ import { backgroundOptions } from "@/components/tile-providers";
 import { learnMoreLink } from "@/pages/learn-more";
 import {
   arrayParam,
+  jsonParam,
   numberParam,
   stringParam,
   useQuery,
@@ -706,6 +723,16 @@ type FeatureInfo = Expand<
 
 const { facets, locationList } = defineProps<Props>();
 
+/** map of location id to human-readable label */
+const locationLabels = computed(() =>
+  Object.fromEntries(
+    Object.values(locationList)
+      .map((value) => Object.entries(value))
+      .flat()
+      .map(([label, id]) => [id, label] as const),
+  ),
+);
+
 /** element refs */
 const leftPanelElement = useTemplateRef("leftPanelElement");
 const rightPanelElement = useTemplateRef("rightPanelElement");
@@ -715,6 +742,8 @@ const map = ref<InstanceType<typeof AppMap>>();
 const selectedLevel = useUrlParam("level", stringParam, "");
 const selectedCategory = useUrlParam("category", stringParam, "");
 const selectedMeasure = useUrlParam("measure", stringParam, "");
+const selectedFactors = shallowRef<Record<string, ShallowRef<string>>>({});
+const selectedLocations = useUrlParam("locations", arrayParam(stringParam), []);
 
 /** map zoom state */
 const zoom = useUrlParam("zoom", numberParam, 0);
@@ -725,7 +754,6 @@ const long = useUrlParam("long", numberParam, 0);
 const showLegends = ref(true);
 const selectedBackground = ref(backgroundOptions[0]!.id || "");
 const selectedGradient = ref(gradientOptions[3]!.id || "");
-const selectedLocations = useUrlParam("locations", arrayParam(stringParam), []);
 const backgroundOpacity = ref(1);
 const geometryOpacity = ref(0.75);
 const locationOpacity = ref(1);
@@ -774,20 +802,99 @@ const reset = async () => {
   renderMap.value = true;
 };
 
-/** load geometry data to display on map */
-const {
-  query: loadGeometry,
-  data: geometry,
-  status: geometryStatus,
-} = useQuery(async () => {
-  if (selectedLevel.value === "county")
-    return await getGeo("counties", "us_fips");
-  else if (selectedLevel.value === "tract")
-    return await getGeo("tracts", "fips");
-}, undefined);
+/** full selected map */
+const selectedMap = computed(() => ({
+  level: selectedLevel.value,
+  category: selectedCategory.value,
+  measure: selectedMeasure.value,
+  /** unwrap nested refs */
+  factors: mapValues(selectedFactors.value, (value) => value.value),
+  locations: selectedLocations.value,
+}));
 
-/** load geometry data to display on map */
-watch(selectedLevel, loadGeometry, { immediate: true });
+type SelectedMap = typeof selectedMap.value;
+
+/** measure compare group */
+const compare = useUrlParam("compare", jsonParam<SelectedMap[]>(), []);
+
+/** are two map selections equal */
+const selectedEqual = (a: SelectedMap, b: SelectedMap) =>
+  a.level === b.level &&
+  a.category === b.category &&
+  a.measure === b.measure &&
+  Object.entries(a.factors).every(
+    ([key, value]) => unref(b.factors[key]) === unref(value),
+  );
+
+/** is selected map already in compare group */
+const comparing = computed(
+  () =>
+    !!compare.value.find((entry) => selectedEqual(selectedMap.value, entry)),
+);
+
+/** add/remove selected map from compare group */
+const toggleCompare = () => {
+  if (comparing.value)
+    /** remove */
+    compare.value = compare.value.filter(
+      (entry) => !selectedEqual(entry, selectedMap.value),
+    );
+  else
+    /** add */
+    compare.value.push(selectedMap.value);
+};
+
+/** selected map and maps in compare group */
+const selectedMaps = computed(() => [selectedMap.value, ...compare.value]);
+
+/** load maps data */
+const {
+  query: loadMapData,
+  data: mapData,
+  status: mapDataStatus,
+} = useQuery(
+  () =>
+    /** query all maps in parallel */
+    Promise.all(
+      selectedMaps.value.map(
+        async ({ level, category, measure, factors, locations }) => ({
+          /** load map geometry data */
+          geometry:
+            level === "tract"
+              ? await getGeo("tracts", "fips")
+              : await getGeo("counties", "us_fips"),
+
+          /** load map values data */
+          values:
+            level && category && measure
+              ? await getValues(level, category, measure, factors)
+              : null,
+
+          /** load location data */
+          locations: Object.fromEntries(
+            /** query for locations in parallel */
+            await Promise.all(
+              locations
+                /** skip locations that shouldn't actually be queried for */
+                .filter((entry) => !fakeLocations.value.includes(entry))
+                .map(
+                  async (location) =>
+                    [
+                      /** location id */
+                      locationLabels.value[location] ?? "",
+                      /** location geo data */
+                      await getLocation(location),
+                    ] as const,
+                ),
+            ),
+          ),
+        }),
+      ),
+    ),
+  [],
+);
+
+watch(selectedMaps, loadMapData, { deep: true });
 
 /** geographic levels from facets data */
 const levels = computed(() => cloneDeep(facets));
@@ -797,42 +904,87 @@ const categories = computed(() =>
   cloneDeep(levels.value[selectedLevel.value]?.list || {}),
 );
 
-const {
-  query: loadValues,
-  data: values,
-  status: valuesStatus,
-} = useQuery(
-  /** load map values data */
-  async () => {
-    if (
-      !selectedLevel.value ||
-      !selectedCategory.value ||
-      !selectedMeasure.value
-    )
-      return;
-    return await getValues(
-      selectedLevel.value,
-      selectedCategory.value,
-      selectedMeasure.value,
-      /** unwrap nested refs */
-      mapValues(selectedFactors.value, (value) => value.value),
-    );
-  },
-  undefined,
-);
-
 /** measures from measure category */
 const measures = computed(() =>
   cloneDeep(categories.value[selectedCategory.value]?.list || {}),
 );
 
+/** turn facet into list of select box options */
+const facetToOptions = (facet: Facet): Option[] =>
+  Object.values(facet).map(({ id, label }) => ({ id, label }));
+
+/** location dropdown options */
+const locationOptions = computed(() => {
+  const entries: Entry[] = [];
+  for (const [group, options] of Object.entries(locationList)) {
+    entries.push({ group });
+    for (const [label, id] of Object.entries(options))
+      entries.push({ id, label });
+  }
+
+  return entries;
+});
+
+/**
+ * locations that are in location dropdown, but aren't real "locations" in
+ * backend and shouldn't be queried for
+ */
+const fakeLocations = computed<string[]>(() => [
+  ...countyWide.value.map(({ id }) => id),
+]);
+
+/** are outreach locations selected */
+const outreachSelected = computed(() =>
+  selectedLocations.value.filter((location) =>
+    (
+      Object.values(extraLocationList["Outreach and Interventions"]) as string[]
+    ).includes(location),
+  ),
+);
+
+/** county overview outreach data */
+const countyWide = computed(() => {
+  if (selectedLevel.value !== "county") return [];
+
+  /** get selected overview fields */
+  let selected = Object.entries(
+    pick(extraLocationList["Outreach and Interventions"], ["2morrow"]),
+  )
+    .filter(([, id]) => selectedLocations.value.includes(id))
+    .map(([label, id]) => ({ id, label }));
+
+  /** preserve selected order */
+  selected = orderBy(selected, ({ id }) => selectedLocations.value.indexOf(id));
+
+  /** set field props */
+  const fields = selected.map(({ label, id }, index) => ({
+    /** actual location "id" (for url, getLocation, etc) */
+    id,
+    /** key to access on feature to determine if checked or not */
+    checkKey: (
+      {
+        "outreach-2morrow-county": "has_2morrow",
+      } satisfies Partial<Record<typeof id, keyof GeoProps>>
+    )[id as string],
+    /** key to access on feature to determine count */
+    countKey: (
+      {
+        "outreach-2morrow-county": "2morrow_signups",
+      } satisfies Partial<Record<typeof id, keyof GeoProps>>
+    )[id as string],
+    /** human-readable label */
+    label,
+    /** icon color */
+    color: colors[index] ?? "",
+  }));
+
+  return fields;
+});
+
 /** stratification factors (e.g. race/ethnicity, sex, etc) */
 const factors = computed(() =>
   cloneDeep(measures.value[selectedMeasure.value]?.factors || {}),
 );
-
-/** selected value state for each factor */
-const selectedFactors = shallowRef<Record<string, ShallowRef<string>>>({});
 
 /** keep track of dynamically created factor watchers */
 let stoppers: WatchStopHandle[] = [];
@@ -892,17 +1044,6 @@ watch(
   { immediate: true, deep: true },
 );
 
-/** load map values data */
-watch(
-  [selectedLevel, selectedCategory, selectedMeasure, selectedFactors],
-  loadValues,
-  { deep: true, immediate: true },
-);
-
-/** turn facet into list of select box options */
-const facetToOptions = (facet: Facet): Option[] =>
-  Object.values(facet).map(({ id, label }) => ({ id, label }));
-
 /** auto-select level option */
 watch(
   [levels, selectedLevel],
@@ -938,116 +1079,11 @@ watch(
   { immediate: true },
 );
 
-/** location dropdown options */
-const locationOptions = computed(() => {
-  const entries: Entry[] = [];
-  for (const [group, options] of Object.entries(locationList)) {
-    entries.push({ group });
-    for (const [label, id] of Object.entries(options))
-      entries.push({ id, label });
-  }
-
-  return entries;
-});
-
-/** are outreach locations selected */
-const outreachSelected = computed(() =>
-  selectedLocations.value.filter((location) =>
-    (
-      Object.values(extraLocationList["Outreach and Interventions"]) as string[]
-    ).includes(location),
-  ),
-);
-
-/** county overview outreach data */
-const countyWide = computed(() => {
-  if (selectedLevel.value !== "county") return [];
-
-  /** get selected overview fields */
-  let selected = Object.entries(
-    pick(extraLocationList["Outreach and Interventions"], ["2morrow"]),
-  )
-    .filter(([, id]) => selectedLocations.value.includes(id))
-    .map(([label, id]) => ({ id, label }));
-
-  /** preserve selected order */
-  selected = orderBy(selected, ({ id }) => selectedLocations.value.indexOf(id));
-
-  /** set field props */
-  const fields = selected.map(({ label, id }, index) => ({
-    /** actual location "id" (for url, getLocation, etc) */
-    id,
-    /** key to access on feature to determine if checked or not */
-    checkKey: (
-      {
-        "outreach-2morrow-county": "has_2morrow",
-      } satisfies Partial<Record<typeof id, keyof GeoProps>>
-    )[id as string],
-    /** key to access on feature to determine count */
-    countKey: (
-      {
-        "outreach-2morrow-county": "2morrow_signups",
-      } satisfies Partial<Record<typeof id, keyof GeoProps>>
-    )[id as string],
-    /** human-readable label */
-    label,
-    /** icon color */
-    color: colors[index] ?? "",
-  }));
-
-  return fields;
-});
-
-/**
- * locations that are in location dropdown, but aren't real "locations" in
- * backend and shouldn't be queried for
- */
-const fakeLocations = computed<string[]>(() => [
-  ...countyWide.value.map(({ id }) => id),
-]);
-
-/** get location data to pass to map based on selected locations */
-const { query: loadLocations, data: locations } = useQuery(
-  async () => {
-    /** convert locations list to map of id to human-readable label */
-    const idToLabel = Object.fromEntries(
-      Object.values(locationList)
-        .map((value) => Object.entries(value))
-        .flat()
-        .map(([label, id]) => [id, label] as const),
-    );
-
-    return Object.fromEntries(
-      /** query for locations in parallel */
-      await Promise.all(
-        selectedLocations.value
-          /** skip locations that shouldn't actually be queried for */
-          .filter((entry) => !fakeLocations.value.includes(entry))
-          .map(
-            async (location) =>
-              [
-                /** location id */
-                idToLabel[location] ?? "",
-                /** location geo data */
-                await getLocation(location),
-              ] as const,
-          ),
-      ),
-    );
-  },
-  undefined,
-  true,
-);
-watch([selectedLocations, fakeLocations], loadLocations, {
-  immediate: true,
-  deep: true,
-});
-
 watchEffect(() => {
   /** if manual min/max off */
   if (!manualMinMax.value) {
     /** keep in sync with actual min/max (nicer UX when turning manual on) */
-    const { min, max } = values.value || {};
+    const { min, max } = mapData.value[0]?.values || {};
     if (typeof min === "number") manualMin.value = min;
     if (typeof max === "number") manualMax.value = max;
   }
