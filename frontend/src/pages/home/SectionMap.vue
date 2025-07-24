@@ -313,7 +313,11 @@
         ref="mapGridElement"
         class="map-grid"
         :style="{
+          '--width': mapWidth ? `${mapWidth}px` : '',
+          '--height': mapHeight ? `${mapHeight}px` : '',
           '--cols': Math.min(2, mapData.length),
+          flexGrow: mapHeight ? '' : 1,
+          flexShrink: mapHeight ? 0 : '',
           opacity: mapDataStatus !== 'success' ? 0.1 : 1,
         }"
       >
@@ -594,6 +598,7 @@
             v-tooltip="'Download current map(s) view as PNG'"
             :icon="faDownload"
             :accent="true"
+            @click="download"
           >
             Map
           </AppButton>
@@ -657,6 +662,7 @@ import {
   watchEffect,
 } from "vue";
 import type { ShallowRef, WatchStopHandle } from "vue";
+import { toBlob } from "html-to-image";
 import {
   clamp,
   cloneDeep,
@@ -722,6 +728,7 @@ import {
   useQuery,
   useUrlParam,
 } from "@/util/composables";
+import { downloadPng } from "@/util/download";
 import { formatValue } from "@/util/math";
 import { sleep } from "@/util/misc";
 import type { Expand, Update } from "@/util/types";
@@ -859,7 +866,7 @@ const toggleCompare = (map?: Map) => {
   if (isComparing(map))
     /** remove */
     compare.value = compare.value.filter((entry) => !mapsEqual(entry, map));
-  else if (compare.value.length < 4)
+  else if (compare.value.length < 3)
     /** add */
     compare.value.push(map);
 };
@@ -1134,6 +1141,19 @@ watch(
   { immediate: true },
 );
 
+/** download map as png */
+const download = async () => {
+  if (!mapGridElement.value) return;
+
+  /** convert to image */
+  const blob = await toBlob(mapGridElement.value, {
+    width: mapWidth.value,
+    height: mapHeight.value,
+  });
+
+  if (blob) downloadPng(blob, "map");
+};
+
 /** toggle fullscreen on element */
 const { toggle: fullscreen } = useFullscreen(mapGridElement);
 </script>
@@ -1228,7 +1248,8 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
 .map-grid {
   display: grid;
   grid-template-columns: repeat(var(--cols), 1fr);
-  flex-grow: 1;
+  width: var(--width);
+  height: var(--height);
   gap: 10px;
   box-shadow: var(--shadow);
   transition: opacity var(--fast);
