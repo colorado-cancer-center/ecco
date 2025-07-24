@@ -1,7 +1,7 @@
 <template>
   <div class="columns">
     <!-- left panel -->
-    <div ref="leftPanelElement" class="left-panel" role="group">
+    <div class="left-panel" role="group">
       <!-- data selections -->
       <AppSelect
         v-model="selectedLevel"
@@ -89,14 +89,14 @@
       <div class="side-control">
         <AppButton
           v-tooltip="
-            comparing
+            isComparing()
               ? 'Remove map from compare group'
               : 'Compare this map with others'
           "
-          :icon="faLayerGroup"
-          @click="toggleCompare"
+          :icon="isComparing() ? faMinus : faLayerGroup"
+          @click="toggleCompare()"
         >
-          {{ comparing ? "Uncompare" : "Compare" }} ({{ compare.length }})
+          {{ isComparing() ? "Comparing" : "Compare" }}
         </AppButton>
         <AppButton
           v-tooltip="'Clear all compared maps'"
@@ -345,6 +345,14 @@
         >
           <!-- main legend -->
           <template #top-left-upper>
+            <AppButton
+              v-if="isComparing(selected)"
+              v-tooltip="'Remove map from compare group'"
+              style="position: absolute; right: 0; top: 0"
+              :icon="isComparing(selected) ? faMinus : faLayerGroup"
+              @click="toggleCompare(selected)"
+            />
+
             <strong>
               {{
                 facets[selected.level]?.list[selected.category]?.list[
@@ -747,7 +755,6 @@ const locationLabels = computed(() =>
 );
 
 /** element refs */
-const leftPanelElement = useTemplateRef("leftPanelElement");
 const rightPanelElement = useTemplateRef("rightPanelElement");
 const mapGridElement = useTemplateRef("mapGridElement");
 const mapElement = useTemplateRef("mapElement");
@@ -826,13 +833,13 @@ const selectedMap = computed(() => ({
   locations: selectedLocations.value,
 }));
 
-type SelectedMap = typeof selectedMap.value;
+type Map = typeof selectedMap.value;
 
-/** measure compare group */
-const compare = useUrlParam("compare", jsonParam<SelectedMap[]>(), []);
+/** map compare group */
+const compare = useUrlParam("compare", jsonParam<Map[]>(), []);
 
 /** are two map selections equal */
-const selectedEqual = (a: SelectedMap, b: SelectedMap) =>
+const mapsEqual = (a: Map, b: Map) =>
   a.level === b.level &&
   a.category === b.category &&
   a.measure === b.measure &&
@@ -841,26 +848,25 @@ const selectedEqual = (a: SelectedMap, b: SelectedMap) =>
   );
 
 /** is selected map already in compare group */
-const comparing = computed(
-  () =>
-    !!compare.value.find((entry) => selectedEqual(selectedMap.value, entry)),
-);
+const isComparing = (map?: Map) => {
+  map ??= selectedMap.value;
+  return !!compare.value.find((entry) => mapsEqual(map, entry));
+};
 
 /** add/remove selected map from compare group */
-const toggleCompare = () => {
-  if (comparing.value)
+const toggleCompare = (map?: Map) => {
+  map ??= selectedMap.value;
+  if (isComparing(map))
     /** remove */
-    compare.value = compare.value.filter(
-      (entry) => !selectedEqual(entry, selectedMap.value),
-    );
+    compare.value = compare.value.filter((entry) => !mapsEqual(entry, map));
   else if (compare.value.length < 4)
     /** add */
-    compare.value.push(selectedMap.value);
+    compare.value.push(map);
 };
 
 /** selected map and maps in compare group */
 const selectedMaps = computed(() =>
-  uniqWith([selectedMap.value, ...compare.value], selectedEqual),
+  uniqWith([selectedMap.value, ...compare.value], mapsEqual),
 );
 
 /** load maps data */

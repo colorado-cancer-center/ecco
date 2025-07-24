@@ -127,7 +127,7 @@ import {
 } from "vue";
 import * as d3 from "d3";
 import type { FeatureCollection } from "geojson";
-import { debounce, isEmpty, mapValues, upperFirst } from "lodash";
+import { isEmpty, mapValues, upperFirst } from "lodash";
 import { Feature, Map, Overlay, View } from "ol";
 import { pointerMove } from "ol/events/condition";
 import type { FeatureLike } from "ol/Feature";
