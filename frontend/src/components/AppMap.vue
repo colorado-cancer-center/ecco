@@ -1,106 +1,101 @@
 <template>
   <div
-    ref="scrollElement"
-    v-bind="$attrs"
-    class="scroll"
+    ref="frameElement"
+    class="frame"
     :style="{
-      '--width': width ? `${width}px` : '',
-      '--height': height ? `${height}px` : '',
       '--zoom': immediateZoom,
       '--label-opacity': geometryOpacity,
     }"
   >
-    <div ref="frameElement" class="frame">
-      <!-- map root  -->
-      <div ref="mapElement" class="map" />
+    <!-- map root  -->
+    <div ref="mapElement" v-bind="$attrs" class="map" />
 
-      <!-- legends -->
-      <template v-if="showLegends">
+    <!-- legends -->
+    <template v-if="showLegends">
+      <div
+        v-if="$slots['top-left-upper'] || $slots['top-left-lower']"
+        class="legend top-left"
+      >
+        <slot name="top-left-upper" />
+
+        <!-- scale key -->
         <div
-          v-if="$slots['top-left-upper'] || $slots['top-left-lower']"
-          class="legend top-left"
+          v-if="scale.steps.length"
+          class="scale"
+          :style="{ '--cols': scale.steps.length }"
         >
-          <slot name="top-left-upper" />
-
-          <!-- scale key -->
           <div
-            v-if="scale.steps.length"
-            class="scale"
-            :style="{ '--cols': scale.steps.length }"
+            v-for="(step, key) of scale.steps"
+            :key="key"
+            v-tooltip="step.tooltip"
+            class="scale-color"
+            tabindex="0"
+            :style="{ background: step.color }"
+          />
+          <div
+            v-for="(step, key) of scale.steps"
+            :key="key"
+            class="scale-label"
           >
-            <div
-              v-for="(step, key) of scale.steps"
-              :key="key"
-              v-tooltip="step.tooltip"
-              class="scale-color"
-              tabindex="0"
-              :style="{ background: step.color }"
-            />
-            <div
-              v-for="(step, key) of scale.steps"
-              :key="key"
-              class="scale-label"
-            >
-              {{ step.label }}
-            </div>
+            {{ step.label }}
           </div>
-
-          <slot name="top-left-lower" />
         </div>
-        <div v-if="$slots['top-right']" class="legend top-right">
-          <slot name="top-right" />
-        </div>
-        <div
-          v-if="$slots['bottom-right'] || !isEmpty(symbols)"
-          class="legend bottom-right"
-        >
-          <slot name="bottom-right" />
 
-          <!-- symbol key -->
-          <div v-if="!isEmpty(symbols)" class="mini-table">
-            <template v-for="(symbol, label) of symbols" :key="label">
-              <template v-if="symbol">
-                <div class="symbol" v-html="symbol.html" />
-                <small>{{ label }}</small>
-              </template>
+        <slot name="top-left-lower" />
+      </div>
+      <div v-if="$slots['top-right']" class="legend top-right">
+        <slot name="top-right" />
+      </div>
+      <div
+        v-if="$slots['bottom-right'] || !isEmpty(symbols)"
+        class="legend bottom-right"
+      >
+        <slot name="bottom-right" />
+
+        <!-- symbol key -->
+        <div v-if="!isEmpty(symbols)" class="mini-table">
+          <template v-for="(symbol, label) of symbols" :key="label">
+            <template v-if="symbol">
+              <div class="symbol" v-html="symbol.html" />
+              <small>{{ label }}</small>
             </template>
-          </div>
+          </template>
         </div>
-        <div v-if="$slots['bottom-left']" class="legend bottom-left">
-          <slot name="bottom-left" />
-        </div>
-      </template>
-
-      <!-- geometry labels -->
-      <div
-        v-for="(feature, key) of geometryFeaturesWLabels"
-        :key="key"
-        ref="geometryLabelElements"
-        class="label"
-      >
-        <div>{{ feature.get("label") }}</div>
-        <slot name="geometry-label" :feature="feature.getProperties()" />
       </div>
-
-      <!-- feature popup -->
-      <div
-        v-if="$slots['popup'] && selectedFeature"
-        ref="popupElement"
-        v-stop
-        class="legend popup"
-      >
-        <AppButton
-          class="popup-close"
-          aria-label="Close popup"
-          @click="selectedFeature = undefined"
-        >
-          <font-awesome-icon :icon="faXmark" />
-        </AppButton>
-        <slot name="popup" :feature="selectedFeature.getProperties()" />
+      <div v-if="$slots['bottom-left']" class="legend bottom-left">
+        <slot name="bottom-left" />
       </div>
+    </template>
 
-      <div class="attribution" v-html="attribution" />
+    <!-- geometry labels -->
+    <div
+      v-for="(feature, key) of geometryFeaturesWLabels"
+      :key="key"
+      ref="geometryLabelElements"
+      class="label"
+    >
+      <div>{{ feature.get("label") }}</div>
+      <slot name="geometry-label" :feature="feature.getProperties()" />
     </div>
+
+    <!-- feature popup -->
+    <div
+      v-if="$slots['popup'] && selectedFeature"
+      ref="popupElement"
+      v-stop
+      class="legend popup"
+    >
+      <AppButton
+        class="popup-close"
+        aria-label="Close popup"
+        @click="selectedFeature = undefined"
+      >
+        <font-awesome-icon :icon="faXmark" />
+      </AppButton>
+      <slot name="popup" :feature="selectedFeature.getProperties()" />
+    </div>
+
+    <div class="attribution" v-html="attribution" />
   </div>
 </template>
 
@@ -132,7 +127,6 @@ import {
 } from "vue";
 import * as d3 from "d3";
 import type { FeatureCollection } from "geojson";
-import { toBlob } from "html-to-image";
 import { debounce, isEmpty, mapValues, upperFirst } from "lodash";
 import { Feature, Map, Overlay, View } from "ol";
 import { pointerMove } from "ol/events/condition";
@@ -147,18 +141,16 @@ import { XYZ } from "ol/source";
 import VectorSource from "ol/source/Vector";
 import { Fill, Icon, Stroke, Style, Text } from "ol/style";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
-import { useElementSize, useFullscreen } from "@vueuse/core";
+import { useElementSize } from "@vueuse/core";
 import { type Unit } from "@/api";
 import hatch from "@/assets/hatch.svg?url";
 import { getGradient, gradientOptions } from "@/components/gradient";
 import { backgroundOptions } from "@/components/tile-providers";
-import { downloadPng } from "@/util/download";
 import { formatValue, normalizedApply } from "@/util/math";
 import { forceHex, getBbox, getCssVar, waitFor } from "@/util/misc";
 import AppButton from "./AppButton.vue";
 import { getMarkers } from "./markers";
 
-const scrollElement = useTemplateRef("scrollElement");
 const frameElement = useTemplateRef("frameElement");
 const mapElement = useTemplateRef("mapElement");
 const popupElement = useTemplateRef("popupElement");
@@ -197,11 +189,6 @@ type Props = {
   scalePower?: number;
   /** enumerated values for scale */
   scaleValues?: (number | string)[];
-  /** forced dimensions */
-  width?: number;
-  height?: number;
-  /** filename for download */
-  filename?: string | string[];
   /** id of feature to highlight and zoom in on */
   highlight?: string;
 };
@@ -227,9 +214,6 @@ const {
   niceSteps = false,
   scalePower = 1,
   scaleValues,
-  width = 0,
-  height = 0,
-  filename = "map",
   highlight = "",
 } = defineProps<Props>();
 
@@ -435,28 +419,20 @@ watchEffect(() => view.setCenter(latlongToXy(lat, long)));
 watchEffect(() => view.setZoom(zoom));
 
 /** on view pan */
-view.on(
-  "change:center",
-  /** debounce so view animations are preserved */
-  debounce(() => {
-    const center = view.getCenter();
-    if (!center) return;
-    const [lat, long] = xyToLatlong(center[0], center[1]);
-    emit("update:lat", lat);
-    emit("update:long", long);
-  }, 100),
-);
+view.on("change:center", () => {
+  const center = view.getCenter();
+  if (!center) return;
+  const [lat, long] = xyToLatlong(center[0], center[1]);
+  emit("update:lat", lat);
+  emit("update:long", long);
+});
 
 /** on view zoom */
-view.on(
-  "change:resolution",
-  /** debounce so view animations are preserved */
-  debounce(() => {
-    const zoom = view.getZoom();
-    if (!zoom) return;
-    emit("update:zoom", zoom);
-  }, 100),
-);
+view.on("change:resolution", () => {
+  const zoom = view.getZoom();
+  if (!zoom) return;
+  emit("update:zoom", zoom);
+});
 
 /** on immediate view zoom */
 const immediateZoom = ref(view.getZoom());
@@ -794,12 +770,10 @@ watch(
 );
 
 /** programmatic zoom in */
-const zoomIn = () =>
-  view.animate({ zoom: (view.getZoom() ?? 0) + 1, duration: 100 });
+const zoomIn = () => view.setZoom((view.getZoom() ?? 0) + 1);
 
 /** programmatic zoom out */
-const zoomOut = () =>
-  view.animate({ zoom: (view.getZoom() ?? 2) - 1, duration: 100 });
+const zoomOut = () => view.setZoom((view.getZoom() ?? 2) - 1);
 
 /** map client size */
 const { width: mapWidth, height: mapHeight } = useElementSize(frameElement);
@@ -839,7 +813,6 @@ const fit = () => {
   /** fit view. add some extra padding. */
   view.fit(extent, {
     padding: [top, right, bottom, left].map((v) => v + 20),
-    duration: 100,
   });
 };
 
@@ -871,24 +844,8 @@ onMounted(async () => {
   }
 });
 
-/** toggle fullscreen on element */
-const { toggle: fullscreen } = useFullscreen(scrollElement);
-
-/** download map as png */
-const download = async () => {
-  if (!frameElement.value) return;
-
-  /** convert to image */
-  const blob = await toBlob(frameElement.value, {
-    width: mapWidth.value,
-    height: mapHeight.value,
-  });
-
-  if (blob) downloadPng(blob, filename);
-};
-
 /** allow control from parent */
-defineExpose({ zoomIn, zoomOut, fit, fullscreen, download });
+defineExpose({ zoomIn, zoomOut, fit });
 
 /** clean up objects */
 onUnmounted(() => {
@@ -905,17 +862,8 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.scroll {
-  max-width: var(--width, 100%);
-  max-height: var(--height, 100%);
-  overflow: auto;
-  box-shadow: var(--shadow);
-}
-
 .frame {
   position: relative;
-  width: var(--width, 100%);
-  height: var(--height, 100%);
 }
 
 .map {

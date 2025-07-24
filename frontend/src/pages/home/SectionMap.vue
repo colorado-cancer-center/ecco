@@ -96,7 +96,7 @@
           :icon="faLayerGroup"
           @click="toggleCompare"
         >
-          {{ comparing ? "Uncompare" : "Compare" }}
+          {{ comparing ? "Uncompare" : "Compare" }} ({{ compare.length }})
         </AppButton>
         <AppButton
           v-tooltip="'Clear all compared maps'"
@@ -308,21 +308,23 @@
       :style="{ height: autoRightPanelHeight }"
     >
       <!-- map -->
-      <template v-if="renderMap">
+      <div
+        v-if="renderMap"
+        ref="mapGridElement"
+        class="map-grid"
+        :style="{
+          '--cols': Math.min(2, mapData.length),
+          opacity: mapDataStatus !== 'success' ? 0.1 : 1,
+        }"
+      >
         <AppMap
-          v-for="({ geometry, locations, values }, index) in mapData"
+          v-for="({ selected, geometry, locations, values }, index) in mapData"
           :key="index"
-          ref="map"
+          ref="mapElement"
           v-model:zoom="zoom"
           v-model:lat="lat"
           v-model:long="long"
           v-model:no-data="noData"
-          class="map"
-          :style="
-            mapDataStatus !== 'success'
-              ? { opacity: 0.25, filter: 'saturate(0.25)' }
-              : undefined
-          "
           :geometry="geometry"
           :locations="locations"
           :values="values?.values"
@@ -340,18 +342,22 @@
           :nice-steps="niceSteps"
           :scale-power="scalePower"
           :scale-values="values?.order"
-          :width="mapWidth"
-          :height="mapHeight"
-          :filename="[selectedMeasure, selectedLevel]"
         >
           <!-- main legend -->
           <template #top-left-upper>
-            <strong>{{ measures[selectedMeasure]?.label }}</strong>
-            <div>{{ categories[selectedCategory]?.label }}</div>
+            <strong>
+              {{
+                facets[selected.level]?.list[selected.category]?.list[
+                  selected.measure
+                ]?.label
+              }}
+            </strong>
+            <div>
+              {{ facets[selected.level]?.list[selected.category]?.label }}
+            </div>
             <div>
               {{
-                Object.values(selectedFactors)
-                  .map((factor) => factor.value)
+                Object.values(selected.factors)
                   .filter((factor) => !factor.match(/(^|\s)all($|\s)/i))
                   .join(", ")
               }}
@@ -562,7 +568,7 @@
             <!-- actions -->
 
             <AppButton
-              v-if="selectedLevel === 'county' && 'county' in feature"
+              v-if="selected.level === 'county' && 'county' in feature"
               :icon="faExternalLinkAlt"
               :to="`/county/${feature.id}`"
               :flip="true"
@@ -571,40 +577,39 @@
             >
           </template>
         </AppMap>
-      </template>
+      </div>
 
       <!-- actions -->
       <div class="actions">
         <div class="action-row">
           <AppButton
-            v-tooltip="'Download current map view as PNG'"
+            v-tooltip="'Download current map(s) view as PNG'"
             :icon="faDownload"
             :accent="true"
-            @click="map?.download"
           >
             Map
           </AppButton>
           <AppButton
             v-tooltip="'Zoom out'"
             :icon="faMinus"
-            @click="map?.zoomOut"
+            @click="mapElement?.forEach((map) => map?.zoomOut())"
           />
           <AppButton
             v-tooltip="'Zoom in'"
             :icon="faPlus"
-            @click="map?.zoomIn"
+            @click="mapElement?.forEach((map) => map?.zoomIn())"
           />
           <AppButton
             v-tooltip="'Fit view to data'"
             :icon="faCropSimple"
-            @click="map?.fit"
+            @click="mapElement?.forEach((map) => map?.fit())"
           >
             Fit
           </AppButton>
           <AppButton
-            v-tooltip="'View map in full screen'"
+            v-tooltip="'View map(s) in full screen'"
             :icon="faExpand"
-            @click="map?.fullscreen"
+            @click="fullscreen"
           >
             Fullscreen
           </AppButton>
@@ -644,7 +649,15 @@ import {
   watchEffect,
 } from "vue";
 import type { ShallowRef, WatchStopHandle } from "vue";
-import { clamp, cloneDeep, isEmpty, mapValues, orderBy, pick } from "lodash";
+import {
+  clamp,
+  cloneDeep,
+  isEmpty,
+  mapValues,
+  orderBy,
+  pick,
+  uniqWith,
+} from "lodash";
 import {
   faComment,
   faHandPointer,
@@ -664,7 +677,7 @@ import {
   faPlus,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
-import { useElementBounding, useWindowSize } from "@vueuse/core";
+import { useElementBounding, useFullscreen, useWindowSize } from "@vueuse/core";
 import type {
   Facet,
   Facets,
@@ -736,7 +749,8 @@ const locationLabels = computed(() =>
 /** element refs */
 const leftPanelElement = useTemplateRef("leftPanelElement");
 const rightPanelElement = useTemplateRef("rightPanelElement");
-const map = ref<InstanceType<typeof AppMap>>();
+const mapGridElement = useTemplateRef("mapGridElement");
+const mapElement = useTemplateRef("mapElement");
 
 /** select boxes state */
 const selectedLevel = useUrlParam("level", stringParam, "");
@@ -839,13 +853,15 @@ const toggleCompare = () => {
     compare.value = compare.value.filter(
       (entry) => !selectedEqual(entry, selectedMap.value),
     );
-  else
+  else if (compare.value.length < 4)
     /** add */
     compare.value.push(selectedMap.value);
 };
 
 /** selected map and maps in compare group */
-const selectedMaps = computed(() => [selectedMap.value, ...compare.value]);
+const selectedMaps = computed(() =>
+  uniqWith([selectedMap.value, ...compare.value], selectedEqual),
+);
 
 /** load maps data */
 const {
@@ -856,45 +872,51 @@ const {
   () =>
     /** query all maps in parallel */
     Promise.all(
-      selectedMaps.value.map(
-        async ({ level, category, measure, factors, locations }) => ({
-          /** load map geometry data */
-          geometry:
-            level === "tract"
-              ? await getGeo("tracts", "fips")
-              : await getGeo("counties", "us_fips"),
+      selectedMaps.value.map(async (selected) => ({
+        /** keep input selection */
+        selected,
 
-          /** load map values data */
-          values:
-            level && category && measure
-              ? await getValues(level, category, measure, factors)
-              : null,
+        /** load map geometry data */
+        geometry:
+          selected.level === "tract"
+            ? await getGeo("tracts", "fips")
+            : await getGeo("counties", "us_fips"),
 
-          /** load location data */
-          locations: Object.fromEntries(
-            /** query for locations in parallel */
-            await Promise.all(
-              locations
-                /** skip locations that shouldn't actually be queried for */
-                .filter((entry) => !fakeLocations.value.includes(entry))
-                .map(
-                  async (location) =>
-                    [
-                      /** location id */
-                      locationLabels.value[location] ?? "",
-                      /** location geo data */
-                      await getLocation(location),
-                    ] as const,
-                ),
-            ),
+        /** load map values data */
+        values:
+          selected.level && selected.category && selected.measure
+            ? await getValues(
+                selected.level,
+                selected.category,
+                selected.measure,
+                selected.factors,
+              )
+            : null,
+
+        /** load location data */
+        locations: Object.fromEntries(
+          /** query for locations in parallel */
+          await Promise.all(
+            selected.locations
+              /** skip locations that shouldn't actually be queried for */
+              .filter((entry) => !fakeLocations.value.includes(entry))
+              .map(
+                async (location) =>
+                  [
+                    /** location id */
+                    locationLabels.value[location] ?? "",
+                    /** location geo data */
+                    await getLocation(location),
+                  ] as const,
+              ),
           ),
-        }),
-      ),
+        ),
+      })),
     ),
   [],
 );
 
-watch(selectedMaps, loadMapData, { deep: true });
+watch(selectedMaps, loadMapData, { immediate: true, deep: true });
 
 /** geographic levels from facets data */
 const levels = computed(() => cloneDeep(facets));
@@ -1105,6 +1127,9 @@ watch(
   },
   { immediate: true },
 );
+
+/** toggle fullscreen on element */
+const { toggle: fullscreen } = useFullscreen(mapGridElement);
 </script>
 
 <style scoped>
@@ -1194,8 +1219,12 @@ watch(
   gap: 20px;
 }
 
-:deep(.map) {
+.map-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), 1fr);
   flex-grow: 1;
+  gap: 10px;
+  box-shadow: var(--shadow);
   transition: opacity var(--fast);
 }
 
@@ -1204,7 +1233,7 @@ watch(
     grid-template-columns: 1fr;
   }
 
-  .map {
+  .map-grid {
     height: 90vh;
   }
 }
