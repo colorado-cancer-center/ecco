@@ -86,22 +86,27 @@
         tooltip="Locations and extra info to show on map, e.g. screening centers, clinics, specialists"
       />
 
-      <div class="side-control">
+      <div class="compare">
+        <AppButton
+          v-tooltip="'Clear all compared maps'"
+          :icon="faXmark"
+          @click="compare = []"
+        />
+
+        <div>
+          <font-awesome-icon :icon="faLayerGroup" />
+          Comparing {{ compare.length }} map(s)
+        </div>
+
         <AppButton
           v-tooltip="
             isComparing()
               ? 'Remove map from compare group'
               : 'Compare this map with others'
           "
-          :icon="isComparing() ? faMinus : faLayerGroup"
+          :icon="isComparing() ? faMinus : faPlus"
+          :disabled="!isComparing() && compare.length >= compareLimit - 1"
           @click="toggleCompare()"
-        >
-          {{ isComparing() ? "Comparing" : "Compare" }}
-        </AppButton>
-        <AppButton
-          v-tooltip="'Clear all compared maps'"
-          :icon="faXmark"
-          @click="compare = []"
         />
       </div>
 
@@ -318,7 +323,7 @@
           '--cols': Math.min(2, mapData.length),
           flexGrow: mapHeight ? '' : 1,
           flexShrink: mapHeight ? 0 : '',
-          opacity: mapDataStatus !== 'success' ? 0.1 : 1,
+          background: !mapData.length ? 'var(--light-gray)' : '',
         }"
       >
         <AppMap
@@ -353,7 +358,7 @@
               v-if="isComparing(selected)"
               v-tooltip="'Remove map from compare group'"
               style="position: absolute; right: 0; top: 0"
-              :icon="isComparing(selected) ? faMinus : faLayerGroup"
+              :icon="isComparing(selected) ? faMinus : undefined"
               @click="toggleCompare(selected)"
             />
 
@@ -604,7 +609,7 @@
           </AppButton>
           <AppButton
             v-tooltip="'Zoom out'"
-            :icon="faMinus"
+            :icon="faXmark"
             @click="mapElement?.forEach((map) => map?.zoomOut())"
           />
           <AppButton
@@ -860,13 +865,15 @@ const isComparing = (map?: Map) => {
   return !!compare.value.find((entry) => mapsEqual(map, entry));
 };
 
+const compareLimit = 4;
+
 /** add/remove selected map from compare group */
 const toggleCompare = (map?: Map) => {
   map ??= selectedMap.value;
   if (isComparing(map))
     /** remove */
     compare.value = compare.value.filter((entry) => !mapsEqual(entry, map));
-  else if (compare.value.length < 3)
+  else if (compare.value.length < compareLimit - 1)
     /** add */
     compare.value.push(map);
 };
@@ -927,6 +934,7 @@ const {
       })),
     ),
   [],
+  true,
 );
 
 watch(selectedMaps, loadMapData, { immediate: true, deep: true });
@@ -1196,6 +1204,13 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
   grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
   align-items: flex-end;
   gap: 15px;
+}
+
+.compare {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  place-items: center;
+  gap: 5px;
 }
 
 .dimensions-label {

@@ -230,6 +230,11 @@ blockquote {
   font-style: italic;
 }
 
+[disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 .center {
   text-align: center;
 }
