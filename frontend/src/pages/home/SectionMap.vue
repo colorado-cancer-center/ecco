@@ -1196,7 +1196,10 @@ const fit = () => mapElement.value?.forEach((map) => map?.fit());
 
 /** re-fit when col number changes */
 watch(mapCols, async () => {
+  /** wait for map data to be done loading */
   await waitFor(() => mapDataStatus.value === "success");
+  /** wait for map component to render */
+  await sleep(10);
   fit();
 });
 
