@@ -876,8 +876,10 @@ onUnmounted(() => {
   z-index: 9;
   position: absolute;
   flex-direction: column;
-  max-width: 250px;
+  max-width: min(250px, calc(100% - 20px));
+  max-height: calc(100% - 20px);
   padding: 20px;
+  overflow: hidden;
   gap: 10px;
   border-radius: var(--rounded);
   background: var(--white);

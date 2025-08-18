@@ -86,28 +86,34 @@
         tooltip="Locations and extra info to show on map, e.g. screening centers, clinics, specialists"
       />
 
-      <div class="compare">
+      <div class="control-row">
         <AppButton
-          v-tooltip="'Clear all compared maps'"
-          :icon="faXmark"
-          @click="compare = []"
-        />
-
-        <div>
-          <font-awesome-icon :icon="faLayerGroup" />
-          Comparing {{ compare.length }} map(s)
-        </div>
-
-        <AppButton
-          v-tooltip="
-            isComparing()
-              ? 'Remove map from compare group'
-              : 'Compare this map with others'
-          "
-          :icon="isComparing() ? faMinus : faPlus"
-          :disabled="!isComparing() && compare.length >= compareLimit - 1"
+          v-if="isComparing()"
+          v-tooltip="'Remove this map from comparison'"
+          :icon="faMinus"
           @click="toggleCompare()"
-        />
+        >
+          Comparing
+        </AppButton>
+        <AppButton
+          v-else
+          v-tooltip="'Compare this map with others'"
+          :icon="faPlus"
+          :disabled="compare.length >= maxCompare"
+          @click="toggleCompare()"
+        >
+          Compare
+        </AppButton>
+      </div>
+
+      <div v-if="compare.length" class="control-row">
+        <span
+          class="center"
+          :style="{ color: compare.length >= maxCompare ? 'var(--error)' : '' }"
+        >
+          <font-awesome-icon :icon="faLayerGroup" />
+          Comparing {{ compare.length }} map(s), ({{ maxCompare }} max)
+        </span>
       </div>
 
       <AppAccordion label="Customization">
@@ -320,7 +326,7 @@
         :style="{
           '--width': mapWidth ? `${mapWidth}px` : '',
           '--height': mapHeight ? `${mapHeight}px` : '',
-          '--cols': Math.min(2, mapData.length),
+          '--cols': mapCols,
           flexGrow: mapHeight ? '' : 1,
           flexShrink: mapHeight ? 0 : '',
           background: !mapData.length ? 'var(--light-gray)' : '',
@@ -356,8 +362,9 @@
           <template #top-left-upper>
             <AppButton
               v-if="isComparing(selected)"
-              v-tooltip="'Remove map from compare group'"
+              v-tooltip="'Remove this map from comparison'"
               style="position: absolute; right: 0; top: 0"
+              data-save-hide
               :icon="isComparing(selected) ? faMinus : undefined"
               @click="toggleCompare(selected)"
             />
@@ -865,7 +872,8 @@ const isComparing = (map?: Map) => {
   return !!compare.value.find((entry) => mapsEqual(map, entry));
 };
 
-const compareLimit = 4;
+/** max # of maps that can be compared */
+const maxCompare = 9;
 
 /** add/remove selected map from compare group */
 const toggleCompare = (map?: Map) => {
@@ -873,22 +881,39 @@ const toggleCompare = (map?: Map) => {
   if (isComparing(map))
     /** remove */
     compare.value = compare.value.filter((entry) => !mapsEqual(entry, map));
-  else if (compare.value.length < compareLimit - 1)
+  else if (compare.value.length < maxCompare)
     /** add */
     compare.value.push(map);
 };
 
-/** selected map and maps in compare group */
+/** selected map or maps in compare group */
 const selectedMaps = computed(() =>
-  uniqWith([selectedMap.value, ...compare.value], mapsEqual),
+  compare.value.length
+    ? uniqWith(compare.value, mapsEqual)
+    : [selectedMap.value],
 );
 
+/** how many cols to arrange compare maps in */
+const mapCols = computed(() => {
+  switch (selectedMaps.value.length) {
+    case 1:
+      return 1;
+    case 2:
+    case 4:
+      return 2;
+    case 3:
+    case 5:
+    case 6:
+    case 7:
+    case 8:
+    case 9:
+      return 3;
+  }
+  return 1;
+});
+
 /** load maps data */
-const {
-  query: loadMapData,
-  data: mapData,
-  status: mapDataStatus,
-} = useQuery(
+const { query: loadMapData, data: mapData } = useQuery(
   () =>
     /** query all maps in parallel */
     Promise.all(
@@ -1157,6 +1182,11 @@ const download = async () => {
   const blob = await toBlob(mapGridElement.value, {
     width: mapWidth.value,
     height: mapHeight.value,
+    filter: (node) => {
+      if (node instanceof HTMLElement)
+        return !node.hasAttribute("data-save-hide");
+      return true;
+    },
   });
 
   if (blob) downloadPng(blob, "map");
@@ -1204,13 +1234,6 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
   grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
   align-items: flex-end;
   gap: 15px;
-}
-
-.compare {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  place-items: center;
-  gap: 5px;
 }
 
 .dimensions-label {
