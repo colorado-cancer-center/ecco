@@ -111,7 +111,7 @@
           </AppButton>
           <AppButton
             v-else
-            v-tooltip="'Compare selected map with others'"
+            v-tooltip="'Add selected map to comparison'"
             :icon="faPlus"
             :disabled="compare.length >= maxCompare"
             @click="toggleCompare()"
@@ -121,7 +121,7 @@
           <AppCheckbox
             v-model="showPreview"
             v-tooltip="
-              'Show preview of selected map before adding it to comparison'
+              'Show preview of selected map before it\'s added to comparison'
             "
             label="Show preview"
           />
@@ -341,7 +341,7 @@
           '--cols': mapCols,
           flexGrow: mapHeight ? '' : 1,
           flexShrink: mapHeight ? 0 : '',
-          background: !mapData.length ? 'var(--light-gray)' : '',
+          opacity: mapDataStatus === 'loading' ? 0.5 : 1,
         }"
       >
         <AppMap
@@ -353,8 +353,10 @@
           v-model:long="long"
           v-model:no-data="noData"
           :style="{
-            opacity:
-              showPreview && compare.length && !inCompare(selected) ? 0.5 : 1,
+            filter:
+              showPreview && compare.length && !inCompare(selected)
+                ? 'contrast(0.5) saturate(0) brightness(1.25)'
+                : '',
           }"
           :geometry="geometry"
           :locations="locations"
@@ -643,7 +645,7 @@
           <AppButton
             v-tooltip="'Fit view to data'"
             :icon="faCropSimple"
-            @click="mapElement?.forEach((map) => map?.fit())"
+            @click="fit"
           >
             Fit
           </AppButton>
@@ -758,7 +760,7 @@ import {
 } from "@/util/composables";
 import { downloadPng } from "@/util/download";
 import { formatValue } from "@/util/math";
-import { sleep } from "@/util/misc";
+import { sleep, waitFor } from "@/util/misc";
 import type { Expand, Update } from "@/util/types";
 
 type Props = {
@@ -909,7 +911,9 @@ const toggleCompare = (map?: Map) => {
 const selectedMaps = computed(() =>
   uniqWith(
     [
+      /** comparison maps */
       ...compare.value,
+      /** selected map */
       ...(showPreview.value || !compare.value.length
         ? [selectedMap.value]
         : []),
@@ -918,27 +922,12 @@ const selectedMaps = computed(() =>
   ),
 );
 
-/** how many cols to arrange compare maps in */
-const mapCols = computed(() => {
-  switch (selectedMaps.value.length) {
-    case 1:
-      return 1;
-    case 2:
-    case 4:
-      return 2;
-    case 3:
-    case 5:
-    case 6:
-    case 7:
-    case 8:
-    case 9:
-      return 3;
-  }
-  return 1;
-});
-
 /** load maps data */
-const { query: loadMapData, data: mapData } = useQuery(
+const {
+  query: loadMapData,
+  data: mapData,
+  status: mapDataStatus,
+} = useQuery(
   () =>
     /** query all maps in parallel */
     Promise.all(
@@ -987,7 +976,27 @@ const { query: loadMapData, data: mapData } = useQuery(
   true,
 );
 
+/** re-load data when selected maps change */
 watch(selectedMaps, loadMapData, { immediate: true, deep: true });
+
+/** how many cols to arrange compare maps in */
+const mapCols = computed(() => {
+  switch (mapData.value.length) {
+    case 1:
+      return 1;
+    case 2:
+    case 4:
+      return 2;
+    case 3:
+    case 5:
+    case 6:
+    case 7:
+    case 8:
+    case 9:
+      return 3;
+  }
+  return 1;
+});
 
 /** geographic levels from facets data */
 const levels = computed(() => cloneDeep(facets));
@@ -1182,6 +1191,15 @@ watchEffect(() => {
   }
 });
 
+/** fit all maps */
+const fit = () => mapElement.value?.forEach((map) => map?.fit());
+
+/** re-fit when col number changes */
+watch(mapCols, async () => {
+  await waitFor(() => mapDataStatus.value === "success");
+  fit();
+});
+
 /** auto-adjust right panel/map height */
 const autoRightPanelHeight = ref("");
 const { top: rightPanelTop } = useElementBounding(rightPanelElement);
@@ -1313,7 +1331,8 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
   grid-template-columns: repeat(var(--cols), 1fr);
   width: var(--width);
   height: var(--height);
-  gap: 10px;
+  gap: 3px;
+  background: var(--dark-gray);
   box-shadow: var(--shadow);
   transition: opacity var(--fast);
 }

@@ -864,6 +864,7 @@ onUnmounted(() => {
 <style scoped>
 .frame {
   position: relative;
+  transition: filter var(--fast);
 }
 
 .map {
