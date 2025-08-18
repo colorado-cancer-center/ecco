@@ -86,35 +86,47 @@
         tooltip="Locations and extra info to show on map, e.g. screening centers, clinics, specialists"
       />
 
-      <div class="control-row">
-        <AppButton
-          v-if="isComparing()"
-          v-tooltip="'Remove this map from comparison'"
-          :icon="faMinus"
-          @click="toggleCompare()"
-        >
-          Comparing
-        </AppButton>
-        <AppButton
-          v-else
-          v-tooltip="'Compare this map with others'"
-          :icon="faPlus"
-          :disabled="compare.length >= maxCompare"
-          @click="toggleCompare()"
-        >
-          Compare
-        </AppButton>
-      </div>
+      <!-- multi-map compare -->
+      <AppAccordion label="Compare">
+        <div class="control-row">
+          <span
+            class="center"
+            :style="{
+              color: compare.length >= maxCompare ? 'var(--error)' : '',
+            }"
+          >
+            <font-awesome-icon :icon="faLayerGroup" />
+            Comparing {{ compare.length }} map(s) ({{ maxCompare }} max)
+          </span>
+        </div>
 
-      <div v-if="compare.length" class="control-row">
-        <span
-          class="center"
-          :style="{ color: compare.length >= maxCompare ? 'var(--error)' : '' }"
-        >
-          <font-awesome-icon :icon="faLayerGroup" />
-          Comparing {{ compare.length }} map(s), ({{ maxCompare }} max)
-        </span>
-      </div>
+        <div class="control-row">
+          <AppButton
+            v-if="inCompare()"
+            v-tooltip="'Remove selected map from comparison'"
+            :icon="faMinus"
+            @click="toggleCompare()"
+          >
+            Remove
+          </AppButton>
+          <AppButton
+            v-else
+            v-tooltip="'Compare selected map with others'"
+            :icon="faPlus"
+            :disabled="compare.length >= maxCompare"
+            @click="toggleCompare()"
+          >
+            Add
+          </AppButton>
+          <AppCheckbox
+            v-model="showPreview"
+            v-tooltip="
+              'Show preview of selected map before adding it to comparison'
+            "
+            label="Show preview"
+          />
+        </div>
+      </AppAccordion>
 
       <AppAccordion label="Customization">
         <!-- legend -->
@@ -340,6 +352,10 @@
           v-model:lat="lat"
           v-model:long="long"
           v-model:no-data="noData"
+          :style="{
+            opacity:
+              showPreview && compare.length && !inCompare(selected) ? 0.5 : 1,
+          }"
           :geometry="geometry"
           :locations="locations"
           :values="values?.values"
@@ -361,11 +377,11 @@
           <!-- main legend -->
           <template #top-left-upper>
             <AppButton
-              v-if="isComparing(selected)"
+              v-if="inCompare(selected)"
               v-tooltip="'Remove this map from comparison'"
               style="position: absolute; right: 0; top: 0"
               data-save-hide
-              :icon="isComparing(selected) ? faMinus : undefined"
+              :icon="inCompare(selected) ? faMinus : undefined"
               @click="toggleCompare(selected)"
             />
 
@@ -854,6 +870,9 @@ const selectedMap = computed(() => ({
 
 type Map = typeof selectedMap.value;
 
+/** show preview of selected map when comparing */
+const showPreview = ref(true);
+
 /** map compare group */
 const compare = useUrlParam("compare", jsonParam<Map[]>(), []);
 
@@ -867,7 +886,7 @@ const mapsEqual = (a: Map, b: Map) =>
   );
 
 /** is selected map already in compare group */
-const isComparing = (map?: Map) => {
+const inCompare = (map?: Map) => {
   map ??= selectedMap.value;
   return !!compare.value.find((entry) => mapsEqual(map, entry));
 };
@@ -878,7 +897,7 @@ const maxCompare = 9;
 /** add/remove selected map from compare group */
 const toggleCompare = (map?: Map) => {
   map ??= selectedMap.value;
-  if (isComparing(map))
+  if (inCompare(map))
     /** remove */
     compare.value = compare.value.filter((entry) => !mapsEqual(entry, map));
   else if (compare.value.length < maxCompare)
@@ -886,11 +905,17 @@ const toggleCompare = (map?: Map) => {
     compare.value.push(map);
 };
 
-/** selected map or maps in compare group */
+/** selected map and/or maps in compare group */
 const selectedMaps = computed(() =>
-  compare.value.length
-    ? uniqWith(compare.value, mapsEqual)
-    : [selectedMap.value],
+  uniqWith(
+    [
+      ...compare.value,
+      ...(showPreview.value || !compare.value.length
+        ? [selectedMap.value]
+        : []),
+    ],
+    mapsEqual,
+  ),
 );
 
 /** how many cols to arrange compare maps in */
@@ -1232,7 +1257,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
 .control-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
-  align-items: flex-end;
+  align-items: center;
   gap: 15px;
 }
 
