@@ -241,12 +241,12 @@ blockquote {
   text-align: center;
 }
 
-.buttons {
+.row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 10px;
 }
 
 .mini-table {

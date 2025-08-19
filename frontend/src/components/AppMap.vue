@@ -72,7 +72,7 @@
       v-for="(feature, key) of geometryFeaturesWLabels"
       :key="key"
       ref="geometryLabelElements"
-      class="label"
+      class="geometry-label"
     >
       <div>{{ feature.get("label") }}</div>
       <slot name="geometry-label" :feature="feature.getProperties()" />
@@ -942,7 +942,7 @@ onUnmounted(() => {
   place-self: center;
 }
 
-.label {
+.geometry-label {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -951,24 +951,24 @@ onUnmounted(() => {
   color: var(--white);
   font-size: calc(var(--zoom) * 1.75px);
   text-align: center;
-  opacity: calc(var(--label-opacity) * 2);
+  opacity: calc(var(--geometry-label-opacity) * 2);
   pointer-events: none;
   user-select: none;
 }
 
-:deep(*:has(> .label)) {
+:deep(*:has(> .geometry-label)) {
   pointer-events: none !important;
   user-select: none !important;
 }
 
-.label > :first-child {
+.geometry-label > :first-child {
   width: min-content;
   line-height: 1;
   -webkit-text-stroke: 3px black;
   paint-order: stroke fill;
 }
 
-.label > :not(:first-child) {
+.geometry-label > :not(:first-child) {
   display: flex;
   flex-wrap: wrap;
   align-items: center;

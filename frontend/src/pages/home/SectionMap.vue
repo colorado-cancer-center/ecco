@@ -88,9 +88,8 @@
 
       <!-- multi-map compare -->
       <AppAccordion label="Compare">
-        <div class="control-row">
+        <div class="row">
           <span
-            class="center"
             :style="{
               color: compare.length >= maxCompare ? 'var(--error)' : '',
             }"
@@ -98,6 +97,11 @@
             <font-awesome-icon :icon="faLayerGroup" />
             Comparing {{ compare.length }} map(s) ({{ maxCompare }} max)
           </span>
+          <AppButton
+            v-tooltip="'Reset comparison (remove all maps)'"
+            :icon="faArrowsRotate"
+            @click="compare = []"
+          />
         </div>
 
         <div class="control-row">
@@ -622,8 +626,8 @@
       </div>
 
       <!-- actions -->
-      <div class="actions">
-        <div class="action-row">
+      <div class="row actions">
+        <div class="row">
           <AppButton
             v-tooltip="'Download current map(s) view as PNG'"
             :icon="faDownload"
@@ -658,12 +662,12 @@
           </AppButton>
         </div>
 
-        <div class="action-row note">
+        <div class="row note">
           <font-awesome-icon :icon="faHandPointer" />Click on a
           {{ selectedLevel }} or location to see more info.
         </div>
 
-        <div class="action-row">
+        <div class="row">
           <AppButton to="/contact" :icon="faComment" :flip="true" :accent="true"
             >Feedback</AppButton
           >
@@ -697,6 +701,7 @@ import {
   clamp,
   cloneDeep,
   isEmpty,
+  isEqual,
   mapValues,
   orderBy,
   pick,
@@ -885,7 +890,8 @@ const mapsEqual = (a: Map, b: Map) =>
   a.measure === b.measure &&
   Object.entries(a.factors).every(
     ([key, value]) => unref(b.factors[key]) === unref(value),
-  );
+  ) &&
+  isEqual(a.locations, b.locations);
 
 /** is selected map already in compare group */
 const inCompare = (map?: Map) => {
@@ -1351,18 +1357,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
 }
 
 .actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
   gap: 20px;
-}
-
-.action-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
 }
 
 .note {
