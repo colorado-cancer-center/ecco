@@ -147,7 +147,7 @@ import hatch from "@/assets/hatch.svg?url";
 import { getGradient, gradientOptions } from "@/components/gradient";
 import { backgroundOptions } from "@/components/tile-providers";
 import { formatValue, normalizedApply } from "@/util/math";
-import { forceHex, getBbox, getCssVar, waitFor } from "@/util/misc";
+import { forceHex, getBbox, getCssVar, sleep, waitFor } from "@/util/misc";
 import AppButton from "./AppButton.vue";
 import { getMarkers } from "./markers";
 
@@ -815,6 +815,19 @@ const fit = () => {
     padding: [top, right, bottom, left].map((v) => v + 20),
   });
 };
+
+/** auto-fit when geometry changes */
+watch(
+  () => geometry,
+  async () => {
+    /** if geometry not loaded yet or view already defined, don't fit */
+    if (!geometry || lat || long || zoom) return;
+    /** wait for render and layout shift */
+    await sleep(100);
+    fit();
+  },
+  { immediate: true, deep: true },
+);
 
 /** auto-fit when legends change */
 watch(
