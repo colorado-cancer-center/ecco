@@ -13,8 +13,8 @@ from models.uv import (
     UVExposureCounty
 )
 
-# metadata about each sheet in the radon spreadsheet, since there's both a
-# county and tract sheet. we assume they're in the same order as this list.
+# defines the mapping from the single sheet in the input file
+# to the county-level UV model and its one measure, UV_Wh_m2
 UV_SHEETS_META = [
     {
         "name": "Sheet1",
