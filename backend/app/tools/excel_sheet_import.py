@@ -113,10 +113,11 @@ def _zero_pad(fips: str) -> str:
 
     If the input FIPS code is not a CO FIPS code, this raises a ValueError.
     """
+    fips_str = str(fips)
     result = (
-        f"0{fips}"
-        if not isinstance(fips, str) or fips[0] != '0' else
-        fips
+        f"0{fips_str}"
+        if fips_str[0] != '0' else
+        fips_str
     )
     
     # check that it's now 08 and throw an error if not
