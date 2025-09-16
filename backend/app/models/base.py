@@ -94,6 +94,10 @@ from .radon import (
     RADON_MODELS,
     RADON_MEASURE_DESCRIPTIONS
 )
+from .uv import (
+    UV_MODELS,
+    UV_MEASURE_DESCRIPTIONS
+)
 from .hpv import (
     HPV_MODELS,
     HPV_MEASURE_DESCRIPTIONS,
@@ -111,6 +115,7 @@ STATS_MODELS = {
         CIF_STATS_MODELS["county"] +
         DISPARITY_INDEX_MODELS["county"] +
         RADON_MODELS["county"] +
+        UV_MODELS["county"] +
         HPV_MODELS["county"] +
         SCP_MODELS["county"]
     ),
@@ -134,6 +139,7 @@ MEASURE_DESCRIPTIONS = {
     **SCP_MEASURE_DESCRIPTIONS,
     **DISPARITY_INDEX_MEASURE_DESCRIPTIONS,
     **RADON_MEASURE_DESCRIPTIONS,
+    **UV_MEASURE_DESCRIPTIONS,
     **HPV_MEASURE_DESCRIPTIONS,
 }
 
