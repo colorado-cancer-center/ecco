@@ -638,7 +638,7 @@
           </AppButton>
           <AppButton
             v-tooltip="'Zoom out'"
-            :icon="faXmark"
+            :icon="faMinus"
             @click="mapElement?.forEach((map) => map?.zoomOut())"
           />
           <AppButton
