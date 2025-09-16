@@ -34,7 +34,7 @@ UV_MEASURE_DESCRIPTIONS = {
         "UV_Wh_m2": {
             "label": "UV Irradiation in Wh/m²",
             "unit": MeasureUnit.RATE,
-            "source": "UV Estimates for 2000-2024 ",
+            "source": "UV Estimates for 2000-2024",
             "source_url": "https://gis.cancer.gov/tools/uv-exposure/",
         },
     }
