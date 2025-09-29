@@ -6,6 +6,14 @@ volumes:
 
 
 services:
+  # make most services restart automatically if they crash or the VM reboots
+  backend:
+    restart: unless-stopped
+  memcached:
+    restart: unless-stopped
+  db:
+    restart: unless-stopped
+
   frontend:
     image: ecco-frontend
     build: ./frontend
@@ -32,6 +40,7 @@ services:
   #     - backend
 
   caddy:
+    restart: unless-stopped
     image: caddy:2.10
     env_file:
       - .env
