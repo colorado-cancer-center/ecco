@@ -152,14 +152,12 @@ const middleware = [
 ];
 
 /** normalize single/multi to array */
-function toArray<T>(value: T | T[]): T[] {
-  return Array.isArray(value) ? value : [value];
-}
+const toArray = <T,>(value: T | T[]): T[] =>
+  Array.isArray(value) ? value : [value];
 
 /** type helper func to check if option is real option or group */
-function isOption(option: O | Group | undefined): option is O {
-  return !!option && "id" in option;
-}
+const isOption = (option: O | Group | undefined): option is O =>
+  !!option && "id" in option;
 
 /** options excluding groups */
 const optionsOnly = computed(() => options.filter(isOption));
@@ -178,11 +176,11 @@ const value = computed(() => {
 });
 
 /** model value to emit from headlessui to parent */
-async function onChange(value: O | O[]) {
+const onChange = async (value: O | O[]) => {
   const list = toArray(value);
   const id = multi ? list.map((option) => option.id) : list[0]?.id || "";
   emit("update:modelValue", id);
-}
+};
 
 /** full selected option (only relevant in single mode) */
 const selectedOption = computed(() => {
@@ -208,13 +206,13 @@ const selectedLabel = computed<string>(() => {
 });
 
 /** when dropdown opened */
-async function onDropdownOpen(node: VNode) {
+const onDropdownOpen = async (node: VNode) => {
   await frame();
   (node.el as Element).scrollIntoView({ block: "nearest" });
-}
+};
 
 /** add "quick" arrow key select */
-function onKeypress({ key }: KeyboardEvent) {
+const onKeypress = async ({ key }: KeyboardEvent) => {
   if (!multi && (key === "ArrowLeft" || key === "ArrowRight")) {
     let index = options.findIndex((option) =>
       isOption(option) ? option.id === modelValue : false,
@@ -235,7 +233,7 @@ function onKeypress({ key }: KeyboardEvent) {
 
     emit("update:modelValue", (options[index] as O).id);
   }
-}
+};
 </script>
 
 <style scoped>

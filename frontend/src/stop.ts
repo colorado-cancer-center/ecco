@@ -13,14 +13,14 @@ export const stop: Directive<HTMLElement> = {
 };
 
 /** get all event names on an element */
-function getEvents(element: Element) {
+const getEvents = (element: Element) => {
   const events = [];
   for (const key in element)
     if (key.startsWith("on")) events.push(key.substring(2));
   return events;
-}
+};
 
 /** stop propagation of an event */
-function stopProp(event: Event) {
+const stopProp = (event: Event) => {
   event.stopPropagation();
-}
+};

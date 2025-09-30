@@ -1,106 +1,101 @@
 <template>
   <div
-    ref="scrollElement"
-    v-bind="$attrs"
-    class="scroll"
+    ref="frameElement"
+    class="frame"
     :style="{
-      '--width': width ? `${width}px` : '',
-      '--height': height ? `${height}px` : '',
       '--zoom': immediateZoom,
       '--label-opacity': geometryOpacity,
     }"
   >
-    <div ref="frameElement" class="frame">
-      <!-- map root  -->
-      <div ref="mapElement" class="map" />
+    <!-- map root  -->
+    <div ref="mapElement" v-bind="$attrs" class="map" />
 
-      <!-- legends -->
-      <template v-if="showLegends">
+    <!-- legends -->
+    <template v-if="showLegends">
+      <div
+        v-if="$slots['top-left-upper'] || $slots['top-left-lower']"
+        class="legend top-left"
+      >
+        <slot name="top-left-upper" />
+
+        <!-- scale key -->
         <div
-          v-if="$slots['top-left-upper'] || $slots['top-left-lower']"
-          class="legend top-left"
+          v-if="scale.steps.length"
+          class="scale"
+          :style="{ '--cols': scale.steps.length }"
         >
-          <slot name="top-left-upper" />
-
-          <!-- scale key -->
           <div
-            v-if="scale.steps.length"
-            class="scale"
-            :style="{ '--cols': scale.steps.length }"
+            v-for="(step, key) of scale.steps"
+            :key="key"
+            v-tooltip="step.tooltip"
+            class="scale-color"
+            tabindex="0"
+            :style="{ background: step.color }"
+          />
+          <div
+            v-for="(step, key) of scale.steps"
+            :key="key"
+            class="scale-label"
           >
-            <div
-              v-for="(step, key) of scale.steps"
-              :key="key"
-              v-tooltip="step.tooltip"
-              class="scale-color"
-              tabindex="0"
-              :style="{ background: step.color }"
-            />
-            <div
-              v-for="(step, key) of scale.steps"
-              :key="key"
-              class="scale-label"
-            >
-              {{ step.label }}
-            </div>
+            {{ step.label }}
           </div>
-
-          <slot name="top-left-lower" />
         </div>
-        <div v-if="$slots['top-right']" class="legend top-right">
-          <slot name="top-right" />
-        </div>
-        <div
-          v-if="$slots['bottom-right'] || !isEmpty(symbols)"
-          class="legend bottom-right"
-        >
-          <slot name="bottom-right" />
 
-          <!-- symbol key -->
-          <div v-if="!isEmpty(symbols)" class="mini-table">
-            <template v-for="(symbol, label) of symbols" :key="label">
-              <template v-if="symbol">
-                <div class="symbol" v-html="symbol.html" />
-                <small>{{ label }}</small>
-              </template>
+        <slot name="top-left-lower" />
+      </div>
+      <div v-if="$slots['top-right']" class="legend top-right">
+        <slot name="top-right" />
+      </div>
+      <div
+        v-if="$slots['bottom-right'] || !isEmpty(symbols)"
+        class="legend bottom-right"
+      >
+        <slot name="bottom-right" />
+
+        <!-- symbol key -->
+        <div v-if="!isEmpty(symbols)" class="mini-table">
+          <template v-for="(symbol, label) of symbols" :key="label">
+            <template v-if="symbol">
+              <div class="symbol" v-html="symbol.html" />
+              <small>{{ label }}</small>
             </template>
-          </div>
+          </template>
         </div>
-        <div v-if="$slots['bottom-left']" class="legend bottom-left">
-          <slot name="bottom-left" />
-        </div>
-      </template>
-
-      <!-- geometry labels -->
-      <div
-        v-for="(feature, key) of geometryFeaturesWLabels"
-        :key="key"
-        ref="geometryLabelElements"
-        class="label"
-      >
-        <div>{{ feature.get("label") }}</div>
-        <slot name="geometry-label" :feature="feature.getProperties()" />
       </div>
-
-      <!-- feature popup -->
-      <div
-        v-if="$slots['popup'] && selectedFeature"
-        ref="popupElement"
-        v-stop
-        class="legend popup"
-      >
-        <AppButton
-          class="popup-close"
-          aria-label="Close popup"
-          @click="selectedFeature = undefined"
-        >
-          <font-awesome-icon :icon="faXmark" />
-        </AppButton>
-        <slot name="popup" :feature="selectedFeature.getProperties()" />
+      <div v-if="$slots['bottom-left']" class="legend bottom-left">
+        <slot name="bottom-left" />
       </div>
+    </template>
 
-      <div class="attribution" v-html="attribution" />
+    <!-- geometry labels -->
+    <div
+      v-for="(feature, key) of geometryFeaturesWLabels"
+      :key="key"
+      ref="geometryLabelElements"
+      class="geometry-label"
+    >
+      <div>{{ feature.get("label") }}</div>
+      <slot name="geometry-label" :feature="feature.getProperties()" />
     </div>
+
+    <!-- feature popup -->
+    <div
+      v-if="$slots['popup'] && selectedFeature"
+      ref="popupElement"
+      v-stop
+      class="legend popup"
+    >
+      <AppButton
+        class="popup-close"
+        aria-label="Close popup"
+        @click="selectedFeature = undefined"
+      >
+        <font-awesome-icon :icon="faXmark" />
+      </AppButton>
+      <slot name="popup" :feature="selectedFeature.getProperties()" />
+    </div>
+
+    <div class="attribution" v-html="attribution" />
   </div>
 </template>
 
@@ -132,8 +127,7 @@ import {
 } from "vue";
 import * as d3 from "d3";
 import type { FeatureCollection } from "geojson";
-import { toBlob } from "html-to-image";
-import { capitalize, debounce, isEmpty, mapValues } from "lodash";
+import { isEmpty, mapValues, upperFirst } from "lodash";
 import { Feature, Map, Overlay, View } from "ol";
 import { pointerMove } from "ol/events/condition";
 import type { FeatureLike } from "ol/Feature";
@@ -147,18 +141,16 @@ import { XYZ } from "ol/source";
 import VectorSource from "ol/source/Vector";
 import { Fill, Icon, Stroke, Style, Text } from "ol/style";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
-import { useElementSize, useFullscreen } from "@vueuse/core";
+import { useElementSize } from "@vueuse/core";
 import { type Unit } from "@/api";
 import hatch from "@/assets/hatch.svg?url";
 import { getGradient, gradientOptions } from "@/components/gradient";
 import { backgroundOptions } from "@/components/tile-providers";
-import { downloadPng } from "@/util/download";
 import { formatValue, normalizedApply } from "@/util/math";
-import { forceHex, getBbox, getCssVar, waitFor } from "@/util/misc";
+import { forceHex, getBbox, getCssVar, sleep, waitFor } from "@/util/misc";
 import AppButton from "./AppButton.vue";
 import { getMarkers } from "./markers";
 
-const scrollElement = useTemplateRef("scrollElement");
 const frameElement = useTemplateRef("frameElement");
 const mapElement = useTemplateRef("mapElement");
 const popupElement = useTemplateRef("popupElement");
@@ -197,11 +189,6 @@ type Props = {
   scalePower?: number;
   /** enumerated values for scale */
   scaleValues?: (number | string)[];
-  /** forced dimensions */
-  width?: number;
-  height?: number;
-  /** filename for download */
-  filename?: string | string[];
   /** id of feature to highlight and zoom in on */
   highlight?: string;
 };
@@ -227,9 +214,6 @@ const {
   niceSteps = false,
   scalePower = 1,
   scaleValues,
-  width = 0,
-  height = 0,
-  filename = "map",
   highlight = "",
 } = defineProps<Props>();
 
@@ -294,7 +278,7 @@ const scale = computed(() => {
         const label =
           typeof value === "number"
             ? formatValue(value, unit, true)
-            : capitalize(value);
+            : upperFirst(value);
         return {
           value,
           label,
@@ -400,20 +384,20 @@ const xy = "EPSG:3857";
 const latlong = "EPSG:4326";
 
 /** transform point coordinates */
-function xyToLatlong(x = 0, y = 0) {
+const xyToLatlong = (x = 0, y = 0) => {
   const [long = 0, lat = 0] = new Point([x, y])
     .transform(xy, latlong)
     .getCoordinates();
   return [lat, long];
-}
+};
 
 /** transform point coordinates */
-function latlongToXy(lat = 0, long = 0) {
+const latlongToXy = (lat = 0, long = 0) => {
   const [x = 0, y = 0] = new Point([long, lat])
     .transform(latlong, xy)
     .getCoordinates();
   return [x, y];
-}
+};
 
 /** view object */
 const view = new View({
@@ -435,28 +419,20 @@ watchEffect(() => view.setCenter(latlongToXy(lat, long)));
 watchEffect(() => view.setZoom(zoom));
 
 /** on view pan */
-view.on(
-  "change:center",
-  /** debounce so view animations are preserved */
-  debounce(() => {
-    const center = view.getCenter();
-    if (!center) return;
-    const [lat, long] = xyToLatlong(center[0], center[1]);
-    emit("update:lat", lat);
-    emit("update:long", long);
-  }, 100),
-);
+view.on("change:center", () => {
+  const center = view.getCenter();
+  if (!center) return;
+  const [lat, long] = xyToLatlong(center[0], center[1]);
+  emit("update:lat", lat);
+  emit("update:long", long);
+});
 
 /** on view zoom */
-view.on(
-  "change:resolution",
-  /** debounce so view animations are preserved */
-  debounce(() => {
-    const zoom = view.getZoom();
-    if (!zoom) return;
-    emit("update:zoom", zoom);
-  }, 100),
-);
+view.on("change:resolution", () => {
+  const zoom = view.getZoom();
+  if (!zoom) return;
+  emit("update:zoom", zoom);
+});
 
 /** on immediate view zoom */
 const immediateZoom = ref(view.getZoom());
@@ -794,20 +770,16 @@ watch(
 );
 
 /** programmatic zoom in */
-function zoomIn() {
-  view.animate({ zoom: (view.getZoom() ?? 0) + 1, duration: 100 });
-}
+const zoomIn = () => view.setZoom((view.getZoom() ?? 0) + 1);
 
 /** programmatic zoom out */
-function zoomOut() {
-  view.animate({ zoom: (view.getZoom() ?? 2) - 1, duration: 100 });
-}
+const zoomOut = () => view.setZoom((view.getZoom() ?? 2) - 1);
 
 /** map client size */
 const { width: mapWidth, height: mapHeight } = useElementSize(frameElement);
 
 /** fit view to geometry layer content */
-function fit() {
+const fit = () => {
   /** get bounding box of content */
   const extent = geometrySource.getExtent();
 
@@ -841,9 +813,21 @@ function fit() {
   /** fit view. add some extra padding. */
   view.fit(extent, {
     padding: [top, right, bottom, left].map((v) => v + 20),
-    duration: 100,
   });
-}
+};
+
+/** auto-fit when geometry changes */
+watch(
+  () => geometry,
+  async () => {
+    /** if geometry not loaded yet or view already defined, don't fit */
+    if (!geometry || lat || long || zoom) return;
+    /** wait for render and layout shift */
+    await sleep(100);
+    fit();
+  },
+  { immediate: true, deep: true },
+);
 
 /** auto-fit when legends change */
 watch(
@@ -873,24 +857,8 @@ onMounted(async () => {
   }
 });
 
-/** toggle fullscreen on element */
-const { toggle: fullscreen } = useFullscreen(scrollElement);
-
-/** download map as png */
-async function download() {
-  if (!frameElement.value) return;
-
-  /** convert to image */
-  const blob = await toBlob(frameElement.value, {
-    width: mapWidth.value,
-    height: mapHeight.value,
-  });
-
-  if (blob) downloadPng(blob, filename);
-}
-
 /** allow control from parent */
-defineExpose({ zoomIn, zoomOut, fit, fullscreen, download });
+defineExpose({ zoomIn, zoomOut, fit });
 
 /** clean up objects */
 onUnmounted(() => {
@@ -907,17 +875,9 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.scroll {
-  max-width: var(--width, 100%);
-  max-height: var(--height, 100%);
-  overflow: auto;
-  box-shadow: var(--shadow);
-}
-
 .frame {
   position: relative;
-  width: var(--width, 100%);
-  height: var(--height, 100%);
+  transition: filter var(--fast);
 }
 
 .map {
@@ -930,8 +890,10 @@ onUnmounted(() => {
   z-index: 9;
   position: absolute;
   flex-direction: column;
-  max-width: 250px;
+  max-width: min(250px, calc(100% - 20px));
+  max-height: calc(100% - 20px);
   padding: 20px;
+  overflow: hidden;
   gap: 10px;
   border-radius: var(--rounded);
   background: var(--white);
@@ -993,7 +955,7 @@ onUnmounted(() => {
   place-self: center;
 }
 
-.label {
+.geometry-label {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1002,24 +964,24 @@ onUnmounted(() => {
   color: var(--white);
   font-size: calc(var(--zoom) * 1.75px);
   text-align: center;
-  opacity: calc(var(--label-opacity) * 2);
+  opacity: calc(var(--geometry-label-opacity) * 2);
   pointer-events: none;
   user-select: none;
 }
 
-:deep(*:has(> .label)) {
+:deep(*:has(> .geometry-label)) {
   pointer-events: none !important;
   user-select: none !important;
 }
 
-.label > :first-child {
+.geometry-label > :first-child {
   width: min-content;
   line-height: 1;
   -webkit-text-stroke: 3px black;
   paint-order: stroke fill;
 }
 
-.label > :not(:first-child) {
+.geometry-label > :not(:first-child) {
   display: flex;
   flex-wrap: wrap;
   align-items: center;

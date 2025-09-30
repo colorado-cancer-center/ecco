@@ -14,6 +14,8 @@
   --accent-b: hsl(80, 35%, 60%);
   --accent-a-light: hsl(200, 50%, 85%);
   --accent-b-light: hsl(80, 50%, 85%);
+  --success: #10b981;
+  --error: #f43f5e;
 
   /* font weights */
   --regular: 400;
@@ -230,16 +232,21 @@ blockquote {
   font-style: italic;
 }
 
+[disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 .center {
   text-align: center;
 }
 
-.buttons {
+.row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 10px;
 }
 
 .mini-table {

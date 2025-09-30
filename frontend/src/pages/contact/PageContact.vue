@@ -2,7 +2,7 @@
   <section>
     <AppHeading level="1">Contact</AppHeading>
 
-    <div class="buttons">
+    <div class="row">
       <AppButton
         :icon="faComment"
         to="https://app.smartsheet.com/b/form/e66c076519a34f59a253a9e9e40b9c03"
