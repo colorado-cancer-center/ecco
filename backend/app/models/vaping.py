@@ -19,7 +19,7 @@ from .base import BaseStatsModel, MeasureUnit, MeasuresByHealthRegion
 
 class VapingHealthRegion(MeasuresByHealthRegion, table=True):
     class Config:
-        label = "Youth Vaping"
+        label = "Vaping"
 
     # since we only have data for one factor per measure, we can't compare, e.g.
     # sex vs race; instead, we define a generic 'factor' field that differs
@@ -44,46 +44,45 @@ VAPING_MODELS = {
 }
 
 # the questions from the source data (i.e., "Health_measure" column)
-QUESTIONS = [
-    "Percentage of students who have ever used an electronic vapor product",
-    "Percentage of students who used an electronic vapor product in the past 30 days",
-]
+# the key of this dict is the name of the measure in the database,
+# and the value is what's displayed as the measure in the UI
+QUESTIONS = {
+    "youth_vaping_ever": "Pct of students who have ever used an electronic vapor product",
+    "youth_vaping_now": "Pct of students who used an electronic vapor product in the past 30 days",
+    "adult_vaping_ever": "Pct of adults who have ever used an electronic vapor product",
+    "adult_vaping_now": "Pct of adults who currently use an electronic vapor product",
+}
 
-# these are the values of the "Demographic" column in the source data; at
-# import, we create one measure per question+demographic pair.
-# (the special demographic "Total" is expanded into one row per other
-# demographic at the time of import, so we don't deal with it here)
-FACTOR_FIELDS = [
-    "Age",
-    "Gender",
-    "Race",
-]
+# shows up in the 'source' field in the legend when this measure is displayed
+# in the UI
+QUESTIONS_TO_SOURCES = {
+    "youth_vaping_ever": {
+        "source": "Healthy Kids Colorado Survey, 2023",
+        "source_url": "https://cdphe.colorado.gov/hkcs"
+    },
+    "youth_vaping_now": {
+        "source": "Healthy Kids Colorado Survey, 2023",
+        "source_url": "https://cdphe.colorado.gov/hkcs"
+    },
+    "adult_vaping_ever": {
+        "source": "BRFSS, 2023",
+        "source_url": "https://www.cdc.gov/brfss/index.html"
+    },
+    "adult_vaping_now": {
+        "source": "BRFSS, 2023",
+        "source_url": "https://www.cdc.gov/brfss/index.html"
+    },
+}
 
 VAPING_MEASURE_DESCRIPTIONS = {
     "vaping": {
-        f"{question} - By {factor}": {
-            "label": f"{question} - By {factor}",
+        measure_name: {
+            "label": question,
             "unit": MeasureUnit.PERCENT,
+            **QUESTIONS_TO_SOURCES[measure_name],
         }
-        for question in QUESTIONS
-        for factor in FACTOR_FIELDS
+        for measure_name, question in QUESTIONS.items()
     }
-}
-
-VAPING_FACTOR_DESCRIPTIONS = {
-    "vaping": {
-        "factor": {
-            "label": "Filter",
-            "default": "All",
-            "values": {
-                "All": "All",
-                "SE Asian": "Southeast Asian",
-                "SA": "South Asian",
-                "AIAN": "American Indian or Alaska Native",
-                "NHPI": "Native Hawaiian or Pacific Islander",
-            },
-        },
-    },
 }
 
 # ===========================================================================
