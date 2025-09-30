@@ -120,6 +120,7 @@ import {
   nextTick,
   onMounted,
   onUnmounted,
+  onUpdated,
   ref,
   useTemplateRef,
   watch,
@@ -127,7 +128,7 @@ import {
 } from "vue";
 import * as d3 from "d3";
 import type { FeatureCollection } from "geojson";
-import { isEmpty, mapValues, upperFirst } from "lodash";
+import { debounce, isEmpty, mapValues, upperFirst } from "lodash";
 import { Feature, Map, Overlay, View } from "ol";
 import { pointerMove } from "ol/events/condition";
 import type { FeatureLike } from "ol/Feature";
@@ -222,6 +223,7 @@ type Emits = {
   "update:lat": [Props["lat"]];
   "update:long": [Props["long"]];
   "update:no-data": [boolean];
+  "update:thumbnail": [string];
 };
 
 const emit = defineEmits<Emits>();
@@ -769,6 +771,27 @@ watch(
   { immediate: true, deep: true },
 );
 
+/** preview image of canvas, as blob url */
+let thumbnail = "";
+
+/** generate thumbnail */
+onUpdated(
+  debounce(async () => {
+    const canvas = mapElement.value?.querySelector("canvas");
+    if (!canvas) return;
+    const type = "image/jpeg";
+    const blob = await new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob((blob) => (blob ? resolve(blob) : reject()), type, 0.1),
+    );
+    URL.revokeObjectURL(thumbnail);
+    thumbnail = URL.createObjectURL(blob);
+    emit("update:thumbnail", thumbnail);
+  }, 500),
+);
+
+/** clean up any previous thumbnail */
+onUnmounted(() => URL.revokeObjectURL(thumbnail));
+
 /** programmatic zoom in */
 const zoomIn = () => view.setZoom((view.getZoom() ?? 0) + 1);
 
@@ -877,7 +900,9 @@ onUnmounted(() => {
 <style scoped>
 .frame {
   position: relative;
-  transition: filter var(--fast);
+  transition:
+    opacity var(--fast),
+    filter var(--fast);
 }
 
 .map {
