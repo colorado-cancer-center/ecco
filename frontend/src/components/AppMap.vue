@@ -782,26 +782,31 @@ watch(
   { immediate: true, deep: true },
 );
 
-/** preview image of canvas, as blob url */
-let thumbnail = "";
+/** preview image of canvas */
+const thumbnail = ref<Blob | null>(null);
 
-/** generate thumbnail */
-onUpdated(
-  debounce(async () => {
-    const canvas = mapElement.value?.querySelector("canvas");
-    if (!canvas) return;
-    const type = "image/jpeg";
-    const blob = await new Promise<Blob>((resolve, reject) =>
-      canvas.toBlob((blob) => (blob ? resolve(blob) : reject()), type, 0.1),
-    );
-    URL.revokeObjectURL(thumbnail);
-    thumbnail = URL.createObjectURL(blob);
-    emit("update:thumbnail", thumbnail);
-  }, 500),
-);
+/** make thumbnail blob from canvas */
+const generateThumbnail = debounce(async () => {
+  const canvas = mapElement.value?.querySelector("canvas");
+  if (!canvas) return;
+  canvas.toBlob((blob) => (thumbnail.value = blob), "image/jpeg", 0.1);
+}, 500);
 
-/** clean up any previous thumbnail */
-onUnmounted(() => URL.revokeObjectURL(thumbnail));
+/** generate thumbnail on any map update */
+onUpdated(generateThumbnail);
+/** cancel any pending debounce */
+onUnmounted(generateThumbnail.cancel);
+
+watchEffect((cleanup) => {
+  /** object url, for img src */
+  const src = thumbnail.value ? URL.createObjectURL(thumbnail.value) : "";
+  emit("update:thumbnail", src);
+  cleanup(() => {
+    /** clean up object url */
+    URL.revokeObjectURL(src);
+    emit("update:thumbnail", "");
+  });
+});
 
 /** programmatic zoom in */
 const zoomIn = () => view.setZoom((view.getZoom() ?? 0) + 1);
