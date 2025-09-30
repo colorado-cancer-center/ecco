@@ -20,10 +20,10 @@ console.debug("API:", api);
 const cache = new Map<string, Response>();
 
 /** general request */
-export async function request<T>(
+export const request = async <T>(
   url: string | URL,
   params: Record<string, string | string[]> = {},
-) {
+) => {
   /** make url object */
   url = new URL(url);
   /** construct params */
@@ -48,7 +48,7 @@ export async function request<T>(
   /** set cache for next time */
   if (request.method === "GET") cache.set(id, response);
   return parsed as T;
-}
+};
 
 /** response from facets api endpoint */
 type _Facets = {
@@ -91,7 +91,7 @@ export type Facet = {
 };
 
 /** get hierarchical list of geographic levels, measure categories, and measures */
-export async function getFacets() {
+export const getFacets = async () => {
   const data = await request<_Facets>(`${api}/stats/measures`);
 
   /** transform data into desired format */
@@ -111,7 +111,7 @@ export async function getFacets() {
       })),
     })),
   })) satisfies Facet;
-}
+};
 
 export type Facets = Awaited<ReturnType<typeof getFacets>>;
 
@@ -133,10 +133,10 @@ export const extraLocationList = {
 } as const;
 
 /** get listing/metadata of locations */
-export async function getLocationList() {
+export const getLocationList = async () => {
   const data = await request<_LocationList>(`${api}/locations`);
   return { ...extraLocationList, ...data };
-}
+};
 
 export type LocationList = Awaited<ReturnType<typeof getLocationList>>;
 
@@ -194,10 +194,10 @@ export type GeoProps = {
 };
 
 /** get geojson from geography data */
-export async function getGeo(
+export const getGeo = async (
   type: "counties" | "tracts" | "healthregions",
   idField: string,
-): Promise<FeatureCollection<Geometry, GeoProps>> {
+): Promise<FeatureCollection<Geometry, GeoProps>> => {
   const data = await request<_Geo>(`${api}/${type}`);
 
   /** transform data into desired format */
@@ -226,7 +226,7 @@ export async function getGeo(
       };
     }),
   };
-}
+};
 
 export type Geo = Awaited<ReturnType<typeof getGeo>>;
 
@@ -262,12 +262,12 @@ type _Values = {
 };
 
 /** get values data */
-export async function getValues(
+export const getValues = async (
   level: string,
   category: string,
   measure: string,
   filters: { [key: string]: string },
-) {
+) => {
   const filtersString = Object.entries(filters || {})
     .map((entry) => entry.join(":"))
     .join(";");
@@ -278,7 +278,7 @@ export async function getValues(
   );
 
   return data;
-}
+};
 
 export type Values = Awaited<ReturnType<typeof getValues>>;
 
@@ -305,9 +305,9 @@ const extraLocationData = {
 >;
 
 /** get locations (markers, highlighted areas, etc) */
-export async function getLocation(
+export const getLocation = async (
   id: string,
-): Promise<FeatureCollection<Geometry, LocationProps>> {
+): Promise<FeatureCollection<Geometry, LocationProps>> => {
   /** include extra location data */
   /** TEMPORARY: should eventually come from backend */
   if (id in extraLocationData) {
@@ -340,21 +340,23 @@ export async function getLocation(
   );
 
   return data.geometry_json;
-}
+};
 
 export type Location = Awaited<ReturnType<typeof getLocation>>;
 
 /** get data download link */
-export function getDownload(level: string, category: string, measure?: string) {
+export const getDownload = (
+  level: string,
+  category: string,
+  measure?: string,
+) => {
   const url = new URL(`${api}/stats/${level}/${category}/as-csv`);
   if (measure) url.searchParams.set(measure, measure);
   return url.toString();
-}
+};
 
 /** get download all link */
-export function getDownloadAll() {
-  return `${api}/stats/download-all`;
-}
+export const getDownloadAll = () => `${api}/stats/download-all`;
 
 /** location geojson properties fields */
 export type LocationProps = {

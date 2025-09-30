@@ -54,9 +54,6 @@ export type GradientName = (typeof gradientOptions)[number]["key"];
 export type GradientFunc = (typeof gradientOptions)[number]["func"];
 
 /** get gradient interpolator function from shorthand id/name */
-export function getGradient(id: string) {
-  return (
-    gradientOptions.find((option) => option.id === id)?.func ||
-    d3.interpolateCool
-  );
-}
+export const getGradient = (id: string) =>
+  gradientOptions.find((option) => option.id === id)?.func ||
+  d3.interpolateCool;

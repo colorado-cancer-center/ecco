@@ -1,13 +1,13 @@
+import { upperFirst } from "lodash";
 import type { Unit } from "@/api/index";
-import { capitalize } from "@/util/string";
 
 /** format map data value */
-export function formatValue(
+export const formatValue = (
   value: number | string,
   unit?: Unit,
   compact = false,
-): string {
-  if (typeof value === "string") return capitalize(value);
+): string => {
+  if (typeof value === "string") return upperFirst(value);
   const format: Intl.NumberFormatOptions = {};
   format.notation = compact ? "compact" : "standard";
   format.maximumSignificantDigits = compact ? 2 : 5;
@@ -34,18 +34,18 @@ export function formatValue(
       break;
   }
   return value.toLocaleString(undefined, format) + suffix;
-}
+};
 
 /**
  * normalize value from [min, max] to [0, 1], apply math function to value, then
  * un-normalize
  */
-export function normalizedApply(
+export const normalizedApply = (
   value: number,
   min: number,
   max: number,
   func: (value: number) => number,
-) {
+) => {
   /** normalize */
   value = (value - min) / (max - min);
   /** apply func */
@@ -53,4 +53,4 @@ export function normalizedApply(
   /** un-normalize */
   value = value * (max - min) + min;
   return value;
-}
+};
