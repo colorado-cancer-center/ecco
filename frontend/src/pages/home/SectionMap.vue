@@ -90,7 +90,6 @@
       <AppAccordion label="Compare">
         <div class="compare-thumbnails">
           <template v-for="(map, index) in compare" :key="index">
-            <!-- eslint-disable-next-line -->
             <AppButton
               v-if="index < compare.length"
               v-tooltip="
@@ -104,6 +103,8 @@
                 borderColor: mapsEqual(map, selectedMap) ? 'var(--theme)' : '',
               }"
               @click="toggleCompare(map)"
+              @focus="highlightedThumbnail = index"
+              @blur="highlightedThumbnail = null"
               @mouseenter="highlightedThumbnail = index"
               @mouseleave="highlightedThumbnail = null"
             >
@@ -111,13 +112,14 @@
             </AppButton>
           </template>
 
-          <!-- eslint-disable-next-line -->
           <AppButton
             v-if="!inCompare() && compare.length < maxCompare"
             v-tooltip="`Add selected measure/etc. map to comparison`"
             class="compare-thumbnail"
             :icon="faPlus"
             @click="toggleCompare()"
+            @focus="highlightedThumbnail = thumbnails.length - 1"
+            @blur="highlightedThumbnail = null"
             @mouseenter="highlightedThumbnail = thumbnails.length - 1"
             @mouseleave="highlightedThumbnail = null"
           >
@@ -125,16 +127,20 @@
               v-if="thumbnails[thumbnails.length - 1]"
               :src="thumbnails[thumbnails.length - 1]"
               alt=""
-              style="opacity: 0.25; filter: saturate(0)"
+              class="preview"
             />
           </AppButton>
         </div>
 
         <AppButton
-          v-if="!inCompare() && showPreview"
-          v-tooltip="'Hide preview of selected measure/etc. map'"
+          v-if="showPreview && compare.length && !inCompare()"
+          v-tooltip="'Hide tentative map of selected measure/etc.'"
           style="align-self: center"
           @click="showPreview = false"
+          @focus="highlightedThumbnail = thumbnails.length - 1"
+          @blur="highlightedThumbnail = null"
+          @mouseenter="highlightedThumbnail = thumbnails.length - 1"
+          @mouseleave="highlightedThumbnail = null"
         >
           Hide Preview
         </AppButton>
@@ -345,13 +351,13 @@
         v-if="renderMap"
         ref="mapGridElement"
         class="map-grid"
+        :class="{ preview: mapDataStatus === 'loading' }"
         :style="{
           '--width': mapWidth ? `${mapWidth}px` : '',
           '--height': mapHeight ? `${mapHeight}px` : '',
 
           flexGrow: mapHeight ? '' : 1,
           flexShrink: mapHeight ? 0 : '',
-          opacity: mapDataStatus === 'loading' ? 0.5 : 1,
         }"
       >
         <AppMap
@@ -362,12 +368,9 @@
           v-model:lat="lat"
           v-model:long="long"
           v-model:no-data="noData"
-          :style="{
-            filter:
-              showPreview && compare.length && !inCompare(selected)
-                ? 'contrast(0.5) saturate(0) brightness(1.25)'
-                : '',
-            opacity: index === highlightedThumbnail ? 0.75 : 1,
+          :class="{
+            preview: showPreview && compare.length && !inCompare(selected),
+            highlight: index === highlightedThumbnail,
           }"
           :geometry="geometry"
           :locations="locations"
@@ -1312,6 +1315,14 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
   gap: 15px;
 }
 
+.preview {
+  filter: contrast(0.5) saturate(0) brightness(1.25);
+}
+
+.highlight {
+  filter: contrast(0.5) sepia(1) saturate(0.25);
+}
+
 .compare-thumbnails {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1342,6 +1353,10 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
 
 .compare-thumbnail:hover img {
   opacity: 0.25;
+}
+
+.compare-thumbnail img.preview {
+  opacity: 0.5;
 }
 
 .dimensions-label {
