@@ -25,8 +25,8 @@
           :style="{ '--cols': scale.steps.length }"
         >
           <div
-            v-for="(step, key) of scale.steps"
-            :key="key"
+            v-for="(step, index) of scale.steps"
+            :key="index"
             v-tooltip="step.tooltip"
             class="scale-color"
             tabindex="0"
@@ -36,8 +36,8 @@
             }"
           />
           <div
-            v-for="(step, key) of scale.steps"
-            :key="key"
+            v-for="(step, index) of scale.steps"
+            :key="index"
             class="scale-label"
           >
             {{ step.label }}
@@ -72,8 +72,8 @@
 
     <!-- geometry labels -->
     <div
-      v-for="(feature, key) of geometryFeaturesWLabels"
-      :key="key"
+      v-for="(feature, index) of geometryFeaturesWLabels"
+      :key="index"
       ref="geometryLabelElements"
       class="geometry-label"
     >
