@@ -95,7 +95,7 @@
               v-if="index < compare.length"
               v-tooltip="
                 mapsEqual(map, selectedMap)
-                  ? `Current map added to comparison. Make new measure/etc. selections to add another.`
+                  ? `Selected map added to comparison. Select new measure/etc. to add another.`
                   : `Remove map from comparison`
               "
               class="compare-thumbnail"
@@ -114,9 +114,7 @@
           <!-- eslint-disable-next-line -->
           <AppButton
             v-if="!inCompare() && compare.length < maxCompare"
-            v-tooltip="
-              `Add current map (measure/etc. selections) to comparison`
-            "
+            v-tooltip="`Add selected measure/etc. map to comparison`"
             class="compare-thumbnail"
             :icon="faPlus"
             @click="toggleCompare()"
@@ -131,17 +129,24 @@
             />
           </AppButton>
         </div>
+
+        <AppButton
+          v-if="!inCompare() && showPreview"
+          v-tooltip="'Hide preview of selected measure/etc. map'"
+          style="align-self: center"
+          @click="showPreview = false"
+        >
+          Hide Preview
+        </AppButton>
       </AppAccordion>
 
       <AppAccordion label="Customization">
         <!-- legend -->
-        <div class="control-row">
-          <AppCheckbox
-            v-model="showLegends"
-            v-tooltip="'Show/hide legend panels on map'"
-            label="Show legends"
-          />
-        </div>
+        <AppCheckbox
+          v-model="showLegends"
+          v-tooltip="'Show/hide legend panels on map'"
+          label="Show legends"
+        />
 
         <!-- gradient -->
         <div class="side-control">
@@ -885,11 +890,14 @@ const selectedMap = computed(() => ({
 
 type Map = typeof selectedMap.value;
 
-/** show preview of selected map when comparing */
+/** show preview of selected map */
 const showPreview = ref(true);
 
 /** map compare group */
 const compare = useUrlParam("compare", jsonParam<Map[]>(), []);
+
+/** reenable preview state on any change to comparison */
+watch(compare, () => (showPreview.value = true), { deep: true });
 
 /** map thumbnails */
 const thumbnails = ref<string[]>([]);
