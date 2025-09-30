@@ -95,7 +95,7 @@
               v-if="index < compare.length"
               v-tooltip="
                 mapsEqual(map, selectedMap)
-                  ? `Current map added to comparison. Make new selections above to add another.`
+                  ? `Current map added to comparison. Make new measure/etc. selections to add another.`
                   : `Remove map from comparison`
               "
               class="compare-thumbnail"
@@ -114,7 +114,9 @@
           <!-- eslint-disable-next-line -->
           <AppButton
             v-if="!inCompare() && compare.length < maxCompare"
-            v-tooltip="`Add current map (selections above) to comparison`"
+            v-tooltip="
+              `Add current map (measure/etc. selections) to comparison`
+            "
             class="compare-thumbnail"
             :icon="faPlus"
             @click="toggleCompare()"
