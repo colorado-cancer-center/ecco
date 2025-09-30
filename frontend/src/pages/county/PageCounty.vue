@@ -59,8 +59,8 @@
         </p>
         <div class="charts">
           <AppBarChart
-            v-for="(chart, key) in chartData"
-            :key="key"
+            v-for="(chart, index) in chartData"
+            :key="index"
             :title="chart.title"
             :data="chart.data"
             :unit="chart.unit"
