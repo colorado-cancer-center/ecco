@@ -56,11 +56,11 @@
       <!-- factors -->
       <template v-if="!isEmpty(factors)">
         <div class="factors">
-          <template v-for="(factor, key) in factors" :key="key">
+          <template v-for="(factor, index) in factors" :key="index">
             <AppSelect
-              v-if="selectedFactors[key]"
+              v-if="selectedFactors[index]"
               class="factor"
-              :model-value="selectedFactors[key]?.value || ''"
+              :model-value="selectedFactors[index]?.value || ''"
               :label="factor.label"
               :options="
                 Object.entries(factor.values).map(([key, value]) => ({
@@ -70,7 +70,7 @@
               "
               @update:model-value="
                 (value) =>
-                  (selectedFactors[key]!.value = [value].flat()[0] || '')
+                  (selectedFactors[index]!.value = [value].flat()[0] || '')
               "
             />
           </template>
@@ -89,10 +89,10 @@
       <!-- multi-map compare -->
       <AppAccordion label="Compare">
         <div class="compare-thumbnails">
-          <template v-for="(map, key) in compare" :key="key">
+          <template v-for="(map, index) in compare" :key="index">
             <!-- eslint-disable-next-line -->
             <AppButton
-              v-if="key < compare.length"
+              v-if="index < compare.length"
               v-tooltip="
                 mapsEqual(map, selectedMap)
                   ? `Current map added to comparison. Make new selections above to add another.`
@@ -104,10 +104,10 @@
                 borderColor: mapsEqual(map, selectedMap) ? 'var(--theme)' : '',
               }"
               @click="toggleCompare(map)"
-              @mouseenter="highlightedThumbnail = key"
+              @mouseenter="highlightedThumbnail = index"
               @mouseleave="highlightedThumbnail = null"
             >
-              <img v-if="thumbnails[key]" :src="thumbnails[key]" alt="" />
+              <img v-if="thumbnails[index]" :src="thumbnails[index]" alt="" />
             </AppButton>
           </template>
 
@@ -159,10 +159,10 @@
                 <defs>
                   <linearGradient :id="option?.id">
                     <stop
-                      v-for="(color, key) in option?.colors"
-                      :key="key"
+                      v-for="(color, index) in option?.colors"
+                      :key="index"
                       :offset="
-                        100 * (key / ((option?.colors.length || 1) - 1)) + '%'
+                        100 * (index / ((option?.colors.length || 1) - 1)) + '%'
                       "
                       :stop-color="color"
                     />
@@ -417,7 +417,7 @@
           <template v-if="countyWide.length" #top-right>
             <b>Outreach (county-level)</b>
             <div class="mini-table">
-              <template v-for="(field, key) of countyWide" :key="key">
+              <template v-for="(field, index) of countyWide" :key="index">
                 <div class="check" :style="{ '--color': field.color }">
                   <font-awesome-icon :icon="faCheck" />
                 </div>
@@ -432,7 +432,7 @@
             #geometry-label="{ feature }: { feature: FeatureInfo }"
           >
             <div>
-              <template v-for="(field, key) of countyWide" :key="key">
+              <template v-for="(field, index) of countyWide" :key="index">
                 <div
                   v-if="field.checkKey && feature[field.checkKey]"
                   class="check"
