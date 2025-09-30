@@ -1,5 +1,5 @@
 <template>
-  <div class="columns">
+  <div class="columns" :style="{ '--cols': mapCols }">
     <!-- left panel -->
     <div class="left-panel" role="group">
       <!-- data selections -->
@@ -88,47 +88,46 @@
 
       <!-- multi-map compare -->
       <AppAccordion label="Compare">
-        <div class="row">
-          <span
-            :style="{
-              color: compare.length >= maxCompare ? 'var(--error)' : '',
-            }"
-          >
-            <font-awesome-icon :icon="faLayerGroup" />
-            Comparing {{ compare.length }} map(s) ({{ maxCompare }} max)
-          </span>
-          <AppButton
-            v-tooltip="'Reset comparison (remove all maps)'"
-            :icon="faArrowsRotate"
-            @click="compare = []"
-          />
-        </div>
+        <div class="compare-thumbnails">
+          <template v-for="(map, key) in compare" :key="key">
+            <!-- eslint-disable-next-line -->
+            <AppButton
+              v-if="key < compare.length"
+              v-tooltip="
+                mapsEqual(map, selectedMap)
+                  ? `Current map added to comparison. Make new selections above to add another.`
+                  : `Remove map from comparison`
+              "
+              class="compare-thumbnail"
+              :icon="faXmark"
+              :style="{
+                borderColor: mapsEqual(map, selectedMap) ? 'var(--theme)' : '',
+              }"
+              @click="toggleCompare(map)"
+              @mouseenter="highlightedThumbnail = key"
+              @mouseleave="highlightedThumbnail = null"
+            >
+              <img v-if="thumbnails[key]" :src="thumbnails[key]" alt="" />
+            </AppButton>
+          </template>
 
-        <div class="control-row">
+          <!-- eslint-disable-next-line -->
           <AppButton
-            v-if="inCompare()"
-            v-tooltip="'Remove selected map from comparison'"
-            :icon="faMinus"
-            @click="toggleCompare()"
-          >
-            Remove
-          </AppButton>
-          <AppButton
-            v-else
-            v-tooltip="'Add selected map to comparison'"
+            v-if="!inCompare() && compare.length < maxCompare"
+            v-tooltip="`Add current map (selections above) to comparison`"
+            class="compare-thumbnail"
             :icon="faPlus"
-            :disabled="compare.length >= maxCompare"
             @click="toggleCompare()"
+            @mouseenter="highlightedThumbnail = thumbnails.length - 1"
+            @mouseleave="highlightedThumbnail = null"
           >
-            Add
+            <img
+              v-if="thumbnails[thumbnails.length - 1]"
+              :src="thumbnails[thumbnails.length - 1]"
+              alt=""
+              style="opacity: 0.25; filter: saturate(0)"
+            />
           </AppButton>
-          <AppCheckbox
-            v-model="showPreview"
-            v-tooltip="
-              'Show preview of selected map before it\'s added to comparison'
-            "
-            label="Show preview"
-          />
         </div>
       </AppAccordion>
 
@@ -342,7 +341,7 @@
         :style="{
           '--width': mapWidth ? `${mapWidth}px` : '',
           '--height': mapHeight ? `${mapHeight}px` : '',
-          '--cols': mapCols,
+
           flexGrow: mapHeight ? '' : 1,
           flexShrink: mapHeight ? 0 : '',
           opacity: mapDataStatus === 'loading' ? 0.5 : 1,
@@ -361,6 +360,7 @@
               showPreview && compare.length && !inCompare(selected)
                 ? 'contrast(0.5) saturate(0) brightness(1.25)'
                 : '',
+            opacity: index === highlightedThumbnail ? 0.75 : 1,
           }"
           :geometry="geometry"
           :locations="locations"
@@ -379,18 +379,10 @@
           :nice-steps="niceSteps"
           :scale-power="scalePower"
           :scale-values="values?.order"
+          @update:thumbnail="(thumb) => (thumbnails[index] = thumb)"
         >
           <!-- main legend -->
           <template #top-left-upper>
-            <AppButton
-              v-if="inCompare(selected)"
-              v-tooltip="'Remove this map from comparison'"
-              style="position: absolute; right: 0; top: 0"
-              data-save-hide
-              :icon="inCompare(selected) ? faMinus : undefined"
-              @click="toggleCompare(selected)"
-            />
-
             <strong>
               {{
                 facets[selected.level]?.list[selected.category]?.list[
@@ -737,7 +729,6 @@ import {
   faExpand,
   faExternalLinkAlt,
   faFeatherPointed,
-  faLayerGroup,
   faMinus,
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
@@ -897,6 +888,12 @@ const showPreview = ref(true);
 
 /** map compare group */
 const compare = useUrlParam("compare", jsonParam<Map[]>(), []);
+
+/** map thumbnails */
+const thumbnails = ref<string[]>([]);
+
+/** highlighted thumbnail */
+const highlightedThumbnail = ref<number | null>(null);
 
 /** are two map selections equal */
 const mapsEqual = (a: Map, b: Map) =>
@@ -1303,6 +1300,38 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
   grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
   align-items: center;
   gap: 15px;
+}
+
+.compare-thumbnails {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  place-items: center;
+  gap: 10px;
+}
+
+.compare-thumbnail {
+  position: relative;
+  aspect-ratio: 2 / 1;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: solid 2px transparent;
+}
+
+.compare-thumbnail img {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition:
+    opacity var(--fast),
+    filter var(--fast);
+}
+
+.compare-thumbnail:hover img {
+  opacity: 0.25;
 }
 
 .dimensions-label {
