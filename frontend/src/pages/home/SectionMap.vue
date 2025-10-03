@@ -945,7 +945,9 @@ const {
         geometry:
           selected.level === "tract"
             ? await getGeo("tracts", "fips")
-            : await getGeo("counties", "us_fips"),
+            : selected.level == "county"
+              ? await getGeo("counties", "us_fips")
+              : await getGeo("healthregions", "hs_region"),
 
         /** load map values data */
         values:

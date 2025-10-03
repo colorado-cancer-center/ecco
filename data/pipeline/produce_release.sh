@@ -146,7 +146,7 @@ cd /app
 ./commands/import_radon.py '/data/reference/radon/TEEO_REF_CDPHE COEPHT Pre-Mitigation Radon Test Results_2023_EN.xlsx'
 ./commands/import_locations.py /data/reference/locations/locations.json /data/staging/${LATEST_STAGING}/locations/locations-data.json 
 ./commands/import_hpv.py /data/reference/cdphe-hpv/CO_Teen_Rates_anygender.xlsx /data/reference/cdphe-hpv/CO_Teen_Rates_female.xlsx /data/reference/cdphe-hpv/CO_Teen_Rates_male.xlsx
-# ./commands/import_vaping_data.py '/data/reference/youth-vaping/sheets/2023 HKCS HS Regional Vapor Results.xlsx' '/data/reference/youth-vaping/sheets/2023 HKCS HS State Vapor Results.xlsx' 
+./commands/import_vaping_data.py '/data/reference/vaping/sheets/youth/HKCS.Teen.VAPE.071525.csv' '/data/reference/vaping/sheets/adult/ECCO_ECIGREQUEST_BRFSS23_HSRSTATS.xlsx'
 ./commands/import_ccc_state_stats.py /data/reference/ccc-team-data/ECCO_IncAverages.xlsx
 EOF
 
