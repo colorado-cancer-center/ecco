@@ -710,7 +710,7 @@ for type, family in STATS_MODELS.items():
 
                 # retrieve state values, if available, by querying CCC models
                 state_values = await _query_state_stats(
-                    session, model, factor_constraints=filter_factors, measure_label=measure_meta['label']
+                    session, model, factor_constraints=filter_factors, measure_label=measure_meta.get('label', None)
                 )
 
                 return FIPSMeasureResponse(
