@@ -110,6 +110,10 @@ async def import_file(file, session, model=None, delete_before_import=True, dont
 
             # set each value
             for name, value in row.items():
+                # exclude columns not in the model
+                if name not in field_types:
+                    continue
+            
                 # for some reason, CIF changes the "Monthly Unemployment Rate" column
                 # to include the current month, e.g. "Monthly Unemployment Rate (Dec)"
                 # since we don't want to record metadata for each month, we'll just
