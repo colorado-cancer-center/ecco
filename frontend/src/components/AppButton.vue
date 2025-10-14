@@ -71,8 +71,8 @@ const component = computed(() => (to ? AppLink : "button"));
 }
 
 .square {
-  width: 35px;
-  height: 35px;
+  min-width: 35px;
+  min-height: 35px;
   padding: 0;
 }
 </style>
