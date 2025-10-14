@@ -168,6 +168,10 @@ export type GeoProps = {
   cent_lat?: number;
   cent_long?: number;
 
+  /* health statistics region (HSR) */
+  counties?: string;
+  hs_region?: string;
+
   /** outreach */
   fit_kits?: number;
   radon_kits?: number;
@@ -191,7 +195,7 @@ export type GeoProps = {
 
 /** get geojson from geography data */
 export const getGeo = async (
-  type: "counties" | "tracts",
+  type: "counties" | "tracts" | "healthregions",
   idField: string,
 ): Promise<FeatureCollection<Geometry, GeoProps>> => {
   const data = await request<_Geo>(`${api}/${type}`);
@@ -247,7 +251,10 @@ type _Values = {
   state_source?: string;
   /** map of feature id to measure value */
   values: {
-    [key: string]: { value: number | string; aac?: number | string };
+    [key: string]: {
+      value?: number | string | null;
+      aac?: number | string | null;
+    };
   };
   /** unit info */
   unit: Unit;

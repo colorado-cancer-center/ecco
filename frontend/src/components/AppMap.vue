@@ -30,7 +30,10 @@
             v-tooltip="step.tooltip"
             class="scale-color"
             tabindex="0"
-            :style="{ background: step.color }"
+            :style="{
+              backgroundColor: step.color,
+              '--image': step.color === noDataColor ? `url(${hatch})` : 'none',
+            }"
           />
           <div
             v-for="(step, key) of scale.steps"
@@ -143,7 +146,7 @@ import { Fill, Icon, Stroke, Style, Text } from "ol/style";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useElementSize } from "@vueuse/core";
 import { type Unit } from "@/api";
-import hatch from "@/assets/hatch.svg?url";
+import hatch from "@/assets/hatch.svg?no-inline";
 import { getGradient, gradientOptions } from "@/components/gradient";
 import { backgroundOptions } from "@/components/tile-providers";
 import { formatValue, normalizedApply } from "@/util/math";
@@ -163,7 +166,10 @@ type Props = {
   geometry?: FeatureCollection;
   locations?: Record<string, FeatureCollection>;
   /** map of geometry id to value */
-  values?: Record<string, { value: number | string; [key: string]: unknown }>;
+  values?: Record<
+    string,
+    { value?: number | string | null; [key: string]: unknown }
+  >;
   /** value domain */
   min?: number | string;
   max?: number | string;
@@ -241,8 +247,13 @@ defineSlots<Slots>();
 /** whether map has any "no data" geometry regions */
 const noData = computed(
   () =>
+    /** whether all features have entry in values object */
     !geometry.features.every(
       (feature) => (feature.properties?.id ?? "") in values,
+    ) ||
+    /** whether any value is nullish */
+    Object.values(values).some(
+      ({ value }) => value === null || value === undefined,
     ),
 );
 
@@ -289,7 +300,7 @@ const scale = computed(() => {
     );
 
     /** explicit color */
-    const getColor = (value?: number | string) =>
+    const getColor = (value?: number | string | null) =>
       forceHex(
         steps.find((step) =>
           "value" in step ? step.value === value : undefined,
@@ -358,12 +369,12 @@ const scale = computed(() => {
     if (noData.value) steps.unshift(noDataEntry);
 
     /** scale interpolator */
-    const getColor = (value?: number | string) =>
-      value === undefined || typeof value === "string"
-        ? noDataColor
-        : forceHex(
+    const getColor = (value?: number | string | null) =>
+      typeof value === "number"
+        ? forceHex(
             d3.scaleQuantile<string>().domain(bands).range(colors)(value),
-          );
+          )
+        : noDataColor;
 
     return { steps, getColor };
   } else {
@@ -503,7 +514,7 @@ watchEffect((onCleanup) => {
       return new Style({
         stroke: new Stroke({ color: "black", width: hover ? 4 : 1 }),
         fill: new Fill({
-          color: feature.get("hatch") ? { color, src: hatch } : color,
+          color: color === noDataColor ? { color, src: hatch } : color,
         }),
         zIndex: hover ? 1 : 0,
       });
@@ -934,9 +945,18 @@ onUnmounted(() => {
 }
 
 .scale-color {
+  position: relative;
   width: 100%;
   max-width: 75px;
   height: 100%;
+}
+
+.scale-color::after {
+  position: absolute;
+  inset: 0;
+  background-image: var(--image);
+  content: "";
+  opacity: 0.5;
 }
 
 .scale-label {

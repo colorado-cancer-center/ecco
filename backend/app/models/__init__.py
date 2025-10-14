@@ -4,6 +4,7 @@ from .geom import (
     GeometryTable,
     County,
     Tract,
+    HealthRegion,
     USState,
 )
 from .locations import (

@@ -471,6 +471,10 @@
               District {{ feature.district }}
             </strong>
 
+            <strong v-if="feature.hs_region">
+              Health Statistic Region {{ feature.hs_region }}
+            </strong>
+
             <!-- main value -->
 
             <div class="mini-table">
@@ -505,6 +509,18 @@
             <!-- extra info -->
 
             <div class="mini-table">
+              <template v-if="feature.counties">
+                <span>Counties</span>
+                <span>
+                  <template
+                    v-for="(county, index) in feature.counties.split(', ')"
+                    :key="index"
+                  >
+                    {{ county }}<br />
+                  </template>
+                </span>
+              </template>
+
               <template v-if="feature.org">
                 <span>Org</span>
                 <span>{{ feature.org }}</span>
@@ -724,7 +740,6 @@ import {
   faLayerGroup,
   faMinus,
   faPlus,
-  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { useElementBounding, useFullscreen, useWindowSize } from "@vueuse/core";
 import type {
@@ -945,7 +960,9 @@ const {
         geometry:
           selected.level === "tract"
             ? await getGeo("tracts", "fips")
-            : await getGeo("counties", "us_fips"),
+            : selected.level == "county"
+              ? await getGeo("counties", "us_fips")
+              : await getGeo("healthregions", "hs_region"),
 
         /** load map values data */
         values:
