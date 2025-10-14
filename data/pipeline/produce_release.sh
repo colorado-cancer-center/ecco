@@ -138,6 +138,7 @@ wait_for_container_healthy backend
 # i've seen so far are warnings that can be ignored. it's safest to start with
 # an empty database if possible, in any case.)
 docker compose exec -T backend /bin/bash -s <<EOF
+set -euo pipefail
 cd /app
 ./commands/add_us_states.py 
 ./commands/import_cif_data.py --warn-on-missing-model True /data/staging/${LATEST_STAGING}/cif/stats/
@@ -146,6 +147,7 @@ cd /app
 ./commands/import_radon.py '/data/reference/radon/TEEO_REF_CDPHE COEPHT Pre-Mitigation Radon Test Results_2023_EN.xlsx'
 ./commands/import_locations.py /data/reference/locations/locations.json /data/staging/${LATEST_STAGING}/locations/locations-data.json 
 ./commands/import_hpv.py /data/reference/cdphe-hpv/CO_Teen_Rates_anygender.xlsx /data/reference/cdphe-hpv/CO_Teen_Rates_female.xlsx /data/reference/cdphe-hpv/CO_Teen_Rates_male.xlsx
+./commands/import_uv_data.py '/data/reference/ccc-team-data/environmental/UV data 2020_2024.xlsx'
 ./commands/import_vaping_data.py '/data/reference/vaping/sheets/youth/HKCS.Teen.VAPE.071525.csv' '/data/reference/vaping/sheets/adult/ECCO_ECIGREQUEST_BRFSS23_HSRSTATS.xlsx'
 ./commands/import_ccc_state_stats.py /data/reference/ccc-team-data/ECCO_IncAverages.xlsx
 EOF
