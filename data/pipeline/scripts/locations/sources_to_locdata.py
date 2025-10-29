@@ -163,7 +163,7 @@ def extract_cif_features(cif_locations_csv):
             if lat_float is None or lon_float is None:
                 # print(f"Geocoding {row['Name']}, address: {row['Address']}...")
                 point = geocode(row["Address"])
-                lat_float, lon_float = point
+                lon_float, lat_float = point
             
             features[dest_type].append({
                 "type": "Feature",
