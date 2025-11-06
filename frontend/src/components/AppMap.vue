@@ -918,6 +918,7 @@ onUnmounted(() => {
   position: relative;
   transition:
     opacity var(--fast),
+    box-shadow var(--fast),
     filter var(--fast);
 }
 

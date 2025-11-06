@@ -88,62 +88,74 @@
 
       <!-- multi-map compare -->
       <AppAccordion label="Compare">
-        <div class="compare-thumbnails">
-          <template v-for="(map, index) in compare" :key="index">
-            <AppButton
-              v-if="index < compare.length"
-              v-tooltip="
-                mapsEqual(map, selectedMap)
-                  ? `Selected map added to comparison. Select new measure/etc. to add another.`
-                  : `Remove map from comparison`
-              "
-              class="compare-thumbnail"
-              :icon="faXmark"
-              :style="{
-                borderColor: mapsEqual(map, selectedMap) ? 'var(--theme)' : '',
-              }"
-              @click="toggleCompare(map)"
-              @focus="highlightedThumbnail = index"
-              @blur="highlightedThumbnail = null"
-              @mouseenter="highlightedThumbnail = index"
-              @mouseleave="highlightedThumbnail = null"
-            >
-              <img v-if="thumbnails[index]" :src="thumbnails[index]" alt="" />
-            </AppButton>
-          </template>
-
+        <div class="control-row">
           <AppButton
-            v-if="!inCompare() && compare.length < maxCompare"
-            v-tooltip="`Add selected measure/etc. map to comparison`"
-            class="compare-thumbnail"
-            :icon="faPlus"
+            v-if="inCompare()"
+            v-tooltip="'Remove selected map from comparison'"
+            v-bind="highlightListeners(findInCompare())"
+            :icon="faMinus"
             @click="toggleCompare()"
-            @focus="highlightedThumbnail = thumbnails.length - 1"
-            @blur="highlightedThumbnail = null"
-            @mouseenter="highlightedThumbnail = thumbnails.length - 1"
-            @mouseleave="highlightedThumbnail = null"
           >
-            <img
-              v-if="thumbnails[thumbnails.length - 1]"
-              :src="thumbnails[thumbnails.length - 1]"
-              alt=""
-              class="preview"
-            />
+            Remove
+          </AppButton>
+          <AppButton
+            v-else
+            v-tooltip="'Add selected map to comparison'"
+            v-bind="highlightListeners(thumbnails.length - 1)"
+            :icon="faPlus"
+            :disabled="compare.length >= maxCompare"
+            @click="toggleCompare()"
+          >
+            Add
+          </AppButton>
+          <AppButton
+            v-if="showPreview && compare.length && !inCompare()"
+            v-tooltip="'Hide preview of selected map'"
+            v-bind="highlightListeners(thumbnails.length - 1)"
+            @click="showPreview = false"
+          >
+            Hide Preview
           </AppButton>
         </div>
 
-        <AppButton
-          v-if="showPreview && compare.length && !inCompare()"
-          v-tooltip="'Hide tentative map of selected measure/etc.'"
-          style="align-self: center"
-          @click="showPreview = false"
-          @focus="highlightedThumbnail = thumbnails.length - 1"
-          @blur="highlightedThumbnail = null"
-          @mouseenter="highlightedThumbnail = thumbnails.length - 1"
-          @mouseleave="highlightedThumbnail = null"
-        >
-          Hide Preview
-        </AppButton>
+        <template v-if="compare.length">
+          <div class="row">Comparing {{ compare.length }} map(s):</div>
+
+          <div class="compare-thumbnails">
+            <template v-for="(map, index) in compare" :key="index">
+              <AppButton
+                v-if="index < compare.length"
+                v-tooltip="'Remove map from comparison'"
+                v-bind="highlightListeners(index)"
+                class="compare-thumbnail"
+                :icon="faMinus"
+                @click="toggleCompare(map)"
+              >
+                <img v-if="thumbnails[index]" :src="thumbnails[index]" alt="" />
+              </AppButton>
+            </template>
+
+            <div
+              v-for="(_, index) in Array(
+                Math.min(round(compare.length + 1, 3, 'ceil'), maxCompare) -
+                  compare.length,
+              )"
+              :key="index"
+              v-tooltip="
+                'Select new measure/locations/etc. to compare another map'
+              "
+              class="compare-thumbnail"
+            />
+          </div>
+
+          <AppButton
+            v-tooltip="'Remove all maps from comparison and reset'"
+            :icon="faXmark"
+            @click="compare = []"
+          >
+            Remove All
+          </AppButton>
+        </template>
       </AppAccordion>
 
       <AppAccordion label="Customization">
@@ -647,7 +659,7 @@
       <div class="row actions">
         <div class="row">
           <AppButton
-            v-tooltip="'Download current map(s) view as PNG'"
+            v-tooltip="'Download selected map(s) view as PNG'"
             :icon="faDownload"
             :accent="true"
             @click="download"
@@ -780,7 +792,7 @@ import {
   useUrlParam,
 } from "@/util/composables";
 import { downloadPng } from "@/util/download";
-import { formatValue } from "@/util/math";
+import { formatValue, round } from "@/util/math";
 import { sleep, waitFor } from "@/util/misc";
 import type { Expand, Update } from "@/util/types";
 
@@ -902,11 +914,19 @@ const compare = useUrlParam("compare", jsonParam<Map[]>(), []);
 /** reenable preview state on any change to comparison */
 watch(compare, () => (showPreview.value = true), { deep: true });
 
-/** map thumbnails */
+/** map thumbnail blob urls */
 const thumbnails = ref<string[]>([]);
 
 /** highlighted thumbnail */
 const highlightedThumbnail = ref<number | null>(null);
+
+/** event listeners to handle map highlighting */
+const highlightListeners = (index: number) => ({
+  onfocus: () => (highlightedThumbnail.value = index),
+  onblur: () => (highlightedThumbnail.value = null),
+  onmouseenter: () => (highlightedThumbnail.value = index),
+  onmouseleave: () => (highlightedThumbnail.value = null),
+});
 
 /** are two map selections equal */
 const mapsEqual = (a: Map, b: Map) =>
@@ -918,11 +938,14 @@ const mapsEqual = (a: Map, b: Map) =>
   ) &&
   isEqual(a.locations, b.locations);
 
-/** is selected map already in compare group */
-const inCompare = (map?: Map) => {
+/** find (selected) map in compare group */
+const findInCompare = (map?: Map) => {
   map ??= selectedMap.value;
-  return !!compare.value.find((entry) => mapsEqual(map, entry));
+  return compare.value.findIndex((entry) => mapsEqual(map, entry));
 };
+
+/** is (selected) map already in compare group */
+const inCompare = (map?: Map) => findInCompare(map) !== -1;
 
 /** max # of maps that can be compared */
 const maxCompare = 9;
@@ -1024,11 +1047,16 @@ const mapCols = computed(() => {
     case 5:
     case 6:
     case 7:
-    case 8:
     case 9:
+    case 11:
       return 3;
+    case 8:
+    case 12:
+      return 4;
+    case 10:
+      return 5;
   }
-  return 1;
+  return 3;
 });
 
 /** geographic levels from facets data */
@@ -1320,7 +1348,8 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
 }
 
 .highlight {
-  filter: contrast(0.5) sepia(1) saturate(0.25);
+  z-index: 10;
+  box-shadow: 0 0 0 10px var(--theme);
 }
 
 .compare-thumbnails {
@@ -1337,26 +1366,21 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
   height: 100%;
   padding: 0;
   overflow: hidden;
-  border: solid 2px transparent;
+  border: solid 1px var(--light-gray);
+  border-radius: var(--rounded);
 }
 
 .compare-thumbnail img {
   position: absolute;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
-  transition:
-    opacity var(--fast),
-    filter var(--fast);
+  transition: opacity var(--fast);
 }
 
 .compare-thumbnail:hover img {
   opacity: 0.25;
-}
-
-.compare-thumbnail img.preview {
-  opacity: 0.5;
 }
 
 .dimensions-label {
