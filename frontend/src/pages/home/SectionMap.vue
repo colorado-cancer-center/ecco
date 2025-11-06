@@ -753,6 +753,7 @@ import {
   faFeatherPointed,
   faMinus,
   faPlus,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { useElementBounding, useFullscreen, useWindowSize } from "@vueuse/core";
 import type {
