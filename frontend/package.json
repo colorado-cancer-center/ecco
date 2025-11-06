@@ -9,7 +9,7 @@
     "test:types": "vue-tsc",
     "test": "bun run test:lint && bun run test:types",
     "test:spelling": "bunx cspell src/**/*.{vue,ts}",
-    "clean": "rm -rf node_modules bun.lockb && bun pm cache rm"
+    "clean": "rm -rf node_modules bun.lock && bun pm cache rm"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.7.2",

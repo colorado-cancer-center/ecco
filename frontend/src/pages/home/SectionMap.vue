@@ -1477,8 +1477,8 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
 .check > svg {
   height: 0.75em;
   stroke: currentColor;
-  stroke-width: 50px;
   stroke-linecap: round;
   stroke-linejoin: round;
+  stroke-width: 50px;
 }
 </style>
