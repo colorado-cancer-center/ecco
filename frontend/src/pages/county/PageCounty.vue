@@ -77,13 +77,6 @@
           <div class="cell">
             <div level="2" class="cell-heading">
               {{ category.label }}
-              <AppLink
-                v-tooltip="'Learn more about this category'"
-                class="cell-heading"
-                :to="learnMoreLink(String(categoryKey))"
-                :new-tab="true"
-                ><font-awesome-icon :icon="faCircleQuestion"
-              /></AppLink>
             </div>
 
             <template
@@ -146,18 +139,15 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { fromPairs, mapValues, orderBy, startCase, toPairs } from "lodash";
-import { faCircleQuestion } from "@fortawesome/free-regular-svg-icons";
 import { faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
 import { getCountyData, getGeo } from "@/api";
 import AppBarChart from "@/components/AppBarChart.vue";
 import AppButton from "@/components/AppButton.vue";
 import AppHeading from "@/components/AppHeading.vue";
-import AppLink from "@/components/AppLink.vue";
 import AppMap from "@/components/AppMap.vue";
 import AppSelect from "@/components/AppSelect.vue";
 import AppStatus from "@/components/AppStatus.vue";
 import { appTitle } from "@/meta";
-import { learnMoreLink } from "@/pages/learn-more";
 import { useQuery } from "@/util/composables";
 import { formatValue } from "@/util/math";
 import basicMeasures from "./basic-measures.json";

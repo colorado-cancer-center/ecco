@@ -49,7 +49,7 @@ const component = computed(() => (to ? AppLink : "button"));
   font: inherit;
   line-height: var(--compact);
   text-decoration: none;
-  overflow-wrap: anywhere;
+  /* overflow-wrap: anywhere; */
   cursor: pointer;
   transition:
     color var(--fast),

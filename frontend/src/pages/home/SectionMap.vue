@@ -39,11 +39,6 @@
         />
       </div>
 
-      <AppLink :to="learnMoreLink(selectedCategory)" :new-tab="true">
-        Learn more about selected data
-        <font-awesome-icon :icon="faArrowRight" />
-      </AppLink>
-
       <AppLink
         v-if="selectedLevel === 'tract' || noData"
         to="/sources#suppressed-values"
@@ -425,12 +420,28 @@
           </template>
 
           <template #top-left-lower>
-            <div v-if="values?.source || values?.source_url">
+            <div v-if="values?.source">
               Source:
-              <AppLink :to="values?.source_url ?? ''">
-                {{ values?.source ?? "source" }}
+              <AppLink :to="values.source.link ?? ''">
+                {{ values.source.name ?? "source" }}
               </AppLink>
+              {{ " " }}
             </div>
+
+            <div v-if="values?.source" class="row" data-save-hide>
+              <AppButton
+                v-tooltip="'Learn more'"
+                :to="`sources/#${kebabCase(values.source.id)}`"
+                :icon="faInfoCircle"
+              />
+              <AppCopy
+                v-tooltip="'Copy citation text to clipboard'"
+                :text="getSourceCitation(values.source)"
+              >
+                <font-awesome-icon :icon="faFeatherPointed" />
+              </AppCopy>
+            </div>
+
             <div v-if="values?.state">
               State-wide: {{ formatValue(values.state, values.unit) }}
             </div>
@@ -732,6 +743,7 @@ import {
   cloneDeep,
   isEmpty,
   isEqual,
+  kebabCase,
   mapValues,
   orderBy,
   pick,
@@ -743,7 +755,6 @@ import {
   faQuestionCircle,
 } from "@fortawesome/free-regular-svg-icons";
 import {
-  faArrowRight,
   faArrowsRotate,
   faCheck,
   faCropSimple,
@@ -751,6 +762,8 @@ import {
   faExpand,
   faExternalLinkAlt,
   faFeatherPointed,
+  faInfoCircle,
+  faLayerGroup,
   faMinus,
   faPlus,
   faXmark,
@@ -769,11 +782,13 @@ import {
   getDownload,
   getGeo,
   getLocation,
+  getSourceCitation,
   getValues,
 } from "@/api";
 import AppAccordion from "@/components/AppAccordion.vue";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
+import AppCopy from "@/components/AppCopy.vue";
 import AppLink from "@/components/AppLink.vue";
 import AppMap from "@/components/AppMap.vue";
 import AppNumber from "@/components/AppNumber.vue";
@@ -783,7 +798,6 @@ import AppSlider from "@/components/AppSlider.vue";
 import { gradientOptions } from "@/components/gradient";
 import { colors } from "@/components/markers";
 import { backgroundOptions } from "@/components/tile-providers";
-import { learnMoreLink } from "@/pages/learn-more";
 import {
   arrayParam,
   jsonParam,

@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import PageContact from "@/pages/contact/PageContact.vue";
 import PageCounty from "@/pages/county/PageCounty.vue";
 import PageSources from "@/pages/sources/PageSources.vue";
-import { waitFor } from "@/util/misc";
+import { sleep, waitFor } from "@/util/misc";
 import PageAbout from "./about/PageAbout.vue";
 import PageHome from "./home/PageHome.vue";
 
@@ -59,9 +59,15 @@ export const router = createRouter({
 
 router.afterEach(async (to) => {
   /** scroll to hash target */
-  if (to.hash)
-    (await waitFor(() => document.querySelector(to.hash)))?.scrollIntoView({
+  if (to.hash) {
+    /** wait for target to appear */
+    const target = await waitFor(() => document.querySelector(to.hash));
+    /** wait for layout shifts */
+    await sleep(100);
+    /** scroll */
+    target?.scrollIntoView({
       block: "start",
       behavior: "smooth",
     });
+  }
 });

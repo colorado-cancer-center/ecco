@@ -9,6 +9,7 @@ import outreachEvents from "./temp/outreach-events.json";
 import outreachFitKits from "./temp/outreach-fit-kits.json";
 import outreachNewspapers from "./temp/outreach-newspapers.json";
 import outreachRadonKits from "./temp/outreach-radon-kits.json";
+import sources from "./temp/sources.json";
 import zipCodeLookup from "./temp/zip-code-lookup.json";
 
 /** api root (no trailing slash) */
@@ -260,8 +261,7 @@ type _Values = {
   unit: Unit;
   order?: string[];
   /** where data came from */
-  source?: string;
-  source_url?: string;
+  source?: Sources[number];
 };
 
 /** get values data */
@@ -279,6 +279,9 @@ export const getValues = async (
     `${api}/stats/${level}/${category}/fips-value?`,
     { measure, ...(filtersString && { filters: filtersString }) },
   );
+
+  /** TEMPORARY TO PREVENT CRASH */
+  data.source = sources[0];
 
   return data;
 };
@@ -404,3 +407,23 @@ type _CountyData = {
 /** get all data for particular county */
 export const getCountyData = (id: string) =>
   request<_CountyData>(`${api}/stats/by-county/${id}`);
+
+/** source metadata */
+type _Sources = {
+  id: string;
+  name: string;
+  data_description: string;
+  date: string;
+  date_description: string;
+  link: string;
+}[];
+
+/** get source metadata */
+export const getSources = async () => sources;
+// request<_Sources>(`${api}/sources`);
+
+export type Sources = Awaited<ReturnType<typeof getSources>>;
+
+/** get source citation */
+export const getSourceCitation = (source: Sources[number]) =>
+  [source.name, source.date, source.link].filter(Boolean).join("\n");

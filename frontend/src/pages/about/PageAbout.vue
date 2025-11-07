@@ -9,14 +9,18 @@
       and environmental exposures, and local resources like cancer prevention,
       screening, treatment, and survivorship.
     </p>
+  </section>
 
+  <section>
     <AppHeading level="2">Disclaimer</AppHeading>
 
     <p>
       This tool is intended to support research, community inquiries, and
       outreach activities. It should not be used to guide clinical decisions.
     </p>
+  </section>
 
+  <section>
     <AppHeading level="2">The Map</AppHeading>
 
     <p>
@@ -34,7 +38,9 @@
       produce other tables, charts, etc. You can also download the current view
       of the map as an image.
     </p>
+  </section>
 
+  <section>
     <AppHeading level="2">Acknowledge</AppHeading>
 
     <p>
