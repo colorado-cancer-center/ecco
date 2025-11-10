@@ -1,5 +1,5 @@
 import { createApp } from "vue";
-import VueGtag from "vue-gtag";
+import { createGtag } from "vue-gtag";
 import VueTippy from "vue-tippy";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { router } from "@/pages";
@@ -19,14 +19,7 @@ app.use(router);
 app.use(VueTippy, tippyOptions);
 app.directive("stop", stop);
 
-app.use(
-  VueGtag,
-  {
-    config: { id: "G-XESEVBEL2X" },
-    enabled:
-      window.location.hostname === new URL(import.meta.env.VITE_URL).hostname,
-  },
-  router,
-);
+if (window.location.hostname === new URL(import.meta.env.VITE_URL).hostname)
+  app.use(createGtag({ tagId: "G-XESEVBEL2X", pageTracker: { router } }));
 
 app.mount("#app");

@@ -1,31 +1,25 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import prettier from "eslint-plugin-prettier";
-import { FlatCompat } from "@eslint/eslintrc";
-import js from "@eslint/js";
+import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
+import pluginVue from "eslint-plugin-vue";
+import pluginVueA11y from "eslint-plugin-vuejs-accessibility";
+import { globalIgnores } from "eslint/config";
+import skipFormatting from "@vue/eslint-config-prettier/skip-formatting";
+import {
+  defineConfigWithVueTs,
+  vueTsConfigs,
+} from "@vue/eslint-config-typescript";
 
-const compat = new FlatCompat({
-  baseDirectory: path.dirname(fileURLToPath(import.meta.url)),
-  recommendedConfig: js.configs.recommended,
-  allConfig: js.configs.all,
-});
+export default defineConfigWithVueTs(
+  globalIgnores(["**/dist/**", "**/dist-ssr/**", "**/coverage/**"]),
 
-export default [
-  ...compat.extends(
-    "plugin:vue/vue3-recommended",
-    "plugin:vuejs-accessibility/recommended",
-    "eslint:recommended",
-    "@vue/eslint-config-typescript",
-    "@vue/eslint-config-prettier/skip-formatting",
-  ),
+  pluginVue.configs["flat/recommended"],
+  vueTsConfigs.recommended,
+  pluginVueA11y.configs["flat/recommended"],
+  skipFormatting,
+  eslintPluginPrettierRecommended,
+
   {
-    plugins: {
-      prettier,
-    },
-    languageOptions: {
-      ecmaVersion: "latest",
-      sourceType: "module",
-    },
+    name: "app/files-to-lint",
+    files: ["**/*.{ts,mts,tsx,vue}"],
     rules: {
       "prettier/prettier": "warn",
       "prefer-const": ["error", { destructuring: "all" }],
@@ -35,6 +29,7 @@ export default [
       ],
       "@typescript-eslint/consistent-type-definitions": ["error", "type"],
       "@typescript-eslint/consistent-type-imports": "error",
+      "vue/require-default-prop": "off",
       "vue/no-v-html": "off",
       "vuejs-accessibility/label-has-for": [
         "error",
@@ -45,9 +40,5 @@ export default [
         },
       ],
     },
-    files: ["**/*.ts", "**/*.vue"],
   },
-  {
-    ignores: ["dist"],
-  },
-];
+);
