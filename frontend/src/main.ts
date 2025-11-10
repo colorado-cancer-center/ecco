@@ -9,7 +9,7 @@ import App from "./App.vue";
 import "tippy.js/dist/tippy.css";
 import "./styles.css";
 
-console.debug(import.meta);
+console.debug(import.meta, import.meta.env);
 
 const app = createApp(App);
 
