@@ -25,8 +25,8 @@
           :style="{ '--cols': scale.steps.length }"
         >
           <div
-            v-for="(step, key) of scale.steps"
-            :key="key"
+            v-for="(step, index) of scale.steps"
+            :key="index"
             v-tooltip="step.tooltip"
             class="scale-color"
             tabindex="0"
@@ -36,8 +36,8 @@
             }"
           />
           <div
-            v-for="(step, key) of scale.steps"
-            :key="key"
+            v-for="(step, index) of scale.steps"
+            :key="index"
             class="scale-label"
           >
             {{ step.label }}
@@ -72,8 +72,8 @@
 
     <!-- geometry labels -->
     <div
-      v-for="(feature, key) of geometryFeaturesWLabels"
-      :key="key"
+      v-for="(feature, index) of geometryFeaturesWLabels"
+      :key="index"
       ref="geometryLabelElements"
       class="geometry-label"
     >
@@ -123,6 +123,7 @@ import {
   nextTick,
   onMounted,
   onUnmounted,
+  onUpdated,
   ref,
   useTemplateRef,
   watch,
@@ -130,7 +131,7 @@ import {
 } from "vue";
 import * as d3 from "d3";
 import type { FeatureCollection } from "geojson";
-import { isEmpty, mapValues, upperFirst } from "lodash";
+import { debounce, isEmpty, mapValues, upperFirst } from "lodash";
 import { Feature, Map, Overlay, View } from "ol";
 import { pointerMove } from "ol/events/condition";
 import type { FeatureLike } from "ol/Feature";
@@ -228,6 +229,7 @@ type Emits = {
   "update:lat": [Props["lat"]];
   "update:long": [Props["long"]];
   "update:no-data": [boolean];
+  "update:thumbnail": [string];
 };
 
 const emit = defineEmits<Emits>();
@@ -780,6 +782,32 @@ watch(
   { immediate: true, deep: true },
 );
 
+/** preview image of canvas */
+const thumbnail = ref<Blob | null>(null);
+
+/** make thumbnail blob from canvas */
+const generateThumbnail = debounce(async () => {
+  const canvas = mapElement.value?.querySelector("canvas");
+  if (!canvas) return;
+  canvas.toBlob((blob) => (thumbnail.value = blob), "image/jpeg", 0.1);
+}, 500);
+
+/** generate thumbnail on any map update */
+onUpdated(generateThumbnail);
+/** cancel any pending debounce */
+onUnmounted(generateThumbnail.cancel);
+
+watchEffect((cleanup) => {
+  /** object url, for img src */
+  const src = thumbnail.value ? URL.createObjectURL(thumbnail.value) : "";
+  emit("update:thumbnail", src);
+  cleanup(() => {
+    /** clean up object url */
+    URL.revokeObjectURL(src);
+    emit("update:thumbnail", "");
+  });
+});
+
 /** programmatic zoom in */
 const zoomIn = () => view.setZoom((view.getZoom() ?? 0) + 1);
 
@@ -888,7 +916,10 @@ onUnmounted(() => {
 <style scoped>
 .frame {
   position: relative;
-  transition: filter var(--fast);
+  transition:
+    opacity var(--fast),
+    box-shadow var(--fast),
+    filter var(--fast);
 }
 
 .map {

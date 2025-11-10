@@ -11,7 +11,7 @@
     </AppLink>
 
     <nav class="nav">
-      <template v-for="(route, key) of routes" :key="key">
+      <template v-for="(route, index) of routes" :key="index">
         <AppLink
           v-if="route.meta?.header"
           :to="route.path"

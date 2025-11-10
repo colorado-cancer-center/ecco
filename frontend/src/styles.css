@@ -286,6 +286,7 @@ blockquote {
 }
 
 .tippy-box {
+  max-width: 400px !important;
   padding: 5px;
   background: var(--off-black);
   box-shadow: var(--shadow);

@@ -54,3 +54,10 @@ export const normalizedApply = (
   value = value * (max - min) + min;
   return value;
 };
+
+/** round to specific multiple */
+export const round = (
+  value: number,
+  multiple: number,
+  method: "round" | "floor" | "ceil" = "round",
+) => Math[method](value / multiple) * multiple;
