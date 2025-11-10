@@ -439,7 +439,7 @@
           <template v-if="countyWide.length" #top-right>
             <b>Outreach (county-level)</b>
             <div class="mini-table">
-              <template v-for="(field, index) of countyWide" :key="index">
+              <template v-for="(field, _index) of countyWide" :key="_index">
                 <div class="check" :style="{ '--color': field.color }">
                   <font-awesome-icon :icon="faCheck" />
                 </div>
@@ -454,7 +454,7 @@
             #geometry-label="{ feature }: { feature: FeatureInfo }"
           >
             <div>
-              <template v-for="(field, index) of countyWide" :key="index">
+              <template v-for="(field, _index) of countyWide" :key="_index">
                 <div
                   v-if="field.checkKey && feature[field.checkKey]"
                   class="check"
@@ -527,8 +527,8 @@
                 <span>Counties</span>
                 <span>
                   <template
-                    v-for="(county, index) in feature.counties.split(', ')"
-                    :key="index"
+                    v-for="(county, _index) in feature.counties.split(', ')"
+                    :key="_index"
                   >
                     {{ county }}<br />
                   </template>
