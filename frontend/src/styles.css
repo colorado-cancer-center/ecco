@@ -148,9 +148,10 @@ a:hover {
 }
 
 input {
-  padding: 5px 10px;
-  border: solid 1px var(--gray);
+  padding: 0;
+  border: none;
   border-radius: var(--rounded);
+  background: none;
   font: inherit;
 }
 

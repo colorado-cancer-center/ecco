@@ -1,43 +1,48 @@
 <template>
-  <div :role="level === 1 ? 'tree' : 'group'" style="display: contents">
+  <div :role="level === 1 ? 'tree' : 'group'" class="col">
     <div
-      v-for="(item, index) in children"
-      :key="index"
-      class="tree"
+      v-for="(item, key, index) in children"
+      :key="key"
+      class="col tree"
       role="treeitem"
-      :aria-selected="open[index]"
+      :aria-selected="open[key]"
       :aria-level="level"
-      :aria-setsize="children.length"
+      :aria-setsize="size(children)"
       :aria-posinset="index + 1"
     >
       <button
         v-show="match(item)"
         class="button"
         :data-level="level"
-        @click="onClick(index)"
-        @keydown="onKey($event, index)"
+        @click="onClick(key)"
+        @keydown="onKey($event, key)"
       >
         <font-awesome-icon
-          v-if="item.children?.length"
-          :icon="open[index] || search ? faChevronDown : faChevronRight"
+          v-if="!isEmpty(item.children)"
+          :icon="open[key] || search ? faChevronDown : faChevronRight"
           class="icon"
         />
 
         <font-awesome-icon
-          v-if="!item.children?.length"
+          v-if="isEmpty(item.children)"
           :icon="faCheck"
           class="icon check"
           :style="{
-            opacity: isEqual(modelValue, getParents(item)) ? 1 : 0,
+            opacity: isEqual(
+              modelValue,
+              getParents(item).map(({ id }) => id),
+            )
+              ? 1
+              : 0,
           }"
         />
 
-        <span class="truncate">
+        <span class="label">
           {{ item.label }}
         </span>
 
-        <span v-if="item.children?.length && !search" class="count">
-          {{ item.children?.length.toLocaleString() }}
+        <span v-if="item.children && !search" class="count">
+          {{ size(item.children).toLocaleString() }}
         </span>
 
         <span class="spacer" />
@@ -57,7 +62,7 @@
       </button>
 
       <AppTree
-        v-if="item.children && (open[index] || search)"
+        v-if="item.children && (open[key] || search)"
         :children="item.children"
         :parents="getParents(item)"
         :search="search"
@@ -69,8 +74,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
-import { isEqual } from "lodash";
+import { computed, ref, watch, watchEffect } from "vue";
+import { isEmpty, isEqual, size } from "lodash";
 import {
   faCheck,
   faChevronDown,
@@ -83,31 +88,30 @@ import { findClosest } from "@/util/dom";
 type Item = {
   id: string;
   label: string;
-  children?: Item[];
+  children?: Items;
   actions?: {
     label: string;
     icon: IconDefinition;
-    onClick: (parents: Value[]) => void;
+    onClick: (parents: Item[]) => void;
   }[];
 };
 
-/** salient info about item */
-type Value = { id: string; label: string };
+type Items = Record<string, Item>;
 
 type Props = {
   /** selected item */
-  modelValue?: Value[];
+  modelValue?: string[];
   /** path of parent items leading to this item */
-  parents?: Value[];
+  parents?: Item[];
   /** search string */
   search?: string;
   /** list of children items */
-  children?: Item[];
+  children?: Items;
 };
 
 const {
   modelValue = [],
-  children = [],
+  children = {},
   parents = [],
   search = "",
 } = defineProps<Props>();
@@ -119,7 +123,7 @@ type Emits = {
 const emit = defineEmits<Emits>();
 
 /** list of open states for each child item */
-const open = ref<boolean[]>([]);
+const open = ref<Record<string, boolean>>({});
 
 /** tree depth */
 const level = computed(() => parents.length + 1);
@@ -129,31 +133,45 @@ watch(
   () => children,
   () => {
     /** reset open states */
-    open.value = Array(children.length).fill(false);
+    open.value = {};
   },
   { immediate: true, deep: true },
 );
 
+/** expand */
+const expand = (key: string) => (open.value[key] = true);
+
+/** collapse */
+const collapse = (key: string) => delete open.value[key];
+
+/** toggle open */
+const toggle = (key: string) => (open.value[key] ? collapse(key) : expand(key));
+
 /** handle button click */
-const onClick = (index: number) => {
-  const item = children[index];
+const onClick = (key: string) => {
+  const item = children[key];
   if (!item) return;
   /** toggle open/closed */
-  if (item.children?.length) open.value[index] = !open.value[index];
-  /** select item */ else emit("update:modelValue", getParents(item));
+  if (!isEmpty(item.children)) toggle(key);
+  else
+    /** select item */
+    emit(
+      "update:modelValue",
+      getParents(item).map(({ id }) => id),
+    );
 };
 
 /** handle button key press */
-const onKey = (event: KeyboardEvent, index: number) => {
-  const item = children[index];
+const onKey = (event: KeyboardEvent, key: string) => {
+  const item = children[key];
   const target = event.target as HTMLElement;
-  const isOpen = open.value[index];
+  const isOpen = open.value[key];
 
   const handle = () => {
     if (event.key === "ArrowRight") {
       if (item?.children?.length) {
         /** expand */
-        if (!isOpen) return (open.value[index] = true);
+        if (!isOpen) return expand(key);
         else
           /** go to child */
           return findClosest(
@@ -166,7 +184,7 @@ const onKey = (event: KeyboardEvent, index: number) => {
 
     if (event.key === "ArrowLeft") {
       /** collapse */
-      if (isOpen) return (open.value[index] = false);
+      if (isOpen) return collapse(key);
       else
         /** go to parent */
         return findClosest(
@@ -198,19 +216,21 @@ const match = (item: Item) =>
     .match(new RegExp(search, "i"));
 
 /** traverse up tree and get list of parent items */
-const getParents = (item: Item): Value[] =>
+const getParents = (item: Item): Item[] =>
   [...parents, item].map(({ id, label }) => ({ id, label }));
 
 /** traverse down tree and get list of nested child items */
-const getChildren = (item: Item): Value[] =>
-  (item.children ?? [])
+const getChildren = (item: Item): Item[] =>
+  Object.values(item.children ?? {})
     .map((item) => [item, ...getChildren(item)])
     .flat()
     .map(({ id, label }) => ({ id, label }));
+
+watchEffect(() => console.log(children));
 </script>
 
 <style scoped>
-.tree {
+.col {
   display: flex;
   flex-direction: column;
 }
@@ -239,6 +259,7 @@ const getChildren = (item: Item): Value[] =>
   border-radius: var(--rounded);
   background: none;
   font: inherit;
+  text-align: left;
   cursor: pointer;
   transition: background var(--fast);
 }
@@ -248,12 +269,19 @@ const getChildren = (item: Item): Value[] =>
 }
 
 .icon {
+  flex-shrink: 0;
   width: 20px;
   color: var(--gray);
 }
 
 .check {
-  color: var(--theme-dark);
+  color: var(--success);
+}
+
+.label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .count {

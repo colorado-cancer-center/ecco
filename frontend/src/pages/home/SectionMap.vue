@@ -2,47 +2,9 @@
   <div class="columns" :style="{ '--cols': mapCols }">
     <!-- left panel -->
     <div class="left-panel" role="group">
-      <!-- data selections -->
-      <AppSelect
-        v-model="selectedLevel"
-        label="Geographic level"
-        :options="facetToOptions(levels)"
-      />
-
-      <div class="side-control">
-        <AppSelect
-          v-model="selectedCategory"
-          label="Measure category"
-          :options="facetToOptions(categories)"
-        />
-
-        <AppButton
-          v-tooltip="'Download selected category data in CSV format'"
-          :icon="faDownload"
-          :to="getDownload(selectedLevel, selectedCategory)"
-          :accent="true"
-        />
-      </div>
-
-      <div class="side-control">
-        <AppSelect
-          v-model="selectedMeasure"
-          label="Measure"
-          :options="facetToOptions(measures)"
-        />
-
-        <AppButton
-          v-tooltip="'Download selected measure data in CSV format'"
-          :icon="faDownload"
-          :to="getDownload(selectedLevel, selectedCategory, selectedMeasure)"
-          :accent="true"
-        />
-      </div>
-
-      <AppLink :to="learnMoreLink(selectedCategory)" :new-tab="true">
-        Learn more about selected data
-        <font-awesome-icon :icon="faArrowRight" />
-      </AppLink>
+      <!-- level/category/measure selection -->
+      <AppInput v-model="search" placeholder="Search data" />
+      <AppTree v-model="selectedFacets" :children="facets" :search="search" />
 
       <AppLink
         v-if="selectedLevel === 'tract' || noData"
@@ -407,13 +369,13 @@
           <template #top-left-upper>
             <strong>
               {{
-                facets[selected.level]?.list[selected.category]?.list[
-                  selected.measure
+                facets[selectedLevel]?.children?.[selectedCategory]?.children?.[
+                  selectedMeasure
                 ]?.label
               }}
             </strong>
             <div>
-              {{ facets[selected.level]?.list[selected.category]?.label }}
+              {{ facets[selectedLevel]?.children?.[selectedCategory]?.label }}
             </div>
             <div>
               {{
@@ -729,7 +691,6 @@ import type { ShallowRef, WatchStopHandle } from "vue";
 import { toBlob } from "html-to-image";
 import {
   clamp,
-  cloneDeep,
   isEmpty,
   isEqual,
   mapValues,
@@ -743,7 +704,6 @@ import {
   faQuestionCircle,
 } from "@fortawesome/free-regular-svg-icons";
 import {
-  faArrowRight,
   faArrowsRotate,
   faCheck,
   faCropSimple,
@@ -757,7 +717,6 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useElementBounding, useFullscreen, useWindowSize } from "@vueuse/core";
 import type {
-  Facet,
   Facets,
   GeoProps,
   LocationList,
@@ -774,16 +733,17 @@ import {
 import AppAccordion from "@/components/AppAccordion.vue";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
+import AppInput from "@/components/AppInput.vue";
 import AppLink from "@/components/AppLink.vue";
 import AppMap from "@/components/AppMap.vue";
 import AppNumber from "@/components/AppNumber.vue";
 import AppSelect from "@/components/AppSelect.vue";
-import type { Entry, Option } from "@/components/AppSelect.vue";
+import type { Entry } from "@/components/AppSelect.vue";
 import AppSlider from "@/components/AppSlider.vue";
+import AppTree from "@/components/AppTree.vue";
 import { gradientOptions } from "@/components/gradient";
 import { colors } from "@/components/markers";
 import { backgroundOptions } from "@/components/tile-providers";
-import { learnMoreLink } from "@/pages/learn-more";
 import {
   arrayParam,
   jsonParam,
@@ -802,6 +762,8 @@ type Props = {
   locationList: LocationList;
 };
 
+const { facets, locationList } = defineProps<Props>();
+
 type Value = NonNullable<Values>["values"][string];
 
 type FeatureInfo = Expand<
@@ -812,18 +774,6 @@ type FeatureInfo = Expand<
       Update<Value, "value", string>
   >
 >;
-
-const { facets, locationList } = defineProps<Props>();
-
-/** map of location id to human-readable label */
-const locationLabels = computed(() =>
-  Object.fromEntries(
-    Object.values(locationList)
-      .map((value) => Object.entries(value))
-      .flat()
-      .map(([label, id]) => [id, label] as const),
-  ),
-);
 
 /** element refs */
 const rightPanelElement = useTemplateRef("rightPanelElement");
@@ -858,6 +808,29 @@ const manualMin = ref(0);
 const manualMax = ref(1);
 const mapWidth = ref(0);
 const mapHeight = ref(0);
+
+/** combined selected facets state (level/category/measure) */
+const selectedFacets = ref<string[]>([]);
+
+/** sync combined facet state */
+watch(
+  () => selectedFacets.value[0],
+  (value) => (selectedLevel.value = value ?? ""),
+);
+watch(
+  () => selectedFacets.value[1],
+  (value) => (selectedCategory.value = value ?? ""),
+);
+watch(
+  () => selectedFacets.value[2],
+  (value) => (selectedMeasure.value = value ?? ""),
+);
+watch(selectedLevel, (value) => (selectedFacets.value[0] = value));
+watch(selectedCategory, (value) => (selectedFacets.value[1] = value));
+watch(selectedMeasure, (value) => (selectedFacets.value[2] = value));
+
+/** facet search */
+const search = ref("");
 
 /** whether map has any "no data" regions */
 const noData = ref(false);
@@ -1060,22 +1033,15 @@ const mapCols = computed(() => {
   return 3;
 });
 
-/** geographic levels from facets data */
-const levels = computed(() => cloneDeep(facets));
-
-/** measure categories from geographic level */
-const categories = computed(() =>
-  cloneDeep(levels.value[selectedLevel.value]?.list || {}),
+/** map of location id to human-readable label */
+const locationLabels = computed(() =>
+  Object.fromEntries(
+    Object.values(locationList)
+      .map((value) => Object.entries(value))
+      .flat()
+      .map(([label, id]) => [id, label] as const),
+  ),
 );
-
-/** measures from measure category */
-const measures = computed(() =>
-  cloneDeep(categories.value[selectedCategory.value]?.list || {}),
-);
-
-/** turn facet into list of select box options */
-const facetToOptions = (facet: Facet): Option[] =>
-  Object.values(facet).map(({ id, label }) => ({ id, label }));
 
 /** location dropdown options */
 const locationOptions = computed(() => {
@@ -1146,9 +1112,12 @@ const countyWide = computed(() => {
 });
 
 /** stratification factors (e.g. race/ethnicity, sex, etc) */
-const factors = computed(() =>
-  cloneDeep(measures.value[selectedMeasure.value]?.factors || {}),
-);
+const factors = computed(() => {
+  const [level, category, measure] = selectedFacets.value;
+  if (!level || !category || !measure) return {};
+  facets;
+  return facets[level]?.children[category]?.children[measure]?.factors || {};
+});
 
 /** keep track of dynamically created factor watchers */
 let stoppers: WatchStopHandle[] = [];
@@ -1207,38 +1176,13 @@ watch(
   },
   { immediate: true, deep: true },
 );
-
-/** auto-select level option */
+/** auto-select level/category/measure */
 watch(
-  [levels, selectedLevel],
+  () => facets,
   () => {
     /** if not already selected, or selection no longer valid */
-    if (!selectedLevel.value || !levels.value[selectedLevel.value])
-      selectedLevel.value = Object.keys(levels.value)[0] || "";
-  },
-  { immediate: true },
-);
-
-/** auto-select category */
-watch(
-  [selectedLevel, categories],
-  () => {
-    if (!selectedCategory.value || !categories.value[selectedCategory.value])
-      selectedCategory.value = categories.value["sociodemographics"]
-        ? "sociodemographics"
-        : Object.keys(categories.value)[0] || "";
-  },
-  { immediate: true },
-);
-
-/** auto-select measure */
-watch(
-  [selectedCategory, measures],
-  () => {
-    if (!selectedMeasure.value || !measures.value[selectedMeasure.value])
-      selectedMeasure.value = measures.value["Total"]
-        ? "Total"
-        : Object.keys(measures.value)[0] || "";
+    // if (!selectedLevel.value || !levels.value[selectedLevel.value])
+    //   selectedLevel.value = Object.keys(levels.value)[0] || "";
   },
   { immediate: true },
 );

@@ -79,7 +79,7 @@ export type Facet = {
   [key: string]: {
     id: string;
     label: string;
-    list?: Facet;
+    children?: Facet;
     factors?: {
       [key: string]: {
         label: string;
@@ -99,11 +99,11 @@ export const getFacets = async () => {
     /** geographic level */
     id,
     label,
-    list: mapValues(categories, ({ label, measures }, id) => ({
+    children: mapValues(categories, ({ label, measures }, id) => ({
       /** measure category */
       id,
       label,
-      list: mapValues(measures, ({ label, factors }, id) => ({
+      children: mapValues(measures, ({ label, factors }, id) => ({
         /** measure */
         id,
         label,
