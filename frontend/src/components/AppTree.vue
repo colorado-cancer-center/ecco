@@ -5,7 +5,7 @@
       :key="index"
       class="tree"
       role="treeitem"
-      :aria-expanded="open[index]"
+      :aria-selected="open[index]"
       :aria-level="level"
       :aria-setsize="children.length"
       :aria-posinset="index + 1"
@@ -44,8 +44,8 @@
 
         <button
           v-for="(action, index) in item.actions"
-          v-tooltip="action.label"
           :key="index"
+          v-tooltip="action.label"
           class="action button"
         >
           <font-awesome-icon
