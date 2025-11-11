@@ -24,6 +24,8 @@
     "echarts": "^5.6.0",
     "html-to-image": "^1.11.13",
     "lodash": "^4.17.21",
+    "micromark": "^4.0.2",
+    "micromark-extension-gfm-table": "^2.1.1",
     "ol": "^10.4.0",
     "radix-vue": "^1.9.17",
     "vue": "^3.5.13",
