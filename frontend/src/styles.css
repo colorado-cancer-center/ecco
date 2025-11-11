@@ -147,6 +147,13 @@ a:hover {
   color: currentColor;
 }
 
+input {
+  padding: 5px 10px;
+  border: solid 1px var(--gray);
+  border-radius: var(--rounded);
+  font: inherit;
+}
+
 b,
 strong,
 th {

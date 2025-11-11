@@ -1,5 +1,15 @@
 <template>
   <section>
+    Selected:<br />{{ selected.map((s) => s.id).join(" → ") }}
+    <br />
+    <br />
+    <input v-model="search" placeholder="Search..." />
+    <br />
+    <br />
+    <AppTree v-model="selected" :children="children" :filter="search" />
+  </section>
+
+  <section>
     <AppHeading level="1">Contact</AppHeading>
 
     <div class="row">
@@ -30,14 +40,49 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from "vue";
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
 import {
   faComment,
   faQuestionCircle,
 } from "@fortawesome/free-regular-svg-icons";
-import { faBug, faEnvelope, faFlask } from "@fortawesome/free-solid-svg-icons";
+import {
+  faBug,
+  faDownload,
+  faEnvelope,
+  faFlask,
+} from "@fortawesome/free-solid-svg-icons";
 import AppButton from "@/components/AppButton.vue";
 import AppHeading from "@/components/AppHeading.vue";
+import AppTree from "@/components/AppTree.vue";
+import { entries } from "@/util/types";
+import data from "./test.json";
+
+const actions = [
+  {
+    label: "Download",
+    icon: faDownload,
+    onClick: console.log,
+  },
+];
+
+const children = entries(data).map(([id, { label, categories }]) => ({
+  id,
+  label,
+  children: entries(categories).map(([id, { label, measures }]) => ({
+    id,
+    label,
+    children: entries(measures).map(([id, { label }]) => ({
+      id,
+      label,
+      actions,
+    })),
+    actions,
+  })),
+}));
+
+const selected = ref<{ id: string; label: string }[]>([]);
+const search = ref("");
 </script>
 
 <style scoped>
