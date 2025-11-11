@@ -6,7 +6,7 @@
     <input v-model="search" placeholder="Search..." />
     <br />
     <br />
-    <AppTree v-model="selected" :children="children" :filter="search" />
+    <AppTree v-model="selected" :children="children" :search="search" />
   </section>
 
   <section>
