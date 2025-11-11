@@ -420,26 +420,27 @@
           </template>
 
           <template #top-left-lower>
-            <div v-if="values?.source">
+            <div v-if="values?.source" class="source">
               Source:
               <AppLink :to="values.source.link ?? ''">
                 {{ values.source.name ?? "source" }}
               </AppLink>
               {{ " " }}
-            </div>
-
-            <div v-if="values?.source" class="row" data-save-hide>
-              <AppButton
+              <AppLink
                 v-tooltip="'Learn more'"
-                :to="`sources/#${kebabCase(values.source.id)}`"
-                :icon="faInfoCircle"
-              />
-              <AppCopy
+                :to="`/sources#${kebabCase(values.source.id)}`"
+                data-save-hide
+              >
+                <font-awesome-icon :icon="faInfoCircle" />
+              </AppLink>
+              {{ " " }}
+              <button
                 v-tooltip="'Copy citation text to clipboard'"
-                :text="getSourceCitation(values.source)"
+                data-save-hide
+                @click="copy(getSourceCitation(values.source))"
               >
                 <font-awesome-icon :icon="faFeatherPointed" />
-              </AppCopy>
+              </button>
             </div>
 
             <div v-if="values?.state">
@@ -788,7 +789,6 @@ import {
 import AppAccordion from "@/components/AppAccordion.vue";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
-import AppCopy from "@/components/AppCopy.vue";
 import AppLink from "@/components/AppLink.vue";
 import AppMap from "@/components/AppMap.vue";
 import AppNumber from "@/components/AppNumber.vue";
@@ -808,7 +808,7 @@ import {
 } from "@/util/composables";
 import { downloadPng } from "@/util/download";
 import { formatValue, round } from "@/util/math";
-import { sleep, waitFor } from "@/util/misc";
+import { copy, sleep, waitFor } from "@/util/misc";
 import type { Expand, Update } from "@/util/types";
 
 type Props = {
@@ -1464,6 +1464,11 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
   .map-grid {
     height: 90vh;
   }
+}
+
+.source > a,
+.source > button {
+  vertical-align: middle;
 }
 
 .actions {

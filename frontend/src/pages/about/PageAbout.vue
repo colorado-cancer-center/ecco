@@ -50,10 +50,16 @@
     </p>
 
     <blockquote>
-      Cancer statistics and information were obtained from ECCO ({{ url }}),
-      accessed on [DATE], and supported by the University of Colorado Cancer
-      Center Support Grant (P30CA046934).
+      {{ citation }}
     </blockquote>
+
+    <AppButton
+      v-tooltip="'Copy citation text to clipboard'"
+      :icon="faFeatherPointed"
+      @click="copy(citation)"
+    >
+      Copy Citation
+    </AppButton>
 
     <p>
       By acknowledging our site, you help support our ongoing efforts to provide
@@ -73,8 +79,14 @@
 </template>
 
 <script setup lang="ts">
+import { faFeatherPointed } from "@fortawesome/free-solid-svg-icons";
+import AppButton from "@/components/AppButton.vue";
 import AppHeading from "@/components/AppHeading.vue";
 import AppLink from "@/components/AppLink.vue";
+import { copy } from "@/util/misc";
+import { formatDate } from "@/util/string";
 
 const { VITE_URL: url } = import.meta.env;
+
+const citation = `Cancer statistics and information were obtained from ECCO (${url}), accessed on ${formatDate()}, supported by the University of Colorado Cancer Center Support Grant (P30CA046934)`;
 </script>

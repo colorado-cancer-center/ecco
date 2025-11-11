@@ -139,11 +139,32 @@ h4 {
 a {
   color: var(--theme-dark);
   transition:
-    color var(--fast),
-    background var(--fast);
+    background var(--fast),
+    color var(--fast);
 }
 
 a:hover {
+  color: currentColor;
+}
+
+button {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--theme-dark);
+  font: inherit;
+  line-height: var(--compact);
+  cursor: pointer;
+  transition:
+    background var(--fast),
+    color var(--fast);
+}
+
+button:hover {
   color: currentColor;
 }
 

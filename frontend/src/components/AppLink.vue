@@ -40,6 +40,7 @@ const target = computed(() => ((newTab ?? external.value) ? "_blank" : ""));
 .link:has(svg) {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5em;
 }
 </style>

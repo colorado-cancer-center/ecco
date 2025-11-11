@@ -30,40 +30,37 @@
     <AppStatus v-if="sourcesStatus == 'error'" status="error" />
     <AppStatus v-else-if="sourcesStatus == 'loading'" status="loading" />
 
-    <div v-else-if="sources" class="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>Source</th>
-            <th>Data</th>
-            <th>Date(s)</th>
-            <th>Date Description</th>
-            <th>Cite</th>
-          </tr>
-        </thead>
+    <table v-else-if="sources">
+      <thead>
+        <tr>
+          <th>Source</th>
+          <th>Data</th>
+          <th>Date(s)</th>
+          <th>Date Description</th>
+          <th>Cite</th>
+        </tr>
+      </thead>
 
-        <tbody>
-          <tr v-for="(source, index) in sources" :key="index">
-            <td>
-              <AppLink :to="`#${kebabCase(source.id)}`">
-                {{ source.name }}
-              </AppLink>
-            </td>
-            <td>{{ source.data_description }}</td>
-            <td>{{ source.date }}</td>
-            <td>{{ source.date_description }}</td>
-            <td>
-              <AppCopy
-                v-tooltip="'Copy citation text to clipboard'"
-                :text="getSourceCitation(source)"
-              >
-                <font-awesome-icon :icon="faFeatherPointed" />
-              </AppCopy>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+      <tbody>
+        <tr v-for="(source, index) in sources" :key="index">
+          <td>
+            <AppLink :to="`#${kebabCase(source.id)}`">
+              {{ source.name }}
+            </AppLink>
+          </td>
+          <td>{{ source.data_description }}</td>
+          <td>{{ source.date }}</td>
+          <td>{{ source.date_description }}</td>
+          <td>
+            <AppButton
+              v-tooltip="'Copy citation text to clipboard'"
+              :icon="faFeatherPointed"
+              @click="copy(getSourceCitation(source))"
+            />
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </section>
 
   <section>
@@ -86,7 +83,14 @@
       {{ source.name }} ({{ source.id }})
     </AppHeading>
 
-    <div style="display: contents" v-html="descriptions[source.id]" />
+    <div
+      v-if="descriptions[source.id]"
+      style="display: contents"
+      v-html="descriptions[source.id]"
+    />
+    <p v-else class="center">
+      <i>Description coming soon</i>
+    </p>
   </section>
 
   <section>
@@ -140,18 +144,18 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from "vue";
+import { onMounted, onUpdated } from "vue";
 import { kebabCase } from "lodash";
 import { micromark } from "micromark";
 import { gfmTable, gfmTableHtml } from "micromark-extension-gfm-table";
 import { faFeatherPointed, faTable } from "@fortawesome/free-solid-svg-icons";
 import { getDownloadAll, getSourceCitation, getSources } from "@/api";
 import AppButton from "@/components/AppButton.vue";
-import AppCopy from "@/components/AppCopy.vue";
 import AppHeading from "@/components/AppHeading.vue";
 import AppLink from "@/components/AppLink.vue";
 import AppStatus from "@/components/AppStatus.vue";
 import { useQuery } from "@/util/composables";
+import { copy } from "@/util/misc";
 
 /** load sources metadata */
 const {
@@ -174,4 +178,15 @@ const descriptions = Object.fromEntries(
     ],
   ),
 );
+
+onUpdated(() => {
+  /** wrap all tables in scrollable container */
+  for (const table of document.querySelectorAll("table")) {
+    if (table.parentElement?.classList.contains("table-wrapper")) continue;
+    const wrapper = document.createElement("div");
+    wrapper.classList.add("table-wrapper");
+    table.parentElement?.insertBefore(wrapper, table);
+    wrapper.append(table);
+  }
+});
 </script>
