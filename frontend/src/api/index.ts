@@ -1,5 +1,5 @@
 import type { FeatureCollection, Geometry } from "geojson";
-import { find, findKey, mapValues } from "lodash";
+import { find, findKey } from "lodash";
 import type { ValueOf } from "type-fest";
 import outreachCounty1 from "./temp/outreach-county-1.json";
 import outreachCounty2 from "./temp/outreach-county-2.json";
@@ -91,27 +91,7 @@ export type Facet = {
 };
 
 /** get hierarchical list of geographic levels, measure categories, and measures */
-export const getFacets = async () => {
-  const data = await request<_Facets>(`${api}/stats/measures`);
-
-  /** transform data into desired format */
-  return mapValues(data, ({ label, categories }, id) => ({
-    /** geographic level */
-    id,
-    label,
-    children: mapValues(categories, ({ label, measures }, id) => ({
-      /** measure category */
-      id,
-      label,
-      children: mapValues(measures, ({ label, factors }, id) => ({
-        /** measure */
-        id,
-        label,
-        factors,
-      })),
-    })),
-  })) satisfies Facet;
-};
+export const getFacets = () => request<_Facets>(`${api}/stats/measures`);
 
 export type Facets = Awaited<ReturnType<typeof getFacets>>;
 
@@ -355,7 +335,7 @@ export const getDownload = (
 ) => {
   const url = new URL(`${api}/stats/${level}/${category}/as-csv`);
   if (measure) url.searchParams.set(measure, measure);
-  return url.toString();
+  window.open(url, "_blank");
 };
 
 /** get download all link */

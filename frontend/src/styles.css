@@ -139,16 +139,40 @@ h4 {
 a {
   color: var(--theme-dark);
   transition:
-    color var(--fast),
-    background var(--fast);
+    background var(--fast),
+    color var(--fast);
 }
 
 a:hover {
   color: currentColor;
 }
 
+button {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  min-height: 35px;
+  padding: 5px 10px;
+  gap: 10px;
+  border: none;
+  border-radius: var(--rounded);
+  background: none;
+  font: inherit;
+  line-height: var(--compact);
+  cursor: pointer;
+  transition:
+    background var(--fast),
+    color var(--fast);
+}
+
+button:hover {
+  color: var(--theme-dark);
+}
+
 input {
-  padding: 0;
+  min-height: 35px;
+  padding: 5px 10px;
   border: none;
   border-radius: var(--rounded);
   background: none;
@@ -241,7 +265,7 @@ blockquote {
 }
 
 [disabled] {
-  opacity: 0.5;
+  color: var(--gray);
   pointer-events: none;
 }
 

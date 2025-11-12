@@ -3,8 +3,7 @@
     <!-- left panel -->
     <div class="left-panel" role="group">
       <!-- level/category/measure selection -->
-      <AppInput v-model="search" placeholder="Search data" />
-      <AppTree v-model="selectedFacets" :children="facets" :search="search" />
+      <AppTree v-model="selectedFacets" :children="tree" />
 
       <AppLink
         v-if="selectedLevel === 'tract' || noData"
@@ -369,13 +368,12 @@
           <template #top-left-upper>
             <strong>
               {{
-                facets[selectedLevel]?.children?.[selectedCategory]?.children?.[
-                  selectedMeasure
-                ]?.label
+                facets[selectedLevel]?.categories?.[selectedCategory]
+                  ?.measures?.[selectedMeasure]?.label
               }}
             </strong>
             <div>
-              {{ facets[selectedLevel]?.children?.[selectedCategory]?.label }}
+              {{ facets[selectedLevel]?.categories?.[selectedCategory]?.label }}
             </div>
             <div>
               {{
@@ -401,7 +399,10 @@
           <template v-if="countyWide.length" #top-right>
             <b>Outreach (county-level)</b>
             <div class="mini-table">
-              <template v-for="(field, index) of countyWide" :key="index">
+              <template
+                v-for="(field, countyIndex) of countyWide"
+                :key="countyIndex"
+              >
                 <div class="check" :style="{ '--color': field.color }">
                   <font-awesome-icon :icon="faCheck" />
                 </div>
@@ -416,7 +417,10 @@
             #geometry-label="{ feature }: { feature: FeatureInfo }"
           >
             <div>
-              <template v-for="(field, index) of countyWide" :key="index">
+              <template
+                v-for="(field, countyIndex) of countyWide"
+                :key="countyIndex"
+              >
                 <div
                   v-if="field.checkKey && feature[field.checkKey]"
                   class="check"
@@ -489,8 +493,10 @@
                 <span>Counties</span>
                 <span>
                   <template
-                    v-for="(county, index) in feature.counties.split(', ')"
-                    :key="index"
+                    v-for="(county, countyIndex) in feature.counties.split(
+                      ', ',
+                    )"
+                    :key="countyIndex"
                   >
                     {{ county }}<br />
                   </template>
@@ -733,14 +739,13 @@ import {
 import AppAccordion from "@/components/AppAccordion.vue";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
-import AppInput from "@/components/AppInput.vue";
 import AppLink from "@/components/AppLink.vue";
 import AppMap from "@/components/AppMap.vue";
 import AppNumber from "@/components/AppNumber.vue";
 import AppSelect from "@/components/AppSelect.vue";
 import type { Entry } from "@/components/AppSelect.vue";
 import AppSlider from "@/components/AppSlider.vue";
-import AppTree from "@/components/AppTree.vue";
+import AppTree, { type Items } from "@/components/AppTree.vue";
 import { gradientOptions } from "@/components/gradient";
 import { colors } from "@/components/markers";
 import { backgroundOptions } from "@/components/tile-providers";
@@ -758,6 +763,7 @@ import { sleep, waitFor } from "@/util/misc";
 import type { Expand, Update } from "@/util/types";
 
 type Props = {
+  /** level/category/measure */
   facets: Facets;
   locationList: LocationList;
 };
@@ -810,7 +816,7 @@ const mapWidth = ref(0);
 const mapHeight = ref(0);
 
 /** combined selected facets state (level/category/measure) */
-const selectedFacets = ref<string[]>([]);
+const selectedFacets = ref<[string, string, string]>(["", "", ""]);
 
 /** sync combined facet state */
 watch(
@@ -825,12 +831,46 @@ watch(
   () => selectedFacets.value[2],
   (value) => (selectedMeasure.value = value ?? ""),
 );
-watch(selectedLevel, (value) => (selectedFacets.value[0] = value));
-watch(selectedCategory, (value) => (selectedFacets.value[1] = value));
-watch(selectedMeasure, (value) => (selectedFacets.value[2] = value));
+watch(selectedLevel, (value) => (selectedFacets.value[0] = value), {
+  immediate: true,
+});
+watch(selectedCategory, (value) => (selectedFacets.value[1] = value), {
+  immediate: true,
+});
+watch(selectedMeasure, (value) => (selectedFacets.value[2] = value), {
+  immediate: true,
+});
 
-/** facet search */
-const search = ref("");
+/** transform facets into tree format */
+const tree = computed<Items>(() =>
+  mapValues(facets, ({ label, categories }, level) => ({
+    id: level,
+    label,
+    children: mapValues(categories, ({ label, measures }, category) => ({
+      id: category,
+      label,
+      actions: [
+        {
+          label: "Download",
+          icon: faDownload,
+          onClick: () => getDownload(level, category),
+        },
+      ],
+      children: mapValues(measures, ({ label, factors }, measure) => ({
+        id: measure,
+        label,
+        factors,
+        actions: [
+          {
+            label: "Download",
+            icon: faDownload,
+            onClick: () => getDownload(level, category, measure),
+          },
+        ],
+      })),
+    })),
+  })),
+);
 
 /** whether map has any "no data" regions */
 const noData = ref(false);
@@ -1116,7 +1156,7 @@ const factors = computed(() => {
   const [level, category, measure] = selectedFacets.value;
   if (!level || !category || !measure) return {};
   facets;
-  return facets[level]?.children[category]?.children[measure]?.factors || {};
+  return facets[level]?.categories[category]?.measures[measure]?.factors || {};
 });
 
 /** keep track of dynamically created factor watchers */
