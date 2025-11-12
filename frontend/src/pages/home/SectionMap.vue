@@ -565,10 +565,6 @@
                 </AppLink>
                 <span>{{ formatValue(feature.radon_kits) }}</span>
               </template>
-              <!-- <template v-if="feature.total_kits">
-              <span>Total Kits</span>
-              <span>{{ formatValue(feature.total_kits) }}</span>
-            </template> -->
               <template v-if="feature.community_events">
                 <span>Community Events</span>
                 <span>{{ formatValue(feature.community_events) }}</span>
@@ -589,10 +585,6 @@
                 <span>School/Church Events</span>
                 <span>{{ formatValue(feature.school_church_events) }}</span>
               </template>
-              <!-- <template v-if="feature.total_events">
-              <span>Total Events</span>
-              <span>{{ formatValue(feature.total_events) }}</span>
-            </template> -->
               <template v-if="feature.womens_wellness_centers">
                 <AppLink to="https://cdphe.colorado.gov/wwc">
                   Women's Wellness Centers
@@ -762,14 +754,6 @@ import { formatValue, round } from "@/util/math";
 import { sleep, waitFor } from "@/util/misc";
 import type { Expand, Update } from "@/util/types";
 
-type Props = {
-  /** level/category/measure */
-  facets: Facets;
-  locationList: LocationList;
-};
-
-const { facets, locationList } = defineProps<Props>();
-
 type Value = NonNullable<Values>["values"][string];
 
 type FeatureInfo = Expand<
@@ -780,6 +764,45 @@ type FeatureInfo = Expand<
       Update<Value, "value", string>
   >
 >;
+
+type Props = {
+  /** level/category/measure */
+  facets: Facets;
+  locationList: LocationList;
+};
+
+const { facets, locationList } = defineProps<Props>();
+
+/** transform facets into tree format */
+const tree = computed<Items>(() =>
+  mapValues(facets, ({ label, categories }, level) => ({
+    id: level,
+    label,
+    children: mapValues(categories, ({ label, measures }, category) => ({
+      id: category,
+      label,
+      actions: [
+        {
+          label: "Download",
+          icon: faDownload,
+          onClick: () => getDownload(level, category),
+        },
+      ],
+      children: mapValues(measures, ({ label, factors }, measure) => ({
+        id: measure,
+        label,
+        factors,
+        actions: [
+          {
+            label: "Download",
+            icon: faDownload,
+            onClick: () => getDownload(level, category, measure),
+          },
+        ],
+      })),
+    })),
+  })),
+);
 
 /** element refs */
 const rightPanelElement = useTemplateRef("rightPanelElement");
@@ -841,71 +864,81 @@ watch(selectedMeasure, (value) => (selectedFacets.value[2] = value), {
   immediate: true,
 });
 
-/** transform facets into tree format */
-const tree = computed<Items>(() =>
-  mapValues(facets, ({ label, categories }, level) => ({
-    id: level,
-    label,
-    children: mapValues(categories, ({ label, measures }, category) => ({
-      id: category,
-      label,
-      actions: [
-        {
-          label: "Download",
-          icon: faDownload,
-          onClick: () => getDownload(level, category),
-        },
-      ],
-      children: mapValues(measures, ({ label, factors }, measure) => ({
-        id: measure,
-        label,
-        factors,
-        actions: [
-          {
-            label: "Download",
-            icon: faDownload,
-            onClick: () => getDownload(level, category, measure),
-          },
-        ],
-      })),
-    })),
-  })),
+/** auto-select level/category/measure */
+watch(
+  () => facets,
+  () => {
+    if (selectedFacets.value.every((facet) => !facet))
+      selectedFacets.value = ["county", "sociodemographics", "Total"];
+  },
+  { immediate: true },
 );
 
-/** whether map has any "no data" regions */
-const noData = ref(false);
+/** stratification factors (e.g. race/ethnicity, sex, etc) */
+const factors = computed(() => {
+  const [level, category, measure] = selectedFacets.value;
+  if (!level || !category || !measure) return {};
+  facets;
+  return facets[level]?.categories[category]?.measures[measure]?.factors || {};
+});
 
-/** flag to force rerender of map */
-const renderMap = ref(true);
+/** keep track of dynamically created factor watchers */
+let stoppers: WatchStopHandle[] = [];
 
-/** reset customizations and map to defaults */
-const reset = async () => {
-  zoom.value = 0;
-  lat.value = 0;
-  long.value = 0;
-  showLegends.value = true;
-  selectedBackground.value = backgroundOptions[0]?.id || "";
-  selectedGradient.value = gradientOptions[3]?.id || "";
-  backgroundOpacity.value = 1;
-  geometryOpacity.value = 0.75;
-  locationOpacity.value = 1;
-  flipGradient.value = false;
-  scaleSteps.value = 6;
-  niceSteps.value = false;
-  scalePower.value = 1;
-  manualMinMax.value = false;
-  mapWidth.value = 0;
-  mapHeight.value = 0;
-
-  /**
-   * force full re-render of map. don't do this via key method to make sure
-   * entire dom completely unmounted and recreated from scratch (no diffing by
-   * vue)
-   */
-  renderMap.value = false;
-  await sleep(100);
-  renderMap.value = true;
+/** clear all factor watchers */
+const clearFactorWatchers = () => {
+  stoppers.forEach((stopper) => stopper());
+  stoppers = [];
 };
+
+/** cleanup factor watchers */
+onUnmounted(clearFactorWatchers);
+
+/** update selected factors when full set of factor options changes */
+watch(
+  factors,
+  () => {
+    /** reset selected factors */
+    selectedFactors.value = {};
+
+    /** all previous watchers irrelevant now */
+    clearFactorWatchers();
+
+    /** for each factor */
+    for (const [key, value] of Object.entries(factors.value)) {
+      /** default fallback option */
+      const fallback =
+        value.default in value.values
+          ? /** explicitly defined default */
+            value.default
+          : /** first option */
+            Object.entries(value.values || {})[0]?.[0] || "";
+
+      /** ref 2-way synced with url */
+      const factor = useUrlParam(key, stringParam, fallback);
+      /** hook up url reactive with selected factor */
+      selectedFactors.value[key] = factor;
+
+      /** dynamically create watcher for factor */
+      stoppers.push(
+        /** when factor value changes */
+        watch(
+          factor,
+          () => {
+            /** get non-stale factor options */
+            const newValue = factors.value[key];
+            /** if value isn't valid anymore */
+            if (!(factor.value in (newValue?.values || {})))
+              /** fall back */
+              factor.value = fallback;
+          },
+          { immediate: true },
+        ),
+      );
+    }
+  },
+  { immediate: true, deep: true },
+);
 
 /** full selected map */
 const selectedMap = computed(() => ({
@@ -1073,6 +1106,41 @@ const mapCols = computed(() => {
   return 3;
 });
 
+/** whether map has any "no data" regions */
+const noData = ref(false);
+
+/** flag to force rerender of map */
+const renderMap = ref(true);
+
+/** reset customizations and map to defaults */
+const reset = async () => {
+  zoom.value = 0;
+  lat.value = 0;
+  long.value = 0;
+  showLegends.value = true;
+  selectedBackground.value = backgroundOptions[0]?.id || "";
+  selectedGradient.value = gradientOptions[3]?.id || "";
+  backgroundOpacity.value = 1;
+  geometryOpacity.value = 0.75;
+  locationOpacity.value = 1;
+  flipGradient.value = false;
+  scaleSteps.value = 6;
+  niceSteps.value = false;
+  scalePower.value = 1;
+  manualMinMax.value = false;
+  mapWidth.value = 0;
+  mapHeight.value = 0;
+
+  /**
+   * force full re-render of map. don't do this via key method to make sure
+   * entire dom completely unmounted and recreated from scratch (no diffing by
+   * vue)
+   */
+  renderMap.value = false;
+  await sleep(100);
+  renderMap.value = true;
+};
+
 /** map of location id to human-readable label */
 const locationLabels = computed(() =>
   Object.fromEntries(
@@ -1150,82 +1218,6 @@ const countyWide = computed(() => {
 
   return fields;
 });
-
-/** stratification factors (e.g. race/ethnicity, sex, etc) */
-const factors = computed(() => {
-  const [level, category, measure] = selectedFacets.value;
-  if (!level || !category || !measure) return {};
-  facets;
-  return facets[level]?.categories[category]?.measures[measure]?.factors || {};
-});
-
-/** keep track of dynamically created factor watchers */
-let stoppers: WatchStopHandle[] = [];
-
-/** clear all factor watchers */
-const clearFactorWatchers = () => {
-  stoppers.forEach((stopper) => stopper());
-  stoppers = [];
-};
-
-/** cleanup factor watchers */
-onUnmounted(clearFactorWatchers);
-
-/** update selected factors when full set of factor options changes */
-watch(
-  factors,
-  () => {
-    /** reset selected factors */
-    selectedFactors.value = {};
-
-    /** all previous watchers irrelevant now */
-    clearFactorWatchers();
-
-    /** for each factor */
-    for (const [key, value] of Object.entries(factors.value)) {
-      /** default fallback option */
-      const fallback =
-        value.default in value.values
-          ? /** explicitly defined default */
-            value.default
-          : /** first option */
-            Object.entries(value.values || {})[0]?.[0] || "";
-
-      /** ref 2-way synced with url */
-      const factor = useUrlParam(key, stringParam, fallback);
-      /** hook up url reactive with selected factor */
-      selectedFactors.value[key] = factor;
-
-      /** dynamically create watcher for factor */
-      stoppers.push(
-        /** when factor value changes */
-        watch(
-          factor,
-          () => {
-            /** get non-stale factor options */
-            const newValue = factors.value[key];
-            /** if value isn't valid anymore */
-            if (!(factor.value in (newValue?.values || {})))
-              /** fall back */
-              factor.value = fallback;
-          },
-          { immediate: true },
-        ),
-      );
-    }
-  },
-  { immediate: true, deep: true },
-);
-/** auto-select level/category/measure */
-watch(
-  () => facets,
-  () => {
-    /** if not already selected, or selection no longer valid */
-    // if (!selectedLevel.value || !levels.value[selectedLevel.value])
-    //   selectedLevel.value = Object.keys(levels.value)[0] || "";
-  },
-  { immediate: true },
-);
 
 watchEffect(() => {
   /** if manual min/max off */

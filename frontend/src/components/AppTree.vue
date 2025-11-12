@@ -32,7 +32,7 @@
     >
       <div v-show="match(item)" class="tree-row">
         <button
-          class="tree-button"
+          class="tree-opener"
           :disabled="!isEmpty(item.children) && !!unref(search)"
           :data-level="level"
           @click="onClick(key)"
@@ -73,6 +73,7 @@
           v-for="(action, actionIndex) in item.actions"
           :key="actionIndex"
           v-tooltip="action.label"
+          class="tree-action"
         >
           <font-awesome-icon
             :icon="action.icon"
@@ -316,12 +317,20 @@ watch(() => children, closeAll, { immediate: true, deep: true });
   gap: 5px;
 }
 
-.tree-button {
+.tree-opener {
   flex-grow: 1;
   flex-basis: 0;
   justify-content: flex-start;
-  min-width: 0;
   text-align: left;
+}
+
+.tree-action {
+  padding: 0;
+}
+
+.tree-action:hover,
+.tree-opener:hover {
+  background: var(--light-gray);
 }
 
 .icon {
