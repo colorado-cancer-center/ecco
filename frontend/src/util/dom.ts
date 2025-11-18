@@ -1,7 +1,7 @@
-/** find next/previous node that matches selector, in dom order */
+/** find next/previous node that matches condition, in dom order */
 export const findClosest = (
   element: HTMLElement,
-  selector: string,
+  condition: (element: HTMLElement) => boolean,
   direction: "next" | "previous",
 ) => {
   const walker = document.createTreeWalker(
@@ -10,6 +10,6 @@ export const findClosest = (
   );
   walker.currentNode = element;
   while (direction === "next" ? walker.nextNode() : walker.previousNode())
-    if ((walker.currentNode as HTMLElement).matches(selector))
+    if (condition(walker.currentNode as HTMLElement))
       return walker.currentNode as HTMLElement;
 };

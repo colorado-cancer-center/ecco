@@ -9,13 +9,18 @@
         placeholder="Search"
       />
       <AppButton
+        v-tooltip="'See selected'"
+        :icon="faCrosshairs"
+        @click="onSeeSelected"
+      />
+      <AppButton
         v-tooltip="'Open all'"
-        :icon="faFolderOpen"
+        :icon="faAnglesDown"
         @click="onOpenAll"
       />
       <AppButton
         v-tooltip="'Close all'"
-        :icon="faFolderClosed"
+        :icon="faAnglesUp"
         @click="onCloseAll"
       />
     </div>
@@ -25,7 +30,13 @@
       :key="key"
       class="tree-item"
       role="treeitem"
-      :aria-selected="isOpen[key]"
+      :aria-checked="
+        isEqual(
+          modelValue,
+          getParents(item).map(({ id }) => id),
+        )
+      "
+      :aria-expanded="isOpen[key]"
       :aria-level="level"
       :aria-setsize="size(children)"
       :aria-posinset="index + 1"
@@ -47,18 +58,18 @@
           />
 
           <font-awesome-icon
-            v-else
-            :icon="faCheck"
-            class="icon check"
-            :style="{
-              opacity: isEqual(
+            v-else-if="
+              isEqual(
                 modelValue,
                 getParents(item).map(({ id }) => id),
               )
-                ? 1
-                : 0,
-            }"
+            "
+            :icon="faCheck"
+            class="icon check"
+            data-tree-selected
           />
+
+          <font-awesome-icon v-else :icon="faCircle" class="icon" />
 
           <span class="label">
             {{ item.label }}
@@ -97,22 +108,25 @@
 </template>
 
 <script setup lang="ts">
-import { computed, isRef, ref, unref, watch } from "vue";
+import { computed, isRef, ref, unref, useTemplateRef, watch } from "vue";
 import { isEmpty, isEqual, size } from "lodash";
+import { faCircle } from "@fortawesome/free-regular-svg-icons";
 import {
+  faAnglesDown,
+  faAnglesUp,
   faCheck,
   faChevronDown,
   faChevronRight,
-  faFolderClosed,
-  faFolderOpen,
+  faCrosshairs,
   faSearch,
-  type IconDefinition,
 } from "@fortawesome/free-solid-svg-icons";
+import type { IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import { useEventBus } from "@vueuse/core";
 import type { UseEventBusReturn } from "@vueuse/core";
 import AppButton from "@/components/AppButton.vue";
 import AppInput from "@/components/AppInput.vue";
 import { findClosest } from "@/util/dom";
+import { sleep } from "@/util/misc";
 
 /** one item in tree */
 type Item = {
@@ -150,10 +164,12 @@ const {
 } = defineProps<Props>();
 
 type Emits = {
-  "update:modelValue": [Props["modelValue"]];
+  "update:modelValue": [string[]];
 };
 
 const emit = defineEmits<Emits>();
+
+const checkElement = ref<HTMLElement>();
 
 /** search string */
 const search = computed(() => parentSearch || ref(""));
@@ -170,6 +186,22 @@ const open = (key: string) => (isOpen.value[key] = true);
 /** close item */
 const close = (key: string) => delete isOpen.value[key];
 
+/** see selected */
+const seeSelected = () => {
+  for (const key of Object.keys(children)) {
+    const item = children[key];
+    if (!item) return;
+    if (modelValue[level.value - 1] === item.id) {
+      open(key);
+      sleep().then(() =>
+        document
+          .querySelector("[aria-checked='true']")
+          ?.scrollIntoView({ behavior: "smooth", block: "center" }),
+      );
+    } else close(key);
+  }
+};
+
 /** open all */
 const openAll = () =>
   Object.keys(children).forEach((key) => (isOpen.value[key] = true));
@@ -181,18 +213,20 @@ const closeAll = () => (isOpen.value = {});
 const toggle = (key: string) => (isOpen.value[key] ? close(key) : open(key));
 
 /** event bus type */
-type Bus = UseEventBusReturn<"open" | "close", undefined>;
+type Bus = UseEventBusReturn<"see-selected" | "open" | "close", undefined>;
 
 /** event bus */
 const bus = computed<Bus>(() => parentBus || useEventBus(Symbol()));
 
 /** react to bus events */
 bus.value.on((event) => {
+  if (event === "see-selected") seeSelected();
   if (event === "open") openAll();
   if (event === "close") closeAll();
 });
 
 /** emit bus events */
+const onSeeSelected = () => bus.value.emit("see-selected");
 const onOpenAll = () => bus.value.emit("open");
 const onCloseAll = () => bus.value.emit("close");
 
@@ -237,44 +271,55 @@ const onKey = (event: KeyboardEvent, key: string) => {
   const item = children[key];
   const target = event.target as HTMLElement;
 
-  const handle = () => {
-    if (event.key === "ArrowRight") {
-      if (!isEmpty(item?.children)) {
-        /** expand */
-        if (!isOpen.value[key]) return open(key);
-        else
-          /** go to child */
-          return findClosest(
-            target,
-            `button[data-level="${level.value + 1}"]`,
-            "next",
-          )?.focus();
-      }
-    }
+  const prevent = () => event.preventDefault();
 
-    if (event.key === "ArrowLeft") {
-      /** collapse */
-      if (isOpen.value[key]) return close(key);
+  if (event.key === "ArrowRight") {
+    prevent();
+    if (!isEmpty(item?.children)) {
+      /** expand */
+      if (!isOpen.value[key]) return open(key);
       else
-        /** go to parent */
+        /** go to child */
         return findClosest(
           target,
-          `button[data-level="${level.value - 1}"]`,
-          "previous",
+          (el) => el.matches(`button[data-level="${level.value + 1}"]`),
+          "next",
         )?.focus();
     }
+  }
 
-    /** go to next down list */
-    if (event.key === "ArrowDown")
-      return findClosest(target, `button[data-level]`, "next")?.focus();
+  if (event.key === "ArrowLeft") {
+    prevent();
+    /** collapse */
+    if (isOpen.value[key]) return close(key);
+    else
+      /** go to parent */
+      return findClosest(
+        target,
+        (el) => el.matches(`button[data-level="${level.value - 1}"]`),
+        "previous",
+      )?.focus();
+  }
 
-    /** go to previous up list */
-    if (event.key === "ArrowUp")
-      return findClosest(target, `button[data-level]`, "previous")?.focus();
-  };
+  /** go to next down list */
+  if (event.key === "ArrowDown") {
+    prevent();
+    return findClosest(
+      target,
+      (el) => el.matches(`button[data-level]`) && el.checkVisibility(),
+      "next",
+    )?.focus();
+  }
 
-  /** if conditions met and actions performed, prevent browser default action */
-  if (handle() !== undefined) event.preventDefault();
+  /** go to previous up list */
+  if (event.key === "ArrowUp") {
+    prevent();
+    return findClosest(
+      target,
+      (el) => el.matches(`button[data-level]`) && el.checkVisibility(),
+      "previous",
+    )?.focus();
+  }
 };
 
 /** when children change, reset open states */

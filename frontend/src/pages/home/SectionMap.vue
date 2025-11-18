@@ -3,7 +3,11 @@
     <!-- left panel -->
     <div class="left-panel" role="group">
       <!-- level/category/measure selection -->
-      <AppTree v-model="selectedFacets" :children="tree" />
+      <AppTree
+        :modelValue="treeValue"
+        @update:model-value="onTreeChange"
+        :children="tree"
+      />
 
       <AppLink
         v-if="selectedLevel === 'tract' || noData"
@@ -677,6 +681,7 @@
 <script setup lang="ts">
 import {
   computed,
+  onMounted,
   onUnmounted,
   ref,
   shallowRef,
@@ -773,37 +778,6 @@ type Props = {
 
 const { facets, locationList } = defineProps<Props>();
 
-/** transform facets into tree format */
-const tree = computed<Items>(() =>
-  mapValues(facets, ({ label, categories }, level) => ({
-    id: level,
-    label,
-    children: mapValues(categories, ({ label, measures }, category) => ({
-      id: category,
-      label,
-      actions: [
-        {
-          label: "Download",
-          icon: faDownload,
-          onClick: () => getDownload(level, category),
-        },
-      ],
-      children: mapValues(measures, ({ label, factors }, measure) => ({
-        id: measure,
-        label,
-        factors,
-        actions: [
-          {
-            label: "Download",
-            icon: faDownload,
-            onClick: () => getDownload(level, category, measure),
-          },
-        ],
-      })),
-    })),
-  })),
-);
-
 /** element refs */
 const rightPanelElement = useTemplateRef("rightPanelElement");
 const mapGridElement = useTemplateRef("mapGridElement");
@@ -838,49 +812,73 @@ const manualMax = ref(1);
 const mapWidth = ref(0);
 const mapHeight = ref(0);
 
-/** combined selected facets state (level/category/measure) */
-const selectedFacets = ref<[string, string, string]>(["", "", ""]);
+/** transform facets into tree format */
+const tree = computed<Items>(() =>
+  mapValues(facets, ({ label, categories }, level) => ({
+    id: level,
+    label,
+    children: mapValues(categories, ({ label, measures }, category) => ({
+      id: category,
+      label,
+      actions: [
+        {
+          label: "Download",
+          icon: faDownload,
+          onClick: () => getDownload(level, category),
+        },
+      ],
+      children: mapValues(measures, ({ label, factors }, measure) => ({
+        id: measure,
+        label,
+        factors,
+        actions: [
+          {
+            label: "Download",
+            icon: faDownload,
+            onClick: () => getDownload(level, category, measure),
+          },
+        ],
+      })),
+    })),
+  })),
+);
 
-/** sync combined facet state */
-watch(
-  () => selectedFacets.value[0],
-  (value) => (selectedLevel.value = value ?? ""),
-);
-watch(
-  () => selectedFacets.value[1],
-  (value) => (selectedCategory.value = value ?? ""),
-);
-watch(
-  () => selectedFacets.value[2],
-  (value) => (selectedMeasure.value = value ?? ""),
-);
-watch(selectedLevel, (value) => (selectedFacets.value[0] = value), {
-  immediate: true,
-});
-watch(selectedCategory, (value) => (selectedFacets.value[1] = value), {
-  immediate: true,
-});
-watch(selectedMeasure, (value) => (selectedFacets.value[2] = value), {
-  immediate: true,
-});
+/** push selected facet values to tree value */
+const treeValue = computed(() => [
+  selectedLevel.value,
+  selectedCategory.value,
+  selectedMeasure.value,
+]);
 
-/** auto-select level/category/measure */
-watch(
-  () => facets,
-  () => {
-    if (selectedFacets.value.every((facet) => !facet))
-      selectedFacets.value = ["county", "sociodemographics", "Total"];
-  },
-  { immediate: true },
-);
+/** pull tree value to selected facet values */
+const onTreeChange = (value: string[]) => {
+  [
+    selectedLevel.value = "",
+    selectedCategory.value = "",
+    selectedMeasure.value = "",
+  ] = value;
+};
+
+/** auto-select facets */
+onMounted(() => {
+  if (
+    !selectedLevel.value &&
+    !selectedCategory.value &&
+    !selectedMeasure.value
+  ) {
+    selectedLevel.value = "county";
+    selectedCategory.value = "sociodemographics";
+    selectedMeasure.value = "Total";
+  }
+});
 
 /** stratification factors (e.g. race/ethnicity, sex, etc) */
-const factors = computed(() => {
-  const [level, category, measure] = selectedFacets.value;
-  if (!level || !category || !measure) return {};
-  facets;
-  return facets[level]?.categories[category]?.measures[measure]?.factors || {};
-});
+const factors = computed(
+  () =>
+    facets[selectedLevel.value]?.categories[selectedCategory.value]?.measures[
+      selectedMeasure.value
+    ]?.factors || {},
+);
 
 /** keep track of dynamically created factor watchers */
 let stoppers: WatchStopHandle[] = [];
