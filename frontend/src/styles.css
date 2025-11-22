@@ -167,10 +167,6 @@ button {
     color var(--fast);
 }
 
-button:hover {
-  color: var(--theme-dark);
-}
-
 input {
   min-width: 35px;
   min-height: 35px;

@@ -40,7 +40,7 @@ const component = computed(() => (to ? AppLink : "button"));
 }
 
 a.button {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 35px;

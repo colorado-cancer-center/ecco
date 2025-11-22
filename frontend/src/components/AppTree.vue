@@ -30,7 +30,7 @@
       :key="key"
       class="tree-item"
       role="treeitem"
-      :aria-checked="
+      :aria-selected="
         isEqual(
           modelValue,
           getParents(item).map(({ id }) => id),
@@ -69,7 +69,7 @@
             data-tree-selected
           />
 
-          <font-awesome-icon v-else :icon="faCircle" class="icon" />
+          <font-awesome-icon v-else :icon="faCircle" class="icon uncheck" />
 
           <span class="label">
             {{ item.label }}
@@ -108,7 +108,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, isRef, ref, unref, useTemplateRef, watch } from "vue";
+import { computed, isRef, ref, unref, watch } from "vue";
 import { isEmpty, isEqual, size } from "lodash";
 import { faCircle } from "@fortawesome/free-regular-svg-icons";
 import {
@@ -169,8 +169,6 @@ type Emits = {
 
 const emit = defineEmits<Emits>();
 
-const checkElement = ref<HTMLElement>();
-
 /** search string */
 const search = computed(() => parentSearch || ref(""));
 
@@ -195,7 +193,7 @@ const seeSelected = () => {
       open(key);
       sleep().then(() =>
         document
-          .querySelector("[aria-checked='true']")
+          .querySelector("[aria-selected='true']")
           ?.scrollIntoView({ behavior: "smooth", block: "center" }),
       );
     } else close(key);
@@ -348,6 +346,10 @@ watch(() => children, closeAll, { immediate: true, deep: true });
   content: "";
 }
 
+.tree-item[aria-selected="true"] .tree-opener {
+  background: var(--light-gray);
+}
+
 .controls {
   display: flex;
   align-items: center;
@@ -386,6 +388,10 @@ watch(() => children, closeAll, { immediate: true, deep: true });
 
 .check {
   color: var(--success);
+}
+
+.uncheck {
+  opacity: 0.25;
 }
 
 .label {
