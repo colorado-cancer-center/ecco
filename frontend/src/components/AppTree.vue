@@ -391,7 +391,7 @@ watch(() => children, closeAll, { immediate: true, deep: true });
 }
 
 .uncheck {
-  opacity: 0.25;
+  opacity: 0;
 }
 
 .label {

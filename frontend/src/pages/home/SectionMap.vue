@@ -4,9 +4,9 @@
     <div class="left-panel" role="group">
       <!-- level/category/measure selection -->
       <AppTree
-        :modelValue="treeValue"
-        @update:model-value="onTreeChange"
         :children="tree"
+        :model-value="treeValue"
+        @update:model-value="onTreeChange"
       />
 
       <AppLink
@@ -850,7 +850,7 @@ const treeValue = computed(() => [
   selectedMeasure.value,
 ]);
 
-/** pull tree value to selected facet values */
+/** pull tree value from selected facet values */
 const onTreeChange = (value: string[]) => {
   [
     selectedLevel.value = "",
