@@ -12,7 +12,7 @@
       >.
     </p>
 
-    <p class="center">
+    <div class="center">
       <AppButton
         v-tooltip="'Download all sources data in CSV format'"
         :icon="faTable"
@@ -21,7 +21,7 @@
       >
         Download All Data
       </AppButton>
-    </p>
+    </div>
   </section>
 
   <section>
