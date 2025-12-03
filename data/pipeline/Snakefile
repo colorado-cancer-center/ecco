@@ -154,7 +154,7 @@ rule extract_cif_stats:
     input:
         f"{TARGET_DIR}/cif/us.zip",
     output:
-        f"{TARGET_DIR}/cif/stats/measure_dictionary_v5-2.csv",
+        f"{TARGET_DIR}/cif/stats/measure_dictionary_v5-3.csv",
         f"{TARGET_DIR}/cif/stats/RELEASE.txt",
         [ f"{TARGET_DIR}/cif/stats/{sheet}_long_DATE.csv" for sheet in CIF_EXPECTED_SHEETS ],
         f"{TARGET_DIR}/cif/stats/us_facilities_and_providers_DATE.csv",
@@ -190,7 +190,7 @@ rule extract_cif_stats:
 rule extract_cif_metadata:
     input:
         [ f"{TARGET_DIR}/cif/stats/{sheet}_long_DATE.csv" for sheet in CIF_EXPECTED_SHEETS ],
-        f"{TARGET_DIR}/cif/stats/measure_dictionary_v5-2.csv",
+        f"{TARGET_DIR}/cif/stats/measure_dictionary_v5-3.csv",
     output:
         f"{TARGET_DIR}/cif/cif_meta.json"
     shell:
@@ -236,7 +236,7 @@ rule download_house_senate_members:
         # use curl and sed to identify the URL for the members spreadsheet
         HOUSE_SENATE_MEMBERS_XLSX_URL=$(
             curl -L -s '{HOUSE_SENATE_MEMBERS_LIST_PAGE}' | \
-                grep 'Member Directory' | \
+                grep '.xlsx' | \
                 sed -n 's/.*href="\([^"]*\)".*/\1/p'
         )
 
