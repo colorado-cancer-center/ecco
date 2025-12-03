@@ -236,7 +236,7 @@ rule download_house_senate_members:
         # use curl and sed to identify the URL for the members spreadsheet
         HOUSE_SENATE_MEMBERS_XLSX_URL=$(
             curl -L -s '{HOUSE_SENATE_MEMBERS_LIST_PAGE}' | \
-                grep 'Member Directory' | \
+                grep '.xlsx' | \
                 sed -n 's/.*href="\([^"]*\)".*/\1/p'
         )
 
