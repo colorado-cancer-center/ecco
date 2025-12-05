@@ -10,6 +10,8 @@ import aiomcache
 
 from routers import healthcheck, geometry, locations, statistics
 
+from tools.caching import request_key_builder
+
 from settings import IS_DEV, FRONTEND_DOMAIN
 
 # we'll just allow all origins for the time being
@@ -50,7 +52,10 @@ class HealthCheckFilter(logging.Filter):
 @app.on_event("startup")
 async def startup():
     mc = aiomcache.Client("memcached", 11211)
-    FastAPICache.init(MemcachedBackend(mc), prefix="fastapi-cache")
+    FastAPICache.init(
+        MemcachedBackend(mc), prefix="fastapi-cache",
+        key_builder=request_key_builder,
+    )
 
     # Remove /healthcheck from access logs
     logging.getLogger("uvicorn.access").addFilter(HealthCheckFilter())
