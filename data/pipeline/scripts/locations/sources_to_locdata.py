@@ -76,6 +76,11 @@ SRC_LABELS_TO_LOCATIONS_DATA = {
         'Senate Districts': 'senate-districts',
         'House Districts': 'house-districts',
         'Congressional Districts': 'congressional-districts',
+    },
+    "zipcode-classes": {
+        'Urban ZIP Codes': 'zipcode-classes-urban',
+        'Rural ZIP Codes': 'zipcode-classes-rural',
+        'Unknown ZIP Codes': 'zipcode-classes-unknown',
     }
 }
 
@@ -379,6 +384,48 @@ def extract_legislative_features(
         for k, v in features.items()
     }
 
+def extract_zipcode_classifications(
+        zipcodes_geojson, zipcode_classifications_xlsx
+):
+    # collect all features into a dict of the form {location_type: [features]}
+    features = defaultdict(list)
+
+    # read in the zipcode classifications XLSX file
+    wb = openpyxl.load_workbook(zipcode_classifications_xlsx)
+    ws = wb.active  # assume the first sheet is the one we want
+
+    # read the first row as the header
+    headers = [cell.value for cell in ws[1]]
+
+    # create dict per row with keys from the header
+    classifications = {
+        str(row[0]): dict(zip(headers, row))
+        for row in ws.iter_rows(min_row=2, values_only=True)
+    }
+
+    wb.close()
+
+    # iterate over each feature in the zipcodes geojson
+    zipcodes_data = json.load(zipcodes_geojson)
+    for feature in zipcodes_data["features"]:
+        try:
+            zipcode = str(feature["properties"]["ZCTA5CE10"])
+            area_type = classifications.get(zipcode, {}).get("Urbanicity", "Unknown")
+            feature["properties"].update({
+                "zip_code": zipcode,
+                "area_type": area_type,
+            })
+            features[f'zipcode-classes-{area_type.lower()}'].append(feature)
+        except KeyError as ex:
+            print(f"Error processing zipcode {zipcode}: missing key {ex}")
+            raise ex
+
+    # return the features with each category wrapped in a FeatureCollection
+    return {
+        k: {"type": "FeatureCollection", "features": v}
+        for k, v in features.items()
+    }
+
 
 # ==============================================================================
 # === Entrypoint
@@ -408,11 +455,14 @@ def _flatten_dict(in_dict):
 @click.argument('congressional_geojson', type=click.File('r'))
 @click.argument('house_senate_reps_excel', type=click.File('rb'))
 @click.argument('congressional_reps_csv', type=click.File('r'))
+@click.argument('zipcodes_geojson', type=click.File('r'))
+@click.argument('zipcode_classifications_xlsx', type=click.File('rb'))
 @click.option('--output', help='Output file', type=click.File('w'), default='-')
 def produce_features(
     locations_json, ccrm_json, cif_locations_csv,
     house_geojson, senate_geojson, congressional_geojson,
     house_senate_reps_excel, congressional_reps_csv,
+    zipcodes_geojson, zipcode_classifications_xlsx,
     output
 ):
     # create dict that will store features for each location type
@@ -455,6 +505,12 @@ def produce_features(
         house_senate_reps_excel, congressional_reps_csv
     )
     features.update(legislative_features)
+
+    # 1e. create zip code classifications
+    zipcode_classifications = extract_zipcode_classifications(
+        zipcodes_geojson, zipcode_classifications_xlsx
+    )
+    features.update(zipcode_classifications)
 
     # write the relevant layers to the output file
     json.dump(features, output, indent=2)

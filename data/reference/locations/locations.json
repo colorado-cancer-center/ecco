@@ -53,5 +53,10 @@
     "Senate Districts": "senate-districts",
     "House Districts": "house-districts",
     "Congressional Districts": "congressional-districts"
+  },
+  "ZIP Codes": {
+    "Urban ZIP Codes": "zipcode-classes-urban",
+    "Rural ZIP Codes": "zipcode-classes-rural",
+    "Unknown ZIP Codes": "zipcode-classes-unknown"
   }
 }
