@@ -2,11 +2,18 @@
   <div class="columns" :style="{ '--cols': mapCols }">
     <!-- left panel -->
     <div class="left-panel" role="group">
-      <!-- level/category/measure selection -->
+      <!-- category/measure selection -->
       <AppTree
         :children="tree"
         :model-value="treeValue"
         @update:model-value="onTreeChange"
+      />
+
+      <!-- level selection -->
+      <AppSelect
+        v-model="selectedLevel"
+        label="Geographic level"
+        :options="levelOptions"
       />
 
       <AppLink
@@ -740,7 +747,7 @@ import AppLink from "@/components/AppLink.vue";
 import AppMap from "@/components/AppMap.vue";
 import AppNumber from "@/components/AppNumber.vue";
 import AppSelect from "@/components/AppSelect.vue";
-import type { Entry } from "@/components/AppSelect.vue";
+import type { Entry, Option } from "@/components/AppSelect.vue";
 import AppSlider from "@/components/AppSlider.vue";
 import AppTree, { type Items } from "@/components/AppTree.vue";
 import { gradientOptions } from "@/components/gradient";
@@ -812,52 +819,63 @@ const manualMax = ref(1);
 const mapWidth = ref(0);
 const mapHeight = ref(0);
 
-/** transform facets into tree format */
-const tree = computed<Items>(() =>
-  mapValues(facets, ({ label, categories }, level) => ({
-    id: level,
-    label,
-    children: mapValues(categories, ({ label, measures }, category) => ({
-      id: category,
-      label,
-      actions: [
-        {
-          label: "Download",
-          icon: faDownload,
-          onClick: () => getDownload(level, category),
-        },
-      ],
-      children: mapValues(measures, ({ label, factors }, measure) => ({
-        id: measure,
+/** transform category and measure facets into tree format */
+const tree = computed<Items>(() => {
+  const tree: Items = {};
+  for (const [, { categories }] of Object.entries(facets)) {
+    for (const [category, { label, measures }] of Object.entries(categories)) {
+      tree[category] ??= {
+        id: category,
         label,
-        factors,
+        children: {},
         actions: [
           {
             label: "Download",
             icon: faDownload,
-            onClick: () => getDownload(level, category, measure),
+            onClick: () => getDownload(selectedLevel.value, category),
           },
         ],
-      })),
-    })),
-  })),
-);
+      };
+      for (const [measure, { label }] of Object.entries(measures)) {
+        tree[category].children![measure] = {
+          id: measure,
+          label,
+          actions: [
+            {
+              label: "Download",
+              icon: faDownload,
+              onClick: () =>
+                getDownload(selectedLevel.value, category, measure),
+            },
+          ],
+        };
+      }
+    }
+  }
+
+  return tree;
+});
 
 /** push selected facet values to tree value */
 const treeValue = computed(() => [
-  selectedLevel.value,
   selectedCategory.value,
   selectedMeasure.value,
 ]);
 
 /** pull tree value from selected facet values */
 const onTreeChange = (value: string[]) => {
-  [
-    selectedLevel.value = "",
-    selectedCategory.value = "",
-    selectedMeasure.value = "",
-  ] = value;
+  [selectedCategory.value = "", selectedMeasure.value = ""] = value;
 };
+
+/** geographic level options */
+const levelOptions = computed<Option[]>(() =>
+  Object.entries(facets)
+    .filter(
+      ([, { categories }]) =>
+        categories[selectedCategory.value]?.measures[selectedMeasure.value],
+    )
+    .map(([level, { label }]) => ({ id: level, label })),
+);
 
 /** auto-select facets */
 onMounted(() => {
@@ -870,6 +888,12 @@ onMounted(() => {
     selectedCategory.value = "sociodemographics";
     selectedMeasure.value = "Total";
   }
+});
+
+/** auto-select level */
+watchEffect(() => {
+  if (!levelOptions.value.find((option) => option.id === selectedLevel.value))
+    selectedLevel.value = levelOptions.value[0]?.id || "";
 });
 
 /** stratification factors (e.g. race/ethnicity, sex, etc) */

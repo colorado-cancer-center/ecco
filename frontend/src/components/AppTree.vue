@@ -9,7 +9,7 @@
         placeholder="Search"
       />
       <AppButton
-        v-tooltip="'See selected'"
+        v-tooltip="'Go to selected'"
         :icon="faCrosshairs"
         @click="onSeeSelected"
       />
@@ -342,12 +342,12 @@ watch(() => children, closeAll, { immediate: true, deep: true });
   bottom: 0;
   left: calc(20px - 2px);
   width: 2px;
-  background: var(--light-gray);
+  background: var(--off-white);
   content: "";
 }
 
 .tree-item[aria-selected="true"] .tree-opener {
-  background: var(--light-gray);
+  background: var(--off-white);
 }
 
 .controls {
@@ -373,11 +373,19 @@ watch(() => children, closeAll, { immediate: true, deep: true });
 
 .tree-action {
   padding: 0;
+  opacity: 0;
+  transition:
+    opacity var(--fast),
+    background var(--fast);
+}
+
+.tree-row:hover .tree-action {
+  opacity: 1;
 }
 
 .tree-action:hover,
 .tree-opener:hover {
-  background: var(--light-gray);
+  background: var(--off-white);
 }
 
 .icon {
