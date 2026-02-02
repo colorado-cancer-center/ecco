@@ -150,6 +150,7 @@ cd /app
 ./commands/import_uv_data.py '/data/reference/ccc-team-data/environmental/UV data 2020_2024.xlsx'
 ./commands/import_vaping_data.py '/data/reference/vaping/sheets/youth/HKCS.Teen.VAPE.071525.csv' '/data/reference/vaping/sheets/adult/ECCO_ECIGREQUEST_BRFSS23_HSRSTATS.xlsx'
 ./commands/import_ccc_state_stats.py /data/reference/ccc-team-data/ECCO_IncAverages.xlsx
+./commands/import_uccc_responders.py /data/reference/ccc-team-data/uccc-research/PRMS.Zipcodes.for.CO.Adult.only.xlsx
 EOF
 
 # get into the database and make a new dump, which will be saved in /db-exports
