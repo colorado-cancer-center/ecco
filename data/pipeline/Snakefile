@@ -313,9 +313,7 @@ rule create_locations_json:
         f"{TARGET_DIR}/cif/stats/us_facilities_and_providers_DATE.csv",
         [ f"{TARGET_DIR}/locations/legislative/{map_name}/{map_name}.geojson" for map_name in LEG_MAPS_TO_URL ],
         f"{TARGET_DIR}/locations/legislative/member_directory.xlsx",
-        f"{TARGET_DIR}/locations/legislative/co_congress_members.csv",
-        f"{DATA_ROOT}/reference/ccc-team-data/uccc-research/co_colorado_zip_codes_geo.min.json",
-        f"{DATA_ROOT}/reference/ccc-team-data/uccc-research/PRMS.Zipcodes.for.CO.Adult.only.xlsx"
+        f"{TARGET_DIR}/locations/legislative/co_congress_members.csv"
     output:
         f"{TARGET_DIR}/locations/locations-data.json"
     shell:
@@ -329,8 +327,6 @@ rule create_locations_json:
             {TARGET_DIR}/locations/legislative/2021_Approved_Congressional_Plan_with_Final_Adjustments/2021_Approved_Congressional_Plan_with_Final_Adjustments.geojson \
             {TARGET_DIR}/locations/legislative/member_directory.xlsx \
             {TARGET_DIR}/locations/legislative/co_congress_members.csv \
-            {DATA_ROOT}/reference/ccc-team-data/uccc-research/co_colorado_zip_codes_geo.min.json \
-            {DATA_ROOT}/reference/ccc-team-data/uccc-research/PRMS.Zipcodes.for.CO.Adult.only.xlsx \
             --output {output}
         """
 
