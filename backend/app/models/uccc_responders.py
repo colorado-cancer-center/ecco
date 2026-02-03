@@ -19,7 +19,7 @@ from .base import MeasureUnit, MeasuresByCounty
 
 class UCCCRespondersCounty(MeasuresByCounty, table=True):
     class Config:
-        label = "UCCC Survey Responders"
+        label = "UCCC Research Participants"
 
     # differentiates between urban vs rural responders
     urbanicity: str = Field(nullable=True, index=True)
