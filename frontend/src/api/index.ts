@@ -372,6 +372,8 @@ export type LocationProps = {
   notes?: string;
   email?: string;
   district?: number;
+  zip_code?: string;
+  area_type?: string;
   representative?: string;
   party?: string;
   fips?: string;

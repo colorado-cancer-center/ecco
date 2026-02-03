@@ -30,6 +30,7 @@ Then run the following series of commands within the `backend` container:
 ./commands/import_hpv.py <Sheet 1> [Sheet 2...]
 ./commands/import_vaping_data.py <Regional Vaping Sheet> <State Vaping Sheet>
 ./commands/import_ccc_state_stats.py <State Stats Excel Sheet>
+./commands/import_uccc_responders.py <UCCC Survey Responders Excel Sheet>
 ```
 
 The geometry tables `County` and `Tract` are populated

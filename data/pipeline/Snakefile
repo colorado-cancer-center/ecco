@@ -313,7 +313,7 @@ rule create_locations_json:
         f"{TARGET_DIR}/cif/stats/us_facilities_and_providers_DATE.csv",
         [ f"{TARGET_DIR}/locations/legislative/{map_name}/{map_name}.geojson" for map_name in LEG_MAPS_TO_URL ],
         f"{TARGET_DIR}/locations/legislative/member_directory.xlsx",
-        f"{TARGET_DIR}/locations/legislative/co_congress_members.csv",
+        f"{TARGET_DIR}/locations/legislative/co_congress_members.csv"
     output:
         f"{TARGET_DIR}/locations/locations-data.json"
     shell:
