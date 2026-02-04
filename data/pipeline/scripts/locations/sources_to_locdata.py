@@ -308,8 +308,8 @@ def extract_legislative_features(
 
         # map chambers to worksheets
         chambers_to_worksheets = {
-            "senate-districts": wb["Senate Members"],
-            "house-districts": wb["House Members"]
+            "senate-districts": wb["Senators"],
+            "house-districts": wb["Representatives"]
         }
 
         # iterate over each known worksheet in the model
@@ -321,6 +321,7 @@ def extract_legislative_features(
             reps = [
                 dict(zip(headers, row))
                 for row in ws.iter_rows(min_row=2, values_only=True)
+                if row[0] is not None and row[0].strip() != ""
             ]
 
             # populate the house_senate_reps dict, keyed by district
@@ -331,7 +332,7 @@ def extract_legislative_features(
                     "representative": f"{rep['First Name']} {rep['Last Name']}",
                     "party": rep["Party Affiliation"],
                     "phone": rep["Work Phone"],
-                    "email": rep["Email"],
+                    "email": rep["E-mail"],
                 }
     finally:
         if wb is not None:
