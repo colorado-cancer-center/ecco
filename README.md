@@ -5,6 +5,12 @@
 
 [**⭐️⭐️ View the Site ⭐️⭐️**](https://coe-ecco.org/)
 
+## Citation
+
+If you use this software in your work, please consider citing:
+
+Jan T Lowery, Faisal Alquaddoomi, Vince Rubinetti, Todd Burus, Cydney T Jardine, Adam C Warren, Jake M Walsh, Evelinn T Borrayo, Sean Davis. Exploring Cancer in Colorado using a novel data platform: the ECCO experience. medRxiv 2026.02.03.26345489; doi: https://doi.org/10.64898/2026.02.03.26345489
+
 ## Background
 
 Cancer Centers, including the University of Colorado Cancer Center, need to provide updated and reliable information to make informed decisions about how best to impact care in their catchment areas.
