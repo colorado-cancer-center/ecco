@@ -11,6 +11,23 @@ import outreachNewspapers from "./temp/outreach-newspapers.json";
 import outreachRadonKits from "./temp/outreach-radon-kits.json";
 import zipCodeLookup from "./temp/zip-code-lookup.json";
 
+// transform original/raw facets into flat list of measures
+// const measures = Object.entries(
+//   Object.values(org)
+//     .map(({ categories }) => categories)
+//     .reduce((a, b) => ({ ...a, ...b }), {}),
+// )
+//   .map(([category, { measures, label: categoryLabel }]) =>
+//     Object.entries(measures).map(([measure, { label: measureLabel }]) => ({
+//       category,
+//       categoryLabel,
+//       measure,
+//       measureLabel,
+//     })),
+//   )
+//   .flat();
+// console.log(measures);
+
 /** api root (no trailing slash) */
 const api = import.meta.env.VITE_API;
 

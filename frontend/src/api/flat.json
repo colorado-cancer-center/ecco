@@ -1,0 +1,1178 @@
+[
+  {
+    "category": "sociodemographics",
+    "categoryLabel": "Sociodemographics",
+    "measure": "18 to 64",
+    "measureLabel": "18 to 64 Years Old"
+  },
+  {
+    "category": "sociodemographics",
+    "categoryLabel": "Sociodemographics",
+    "measure": "Advanced Degree",
+    "measureLabel": "Completed a Graduate Degree"
+  },
+  {
+    "category": "sociodemographics",
+    "categoryLabel": "Sociodemographics",
+    "measure": "AIAN",
+    "measureLabel": "American Indian and Alaska Native (non-Hispanic)"
+  },
+  {
+    "category": "sociodemographics",
+    "categoryLabel": "Sociodemographics",
+    "measure": "Asian",
+    "measureLabel": "Asian (non-Hispanic)"
+  },
+  {
+    "category": "sociodemographics",
+    "categoryLabel": "Sociodemographics",
+    "measure": "Below 9th grade",
+    "measureLabel": "Did Not Attend High School"
+  },
+  {
+    "category": "sociodemographics",
+    "categoryLabel": "Sociodemographics",
+    "measure": "Black",
+    "measureLabel": "Black (non-Hispanic)"
+  },
+  {
+    "category": "sociodemographics",
+    "categoryLabel": "Sociodemographics",
+    "measure": "College",
+    "measureLabel": "Graduated College"
+  },
+  {
+    "category": "sociodemographics",
+    "categoryLabel": "Sociodemographics",
+    "measure": "High School",
+    "measureLabel": "Graduated High School"
+  },
+  {
+    "category": "sociodemographics",
+    "categoryLabel": "Sociodemographics",
+    "measure": "Hispanic",
+    "measureLabel": "Hispanic"
+  },
+  {
+    "category": "sociodemographics",
+    "categoryLabel": "Sociodemographics",
+    "measure": "NHOPI",
+    "measureLabel": "Native Hawaiian and Other Pacific Islander (non-Hispanic)"
+  },
+  {
+    "category": "sociodemographics",
+    "categoryLabel": "Sociodemographics",
+    "measure": "Other_Races",
+    "measureLabel": "Other Non-Hispanic Race"
+  },
+  {
+    "category": "sociodemographics",
+    "categoryLabel": "Sociodemographics",
+    "measure": "Over 64",
+    "measureLabel": "Over 64 Years Old"
+  },
+  {
+    "category": "sociodemographics",
+    "categoryLabel": "Sociodemographics",
+    "measure": "Total",
+    "measureLabel": "Total Population"
+  },
+  {
+    "category": "sociodemographics",
+    "categoryLabel": "Sociodemographics",
+    "measure": "Under 18",
+    "measureLabel": "Under 18 Years Old"
+  },
+  {
+    "category": "sociodemographics",
+    "categoryLabel": "Sociodemographics",
+    "measure": "White",
+    "measureLabel": "White (non-Hispanic)"
+  },
+  {
+    "category": "economy",
+    "categoryLabel": "Economics & Insurance",
+    "measure": "Annual Labor Force Participation Rate",
+    "measureLabel": "Annual Labor Force Participation"
+  },
+  {
+    "category": "economy",
+    "categoryLabel": "Economics & Insurance",
+    "measure": "Annual Unemployment Rate",
+    "measureLabel": "Annual Unemployment Rate"
+  },
+  {
+    "category": "economy",
+    "categoryLabel": "Economics & Insurance",
+    "measure": "Below Poverty",
+    "measureLabel": "Living Below Poverty"
+  },
+  {
+    "category": "economy",
+    "categoryLabel": "Economics & Insurance",
+    "measure": "Household Income",
+    "measureLabel": "Household Income ($)"
+  },
+  {
+    "category": "economy",
+    "categoryLabel": "Economics & Insurance",
+    "measure": "Insurance Coverage",
+    "measureLabel": "Insured"
+  },
+  {
+    "category": "economy",
+    "categoryLabel": "Economics & Insurance",
+    "measure": "Medicaid Enrollment",
+    "measureLabel": "Enrolled in Medicaid"
+  },
+  {
+    "category": "economy",
+    "categoryLabel": "Economics & Insurance",
+    "measure": "Received Public Assistance",
+    "measureLabel": "Received TANF or SNAP Public Assistance"
+  },
+  {
+    "category": "economy",
+    "categoryLabel": "Economics & Insurance",
+    "measure": "Uninsured",
+    "measureLabel": "Uninsured"
+  },
+  {
+    "category": "environment",
+    "categoryLabel": "Environment",
+    "measure": "Diesel PM",
+    "measureLabel": "Diesel Particulate Matter (annual avg. mcg/m^3)"
+  },
+  {
+    "category": "environment",
+    "categoryLabel": "Environment",
+    "measure": "Drinking Water Noncompliance",
+    "measureLabel": "Drinking Water Non-Compliance"
+  },
+  {
+    "category": "environment",
+    "categoryLabel": "Environment",
+    "measure": "Hazardous Waste Proximity",
+    "measureLabel": "Hazardous Waste Proximity"
+  },
+  {
+    "category": "environment",
+    "categoryLabel": "Environment",
+    "measure": "Lead Paint",
+    "measureLabel": "Housing Units Built Pre-1960"
+  },
+  {
+    "category": "environment",
+    "categoryLabel": "Environment",
+    "measure": "Nitrogen Dioxide",
+    "measureLabel": "Nitrogen Dioxide (average annual part per billion)"
+  },
+  {
+    "category": "environment",
+    "categoryLabel": "Environment",
+    "measure": "Ozone",
+    "measureLabel": "Annual Ozone Average (ppb)"
+  },
+  {
+    "category": "environment",
+    "categoryLabel": "Environment",
+    "measure": "PM25",
+    "measureLabel": "Particulate Matter 2.5 (annual avg. mcg/m^3)"
+  },
+  {
+    "category": "environment",
+    "categoryLabel": "Environment",
+    "measure": "RMP Proximity",
+    "measureLabel": "Risk Management Plan Facility Proximity"
+  },
+  {
+    "category": "environment",
+    "categoryLabel": "Environment",
+    "measure": "Superfund Proximity",
+    "measureLabel": "Superfund Proximity"
+  },
+  {
+    "category": "environment",
+    "categoryLabel": "Environment",
+    "measure": "Toxics Release to Air",
+    "measureLabel": "Toxic Releases to Air"
+  },
+  {
+    "category": "environment",
+    "categoryLabel": "Environment",
+    "measure": "Traffic Proximity",
+    "measureLabel": "Traffic Volume"
+  },
+  {
+    "category": "environment",
+    "categoryLabel": "Environment",
+    "measure": "Underground Storage Tanks",
+    "measureLabel": "Underground Storage Tanks"
+  },
+  {
+    "category": "environment",
+    "categoryLabel": "Environment",
+    "measure": "Water Discharge",
+    "measureLabel": "Toxic Water Discharge"
+  },
+  {
+    "category": "housingtrans",
+    "categoryLabel": "Housing & Transportation",
+    "measure": "Crowded Housing",
+    "measureLabel": "Crowded Homes"
+  },
+  {
+    "category": "housingtrans",
+    "categoryLabel": "Housing & Transportation",
+    "measure": "Lack Complete Plumbing",
+    "measureLabel": "Homes without Complete Plumbing"
+  },
+  {
+    "category": "housingtrans",
+    "categoryLabel": "Housing & Transportation",
+    "measure": "Median Gross Rent",
+    "measureLabel": "Median Gross Rent ($)"
+  },
+  {
+    "category": "housingtrans",
+    "categoryLabel": "Housing & Transportation",
+    "measure": "Median Home Value",
+    "measureLabel": "Median Home Value ($)"
+  },
+  {
+    "category": "housingtrans",
+    "categoryLabel": "Housing & Transportation",
+    "measure": "Median Monthly Mortgage",
+    "measureLabel": "Median Monthly Mortgage ($)"
+  },
+  {
+    "category": "housingtrans",
+    "categoryLabel": "Housing & Transportation",
+    "measure": "Mobile Homes",
+    "measureLabel": "Housing in Mobile Homes"
+  },
+  {
+    "category": "housingtrans",
+    "categoryLabel": "Housing & Transportation",
+    "measure": "Multi-Unit Structures",
+    "measureLabel": "Housing in Multi-Unit Structures"
+  },
+  {
+    "category": "housingtrans",
+    "categoryLabel": "Housing & Transportation",
+    "measure": "No Home Broadband",
+    "measureLabel": "Homes without Broadband Internet"
+  },
+  {
+    "category": "housingtrans",
+    "categoryLabel": "Housing & Transportation",
+    "measure": "No Vehicle",
+    "measureLabel": "No Household Vehicle Access"
+  },
+  {
+    "category": "housingtrans",
+    "categoryLabel": "Housing & Transportation",
+    "measure": "Owner Occupied Housing",
+    "measureLabel": "Owner-occupied Housing Units"
+  },
+  {
+    "category": "housingtrans",
+    "categoryLabel": "Housing & Transportation",
+    "measure": "Rent Burden (40% Income)",
+    "measureLabel": "High Rent Burden"
+  },
+  {
+    "category": "housingtrans",
+    "categoryLabel": "Housing & Transportation",
+    "measure": "Single Parent Household",
+    "measureLabel": "Single Parent Homes"
+  },
+  {
+    "category": "housingtrans",
+    "categoryLabel": "Housing & Transportation",
+    "measure": "Vacancy Rate",
+    "measureLabel": "Vacant Housing"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Asthma",
+    "measureLabel": "Diagnosed with Asthma"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Bad_Health",
+    "measureLabel": "Report Fair or Poor Overall Health"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Binge_Drinking",
+    "measureLabel": "Binge Drink"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "BMI_Obese",
+    "measureLabel": "Obese (BMI over 30)"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "BP_Medicine",
+    "measureLabel": "On Blood Pressure Medication"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Cancer_Prevalence",
+    "measureLabel": "History of Cancer Diagnosis"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "CHD",
+    "measureLabel": "Have Coronary Heart Disease"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Cognitive_Disability",
+    "measureLabel": "Cognitive Disability"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "COPD",
+    "measureLabel": "Have COPD"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Currently_Smoke",
+    "measureLabel": "Currently Smoke (adults)"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Depression",
+    "measureLabel": "Have Depression"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Diabetes_DX",
+    "measureLabel": "Diagnosed with Diabetes"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Food_Insecure",
+    "measureLabel": "Experienced Food Insecurity in Last 12 Months"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Had_Stroke",
+    "measureLabel": "Had a Stroke"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Hearing_Disability",
+    "measureLabel": "Hearing Disability"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "High_BP",
+    "measureLabel": "Have High Blood Pressure"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "High_Cholesterol",
+    "measureLabel": "Have High Cholesterol"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Housing_Insecure",
+    "measureLabel": "Experienced Housing Insecurity in Last 12 Months"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Independent_Living_Disability",
+    "measureLabel": "Independent Living Disability"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Lacked_Reliable_Transportation",
+    "measureLabel": "Lacked Reliable Transportation in Last 12 Months"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Lacked_Social_Emotional_Support",
+    "measureLabel": "Lacked Social/Emotional Support in Last 12 Months"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Met_Breast_Screen",
+    "measureLabel": "Met Breast Screening Recommendations"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Met_Colon_Screen",
+    "measureLabel": "Met Colorectal Screening Recommendations"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Mobility_Disability",
+    "measureLabel": "Mobility Disability"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "No_Teeth",
+    "measureLabel": "All Adult Teeth Lost"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Physically_Inactive",
+    "measureLabel": "Physically Inactive"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Poor_Mental",
+    "measureLabel": "Report Frequent Mental Health Distress"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Poor_Physical",
+    "measureLabel": "Report Frequent Physical Health Distress"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Recent_Checkup",
+    "measureLabel": "Had a Medical Checkup in the Last Year"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Recent_Dentist",
+    "measureLabel": "Had a Dental Visit in the Last Year"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Selfcare_Disability",
+    "measureLabel": "Self-care Disability"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Sleep_Debt",
+    "measureLabel": "Sleep < 7 Hours a Night"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Socially_Isolated",
+    "measureLabel": "Felt Socially Isolated in Last 12 Months"
+  },
+  {
+    "category": "rfandscreening",
+    "categoryLabel": "Screening & Risk Factors",
+    "measure": "Vision_Disability",
+    "measureLabel": "Vision Disability"
+  },
+  {
+    "category": "disparities",
+    "categoryLabel": "Disparities",
+    "measure": "Economic Segregation",
+    "measureLabel": "Economic Segregation"
+  },
+  {
+    "category": "disparities",
+    "categoryLabel": "Disparities",
+    "measure": "Gender Pay Gap",
+    "measureLabel": "Gender Pay Gap"
+  },
+  {
+    "category": "disparities",
+    "categoryLabel": "Disparities",
+    "measure": "Gini Coefficient",
+    "measureLabel": "Income Inequality (Gini Coefficient)"
+  },
+  {
+    "category": "disparities",
+    "categoryLabel": "Disparities",
+    "measure": "Lack_English_Prof",
+    "measureLabel": "Lack Proficiency in English"
+  },
+  {
+    "category": "disparities",
+    "categoryLabel": "Disparities",
+    "measure": "Living Below Poverty (Black)",
+    "measureLabel": "Black Population Living Below Poverty"
+  },
+  {
+    "category": "disparities",
+    "categoryLabel": "Disparities",
+    "measure": "Living Below Poverty (Hispanic)",
+    "measureLabel": "Hispanic Population Living Below Poverty"
+  },
+  {
+    "category": "disparities",
+    "categoryLabel": "Disparities",
+    "measure": "Racial Economic Segregation",
+    "measureLabel": "Racial Economic Segregation"
+  },
+  {
+    "category": "disparities",
+    "categoryLabel": "Disparities",
+    "measure": "Racial Segregation",
+    "measureLabel": "Racial Segregation"
+  },
+  {
+    "category": "disparities",
+    "categoryLabel": "Disparities",
+    "measure": "Uninsured (Black)",
+    "measureLabel": "Black Population without Health Insurance"
+  },
+  {
+    "category": "disparities",
+    "categoryLabel": "Disparities",
+    "measure": "Uninsured Children",
+    "measureLabel": "Children without Health Insurance"
+  },
+  {
+    "category": "disparities",
+    "categoryLabel": "Disparities",
+    "measure": "Uninsured (Hispanic)",
+    "measureLabel": "Hispanic Population without Health Insurance"
+  },
+  {
+    "category": "cancerdisparitiesindex",
+    "categoryLabel": "Cancer Disparities Index",
+    "measure": "Breast Cancer Index",
+    "measureLabel": "Breast Cancer Index"
+  },
+  {
+    "category": "cancerdisparitiesindex",
+    "categoryLabel": "Cancer Disparities Index",
+    "measure": "Colorectal Cancer Index",
+    "measureLabel": "Colorectal Cancer Index"
+  },
+  {
+    "category": "cancerdisparitiesindex",
+    "categoryLabel": "Cancer Disparities Index",
+    "measure": "Head and Neck Cancer Index",
+    "measureLabel": "Head and Neck Cancer Index"
+  },
+  {
+    "category": "cancerdisparitiesindex",
+    "categoryLabel": "Cancer Disparities Index",
+    "measure": "Lung Cancer Index",
+    "measureLabel": "Lung Cancer Index"
+  },
+  {
+    "category": "radon",
+    "categoryLabel": "Radon Exposure",
+    "measure": "NTests",
+    "measureLabel": "Total Tests"
+  },
+  {
+    "category": "radon",
+    "categoryLabel": "Radon Exposure",
+    "measure": "NTestsover4",
+    "measureLabel": "Total Tests over 4 pCi/L"
+  },
+  {
+    "category": "radon",
+    "categoryLabel": "Radon Exposure",
+    "measure": "PctOver4",
+    "measureLabel": "Percentage of Tests over 4 pCi/L"
+  },
+  {
+    "category": "uvexposure",
+    "categoryLabel": "UV Exposure",
+    "measure": "UV_Wh_m2",
+    "measureLabel": "UV Irradiation in Wh/m²"
+  },
+  {
+    "category": "hpv",
+    "categoryLabel": "Teen HPV Immunization Rate",
+    "measure": "Up-To-Date Percent",
+    "measureLabel": "Up-To-Date Percent"
+  },
+  {
+    "category": "scpdeaths",
+    "categoryLabel": "Cancer Mortality (age-adj per 100k)",
+    "measure": "All Cancer Sites",
+    "measureLabel": "All Cancer Sites"
+  },
+  {
+    "category": "scpdeaths",
+    "categoryLabel": "Cancer Mortality (age-adj per 100k)",
+    "measure": "Bladder",
+    "measureLabel": "Bladder"
+  },
+  {
+    "category": "scpdeaths",
+    "categoryLabel": "Cancer Mortality (age-adj per 100k)",
+    "measure": "Brain & ONS",
+    "measureLabel": "Brain & ONS"
+  },
+  {
+    "category": "scpdeaths",
+    "categoryLabel": "Cancer Mortality (age-adj per 100k)",
+    "measure": "Breast (Female)",
+    "measureLabel": "Breast (Female)"
+  },
+  {
+    "category": "scpdeaths",
+    "categoryLabel": "Cancer Mortality (age-adj per 100k)",
+    "measure": "Cervix",
+    "measureLabel": "Cervix"
+  },
+  {
+    "category": "scpdeaths",
+    "categoryLabel": "Cancer Mortality (age-adj per 100k)",
+    "measure": "Childhood (Ages <20, All Sites)",
+    "measureLabel": "Childhood (Ages <20, All Sites)"
+  },
+  {
+    "category": "scpdeaths",
+    "categoryLabel": "Cancer Mortality (age-adj per 100k)",
+    "measure": "Colon & Rectum",
+    "measureLabel": "Colon & Rectum"
+  },
+  {
+    "category": "scpdeaths",
+    "categoryLabel": "Cancer Mortality (age-adj per 100k)",
+    "measure": "Esophagus",
+    "measureLabel": "Esophagus"
+  },
+  {
+    "category": "scpdeaths",
+    "categoryLabel": "Cancer Mortality (age-adj per 100k)",
+    "measure": "Kidney & Renal Pelvis",
+    "measureLabel": "Kidney & Renal Pelvis"
+  },
+  {
+    "category": "scpdeaths",
+    "categoryLabel": "Cancer Mortality (age-adj per 100k)",
+    "measure": "Leukemia",
+    "measureLabel": "Leukemia"
+  },
+  {
+    "category": "scpdeaths",
+    "categoryLabel": "Cancer Mortality (age-adj per 100k)",
+    "measure": "Liver & Bile Duct",
+    "measureLabel": "Liver & Bile Duct"
+  },
+  {
+    "category": "scpdeaths",
+    "categoryLabel": "Cancer Mortality (age-adj per 100k)",
+    "measure": "Lung & Bronchus",
+    "measureLabel": "Lung & Bronchus"
+  },
+  {
+    "category": "scpdeaths",
+    "categoryLabel": "Cancer Mortality (age-adj per 100k)",
+    "measure": "Melanoma of the Skin",
+    "measureLabel": "Melanoma of the Skin"
+  },
+  {
+    "category": "scpdeaths",
+    "categoryLabel": "Cancer Mortality (age-adj per 100k)",
+    "measure": "Non-Hodgkin Lymphoma",
+    "measureLabel": "Non-Hodgkin Lymphoma"
+  },
+  {
+    "category": "scpdeaths",
+    "categoryLabel": "Cancer Mortality (age-adj per 100k)",
+    "measure": "Oral Cavity & Pharynx",
+    "measureLabel": "Oral Cavity & Pharynx"
+  },
+  {
+    "category": "scpdeaths",
+    "categoryLabel": "Cancer Mortality (age-adj per 100k)",
+    "measure": "Ovary",
+    "measureLabel": "Ovary"
+  },
+  {
+    "category": "scpdeaths",
+    "categoryLabel": "Cancer Mortality (age-adj per 100k)",
+    "measure": "Pancreas",
+    "measureLabel": "Pancreas"
+  },
+  {
+    "category": "scpdeaths",
+    "categoryLabel": "Cancer Mortality (age-adj per 100k)",
+    "measure": "Prostate",
+    "measureLabel": "Prostate"
+  },
+  {
+    "category": "scpdeaths",
+    "categoryLabel": "Cancer Mortality (age-adj per 100k)",
+    "measure": "Stomach",
+    "measureLabel": "Stomach"
+  },
+  {
+    "category": "scpdeaths",
+    "categoryLabel": "Cancer Mortality (age-adj per 100k)",
+    "measure": "Thyroid",
+    "measureLabel": "Thyroid"
+  },
+  {
+    "category": "scpdeaths",
+    "categoryLabel": "Cancer Mortality (age-adj per 100k)",
+    "measure": "Uterus (Corpus & Uterus, NOS)",
+    "measureLabel": "Uterus (Corpus & Uterus, NOS)"
+  },
+  {
+    "category": "scpincidence",
+    "categoryLabel": "Cancer Incidence (age-adj per 100k)",
+    "measure": "All Cancer Sites",
+    "measureLabel": "All Cancer Sites"
+  },
+  {
+    "category": "scpincidence",
+    "categoryLabel": "Cancer Incidence (age-adj per 100k)",
+    "measure": "Bladder",
+    "measureLabel": "Bladder"
+  },
+  {
+    "category": "scpincidence",
+    "categoryLabel": "Cancer Incidence (age-adj per 100k)",
+    "measure": "Brain & ONS",
+    "measureLabel": "Brain & ONS"
+  },
+  {
+    "category": "scpincidence",
+    "categoryLabel": "Cancer Incidence (age-adj per 100k)",
+    "measure": "Breast (Female)",
+    "measureLabel": "Breast (Female)"
+  },
+  {
+    "category": "scpincidence",
+    "categoryLabel": "Cancer Incidence (age-adj per 100k)",
+    "measure": "Breast (Female in situ)",
+    "measureLabel": "Breast (Female in situ)"
+  },
+  {
+    "category": "scpincidence",
+    "categoryLabel": "Cancer Incidence (age-adj per 100k)",
+    "measure": "Cervix",
+    "measureLabel": "Cervix"
+  },
+  {
+    "category": "scpincidence",
+    "categoryLabel": "Cancer Incidence (age-adj per 100k)",
+    "measure": "Childhood (Ages <15, All Sites)",
+    "measureLabel": "Childhood (Ages <15, All Sites)"
+  },
+  {
+    "category": "scpincidence",
+    "categoryLabel": "Cancer Incidence (age-adj per 100k)",
+    "measure": "Childhood (Ages <20, All Sites)",
+    "measureLabel": "Childhood (Ages <20, All Sites)"
+  },
+  {
+    "category": "scpincidence",
+    "categoryLabel": "Cancer Incidence (age-adj per 100k)",
+    "measure": "Colon & Rectum",
+    "measureLabel": "Colon & Rectum"
+  },
+  {
+    "category": "scpincidence",
+    "categoryLabel": "Cancer Incidence (age-adj per 100k)",
+    "measure": "Esophagus",
+    "measureLabel": "Esophagus"
+  },
+  {
+    "category": "scpincidence",
+    "categoryLabel": "Cancer Incidence (age-adj per 100k)",
+    "measure": "Kidney & Renal Pelvis",
+    "measureLabel": "Kidney & Renal Pelvis"
+  },
+  {
+    "category": "scpincidence",
+    "categoryLabel": "Cancer Incidence (age-adj per 100k)",
+    "measure": "Leukemia",
+    "measureLabel": "Leukemia"
+  },
+  {
+    "category": "scpincidence",
+    "categoryLabel": "Cancer Incidence (age-adj per 100k)",
+    "measure": "Liver & Bile Duct",
+    "measureLabel": "Liver & Bile Duct"
+  },
+  {
+    "category": "scpincidence",
+    "categoryLabel": "Cancer Incidence (age-adj per 100k)",
+    "measure": "Lung & Bronchus",
+    "measureLabel": "Lung & Bronchus"
+  },
+  {
+    "category": "scpincidence",
+    "categoryLabel": "Cancer Incidence (age-adj per 100k)",
+    "measure": "Melanoma of the Skin",
+    "measureLabel": "Melanoma of the Skin"
+  },
+  {
+    "category": "scpincidence",
+    "categoryLabel": "Cancer Incidence (age-adj per 100k)",
+    "measure": "Non-Hodgkin Lymphoma",
+    "measureLabel": "Non-Hodgkin Lymphoma"
+  },
+  {
+    "category": "scpincidence",
+    "categoryLabel": "Cancer Incidence (age-adj per 100k)",
+    "measure": "Oral Cavity & Pharynx",
+    "measureLabel": "Oral Cavity & Pharynx"
+  },
+  {
+    "category": "scpincidence",
+    "categoryLabel": "Cancer Incidence (age-adj per 100k)",
+    "measure": "Ovary",
+    "measureLabel": "Ovary"
+  },
+  {
+    "category": "scpincidence",
+    "categoryLabel": "Cancer Incidence (age-adj per 100k)",
+    "measure": "Pancreas",
+    "measureLabel": "Pancreas"
+  },
+  {
+    "category": "scpincidence",
+    "categoryLabel": "Cancer Incidence (age-adj per 100k)",
+    "measure": "Prostate",
+    "measureLabel": "Prostate"
+  },
+  {
+    "category": "scpincidence",
+    "categoryLabel": "Cancer Incidence (age-adj per 100k)",
+    "measure": "Stomach",
+    "measureLabel": "Stomach"
+  },
+  {
+    "category": "scpincidence",
+    "categoryLabel": "Cancer Incidence (age-adj per 100k)",
+    "measure": "Thyroid",
+    "measureLabel": "Thyroid"
+  },
+  {
+    "category": "scpincidence",
+    "categoryLabel": "Cancer Incidence (age-adj per 100k)",
+    "measure": "Uterus (Corpus & Uterus, NOS)",
+    "measureLabel": "Uterus (Corpus & Uterus, NOS)"
+  },
+  {
+    "category": "scpdeathstrend",
+    "categoryLabel": "Cancer Mortality: Trends",
+    "measure": "All Cancer Sites",
+    "measureLabel": "All Cancer Sites"
+  },
+  {
+    "category": "scpdeathstrend",
+    "categoryLabel": "Cancer Mortality: Trends",
+    "measure": "Bladder",
+    "measureLabel": "Bladder"
+  },
+  {
+    "category": "scpdeathstrend",
+    "categoryLabel": "Cancer Mortality: Trends",
+    "measure": "Brain & ONS",
+    "measureLabel": "Brain & ONS"
+  },
+  {
+    "category": "scpdeathstrend",
+    "categoryLabel": "Cancer Mortality: Trends",
+    "measure": "Breast (Female)",
+    "measureLabel": "Breast (Female)"
+  },
+  {
+    "category": "scpdeathstrend",
+    "categoryLabel": "Cancer Mortality: Trends",
+    "measure": "Cervix",
+    "measureLabel": "Cervix"
+  },
+  {
+    "category": "scpdeathstrend",
+    "categoryLabel": "Cancer Mortality: Trends",
+    "measure": "Childhood (Ages <20, All Sites)",
+    "measureLabel": "Childhood (Ages <20, All Sites)"
+  },
+  {
+    "category": "scpdeathstrend",
+    "categoryLabel": "Cancer Mortality: Trends",
+    "measure": "Colon & Rectum",
+    "measureLabel": "Colon & Rectum"
+  },
+  {
+    "category": "scpdeathstrend",
+    "categoryLabel": "Cancer Mortality: Trends",
+    "measure": "Esophagus",
+    "measureLabel": "Esophagus"
+  },
+  {
+    "category": "scpdeathstrend",
+    "categoryLabel": "Cancer Mortality: Trends",
+    "measure": "Kidney & Renal Pelvis",
+    "measureLabel": "Kidney & Renal Pelvis"
+  },
+  {
+    "category": "scpdeathstrend",
+    "categoryLabel": "Cancer Mortality: Trends",
+    "measure": "Leukemia",
+    "measureLabel": "Leukemia"
+  },
+  {
+    "category": "scpdeathstrend",
+    "categoryLabel": "Cancer Mortality: Trends",
+    "measure": "Liver & Bile Duct",
+    "measureLabel": "Liver & Bile Duct"
+  },
+  {
+    "category": "scpdeathstrend",
+    "categoryLabel": "Cancer Mortality: Trends",
+    "measure": "Lung & Bronchus",
+    "measureLabel": "Lung & Bronchus"
+  },
+  {
+    "category": "scpdeathstrend",
+    "categoryLabel": "Cancer Mortality: Trends",
+    "measure": "Melanoma of the Skin",
+    "measureLabel": "Melanoma of the Skin"
+  },
+  {
+    "category": "scpdeathstrend",
+    "categoryLabel": "Cancer Mortality: Trends",
+    "measure": "Non-Hodgkin Lymphoma",
+    "measureLabel": "Non-Hodgkin Lymphoma"
+  },
+  {
+    "category": "scpdeathstrend",
+    "categoryLabel": "Cancer Mortality: Trends",
+    "measure": "Oral Cavity & Pharynx",
+    "measureLabel": "Oral Cavity & Pharynx"
+  },
+  {
+    "category": "scpdeathstrend",
+    "categoryLabel": "Cancer Mortality: Trends",
+    "measure": "Ovary",
+    "measureLabel": "Ovary"
+  },
+  {
+    "category": "scpdeathstrend",
+    "categoryLabel": "Cancer Mortality: Trends",
+    "measure": "Pancreas",
+    "measureLabel": "Pancreas"
+  },
+  {
+    "category": "scpdeathstrend",
+    "categoryLabel": "Cancer Mortality: Trends",
+    "measure": "Prostate",
+    "measureLabel": "Prostate"
+  },
+  {
+    "category": "scpdeathstrend",
+    "categoryLabel": "Cancer Mortality: Trends",
+    "measure": "Stomach",
+    "measureLabel": "Stomach"
+  },
+  {
+    "category": "scpdeathstrend",
+    "categoryLabel": "Cancer Mortality: Trends",
+    "measure": "Thyroid",
+    "measureLabel": "Thyroid"
+  },
+  {
+    "category": "scpdeathstrend",
+    "categoryLabel": "Cancer Mortality: Trends",
+    "measure": "Uterus (Corpus & Uterus, NOS)",
+    "measureLabel": "Uterus (Corpus & Uterus, NOS)"
+  },
+  {
+    "category": "scpincidencetrend",
+    "categoryLabel": "Cancer Incidence: Trends",
+    "measure": "All Cancer Sites",
+    "measureLabel": "All Cancer Sites"
+  },
+  {
+    "category": "scpincidencetrend",
+    "categoryLabel": "Cancer Incidence: Trends",
+    "measure": "Bladder",
+    "measureLabel": "Bladder"
+  },
+  {
+    "category": "scpincidencetrend",
+    "categoryLabel": "Cancer Incidence: Trends",
+    "measure": "Brain & ONS",
+    "measureLabel": "Brain & ONS"
+  },
+  {
+    "category": "scpincidencetrend",
+    "categoryLabel": "Cancer Incidence: Trends",
+    "measure": "Breast (Female)",
+    "measureLabel": "Breast (Female)"
+  },
+  {
+    "category": "scpincidencetrend",
+    "categoryLabel": "Cancer Incidence: Trends",
+    "measure": "Breast (Female in situ)",
+    "measureLabel": "Breast (Female in situ)"
+  },
+  {
+    "category": "scpincidencetrend",
+    "categoryLabel": "Cancer Incidence: Trends",
+    "measure": "Cervix",
+    "measureLabel": "Cervix"
+  },
+  {
+    "category": "scpincidencetrend",
+    "categoryLabel": "Cancer Incidence: Trends",
+    "measure": "Childhood (Ages <15, All Sites)",
+    "measureLabel": "Childhood (Ages <15, All Sites)"
+  },
+  {
+    "category": "scpincidencetrend",
+    "categoryLabel": "Cancer Incidence: Trends",
+    "measure": "Childhood (Ages <20, All Sites)",
+    "measureLabel": "Childhood (Ages <20, All Sites)"
+  },
+  {
+    "category": "scpincidencetrend",
+    "categoryLabel": "Cancer Incidence: Trends",
+    "measure": "Colon & Rectum",
+    "measureLabel": "Colon & Rectum"
+  },
+  {
+    "category": "scpincidencetrend",
+    "categoryLabel": "Cancer Incidence: Trends",
+    "measure": "Esophagus",
+    "measureLabel": "Esophagus"
+  },
+  {
+    "category": "scpincidencetrend",
+    "categoryLabel": "Cancer Incidence: Trends",
+    "measure": "Kidney & Renal Pelvis",
+    "measureLabel": "Kidney & Renal Pelvis"
+  },
+  {
+    "category": "scpincidencetrend",
+    "categoryLabel": "Cancer Incidence: Trends",
+    "measure": "Leukemia",
+    "measureLabel": "Leukemia"
+  },
+  {
+    "category": "scpincidencetrend",
+    "categoryLabel": "Cancer Incidence: Trends",
+    "measure": "Liver & Bile Duct",
+    "measureLabel": "Liver & Bile Duct"
+  },
+  {
+    "category": "scpincidencetrend",
+    "categoryLabel": "Cancer Incidence: Trends",
+    "measure": "Lung & Bronchus",
+    "measureLabel": "Lung & Bronchus"
+  },
+  {
+    "category": "scpincidencetrend",
+    "categoryLabel": "Cancer Incidence: Trends",
+    "measure": "Melanoma of the Skin",
+    "measureLabel": "Melanoma of the Skin"
+  },
+  {
+    "category": "scpincidencetrend",
+    "categoryLabel": "Cancer Incidence: Trends",
+    "measure": "Non-Hodgkin Lymphoma",
+    "measureLabel": "Non-Hodgkin Lymphoma"
+  },
+  {
+    "category": "scpincidencetrend",
+    "categoryLabel": "Cancer Incidence: Trends",
+    "measure": "Oral Cavity & Pharynx",
+    "measureLabel": "Oral Cavity & Pharynx"
+  },
+  {
+    "category": "scpincidencetrend",
+    "categoryLabel": "Cancer Incidence: Trends",
+    "measure": "Ovary",
+    "measureLabel": "Ovary"
+  },
+  {
+    "category": "scpincidencetrend",
+    "categoryLabel": "Cancer Incidence: Trends",
+    "measure": "Pancreas",
+    "measureLabel": "Pancreas"
+  },
+  {
+    "category": "scpincidencetrend",
+    "categoryLabel": "Cancer Incidence: Trends",
+    "measure": "Prostate",
+    "measureLabel": "Prostate"
+  },
+  {
+    "category": "scpincidencetrend",
+    "categoryLabel": "Cancer Incidence: Trends",
+    "measure": "Stomach",
+    "measureLabel": "Stomach"
+  },
+  {
+    "category": "scpincidencetrend",
+    "categoryLabel": "Cancer Incidence: Trends",
+    "measure": "Thyroid",
+    "measureLabel": "Thyroid"
+  },
+  {
+    "category": "scpincidencetrend",
+    "categoryLabel": "Cancer Incidence: Trends",
+    "measure": "Uterus (Corpus & Uterus, NOS)",
+    "measureLabel": "Uterus (Corpus & Uterus, NOS)"
+  },
+  {
+    "category": "fooddesert",
+    "categoryLabel": "Food Deserts",
+    "measure": "LILATracts_Vehicle",
+    "measureLabel": "Tracts that are Food Deserts"
+  },
+  {
+    "category": "vaping",
+    "categoryLabel": "Vaping",
+    "measure": "adult_vaping_ever",
+    "measureLabel": "Pct of adults who have ever used an electronic vapor product"
+  },
+  {
+    "category": "vaping",
+    "categoryLabel": "Vaping",
+    "measure": "adult_vaping_now",
+    "measureLabel": "Pct of adults who currently use an electronic vapor product"
+  },
+  {
+    "category": "vaping",
+    "categoryLabel": "Vaping",
+    "measure": "youth_vaping_ever",
+    "measureLabel": "Pct of students who have ever used an electronic vapor product"
+  },
+  {
+    "category": "vaping",
+    "categoryLabel": "Vaping",
+    "measure": "youth_vaping_now",
+    "measureLabel": "Pct of students who used an electronic vapor product in the past 30 days"
+  }
+]
