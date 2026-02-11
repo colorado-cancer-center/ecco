@@ -4,7 +4,7 @@
     "children": [
       {
         "id": "sociodemographics;18 to 64",
-        "label": "18 to 64 Years Old"
+        "label": "18-64 Years Old"
       },
       {
         "id": "sociodemographics;Advanced Degree",
@@ -12,11 +12,11 @@
       },
       {
         "id": "sociodemographics;AIAN",
-        "label": "American Indian & Alaska Native (non-Hispanic)"
+        "label": "American Indian & Alaska Native (Non-Hispanic)"
       },
       {
         "id": "sociodemographics;Asian",
-        "label": "Asian (non-Hispanic)"
+        "label": "Asian (Non-Hispanic)"
       },
       {
         "id": "sociodemographics;Below 9th grade",
@@ -24,7 +24,7 @@
       },
       {
         "id": "sociodemographics;Black",
-        "label": "Black (non-Hispanic)"
+        "label": "Black (Non-Hispanic)"
       },
       {
         "id": "sociodemographics;College",
@@ -40,7 +40,7 @@
       },
       {
         "id": "sociodemographics;NHOPI",
-        "label": "Native Hawaiian & Other Pacific Islander (non-Hispanic)"
+        "label": "Native Hawaiian & Other Pacific Islander (Non-Hispanic)"
       },
       {
         "id": "sociodemographics;Other_Races",
@@ -48,7 +48,7 @@
       },
       {
         "id": "sociodemographics;Over 64",
-        "label": "Over 64 Years Old"
+        "label": "> 64 Years Old"
       },
       {
         "id": "sociodemographics;Total",
@@ -56,11 +56,11 @@
       },
       {
         "id": "sociodemographics;Under 18",
-        "label": "Under 18 Years Old"
+        "label": "< 18 Years Old"
       },
       {
         "id": "sociodemographics;White",
-        "label": "White (non-Hispanic)"
+        "label": "White (Non-Hispanic)"
       }
     ]
   },
@@ -88,7 +88,7 @@
           },
           {
             "id": "scpincidence;Breast (Female in situ)",
-            "label": "Breast (Female in situ)"
+            "label": "Breast (Female In Situ)"
           },
           {
             "id": "scpincidence;Cervix",
@@ -96,11 +96,11 @@
           },
           {
             "id": "scpincidence;Childhood (Ages <15, All Sites)",
-            "label": "Childhood (Ages <15, All Sites)"
+            "label": "Childhood (< 15 Years Old, All Sites)"
           },
           {
             "id": "scpincidence;Childhood (Ages <20, All Sites)",
-            "label": "Childhood (Ages <20, All Sites)"
+            "label": "Childhood (< 20 Years Old, All Sites)"
           },
           {
             "id": "scpincidence;Colon & Rectum",
@@ -128,7 +128,7 @@
           },
           {
             "id": "scpincidence;Melanoma of the Skin",
-            "label": "Melanoma of the Skin"
+            "label": "Melanoma of Skin"
           },
           {
             "id": "scpincidence;Non-Hodgkin Lymphoma",
@@ -189,7 +189,7 @@
           },
           {
             "id": "scpdeaths;Childhood (Ages <20, All Sites)",
-            "label": "Childhood (Ages <20, All Sites)"
+            "label": "Childhood (< 20 Years Old, All Sites)"
           },
           {
             "id": "scpdeaths;Colon & Rectum",
@@ -217,7 +217,7 @@
           },
           {
             "id": "scpdeaths;Melanoma of the Skin",
-            "label": "Melanoma of the Skin"
+            "label": "Melanoma of Skin"
           },
           {
             "id": "scpdeaths;Non-Hodgkin Lymphoma",
@@ -274,7 +274,7 @@
           },
           {
             "id": "scpincidencetrend;Breast (Female in situ)",
-            "label": "Breast (Female in situ)"
+            "label": "Breast (Female In Situ)"
           },
           {
             "id": "scpincidencetrend;Cervix",
@@ -282,11 +282,11 @@
           },
           {
             "id": "scpincidencetrend;Childhood (Ages <15, All Sites)",
-            "label": "Childhood (Ages <15, All Sites)"
+            "label": "Childhood (< 15 Years Old, All Sites)"
           },
           {
             "id": "scpincidencetrend;Childhood (Ages <20, All Sites)",
-            "label": "Childhood (Ages <20, All Sites)"
+            "label": "Childhood (< 20 Years Old, All Sites)"
           },
           {
             "id": "scpincidencetrend;Colon & Rectum",
@@ -314,7 +314,7 @@
           },
           {
             "id": "scpincidencetrend;Melanoma of the Skin",
-            "label": "Melanoma of the Skin"
+            "label": "Melanoma of Skin"
           },
           {
             "id": "scpincidencetrend;Non-Hodgkin Lymphoma",
@@ -375,7 +375,7 @@
           },
           {
             "id": "scpdeathstrend;Childhood (Ages <20, All Sites)",
-            "label": "Childhood (Ages <20, All Sites)"
+            "label": "Childhood (< 20 Years Old, All Sites)"
           },
           {
             "id": "scpdeathstrend;Colon & Rectum",
@@ -403,7 +403,7 @@
           },
           {
             "id": "scpdeathstrend;Melanoma of the Skin",
-            "label": "Melanoma of the Skin"
+            "label": "Melanoma of Skin"
           },
           {
             "id": "scpdeathstrend;Non-Hodgkin Lymphoma",
@@ -444,19 +444,19 @@
         "children": [
           {
             "id": "cancerdisparitiesindex;Breast Cancer Index",
-            "label": "Breast Cancer Index"
+            "label": "Breast Cancer"
           },
           {
             "id": "cancerdisparitiesindex;Colorectal Cancer Index",
-            "label": "Colorectal Cancer Index"
+            "label": "Colorectal Cancer"
           },
           {
             "id": "cancerdisparitiesindex;Head and Neck Cancer Index",
-            "label": "Head & Neck Cancer Index"
+            "label": "Head & Neck Cancer"
           },
           {
             "id": "cancerdisparitiesindex;Lung Cancer Index",
-            "label": "Lung Cancer Index"
+            "label": "Lung Cancer"
           }
         ]
       }
@@ -467,11 +467,11 @@
     "children": [
       {
         "id": "rfandscreening;Currently_Smoke",
-        "label": "Currently Smoke (adults)"
+        "label": "Currently Smoke (Adults)"
       },
       {
         "id": "rfandscreening;BMI_Obese",
-        "label": "Obese (BMI over 30)"
+        "label": "Obese (BMI > 30)"
       },
       {
         "id": "rfandscreening;Physically_Inactive",
@@ -487,19 +487,19 @@
       },
       {
         "id": "vaping;adult_vaping_ever",
-        "label": "% adults ever used e-vape product"
+        "label": "% Adults Ever Used E-vape Product"
       },
       {
         "id": "vaping;adult_vaping_now",
-        "label": "% adults currently use e-vape product"
+        "label": "% Adults Currently Use E-vape Product"
       },
       {
         "id": "vaping;youth_vaping_ever",
-        "label": "% students ever used e-vape product"
+        "label": "% Students Ever Used E-vape Product"
       },
       {
         "id": "vaping;youth_vaping_now",
-        "label": "% students used e-vape product past 30 days"
+        "label": "% Students Used E-vape Product Past 30 Days"
       },
       {
         "id": "radon;NTests",
@@ -515,7 +515,7 @@
       },
       {
         "id": "uvexposure;UV_Wh_m2",
-        "label": "UV Irradiation in Wh/m^2"
+        "label": "UV Irradiation (Wh/m^2)"
       }
     ]
   },
@@ -541,7 +541,7 @@
     "children": [
       {
         "id": "rfandscreening;Asthma",
-        "label": "Diagnosed with Asthma"
+        "label": "Diagnosed w/ Asthma"
       },
       {
         "id": "rfandscreening;Bad_Health",
@@ -569,7 +569,7 @@
       },
       {
         "id": "rfandscreening;Diabetes_DX",
-        "label": "Diagnosed with Diabetes"
+        "label": "Diagnosed w/ Diabetes"
       },
       {
         "id": "rfandscreening;Food_Insecure",
@@ -577,7 +577,7 @@
       },
       {
         "id": "rfandscreening;Had_Stroke",
-        "label": "Had a Stroke"
+        "label": "Had Stroke"
       },
       {
         "id": "rfandscreening;Hearing_Disability",
@@ -625,11 +625,11 @@
       },
       {
         "id": "rfandscreening;Recent_Checkup",
-        "label": "Had a Medical Checkup in the Last Year"
+        "label": "Had Medical Checkup in Last Year"
       },
       {
         "id": "rfandscreening;Recent_Dentist",
-        "label": "Had a Dental Visit in the Last Year"
+        "label": "Had Dental Visit in Last Year"
       },
       {
         "id": "rfandscreening;Selfcare_Disability",
@@ -694,7 +694,7 @@
         "children": [
           {
             "id": "environment;Diesel PM",
-            "label": "Diesel Particulate Matter (annual avg. mcg/m^3)"
+            "label": "Diesel Particulate Matter (Annual AVG mcg/m^3)"
           },
           {
             "id": "environment;Drinking Water Noncompliance",
@@ -710,15 +710,15 @@
           },
           {
             "id": "environment;Nitrogen Dioxide",
-            "label": "Nitrogen Dioxide (annual avg. ppb)"
+            "label": "Nitrogen Dioxide (Annual AVG ppb)"
           },
           {
             "id": "environment;Ozone",
-            "label": "Annual Ozone Average (ppb)"
+            "label": "Ozone (Annual AVG ppb)"
           },
           {
             "id": "environment;PM25",
-            "label": "Particulate Matter 2.5 (annual avg. mcg/m^3)"
+            "label": "Particulate Matter 2.5 (Annual AVG mcg/m^3)"
           },
           {
             "id": "environment;RMP Proximity",
@@ -787,7 +787,7 @@
           },
           {
             "id": "housingtrans;Owner Occupied Housing",
-            "label": "Owner-occupied Housing Units"
+            "label": "Owner-Occupied Housing Units"
           },
           {
             "id": "housingtrans;Rent Burden (40% Income)",
@@ -824,11 +824,11 @@
           },
           {
             "id": "disparities;Living Below Poverty (Black)",
-            "label": "Black Population Living Below Poverty"
+            "label": "Black Population Below Poverty"
           },
           {
             "id": "disparities;Living Below Poverty (Hispanic)",
-            "label": "Hispanic Population Living Below Poverty"
+            "label": "Hispanic Population Below Poverty"
           },
           {
             "id": "disparities;Racial Economic Segregation",
