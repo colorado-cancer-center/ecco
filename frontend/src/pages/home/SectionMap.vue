@@ -4,7 +4,7 @@
     <div class="left-panel" role="group">
       <!-- category/measure selection -->
       <AppTree
-        :children="tree"
+        :children="measureMap"
         :model-value="treeValue"
         @update:model-value="onTreeChange"
       >
@@ -750,7 +750,7 @@ import {
   getValues,
   outreachLocationKey,
 } from "@/api";
-import tree from "@/api/tree.json";
+import measureMap from "@/api/measure-map.json";
 import AppAccordion from "@/components/AppAccordion.vue";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
