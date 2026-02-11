@@ -388,12 +388,6 @@ watch(() => children, closeAll, { immediate: true, deep: true });
   opacity: 0;
 }
 
-.label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .count {
   color: var(--gray);
 }
