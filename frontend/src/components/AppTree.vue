@@ -26,17 +26,12 @@
     </div>
 
     <div
-      v-for="(item, key, index) in children"
-      :key="key"
+      v-for="(item, index) in children"
+      :key="index"
       class="tree-item"
       role="treeitem"
-      :aria-selected="
-        isEqual(
-          modelValue,
-          getParents(item).map(({ id }) => id),
-        )
-      "
-      :aria-expanded="isOpen[key]"
+      :aria-selected="isEqual(modelValue, getValue(item))"
+      :aria-expanded="isOpen[index]"
       :aria-level="level"
       :aria-setsize="size(children)"
       :aria-posinset="index + 1"
@@ -46,24 +41,19 @@
           class="tree-opener"
           :disabled="!isEmpty(item.children) && !!unref(search)"
           :data-level="level"
-          @click="onClick(key)"
-          @keydown="onKey($event, key)"
+          @click="onClick(index)"
+          @keydown="onKey($event, index)"
         >
           <font-awesome-icon
             v-if="!isEmpty(item.children)"
             :icon="
-              isOpen[key] || unref(search) ? faChevronDown : faChevronRight
+              isOpen[index] || unref(search) ? faChevronDown : faChevronRight
             "
             class="icon"
           />
 
           <font-awesome-icon
-            v-else-if="
-              isEqual(
-                modelValue,
-                getParents(item).map(({ id }) => id),
-              )
-            "
+            v-else-if="isEqual(modelValue, getValue(item))"
             :icon="faCheck"
             class="icon check"
             data-tree-selected
@@ -79,36 +69,30 @@
             {{ size(item.children).toLocaleString() }}
           </span>
         </button>
-
-        <button
-          v-for="(action, actionIndex) in item.actions"
-          :key="actionIndex"
-          v-tooltip="action.label"
-          class="tree-action"
-        >
-          <font-awesome-icon
-            :icon="action.icon"
-            class="icon"
-            @click.stop="action.onClick(getParents(item))"
-          />
-        </button>
+        <div class="tree-action">
+          <slot :parents="getParents(item)"></slot>
+        </div>
       </div>
 
       <AppTree
-        v-show="item.children && (isOpen[key] || unref(search))"
+        v-show="item.children && (isOpen[index] || unref(search))"
         :children="item.children"
         :parents="getParents(item)"
         :parent-search="unref(search)"
         :parent-bus="unref(bus)"
         :model-value="modelValue"
         @update:model-value="(value) => $emit('update:modelValue', value)"
-      />
+      >
+        <template #default="slotProps">
+          <slot name="default" v-bind="slotProps" />
+        </template>
+      </AppTree>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, isRef, ref, unref, watch } from "vue";
+import { computed, isRef, ref, unref, watch, type VNode } from "vue";
 import { isEmpty, isEqual, size } from "lodash";
 import { faCircle } from "@fortawesome/free-regular-svg-icons";
 import {
@@ -120,7 +104,6 @@ import {
   faCrosshairs,
   faSearch,
 } from "@fortawesome/free-solid-svg-icons";
-import type { IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import { useEventBus } from "@vueuse/core";
 import type { UseEventBusReturn } from "@vueuse/core";
 import AppButton from "@/components/AppButton.vue";
@@ -130,25 +113,20 @@ import { sleep } from "@/util/misc";
 
 /** one item in tree */
 type Item = {
-  id: string;
+  id?: ID;
   label: string;
-  children?: Items;
-  actions?: {
-    label: string;
-    icon: IconDefinition;
-    onClick: (parents: Item[]) => void;
-  }[];
+  children?: Item[];
 };
 
-export type Items = Record<string, Item>;
+type ID = string;
 
 type Props = {
   /** selected item */
-  modelValue?: string[];
+  modelValue?: ID[];
   /** path of parent items leading to this item */
   parents?: Item[];
   /** list of children items */
-  children?: Items;
+  children?: Item[];
   /** passed down search from parent */
   parentSearch?: string;
   /** passed down events from parent */
@@ -157,58 +135,57 @@ type Props = {
 
 const {
   modelValue = [],
-  children = {},
+  children = [],
   parents = [],
   parentSearch = "",
   parentBus = undefined,
 } = defineProps<Props>();
 
 type Emits = {
-  "update:modelValue": [string[]];
+  "update:modelValue": [ID[]];
 };
 
 const emit = defineEmits<Emits>();
+
+type Slots = {
+  default(props: { parents: ReturnType<typeof getParents> }): VNode;
+};
+
+defineSlots<Slots>();
 
 /** search string */
 const search = computed(() => parentSearch || ref(""));
 
 /** list of open states for each child item */
-const isOpen = ref<Record<string, boolean>>({});
+const isOpen = ref<Record<number, boolean>>({});
 
 /** tree depth */
 const level = computed(() => parents.length + 1);
 
 /** open item */
-const open = (key: string) => (isOpen.value[key] = true);
+const open = (index: number) => (isOpen.value[index] = true);
 
 /** close item */
-const close = (key: string) => delete isOpen.value[key];
+const close = (index: number) => delete isOpen.value[index];
 
 /** see selected */
-const seeSelected = () => {
-  for (const key of Object.keys(children)) {
-    const item = children[key];
-    if (!item) return;
-    if (modelValue[level.value - 1] === item.id) {
-      open(key);
-      sleep().then(() =>
-        document
-          .querySelector("[aria-selected='true']")
-          ?.scrollIntoView({ behavior: "smooth", block: "center" }),
-      );
-    } else close(key);
-  }
-};
+const seeSelected = async () =>
+  children.forEach(async (item, index) => {
+    if (getChildren(item).some((item) => isEqual(getValue(item), modelValue)))
+      open(index);
+    else close(index);
+  });
 
 /** open all */
 const openAll = () =>
-  Object.keys(children).forEach((key) => (isOpen.value[key] = true));
+  children.forEach((_, index) => (isOpen.value[index] = true));
 
 /** close all */
 const closeAll = () => (isOpen.value = {});
 
 /** toggle open state */
-const toggle = (key: string) => (isOpen.value[key] ? close(key) : open(key));
+const toggle = (index: number) =>
+  isOpen.value[index] ? close(index) : open(index);
 
 /** event bus type */
 type Bus = UseEventBusReturn<"see-selected" | "open" | "close", undefined>;
@@ -217,8 +194,14 @@ type Bus = UseEventBusReturn<"see-selected" | "open" | "close", undefined>;
 const bus = computed<Bus>(() => parentBus || useEventBus(Symbol()));
 
 /** react to bus events */
-bus.value.on((event) => {
-  if (event === "see-selected") seeSelected();
+bus.value.on(async (event) => {
+  if (event === "see-selected") {
+    seeSelected();
+    await sleep();
+    document
+      .querySelector("[aria-selected='true']")
+      ?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
   if (event === "open") openAll();
   if (event === "close") closeAll();
 });
@@ -238,35 +221,35 @@ const match = (item: Item) =>
 
 /** traverse up tree and get list of parent items */
 const getParents = (item: Item): Item[] =>
-  [...parents, { ...item, openAll, closeAll }].map(({ id, label }) => ({
-    id,
-    label,
-  }));
+  [...parents, item].map(({ id, label }) => ({ id, label }));
+
+/** traverse up tree and get list of ids forming path to current element */
+const getValue = (item: Item): ID[] =>
+  getParents(item)
+    .map(({ id }) => id)
+    .filter((id) => id !== undefined);
 
 /** traverse down tree and get list of nested child items */
 const getChildren = (item: Item): Item[] =>
-  Object.values(item.children ?? {})
-    .map((item) => [{ ...item, openAll, closeAll }, ...getChildren(item)])
+  item.children
+    ?.map((item) => [item, ...getChildren(item)])
     .flat()
-    .map(({ id, label }) => ({ id, label }));
+    .map(({ id, label }) => ({ id, label })) ?? [];
 
 /** handle button click */
-const onClick = (key: string) => {
-  const item = children[key];
+const onClick = (index: number) => {
+  const item = children[index];
   if (!item) return;
   /** toggle isOpen/closed */
-  if (!isEmpty(item.children)) toggle(key);
+  if (!isEmpty(item.children)) toggle(index);
   else
     /** select item */
-    emit(
-      "update:modelValue",
-      getParents(item).map(({ id }) => id),
-    );
+    emit("update:modelValue", getValue(item));
 };
 
 /** handle button key press */
-const onKey = (event: KeyboardEvent, key: string) => {
-  const item = children[key];
+const onKey = (event: KeyboardEvent, index: number) => {
+  const item = children[index];
   const target = event.target as HTMLElement;
 
   const prevent = () => event.preventDefault();
@@ -275,7 +258,7 @@ const onKey = (event: KeyboardEvent, key: string) => {
     prevent();
     if (!isEmpty(item?.children)) {
       /** expand */
-      if (!isOpen.value[key]) return open(key);
+      if (!isOpen.value[index]) return open(index);
       else
         /** go to child */
         return findClosest(
@@ -289,7 +272,7 @@ const onKey = (event: KeyboardEvent, key: string) => {
   if (event.key === "ArrowLeft") {
     prevent();
     /** collapse */
-    if (isOpen.value[key]) return close(key);
+    if (isOpen.value[index]) return close(index);
     else
       /** go to parent */
       return findClosest(
@@ -372,7 +355,10 @@ watch(() => children, closeAll, { immediate: true, deep: true });
 }
 
 .tree-action {
+  display: flex;
+  align-items: center;
   padding: 0;
+  gap: 5px;
   opacity: 0;
   transition:
     opacity var(--fast),

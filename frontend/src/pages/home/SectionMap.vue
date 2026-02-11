@@ -7,7 +7,16 @@
         :children="tree"
         :model-value="treeValue"
         @update:model-value="onTreeChange"
-      />
+      >
+        <template #default="{ parents }">
+          <AppButton
+            v-if="parents.at(-1)?.id"
+            v-tooltip="'Download measure data'"
+            :icon="faDownload"
+            @click="onTreeDownload(parents.at(-1)?.id)"
+          />
+        </template>
+      </AppTree>
 
       <!-- level selection -->
       <AppSelect
@@ -740,6 +749,7 @@ import {
   getLocation,
   getValues,
 } from "@/api";
+import tree from "@/api/tree.json";
 import AppAccordion from "@/components/AppAccordion.vue";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
@@ -749,7 +759,7 @@ import AppNumber from "@/components/AppNumber.vue";
 import AppSelect from "@/components/AppSelect.vue";
 import type { Entry, Option } from "@/components/AppSelect.vue";
 import AppSlider from "@/components/AppSlider.vue";
-import AppTree, { type Items } from "@/components/AppTree.vue";
+import AppTree from "@/components/AppTree.vue";
 import { gradientOptions } from "@/components/gradient";
 import { colors } from "@/components/markers";
 import { backgroundOptions } from "@/components/tile-providers";
@@ -819,52 +829,23 @@ const manualMax = ref(1);
 const mapWidth = ref(0);
 const mapHeight = ref(0);
 
-/** transform category and measure facets into tree format */
-const tree = computed<Items>(() => {
-  const tree: Items = {};
-  for (const [, { categories }] of Object.entries(facets)) {
-    for (const [category, { label, measures }] of Object.entries(categories)) {
-      tree[category] ??= {
-        id: category,
-        label,
-        children: {},
-        actions: [
-          {
-            label: "Download",
-            icon: faDownload,
-            onClick: () => getDownload(selectedLevel.value, category),
-          },
-        ],
-      };
-      for (const [measure, { label }] of Object.entries(measures)) {
-        tree[category].children![measure] = {
-          id: measure,
-          label,
-          actions: [
-            {
-              label: "Download",
-              icon: faDownload,
-              onClick: () =>
-                getDownload(selectedLevel.value, category, measure),
-            },
-          ],
-        };
-      }
-    }
-  }
-
-  return tree;
-});
-
 /** push selected facet values to tree value */
 const treeValue = computed(() => [
-  selectedCategory.value,
-  selectedMeasure.value,
+  `${selectedCategory.value};${selectedMeasure.value}`,
 ]);
 
 /** pull tree value from selected facet values */
 const onTreeChange = (value: string[]) => {
-  [selectedCategory.value = "", selectedMeasure.value = ""] = value;
+  [selectedCategory.value = "", selectedMeasure.value = ""] =
+    value.at(-1)?.split(";") ?? [];
+};
+
+/** download measure from tree click */
+const onTreeDownload = (value = "") => {
+  if (!value) return;
+  const [category = "", measure = ""] = value.split(";");
+  if (!category || !measure) return;
+  getDownload(selectedLevel.value, category, measure);
 };
 
 /** geographic level options */
