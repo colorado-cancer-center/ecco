@@ -748,6 +748,7 @@ import {
   getGeo,
   getLocation,
   getValues,
+  outreachLocationKey,
 } from "@/api";
 import tree from "@/api/tree.json";
 import AppAccordion from "@/components/AppAccordion.vue";
@@ -1178,7 +1179,7 @@ const fakeLocations = computed<string[]>(() => [
 const outreachSelected = computed(() =>
   selectedLocations.value.filter((location) =>
     (
-      Object.values(extraLocationList["Outreach and Interventions"]) as string[]
+      Object.values(extraLocationList[outreachLocationKey]) as string[]
     ).includes(location),
   ),
 );
@@ -1189,7 +1190,9 @@ const countyWide = computed(() => {
 
   /** get selected overview fields */
   let selected = Object.entries(
-    pick(extraLocationList["Outreach and Interventions"], ["2morrow"]),
+    pick(extraLocationList[outreachLocationKey], [
+      "Tobacco Cessation App Users",
+    ]),
   )
     .filter(([, id]) => selectedLocations.value.includes(id))
     .map(([label, id]) => ({ id, label }));

@@ -103,14 +103,17 @@ type _LocationList = {
 /** extra hard-coded location list entries */
 /** TEMPORARY: should eventually come from backend */
 export const extraLocationList = {
-  "Outreach and Interventions": {
-    Events: "outreach-events",
-    Newspapers: "outreach-newspapers",
-    "FIT Kits": "outreach-fit-kits",
-    "Radon Kits": "outreach-radon-kits",
-    "2morrow": "outreach-2morrow-county",
+  "Office of COE: Outreach Sites and Interventions": {
+    "Events Attended": "outreach-events",
+    "Local Newspapers": "outreach-newspapers",
+    "FIT Kits Distributed": "outreach-fit-kits",
+    "Radon Kits Distributed": "outreach-radon-kits",
+    "Tobacco Cessation App Users": "outreach-2morrow-county",
   },
 } as const;
+
+export const outreachLocationKey =
+  "Office of COE: Outreach Sites and Interventions";
 
 /** get listing/metadata of locations */
 export const getLocationList = async () => {
@@ -282,7 +285,7 @@ const extraLocationData = {
   "outreach-radon-kits": outreachRadonKits,
 } satisfies Partial<
   Record<
-    ValueOf<(typeof extraLocationList)["Outreach and Interventions"]>,
+    ValueOf<(typeof extraLocationList)[typeof outreachLocationKey]>,
     unknown
   >
 >;
@@ -296,7 +299,10 @@ export const getLocation = async (
   if (id in extraLocationData) {
     /** get label version of id */
     const type =
-      findKey(extraLocationList["Outreach and Interventions"], id) ?? "";
+      findKey(
+        extraLocationList["Office of COE: Outreach Sites and Interventions"],
+        id,
+      ) ?? "";
 
     return {
       type: "FeatureCollection",
