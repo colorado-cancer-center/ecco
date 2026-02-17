@@ -3,64 +3,79 @@
     "label": "Sociodemographics",
     "children": [
       {
-        "id": "sociodemographics;18 to 64",
-        "label": "18-64 Years Old"
-      },
-      {
-        "id": "sociodemographics;Advanced Degree",
-        "label": "Completed Graduate Degree"
-      },
-      {
-        "id": "sociodemographics;AIAN",
-        "label": "American Indian & Alaska Native (Non-Hispanic)"
-      },
-      {
-        "id": "sociodemographics;Asian",
-        "label": "Asian (Non-Hispanic)"
-      },
-      {
-        "id": "sociodemographics;Below 9th grade",
-        "label": "Did Not Attend High School"
-      },
-      {
-        "id": "sociodemographics;Black",
-        "label": "Black (Non-Hispanic)"
-      },
-      {
-        "id": "sociodemographics;College",
-        "label": "Graduated College"
-      },
-      {
-        "id": "sociodemographics;High School",
-        "label": "Graduated High School"
-      },
-      {
-        "id": "sociodemographics;Hispanic",
-        "label": "Hispanic"
-      },
-      {
-        "id": "sociodemographics;NHOPI",
-        "label": "Native Hawaiian & Other Pacific Islander (Non-Hispanic)"
-      },
-      {
-        "id": "sociodemographics;Other_Races",
-        "label": "Other Non-Hispanic Race"
-      },
-      {
-        "id": "sociodemographics;Over 64",
-        "label": "> 64 Years Old"
-      },
-      {
         "id": "sociodemographics;Total",
         "label": "Total Population"
       },
       {
-        "id": "sociodemographics;Under 18",
-        "label": "< 18 Years Old"
+        "label": "Age",
+        "children": [
+          {
+            "id": "sociodemographics;Under 18",
+            "label": "< 18 Years Old"
+          },
+          {
+            "id": "sociodemographics;18 to 64",
+            "label": "18-64 Years Old"
+          },
+          {
+            "id": "sociodemographics;Over 64",
+            "label": "> 64 Years Old"
+          }
+        ]
       },
       {
-        "id": "sociodemographics;White",
-        "label": "White (Non-Hispanic)"
+        "label": "Education",
+        "children": [
+          {
+            "id": "sociodemographics;Below 9th grade",
+            "label": "Did Not Attend High School"
+          },
+          {
+            "id": "sociodemographics;High School",
+            "label": "Graduated High School"
+          },
+          {
+            "id": "sociodemographics;College",
+            "label": "Graduated College"
+          },
+          {
+            "id": "sociodemographics;Advanced Degree",
+            "label": "Completed Graduate Degree"
+          }
+        ]
+      },
+      {
+        "label": "Race/Ethnicity",
+        "children": [
+          {
+            "id": "sociodemographics;AIAN",
+            "label": "American Indian & Alaska Native (Non-Hispanic)"
+          },
+          {
+            "id": "sociodemographics;Asian",
+            "label": "Asian (Non-Hispanic)"
+          },
+          {
+            "id": "sociodemographics;Black",
+            "label": "Black (Non-Hispanic)"
+          },
+          {
+            "id": "sociodemographics;Hispanic",
+            "label": "Hispanic"
+          },
+          {
+            "id": "sociodemographics;NHOPI",
+            "label": "Native Hawaiian & Other Pacific Islander (Non-Hispanic)"
+          },
+          {
+            "id": "sociodemographics;Other_Races",
+            "label": "Other Non-Hispanic Race"
+          },
+          {
+            "id": "sociodemographics;White",
+            "label": "White (Non-Hispanic)"
+          }
+        ]
       }
     ]
   },
@@ -72,7 +87,15 @@
         "children": [
           {
             "id": "scpincidence;All Cancer Sites",
-            "label": "All Cancer Sites"
+            "label": "All Sites"
+          },
+          {
+            "id": "scpincidence;Childhood (Ages <15, All Sites)",
+            "label": "Childhood (< 15 Years Old, All Sites)"
+          },
+          {
+            "id": "scpincidence;Childhood (Ages <20, All Sites)",
+            "label": "Childhood (< 20 Years Old, All Sites)"
           },
           {
             "id": "scpincidence;Bladder",
@@ -93,14 +116,6 @@
           {
             "id": "scpincidence;Cervix",
             "label": "Cervix"
-          },
-          {
-            "id": "scpincidence;Childhood (Ages <15, All Sites)",
-            "label": "Childhood (< 15 Years Old, All Sites)"
-          },
-          {
-            "id": "scpincidence;Childhood (Ages <20, All Sites)",
-            "label": "Childhood (< 20 Years Old, All Sites)"
           },
           {
             "id": "scpincidence;Colon & Rectum",
@@ -160,7 +175,7 @@
           },
           {
             "id": "scpincidence;Uterus (Corpus & Uterus, NOS)",
-            "label": "Uterus (Corpus & Uterus, NOS)"
+            "label": "Uterus"
           }
         ]
       },
@@ -169,7 +184,7 @@
         "children": [
           {
             "id": "scpdeaths;All Cancer Sites",
-            "label": "All Cancer Sites"
+            "label": "All Sites"
           },
           {
             "id": "scpdeaths;Bladder",
@@ -249,7 +264,7 @@
           },
           {
             "id": "scpdeaths;Uterus (Corpus & Uterus, NOS)",
-            "label": "Uterus (Corpus & Uterus, NOS)"
+            "label": "Uterus"
           }
         ]
       },
@@ -258,7 +273,15 @@
         "children": [
           {
             "id": "scpincidencetrend;All Cancer Sites",
-            "label": "All Cancer Sites"
+            "label": "All Sites"
+          },
+          {
+            "id": "scpincidencetrend;Childhood (Ages <15, All Sites)",
+            "label": "Childhood (< 15 Years Old, All Sites)"
+          },
+          {
+            "id": "scpincidencetrend;Childhood (Ages <20, All Sites)",
+            "label": "Childhood (< 20 Years Old, All Sites)"
           },
           {
             "id": "scpincidencetrend;Bladder",
@@ -279,14 +302,6 @@
           {
             "id": "scpincidencetrend;Cervix",
             "label": "Cervix"
-          },
-          {
-            "id": "scpincidencetrend;Childhood (Ages <15, All Sites)",
-            "label": "Childhood (< 15 Years Old, All Sites)"
-          },
-          {
-            "id": "scpincidencetrend;Childhood (Ages <20, All Sites)",
-            "label": "Childhood (< 20 Years Old, All Sites)"
           },
           {
             "id": "scpincidencetrend;Colon & Rectum",
@@ -346,7 +361,7 @@
           },
           {
             "id": "scpincidencetrend;Uterus (Corpus & Uterus, NOS)",
-            "label": "Uterus (Corpus & Uterus, NOS)"
+            "label": "Uterus"
           }
         ]
       },
@@ -355,7 +370,11 @@
         "children": [
           {
             "id": "scpdeathstrend;All Cancer Sites",
-            "label": "All Cancer Sites"
+            "label": "All Sites"
+          },
+          {
+            "id": "scpdeathstrend;Childhood (Ages <20, All Sites)",
+            "label": "Childhood (< 20 Years Old, All Sites)"
           },
           {
             "id": "scpdeathstrend;Bladder",
@@ -372,10 +391,6 @@
           {
             "id": "scpdeathstrend;Cervix",
             "label": "Cervix"
-          },
-          {
-            "id": "scpdeathstrend;Childhood (Ages <20, All Sites)",
-            "label": "Childhood (< 20 Years Old, All Sites)"
           },
           {
             "id": "scpdeathstrend;Colon & Rectum",
@@ -435,7 +450,7 @@
           },
           {
             "id": "scpdeathstrend;Uterus (Corpus & Uterus, NOS)",
-            "label": "Uterus (Corpus & Uterus, NOS)"
+            "label": "Uterus"
           }
         ]
       },
@@ -444,19 +459,19 @@
         "children": [
           {
             "id": "cancerdisparitiesindex;Breast Cancer Index",
-            "label": "Breast Cancer"
+            "label": "Breast"
           },
           {
             "id": "cancerdisparitiesindex;Colorectal Cancer Index",
-            "label": "Colorectal Cancer"
+            "label": "Colorectal"
           },
           {
             "id": "cancerdisparitiesindex;Head and Neck Cancer Index",
-            "label": "Head & Neck Cancer"
+            "label": "Head & Neck"
           },
           {
             "id": "cancerdisparitiesindex;Lung Cancer Index",
-            "label": "Lung Cancer"
+            "label": "Lung"
           }
         ]
       }
@@ -466,8 +481,16 @@
     "label": "Cancer Risk Factors",
     "children": [
       {
+        "id": "rfandscreening;Cancer_Prevalence",
+        "label": "History of Cancer Diagnosis"
+      },
+      {
         "id": "rfandscreening;Currently_Smoke",
         "label": "Currently Smoke (Adults)"
+      },
+      {
+        "id": "rfandscreening;Binge_Drinking",
+        "label": "Binge Drink"
       },
       {
         "id": "rfandscreening;BMI_Obese",
@@ -478,44 +501,46 @@
         "label": "Physically Inactive"
       },
       {
-        "id": "rfandscreening;Binge_Drinking",
-        "label": "Binge Drink"
-      },
-      {
-        "id": "rfandscreening;Cancer_Prevalence",
-        "label": "History of Cancer Diagnosis"
-      },
-      {
-        "id": "vaping;adult_vaping_ever",
-        "label": "% Adults Ever Used E-vape Product"
-      },
-      {
-        "id": "vaping;adult_vaping_now",
-        "label": "% Adults Currently Use E-vape Product"
-      },
-      {
-        "id": "vaping;youth_vaping_ever",
-        "label": "% Students Ever Used E-vape Product"
-      },
-      {
-        "id": "vaping;youth_vaping_now",
-        "label": "% Students Used E-vape Product Past 30 Days"
-      },
-      {
-        "id": "radon;NTests",
-        "label": "Total Tests"
-      },
-      {
-        "id": "radon;NTestsover4",
-        "label": "Total Tests > 4 pCi/L"
-      },
-      {
-        "id": "radon;PctOver4",
-        "label": "% Tests > 4 pCi/L"
-      },
-      {
         "id": "uvexposure;UV_Wh_m2",
         "label": "UV Irradiation (Wh/m^2)"
+      },
+      {
+        "label": "Vaping",
+        "children": [
+          {
+            "id": "vaping;adult_vaping_ever",
+            "label": "% Adults Ever Used"
+          },
+          {
+            "id": "vaping;adult_vaping_now",
+            "label": "% Adults Currently Use"
+          },
+          {
+            "id": "vaping;youth_vaping_ever",
+            "label": "% Students Ever Used"
+          },
+          {
+            "id": "vaping;youth_vaping_now",
+            "label": "% Students Used Past 30 Days"
+          }
+        ]
+      },
+      {
+        "label": "Radon",
+        "children": [
+          {
+            "id": "radon;NTests",
+            "label": "Total Tests"
+          },
+          {
+            "id": "radon;NTestsover4",
+            "label": "Total Tests > 4 pCi/L"
+          },
+          {
+            "id": "radon;PctOver4",
+            "label": "% Tests > 4 pCi/L"
+          }
+        ]
       }
     ]
   },
@@ -524,11 +549,11 @@
     "children": [
       {
         "id": "rfandscreening;Met_Breast_Screen",
-        "label": "Met Breast Screening Recommendations"
+        "label": "Met Breast Screening Recs"
       },
       {
         "id": "rfandscreening;Met_Colon_Screen",
-        "label": "Met Colorectal Screening Recommendations"
+        "label": "Met Colorectal Screening Recs"
       },
       {
         "id": "hpv;Up-To-Date Percent",
@@ -540,112 +565,128 @@
     "label": "Other Health Conditions & Behaviors",
     "children": [
       {
-        "id": "rfandscreening;Asthma",
-        "label": "Diagnosed w/ Asthma"
+        "label": "Diagnosed With",
+        "children": [
+          {
+            "id": "rfandscreening;Asthma",
+            "label": "Asthma"
+          },
+          {
+            "id": "rfandscreening;Cognitive_Disability",
+            "label": "Cognitive Disability"
+          },
+          {
+            "id": "rfandscreening;COPD",
+            "label": "COPD"
+          },
+          {
+            "id": "rfandscreening;Depression",
+            "label": "Depression"
+          },
+          {
+            "id": "rfandscreening;Diabetes_DX",
+            "label": "Diabetes"
+          },
+          {
+            "id": "rfandscreening;CHD",
+            "label": "Heart Disease"
+          },
+          {
+            "id": "rfandscreening;High_BP",
+            "label": "High Blood Pressure"
+          },
+          {
+            "id": "rfandscreening;High_Cholesterol",
+            "label": "High Cholesterol"
+          },
+          {
+            "id": "rfandscreening;Had_Stroke",
+            "label": "Stroke"
+          }
+        ]
       },
       {
-        "id": "rfandscreening;Bad_Health",
-        "label": "Report Fair or Poor Overall Health"
+        "label": "Disabilities",
+        "children": [
+          {
+            "id": "rfandscreening;No_Teeth",
+            "label": "All Adult Teeth Lost"
+          },
+          {
+            "id": "rfandscreening;Hearing_Disability",
+            "label": "Hearing"
+          },
+          {
+            "id": "rfandscreening;Independent_Living_Disability",
+            "label": "Independent Living"
+          },
+          {
+            "id": "rfandscreening;Mobility_Disability",
+            "label": "Mobility"
+          },
+          {
+            "id": "rfandscreening;Selfcare_Disability",
+            "label": "Self-care"
+          },
+          {
+            "id": "rfandscreening;Vision_Disability",
+            "label": "Vision"
+          }
+        ]
       },
       {
-        "id": "rfandscreening;BP_Medicine",
-        "label": "On Blood Pressure Medication"
+        "label": "Insecurities",
+        "children": [
+          {
+            "id": "rfandscreening;Food_Insecure",
+            "label": "Food (Last 12 Months)"
+          },
+          {
+            "id": "rfandscreening;Housing_Insecure",
+            "label": "Housing (Last 12 Months)"
+          },
+          {
+            "id": "rfandscreening;Lacked_Reliable_Transportation",
+            "label": "Reliable Transportation (Last 12 Months)"
+          },
+          {
+            "id": "rfandscreening;Lacked_Social_Emotional_Support",
+            "label": "Social/Emotional Support (Last 12 Months)"
+          }
+        ]
       },
       {
-        "id": "rfandscreening;CHD",
-        "label": "Have Coronary Heart Disease"
-      },
-      {
-        "id": "rfandscreening;Cognitive_Disability",
-        "label": "Cognitive Disability"
-      },
-      {
-        "id": "rfandscreening;COPD",
-        "label": "Have COPD"
-      },
-      {
-        "id": "rfandscreening;Depression",
-        "label": "Have Depression"
-      },
-      {
-        "id": "rfandscreening;Diabetes_DX",
-        "label": "Diagnosed w/ Diabetes"
-      },
-      {
-        "id": "rfandscreening;Food_Insecure",
-        "label": "Experienced Food Insecurity in Last 12 Months"
-      },
-      {
-        "id": "rfandscreening;Had_Stroke",
-        "label": "Had Stroke"
-      },
-      {
-        "id": "rfandscreening;Hearing_Disability",
-        "label": "Hearing Disability"
-      },
-      {
-        "id": "rfandscreening;High_BP",
-        "label": "Have High Blood Pressure"
-      },
-      {
-        "id": "rfandscreening;High_Cholesterol",
-        "label": "Have High Cholesterol"
-      },
-      {
-        "id": "rfandscreening;Housing_Insecure",
-        "label": "Experienced Housing Insecurity in Last 12 Months"
-      },
-      {
-        "id": "rfandscreening;Independent_Living_Disability",
-        "label": "Independent Living Disability"
-      },
-      {
-        "id": "rfandscreening;Lacked_Reliable_Transportation",
-        "label": "Lacked Reliable Transportation in Last 12 Months"
-      },
-      {
-        "id": "rfandscreening;Lacked_Social_Emotional_Support",
-        "label": "Lacked Social/Emotional Support in Last 12 Months"
-      },
-      {
-        "id": "rfandscreening;Mobility_Disability",
-        "label": "Mobility Disability"
-      },
-      {
-        "id": "rfandscreening;No_Teeth",
-        "label": "All Adult Teeth Lost"
-      },
-      {
-        "id": "rfandscreening;Poor_Mental",
-        "label": "Report Frequent Mental Health Distress"
-      },
-      {
-        "id": "rfandscreening;Poor_Physical",
-        "label": "Report Frequent Physical Health Distress"
-      },
-      {
-        "id": "rfandscreening;Recent_Checkup",
-        "label": "Had Medical Checkup in Last Year"
-      },
-      {
-        "id": "rfandscreening;Recent_Dentist",
-        "label": "Had Dental Visit in Last Year"
-      },
-      {
-        "id": "rfandscreening;Selfcare_Disability",
-        "label": "Self-care Disability"
-      },
-      {
-        "id": "rfandscreening;Sleep_Debt",
-        "label": "Sleep < 7 Hours a Night"
-      },
-      {
-        "id": "rfandscreening;Socially_Isolated",
-        "label": "Felt Socially Isolated in Last 12 Months"
-      },
-      {
-        "id": "rfandscreening;Vision_Disability",
-        "label": "Vision Disability"
+        "label": "Reported Conditions",
+        "children": [
+          {
+            "id": "rfandscreening;Bad_Health",
+            "label": "Fair/Poor Overall Health"
+          },
+          {
+            "id": "rfandscreening;Poor_Mental",
+            "label": "Frequent Mental Health Distress"
+          },
+          {
+            "id": "rfandscreening;Poor_Physical",
+            "label": "Frequent Physical Health Distress"
+          },
+          {
+            "id": "rfandscreening;Recent_Checkup",
+            "label": "Medical Checkup in Last Year"
+          },
+          {
+            "id": "rfandscreening;Recent_Dentist",
+            "label": "Dental Visit in Last Year"
+          },
+          {
+            "id": "rfandscreening;Sleep_Debt",
+            "label": "Sleep < 7 Hours a Night"
+          },
+          {
+            "id": "rfandscreening;Socially_Isolated",
+            "label": "Socially Isolated in Last 12 Months"
+          }
+        ]
       }
     ]
   },
@@ -750,16 +791,12 @@
         "label": "Housing & Transportation",
         "children": [
           {
-            "id": "housingtrans;Crowded Housing",
-            "label": "Crowded Homes"
-          },
-          {
-            "id": "housingtrans;Lack Complete Plumbing",
-            "label": "Homes w/o Complete Plumbing"
-          },
-          {
             "id": "housingtrans;Median Gross Rent",
             "label": "Median Gross Rent"
+          },
+          {
+            "id": "housingtrans;Rent Burden (40% Income)",
+            "label": "High Rent Burden"
           },
           {
             "id": "housingtrans;Median Home Value",
@@ -770,12 +807,12 @@
             "label": "Median Monthly Mortgage"
           },
           {
-            "id": "housingtrans;Mobile Homes",
-            "label": "Housing in Mobile Homes"
+            "id": "housingtrans;Crowded Housing",
+            "label": "Crowded Homes"
           },
           {
-            "id": "housingtrans;Multi-Unit Structures",
-            "label": "Housing in Multi-Unit Structures"
+            "id": "housingtrans;Lack Complete Plumbing",
+            "label": "Homes w/o Complete Plumbing"
           },
           {
             "id": "housingtrans;No Home Broadband",
@@ -783,19 +820,23 @@
           },
           {
             "id": "housingtrans;No Vehicle",
-            "label": "No Household Vehicle Access"
+            "label": "No Household Vehicle"
           },
           {
             "id": "housingtrans;Owner Occupied Housing",
             "label": "Owner-Occupied Housing Units"
           },
           {
-            "id": "housingtrans;Rent Burden (40% Income)",
-            "label": "High Rent Burden"
-          },
-          {
             "id": "housingtrans;Single Parent Household",
             "label": "Single Parent Homes"
+          },
+          {
+            "id": "housingtrans;Multi-Unit Structures",
+            "label": "Housing in Multi-Unit Structures"
+          },
+          {
+            "id": "housingtrans;Mobile Homes",
+            "label": "Housing in Mobile Homes"
           },
           {
             "id": "housingtrans;Vacancy Rate",
@@ -831,20 +872,20 @@
             "label": "Hispanic Population Below Poverty"
           },
           {
-            "id": "disparities;Racial Economic Segregation",
-            "label": "Racial Economic Segregation"
-          },
-          {
             "id": "disparities;Racial Segregation",
             "label": "Racial Segregation"
           },
           {
-            "id": "disparities;Uninsured (Black)",
-            "label": "Black Population w/o Health Insurance"
+            "id": "disparities;Racial Economic Segregation",
+            "label": "Racial Economic Segregation"
           },
           {
             "id": "disparities;Uninsured Children",
             "label": "Children w/o Health Insurance"
+          },
+          {
+            "id": "disparities;Uninsured (Black)",
+            "label": "Black Population w/o Health Insurance"
           },
           {
             "id": "disparities;Uninsured (Hispanic)",
