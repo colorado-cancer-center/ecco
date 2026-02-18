@@ -58,7 +58,7 @@ SRC_LABELS_TO_LOCATIONS_DATA = {
     },
     "cif": {
         'Colon & Rectal Surgeon': 'colon-rectal-surgeon',
-        'FQHC': 'fqhc',
+        'Federally Qualified Health Center (FQHC)': 'fqhc',
         'Gastroenterology': 'gastroenterology',
         'HPSA Correctional Facility': 'hpsa-correctional-facility',
         'HPSA Federally Qualified Health Center Look A Like': 'hpsa-federally-qualified-health-center-look-a-like',
@@ -73,9 +73,9 @@ SRC_LABELS_TO_LOCATIONS_DATA = {
         'Toxic Release Inventory Facility': 'toxic-release-inventory-facility',
     },
     "legislative": {
-        'Senate Districts': 'senate-districts',
-        'House Districts': 'house-districts',
-        'Congressional Districts': 'congressional-districts',
+        'CO Senate Districts': 'senate-districts',
+        'CO House Districts': 'house-districts',
+        'US Congressional Districts': 'congressional-districts',
     }
 }
 

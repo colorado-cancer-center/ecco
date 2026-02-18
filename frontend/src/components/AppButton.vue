@@ -35,25 +35,19 @@ const component = computed(() => (to ? AppLink : "button"));
 
 <style scoped>
 .button {
+  background: var(--light-gray);
+  color: var(--black);
+}
+
+a.button {
   display: inline-flex;
-  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   min-height: 35px;
   padding: 5px 10px;
   gap: 10px;
-  border: none;
   border-radius: var(--rounded);
-  background: var(--light-gray);
-  color: var(--black);
-  font: inherit;
-  line-height: var(--compact);
   text-decoration: none;
-  overflow-wrap: anywhere;
-  cursor: pointer;
-  transition:
-    color var(--fast),
-    background var(--fast);
 }
 
 .button:hover {

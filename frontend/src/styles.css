@@ -1,21 +1,20 @@
 :root {
   /* colors */
-  --theme-light: hsl(43, 64%, 86%);
-  --theme: hsl(43, 46%, 65%);
-  --theme-dark: hsl(43, 44%, 29%);
-  --white: #ffffff;
-  --off-white: #f8f8f8;
-  --light-gray: #e8e8e8;
-  --gray: #a0a0a0;
-  --dark-gray: #434343;
-  --off-black: #1a1a1a;
-  --black: #000000;
+  --theme-light: hsl(40, 75%, 90%);
+  --theme: hsl(40, 50%, 70%);
+  --theme-dark: hsl(30, 75%, 25%);
+  --white: hsl(40, 10%, 100%);
+  --off-white: hsl(40, 10%, 97%);
+  --light-gray: hsl(40, 10%, 90%);
+  --gray: hsl(40, 10%, 75%);
+  --dark-gray: hsl(40, 10%, 25%);
+  --black: hsl(40, 10%, 0%);
   --accent-a: hsl(200, 35%, 60%);
   --accent-b: hsl(80, 35%, 60%);
   --accent-a-light: hsl(200, 50%, 85%);
   --accent-b-light: hsl(80, 50%, 85%);
-  --success: #10b981;
-  --error: #f43f5e;
+  --success: hsl(160, 80%, 40%);
+  --error: hsl(350, 80%, 60%);
 
   /* font weights */
   --regular: 400;
@@ -93,7 +92,7 @@ section:last-child {
   flex-grow: 1;
 }
 
-section:nth-child(even) {
+section:nth-child(odd) {
   background: var(--off-white);
 }
 
@@ -110,7 +109,7 @@ h2,
 h3,
 h4 {
   margin: 40px 0;
-  color: var(--off-black);
+  color: var(--dark-gray);
   font-weight: var(--bold);
 }
 
@@ -139,12 +138,42 @@ h4 {
 a {
   color: var(--theme-dark);
   transition:
-    color var(--fast),
-    background var(--fast);
+    background var(--fast),
+    color var(--fast);
 }
 
 a:hover {
   color: currentColor;
+}
+
+button {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  min-width: 35px;
+  min-height: 35px;
+  padding: 5px 10px;
+  gap: 10px;
+  border: none;
+  border-radius: var(--rounded);
+  background: none;
+  font: inherit;
+  line-height: var(--compact);
+  cursor: pointer;
+  transition:
+    background var(--fast),
+    color var(--fast);
+}
+
+input {
+  min-width: 35px;
+  min-height: 35px;
+  padding: 5px 10px;
+  border: none;
+  border-radius: var(--rounded);
+  background: none;
+  font: inherit;
 }
 
 b,
@@ -233,7 +262,7 @@ blockquote {
 }
 
 [disabled] {
-  opacity: 0.5;
+  color: var(--gray);
   pointer-events: none;
 }
 
@@ -288,14 +317,14 @@ blockquote {
 .tippy-box {
   max-width: 400px !important;
   padding: 5px;
-  background: var(--off-black);
+  background: var(--dark-gray);
   box-shadow: var(--shadow);
   color: var(--white);
   font: inherit;
 }
 
 .tippy-arrow {
-  color: var(--off-black);
+  color: var(--dark-gray);
 }
 
 .sr-only {

@@ -2,47 +2,28 @@
   <div class="columns" :style="{ '--cols': mapCols }">
     <!-- left panel -->
     <div class="left-panel" role="group">
-      <!-- data selections -->
+      <!-- category/measure selection -->
+      <AppTree
+        :children="measureMap"
+        :model-value="treeValue"
+        @update:model-value="onTreeChange"
+      >
+        <template #default="{ parents }">
+          <AppButton
+            v-if="parents.at(-1)?.id"
+            v-tooltip="'Download measure data'"
+            :icon="faDownload"
+            @click="onTreeDownload(parents.at(-1)?.id)"
+          />
+        </template>
+      </AppTree>
+
+      <!-- level selection -->
       <AppSelect
         v-model="selectedLevel"
         label="Geographic level"
-        :options="facetToOptions(levels)"
+        :options="levelOptions"
       />
-
-      <div class="side-control">
-        <AppSelect
-          v-model="selectedCategory"
-          label="Measure category"
-          :options="facetToOptions(categories)"
-        />
-
-        <AppButton
-          v-tooltip="'Download selected category data in CSV format'"
-          :icon="faDownload"
-          :to="getDownload(selectedLevel, selectedCategory)"
-          :accent="true"
-        />
-      </div>
-
-      <div class="side-control">
-        <AppSelect
-          v-model="selectedMeasure"
-          label="Measure"
-          :options="facetToOptions(measures)"
-        />
-
-        <AppButton
-          v-tooltip="'Download selected measure data in CSV format'"
-          :icon="faDownload"
-          :to="getDownload(selectedLevel, selectedCategory, selectedMeasure)"
-          :accent="true"
-        />
-      </div>
-
-      <AppLink :to="learnMoreLink(selectedCategory)" :new-tab="true">
-        Learn more about selected data
-        <font-awesome-icon :icon="faArrowRight" />
-      </AppLink>
 
       <AppLink
         v-if="selectedLevel === 'tract' || noData"
@@ -407,13 +388,12 @@
           <template #top-left-upper>
             <strong>
               {{
-                facets[selected.level]?.list[selected.category]?.list[
-                  selected.measure
-                ]?.label
+                facets[selectedLevel]?.categories?.[selectedCategory]
+                  ?.measures?.[selectedMeasure]?.label
               }}
             </strong>
             <div>
-              {{ facets[selected.level]?.list[selected.category]?.label }}
+              {{ facets[selectedLevel]?.categories?.[selectedCategory]?.label }}
             </div>
             <div>
               {{
@@ -439,7 +419,10 @@
           <template v-if="countyWide.length" #top-right>
             <b>Outreach (county-level)</b>
             <div class="mini-table">
-              <template v-for="(field, _index) of countyWide" :key="_index">
+              <template
+                v-for="(field, countyIndex) of countyWide"
+                :key="countyIndex"
+              >
                 <div class="check" :style="{ '--color': field.color }">
                   <font-awesome-icon :icon="faCheck" />
                 </div>
@@ -454,7 +437,10 @@
             #geometry-label="{ feature }: { feature: FeatureInfo }"
           >
             <div>
-              <template v-for="(field, _index) of countyWide" :key="_index">
+              <template
+                v-for="(field, countyIndex) of countyWide"
+                :key="countyIndex"
+              >
                 <div
                   v-if="field.checkKey && feature[field.checkKey]"
                   class="check"
@@ -527,8 +513,10 @@
                 <span>Counties</span>
                 <span>
                   <template
-                    v-for="(county, _index) in feature.counties.split(', ')"
-                    :key="_index"
+                    v-for="(county, countyIndex) in feature.counties.split(
+                      ', ',
+                    )"
+                    :key="countyIndex"
                   >
                     {{ county }}<br />
                   </template>
@@ -607,10 +595,6 @@
                 </AppLink>
                 <span>{{ formatValue(feature.radon_kits) }}</span>
               </template>
-              <!-- <template v-if="feature.total_kits">
-              <span>Total Kits</span>
-              <span>{{ formatValue(feature.total_kits) }}</span>
-            </template> -->
               <template v-if="feature.community_events">
                 <span>Community Events</span>
                 <span>{{ formatValue(feature.community_events) }}</span>
@@ -631,10 +615,6 @@
                 <span>School/Church Events</span>
                 <span>{{ formatValue(feature.school_church_events) }}</span>
               </template>
-              <!-- <template v-if="feature.total_events">
-              <span>Total Events</span>
-              <span>{{ formatValue(feature.total_events) }}</span>
-            </template> -->
               <template v-if="feature.womens_wellness_centers">
                 <AppLink to="https://cdphe.colorado.gov/wwc">
                   Women's Wellness Centers
@@ -727,6 +707,7 @@
 <script setup lang="ts">
 import {
   computed,
+  onMounted,
   onUnmounted,
   ref,
   shallowRef,
@@ -739,7 +720,6 @@ import type { ShallowRef, WatchStopHandle } from "vue";
 import { toBlob } from "html-to-image";
 import {
   clamp,
-  cloneDeep,
   isEmpty,
   isEqual,
   mapValues,
@@ -753,7 +733,6 @@ import {
   faQuestionCircle,
 } from "@fortawesome/free-regular-svg-icons";
 import {
-  faArrowRight,
   faArrowsRotate,
   faCheck,
   faCropSimple,
@@ -767,7 +746,6 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useElementBounding, useFullscreen, useWindowSize } from "@vueuse/core";
 import type {
-  Facet,
   Facets,
   GeoProps,
   LocationList,
@@ -780,7 +758,9 @@ import {
   getGeo,
   getLocation,
   getValues,
+  outreachLocationKey,
 } from "@/api";
+import measureMap from "@/api/measure-map.json";
 import AppAccordion from "@/components/AppAccordion.vue";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
@@ -790,10 +770,10 @@ import AppNumber from "@/components/AppNumber.vue";
 import AppSelect from "@/components/AppSelect.vue";
 import type { Entry, Option } from "@/components/AppSelect.vue";
 import AppSlider from "@/components/AppSlider.vue";
+import AppTree from "@/components/AppTree.vue";
 import { gradientOptions } from "@/components/gradient";
 import { colors } from "@/components/markers";
 import { backgroundOptions } from "@/components/tile-providers";
-import { learnMoreLink } from "@/pages/learn-more";
 import {
   arrayParam,
   jsonParam,
@@ -807,11 +787,6 @@ import { formatValue, round } from "@/util/math";
 import { sleep, waitFor } from "@/util/misc";
 import type { Expand, Update } from "@/util/types";
 
-type Props = {
-  facets: Facets;
-  locationList: LocationList;
-};
-
 type Value = NonNullable<Values>["values"][string];
 
 type FeatureInfo = Expand<
@@ -823,17 +798,13 @@ type FeatureInfo = Expand<
   >
 >;
 
-const { facets, locationList } = defineProps<Props>();
+type Props = {
+  /** level/category/measure */
+  facets: Facets;
+  locationList: LocationList;
+};
 
-/** map of location id to human-readable label */
-const locationLabels = computed(() =>
-  Object.fromEntries(
-    Object.values(locationList)
-      .map((value) => Object.entries(value))
-      .flat()
-      .map(([label, id]) => [id, label] as const),
-  ),
-);
+const { facets, locationList } = defineProps<Props>();
 
 /** element refs */
 const rightPanelElement = useTemplateRef("rightPanelElement");
@@ -869,40 +840,119 @@ const manualMax = ref(1);
 const mapWidth = ref(0);
 const mapHeight = ref(0);
 
-/** whether map has any "no data" regions */
-const noData = ref(false);
+/** push selected facet values to tree value */
+const treeValue = computed(() => [
+  `${selectedCategory.value};${selectedMeasure.value}`,
+]);
 
-/** flag to force rerender of map */
-const renderMap = ref(true);
-
-/** reset customizations and map to defaults */
-const reset = async () => {
-  zoom.value = 0;
-  lat.value = 0;
-  long.value = 0;
-  showLegends.value = true;
-  selectedBackground.value = backgroundOptions[0]?.id || "";
-  selectedGradient.value = gradientOptions[3]?.id || "";
-  backgroundOpacity.value = 1;
-  geometryOpacity.value = 0.75;
-  locationOpacity.value = 1;
-  flipGradient.value = false;
-  scaleSteps.value = 6;
-  niceSteps.value = false;
-  scalePower.value = 1;
-  manualMinMax.value = false;
-  mapWidth.value = 0;
-  mapHeight.value = 0;
-
-  /**
-   * force full re-render of map. don't do this via key method to make sure
-   * entire dom completely unmounted and recreated from scratch (no diffing by
-   * vue)
-   */
-  renderMap.value = false;
-  await sleep(100);
-  renderMap.value = true;
+/** pull tree value from selected facet values */
+const onTreeChange = (value: string[]) => {
+  [selectedCategory.value = "", selectedMeasure.value = ""] =
+    value.at(-1)?.split(";") ?? [];
 };
+
+/** download measure from tree click */
+const onTreeDownload = (value = "") => {
+  if (!value) return;
+  const [category = "", measure = ""] = value.split(";");
+  if (!category || !measure) return;
+  getDownload(selectedLevel.value, category, measure);
+};
+
+/** geographic level options */
+const levelOptions = computed<Option[]>(() =>
+  Object.entries(facets)
+    .filter(
+      ([, { categories }]) =>
+        categories[selectedCategory.value]?.measures[selectedMeasure.value],
+    )
+    .map(([level, { label }]) => ({ id: level, label })),
+);
+
+/** auto-select facets */
+onMounted(() => {
+  if (
+    !selectedLevel.value &&
+    !selectedCategory.value &&
+    !selectedMeasure.value
+  ) {
+    selectedLevel.value = "county";
+    selectedCategory.value = "sociodemographics";
+    selectedMeasure.value = "Total";
+  }
+});
+
+/** auto-select level */
+watchEffect(() => {
+  if (!levelOptions.value.find((option) => option.id === selectedLevel.value))
+    selectedLevel.value = levelOptions.value[0]?.id || "";
+});
+
+/** stratification factors (e.g. race/ethnicity, sex, etc) */
+const factors = computed(
+  () =>
+    facets[selectedLevel.value]?.categories[selectedCategory.value]?.measures[
+      selectedMeasure.value
+    ]?.factors || {},
+);
+
+/** keep track of dynamically created factor watchers */
+let stoppers: WatchStopHandle[] = [];
+
+/** clear all factor watchers */
+const clearFactorWatchers = () => {
+  stoppers.forEach((stopper) => stopper());
+  stoppers = [];
+};
+
+/** cleanup factor watchers */
+onUnmounted(clearFactorWatchers);
+
+/** update selected factors when full set of factor options changes */
+watch(
+  factors,
+  () => {
+    /** reset selected factors */
+    selectedFactors.value = {};
+
+    /** all previous watchers irrelevant now */
+    clearFactorWatchers();
+
+    /** for each factor */
+    for (const [key, value] of Object.entries(factors.value)) {
+      /** default fallback option */
+      const fallback =
+        value.default in value.values
+          ? /** explicitly defined default */
+            value.default
+          : /** first option */
+            Object.entries(value.values || {})[0]?.[0] || "";
+
+      /** ref 2-way synced with url */
+      const factor = useUrlParam(key, stringParam, fallback);
+      /** hook up url reactive with selected factor */
+      selectedFactors.value[key] = factor;
+
+      /** dynamically create watcher for factor */
+      stoppers.push(
+        /** when factor value changes */
+        watch(
+          factor,
+          () => {
+            /** get non-stale factor options */
+            const newValue = factors.value[key];
+            /** if value isn't valid anymore */
+            if (!(factor.value in (newValue?.values || {})))
+              /** fall back */
+              factor.value = fallback;
+          },
+          { immediate: true },
+        ),
+      );
+    }
+  },
+  { immediate: true, deep: true },
+);
 
 /** full selected map */
 const selectedMap = computed(() => ({
@@ -1070,22 +1120,50 @@ const mapCols = computed(() => {
   return 3;
 });
 
-/** geographic levels from facets data */
-const levels = computed(() => cloneDeep(facets));
+/** whether map has any "no data" regions */
+const noData = ref(false);
 
-/** measure categories from geographic level */
-const categories = computed(() =>
-  cloneDeep(levels.value[selectedLevel.value]?.list || {}),
+/** flag to force rerender of map */
+const renderMap = ref(true);
+
+/** reset customizations and map to defaults */
+const reset = async () => {
+  zoom.value = 0;
+  lat.value = 0;
+  long.value = 0;
+  showLegends.value = true;
+  selectedBackground.value = backgroundOptions[0]?.id || "";
+  selectedGradient.value = gradientOptions[3]?.id || "";
+  backgroundOpacity.value = 1;
+  geometryOpacity.value = 0.75;
+  locationOpacity.value = 1;
+  flipGradient.value = false;
+  scaleSteps.value = 6;
+  niceSteps.value = false;
+  scalePower.value = 1;
+  manualMinMax.value = false;
+  mapWidth.value = 0;
+  mapHeight.value = 0;
+
+  /**
+   * force full re-render of map. don't do this via key method to make sure
+   * entire dom completely unmounted and recreated from scratch (no diffing by
+   * vue)
+   */
+  renderMap.value = false;
+  await sleep(100);
+  renderMap.value = true;
+};
+
+/** map of location id to human-readable label */
+const locationLabels = computed(() =>
+  Object.fromEntries(
+    Object.values(locationList)
+      .map((value) => Object.entries(value))
+      .flat()
+      .map(([label, id]) => [id, label] as const),
+  ),
 );
-
-/** measures from measure category */
-const measures = computed(() =>
-  cloneDeep(categories.value[selectedCategory.value]?.list || {}),
-);
-
-/** turn facet into list of select box options */
-const facetToOptions = (facet: Facet): Option[] =>
-  Object.values(facet).map(({ id, label }) => ({ id, label }));
 
 /** location dropdown options */
 const locationOptions = computed(() => {
@@ -1111,7 +1189,7 @@ const fakeLocations = computed<string[]>(() => [
 const outreachSelected = computed(() =>
   selectedLocations.value.filter((location) =>
     (
-      Object.values(extraLocationList["Outreach and Interventions"]) as string[]
+      Object.values(extraLocationList[outreachLocationKey]) as string[]
     ).includes(location),
   ),
 );
@@ -1122,7 +1200,9 @@ const countyWide = computed(() => {
 
   /** get selected overview fields */
   let selected = Object.entries(
-    pick(extraLocationList["Outreach and Interventions"], ["2morrow"]),
+    pick(extraLocationList[outreachLocationKey], [
+      "Tobacco Cessation App Users",
+    ]),
   )
     .filter(([, id]) => selectedLocations.value.includes(id))
     .map(([label, id]) => ({ id, label }));
@@ -1154,104 +1234,6 @@ const countyWide = computed(() => {
 
   return fields;
 });
-
-/** stratification factors (e.g. race/ethnicity, sex, etc) */
-const factors = computed(() =>
-  cloneDeep(measures.value[selectedMeasure.value]?.factors || {}),
-);
-
-/** keep track of dynamically created factor watchers */
-let stoppers: WatchStopHandle[] = [];
-
-/** clear all factor watchers */
-const clearFactorWatchers = () => {
-  stoppers.forEach((stopper) => stopper());
-  stoppers = [];
-};
-
-/** cleanup factor watchers */
-onUnmounted(clearFactorWatchers);
-
-/** update selected factors when full set of factor options changes */
-watch(
-  factors,
-  () => {
-    /** reset selected factors */
-    selectedFactors.value = {};
-
-    /** all previous watchers irrelevant now */
-    clearFactorWatchers();
-
-    /** for each factor */
-    for (const [key, value] of Object.entries(factors.value)) {
-      /** default fallback option */
-      const fallback =
-        value.default in value.values
-          ? /** explicitly defined default */
-            value.default
-          : /** first option */
-            Object.entries(value.values || {})[0]?.[0] || "";
-
-      /** ref 2-way synced with url */
-      const factor = useUrlParam(key, stringParam, fallback);
-      /** hook up url reactive with selected factor */
-      selectedFactors.value[key] = factor;
-
-      /** dynamically create watcher for factor */
-      stoppers.push(
-        /** when factor value changes */
-        watch(
-          factor,
-          () => {
-            /** get non-stale factor options */
-            const newValue = factors.value[key];
-            /** if value isn't valid anymore */
-            if (!(factor.value in (newValue?.values || {})))
-              /** fall back */
-              factor.value = fallback;
-          },
-          { immediate: true },
-        ),
-      );
-    }
-  },
-  { immediate: true, deep: true },
-);
-
-/** auto-select level option */
-watch(
-  [levels, selectedLevel],
-  () => {
-    /** if not already selected, or selection no longer valid */
-    if (!selectedLevel.value || !levels.value[selectedLevel.value])
-      selectedLevel.value = Object.keys(levels.value)[0] || "";
-  },
-  { immediate: true },
-);
-
-/** auto-select category */
-watch(
-  [selectedLevel, categories],
-  () => {
-    if (!selectedCategory.value || !categories.value[selectedCategory.value])
-      selectedCategory.value = categories.value["sociodemographics"]
-        ? "sociodemographics"
-        : Object.keys(categories.value)[0] || "";
-  },
-  { immediate: true },
-);
-
-/** auto-select measure */
-watch(
-  [selectedCategory, measures],
-  () => {
-    if (!selectedMeasure.value || !measures.value[selectedMeasure.value])
-      selectedMeasure.value = measures.value["Total"]
-        ? "Total"
-        : Object.keys(measures.value)[0] || "";
-  },
-  { immediate: true },
-);
 
 watchEffect(() => {
   /** if manual min/max off */

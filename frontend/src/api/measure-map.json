@@ -1,0 +1,898 @@
+[
+  {
+    "label": "Sociodemographics",
+    "children": [
+      {
+        "id": "sociodemographics;Total",
+        "label": "Total Population"
+      },
+      {
+        "label": "Age",
+        "children": [
+          {
+            "id": "sociodemographics;Under 18",
+            "label": "< 18 Years Old"
+          },
+          {
+            "id": "sociodemographics;18 to 64",
+            "label": "18-64 Years Old"
+          },
+          {
+            "id": "sociodemographics;Over 64",
+            "label": "> 64 Years Old"
+          }
+        ]
+      },
+      {
+        "label": "Education",
+        "children": [
+          {
+            "id": "sociodemographics;Below 9th grade",
+            "label": "Did Not Attend High School"
+          },
+          {
+            "id": "sociodemographics;High School",
+            "label": "Graduated High School"
+          },
+          {
+            "id": "sociodemographics;College",
+            "label": "Graduated College"
+          },
+          {
+            "id": "sociodemographics;Advanced Degree",
+            "label": "Completed Graduate Degree"
+          }
+        ]
+      },
+      {
+        "label": "Race/Ethnicity",
+        "children": [
+          {
+            "id": "sociodemographics;AIAN",
+            "label": "American Indian & Alaska Native (Non-Hispanic)"
+          },
+          {
+            "id": "sociodemographics;Asian",
+            "label": "Asian (Non-Hispanic)"
+          },
+          {
+            "id": "sociodemographics;Black",
+            "label": "Black (Non-Hispanic)"
+          },
+          {
+            "id": "sociodemographics;Hispanic",
+            "label": "Hispanic"
+          },
+          {
+            "id": "sociodemographics;NHOPI",
+            "label": "Native Hawaiian & Other Pacific Islander (Non-Hispanic)"
+          },
+          {
+            "id": "sociodemographics;Other_Races",
+            "label": "Other Non-Hispanic Race"
+          },
+          {
+            "id": "sociodemographics;White",
+            "label": "White (Non-Hispanic)"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Cancer Statistics",
+    "children": [
+      {
+        "label": "Incidence",
+        "children": [
+          {
+            "id": "scpincidence;All Cancer Sites",
+            "label": "All Sites"
+          },
+          {
+            "id": "scpincidence;Childhood (Ages <15, All Sites)",
+            "label": "Childhood (< 15 Years Old, All Sites)"
+          },
+          {
+            "id": "scpincidence;Childhood (Ages <20, All Sites)",
+            "label": "Childhood (< 20 Years Old, All Sites)"
+          },
+          {
+            "id": "scpincidence;Bladder",
+            "label": "Bladder"
+          },
+          {
+            "id": "scpincidence;Brain & ONS",
+            "label": "Brain & ONS"
+          },
+          {
+            "id": "scpincidence;Breast (Female)",
+            "label": "Breast (Female)"
+          },
+          {
+            "id": "scpincidence;Breast (Female in situ)",
+            "label": "Breast (Female In Situ)"
+          },
+          {
+            "id": "scpincidence;Cervix",
+            "label": "Cervix"
+          },
+          {
+            "id": "scpincidence;Colon & Rectum",
+            "label": "Colon & Rectum"
+          },
+          {
+            "id": "scpincidence;Esophagus",
+            "label": "Esophagus"
+          },
+          {
+            "id": "scpincidence;Kidney & Renal Pelvis",
+            "label": "Kidney & Renal Pelvis"
+          },
+          {
+            "id": "scpincidence;Leukemia",
+            "label": "Leukemia"
+          },
+          {
+            "id": "scpincidence;Liver & Bile Duct",
+            "label": "Liver & Bile Duct"
+          },
+          {
+            "id": "scpincidence;Lung & Bronchus",
+            "label": "Lung & Bronchus"
+          },
+          {
+            "id": "scpincidence;Melanoma of the Skin",
+            "label": "Melanoma of Skin"
+          },
+          {
+            "id": "scpincidence;Non-Hodgkin Lymphoma",
+            "label": "Non-Hodgkin Lymphoma"
+          },
+          {
+            "id": "scpincidence;Oral Cavity & Pharynx",
+            "label": "Oral Cavity & Pharynx"
+          },
+          {
+            "id": "scpincidence;Ovary",
+            "label": "Ovary"
+          },
+          {
+            "id": "scpincidence;Pancreas",
+            "label": "Pancreas"
+          },
+          {
+            "id": "scpincidence;Prostate",
+            "label": "Prostate"
+          },
+          {
+            "id": "scpincidence;Stomach",
+            "label": "Stomach"
+          },
+          {
+            "id": "scpincidence;Thyroid",
+            "label": "Thyroid"
+          },
+          {
+            "id": "scpincidence;Uterus (Corpus & Uterus, NOS)",
+            "label": "Uterus"
+          }
+        ]
+      },
+      {
+        "label": "Mortality",
+        "children": [
+          {
+            "id": "scpdeaths;All Cancer Sites",
+            "label": "All Sites"
+          },
+          {
+            "id": "scpdeaths;Bladder",
+            "label": "Bladder"
+          },
+          {
+            "id": "scpdeaths;Brain & ONS",
+            "label": "Brain & ONS"
+          },
+          {
+            "id": "scpdeaths;Breast (Female)",
+            "label": "Breast (Female)"
+          },
+          {
+            "id": "scpdeaths;Cervix",
+            "label": "Cervix"
+          },
+          {
+            "id": "scpdeaths;Childhood (Ages <20, All Sites)",
+            "label": "Childhood (< 20 Years Old, All Sites)"
+          },
+          {
+            "id": "scpdeaths;Colon & Rectum",
+            "label": "Colon & Rectum"
+          },
+          {
+            "id": "scpdeaths;Esophagus",
+            "label": "Esophagus"
+          },
+          {
+            "id": "scpdeaths;Kidney & Renal Pelvis",
+            "label": "Kidney & Renal Pelvis"
+          },
+          {
+            "id": "scpdeaths;Leukemia",
+            "label": "Leukemia"
+          },
+          {
+            "id": "scpdeaths;Liver & Bile Duct",
+            "label": "Liver & Bile Duct"
+          },
+          {
+            "id": "scpdeaths;Lung & Bronchus",
+            "label": "Lung & Bronchus"
+          },
+          {
+            "id": "scpdeaths;Melanoma of the Skin",
+            "label": "Melanoma of Skin"
+          },
+          {
+            "id": "scpdeaths;Non-Hodgkin Lymphoma",
+            "label": "Non-Hodgkin Lymphoma"
+          },
+          {
+            "id": "scpdeaths;Oral Cavity & Pharynx",
+            "label": "Oral Cavity & Pharynx"
+          },
+          {
+            "id": "scpdeaths;Ovary",
+            "label": "Ovary"
+          },
+          {
+            "id": "scpdeaths;Pancreas",
+            "label": "Pancreas"
+          },
+          {
+            "id": "scpdeaths;Prostate",
+            "label": "Prostate"
+          },
+          {
+            "id": "scpdeaths;Stomach",
+            "label": "Stomach"
+          },
+          {
+            "id": "scpdeaths;Thyroid",
+            "label": "Thyroid"
+          },
+          {
+            "id": "scpdeaths;Uterus (Corpus & Uterus, NOS)",
+            "label": "Uterus"
+          }
+        ]
+      },
+      {
+        "label": "Incidence Trends",
+        "children": [
+          {
+            "id": "scpincidencetrend;All Cancer Sites",
+            "label": "All Sites"
+          },
+          {
+            "id": "scpincidencetrend;Childhood (Ages <15, All Sites)",
+            "label": "Childhood (< 15 Years Old, All Sites)"
+          },
+          {
+            "id": "scpincidencetrend;Childhood (Ages <20, All Sites)",
+            "label": "Childhood (< 20 Years Old, All Sites)"
+          },
+          {
+            "id": "scpincidencetrend;Bladder",
+            "label": "Bladder"
+          },
+          {
+            "id": "scpincidencetrend;Brain & ONS",
+            "label": "Brain & ONS"
+          },
+          {
+            "id": "scpincidencetrend;Breast (Female)",
+            "label": "Breast (Female)"
+          },
+          {
+            "id": "scpincidencetrend;Breast (Female in situ)",
+            "label": "Breast (Female In Situ)"
+          },
+          {
+            "id": "scpincidencetrend;Cervix",
+            "label": "Cervix"
+          },
+          {
+            "id": "scpincidencetrend;Colon & Rectum",
+            "label": "Colon & Rectum"
+          },
+          {
+            "id": "scpincidencetrend;Esophagus",
+            "label": "Esophagus"
+          },
+          {
+            "id": "scpincidencetrend;Kidney & Renal Pelvis",
+            "label": "Kidney & Renal Pelvis"
+          },
+          {
+            "id": "scpincidencetrend;Leukemia",
+            "label": "Leukemia"
+          },
+          {
+            "id": "scpincidencetrend;Liver & Bile Duct",
+            "label": "Liver & Bile Duct"
+          },
+          {
+            "id": "scpincidencetrend;Lung & Bronchus",
+            "label": "Lung & Bronchus"
+          },
+          {
+            "id": "scpincidencetrend;Melanoma of the Skin",
+            "label": "Melanoma of Skin"
+          },
+          {
+            "id": "scpincidencetrend;Non-Hodgkin Lymphoma",
+            "label": "Non-Hodgkin Lymphoma"
+          },
+          {
+            "id": "scpincidencetrend;Oral Cavity & Pharynx",
+            "label": "Oral Cavity & Pharynx"
+          },
+          {
+            "id": "scpincidencetrend;Ovary",
+            "label": "Ovary"
+          },
+          {
+            "id": "scpincidencetrend;Pancreas",
+            "label": "Pancreas"
+          },
+          {
+            "id": "scpincidencetrend;Prostate",
+            "label": "Prostate"
+          },
+          {
+            "id": "scpincidencetrend;Stomach",
+            "label": "Stomach"
+          },
+          {
+            "id": "scpincidencetrend;Thyroid",
+            "label": "Thyroid"
+          },
+          {
+            "id": "scpincidencetrend;Uterus (Corpus & Uterus, NOS)",
+            "label": "Uterus"
+          }
+        ]
+      },
+      {
+        "label": "Mortality Trends",
+        "children": [
+          {
+            "id": "scpdeathstrend;All Cancer Sites",
+            "label": "All Sites"
+          },
+          {
+            "id": "scpdeathstrend;Childhood (Ages <20, All Sites)",
+            "label": "Childhood (< 20 Years Old, All Sites)"
+          },
+          {
+            "id": "scpdeathstrend;Bladder",
+            "label": "Bladder"
+          },
+          {
+            "id": "scpdeathstrend;Brain & ONS",
+            "label": "Brain & ONS"
+          },
+          {
+            "id": "scpdeathstrend;Breast (Female)",
+            "label": "Breast (Female)"
+          },
+          {
+            "id": "scpdeathstrend;Cervix",
+            "label": "Cervix"
+          },
+          {
+            "id": "scpdeathstrend;Colon & Rectum",
+            "label": "Colon & Rectum"
+          },
+          {
+            "id": "scpdeathstrend;Esophagus",
+            "label": "Esophagus"
+          },
+          {
+            "id": "scpdeathstrend;Kidney & Renal Pelvis",
+            "label": "Kidney & Renal Pelvis"
+          },
+          {
+            "id": "scpdeathstrend;Leukemia",
+            "label": "Leukemia"
+          },
+          {
+            "id": "scpdeathstrend;Liver & Bile Duct",
+            "label": "Liver & Bile Duct"
+          },
+          {
+            "id": "scpdeathstrend;Lung & Bronchus",
+            "label": "Lung & Bronchus"
+          },
+          {
+            "id": "scpdeathstrend;Melanoma of the Skin",
+            "label": "Melanoma of Skin"
+          },
+          {
+            "id": "scpdeathstrend;Non-Hodgkin Lymphoma",
+            "label": "Non-Hodgkin Lymphoma"
+          },
+          {
+            "id": "scpdeathstrend;Oral Cavity & Pharynx",
+            "label": "Oral Cavity & Pharynx"
+          },
+          {
+            "id": "scpdeathstrend;Ovary",
+            "label": "Ovary"
+          },
+          {
+            "id": "scpdeathstrend;Pancreas",
+            "label": "Pancreas"
+          },
+          {
+            "id": "scpdeathstrend;Prostate",
+            "label": "Prostate"
+          },
+          {
+            "id": "scpdeathstrend;Stomach",
+            "label": "Stomach"
+          },
+          {
+            "id": "scpdeathstrend;Thyroid",
+            "label": "Thyroid"
+          },
+          {
+            "id": "scpdeathstrend;Uterus (Corpus & Uterus, NOS)",
+            "label": "Uterus"
+          }
+        ]
+      },
+      {
+        "label": "Disparity Index",
+        "children": [
+          {
+            "id": "cancerdisparitiesindex;Breast Cancer Index",
+            "label": "Breast"
+          },
+          {
+            "id": "cancerdisparitiesindex;Colorectal Cancer Index",
+            "label": "Colorectal"
+          },
+          {
+            "id": "cancerdisparitiesindex;Head and Neck Cancer Index",
+            "label": "Head & Neck"
+          },
+          {
+            "id": "cancerdisparitiesindex;Lung Cancer Index",
+            "label": "Lung"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Cancer Risk Factors",
+    "children": [
+      {
+        "id": "rfandscreening;Cancer_Prevalence",
+        "label": "History of Cancer Diagnosis"
+      },
+      {
+        "id": "rfandscreening;Currently_Smoke",
+        "label": "Currently Smoke (Adults)"
+      },
+      {
+        "id": "rfandscreening;Binge_Drinking",
+        "label": "Binge Drink"
+      },
+      {
+        "id": "rfandscreening;BMI_Obese",
+        "label": "Obese (BMI > 30)"
+      },
+      {
+        "id": "rfandscreening;Physically_Inactive",
+        "label": "Physically Inactive"
+      },
+      {
+        "id": "uvexposure;UV_Wh_m2",
+        "label": "UV Irradiation (Wh/m^2)"
+      },
+      {
+        "label": "Vaping",
+        "children": [
+          {
+            "id": "vaping;adult_vaping_ever",
+            "label": "% Adults Ever Used"
+          },
+          {
+            "id": "vaping;adult_vaping_now",
+            "label": "% Adults Currently Use"
+          },
+          {
+            "id": "vaping;youth_vaping_ever",
+            "label": "% Students Ever Used"
+          },
+          {
+            "id": "vaping;youth_vaping_now",
+            "label": "% Students Used Past 30 Days"
+          }
+        ]
+      },
+      {
+        "label": "Radon",
+        "children": [
+          {
+            "id": "radon;NTests",
+            "label": "Total Tests"
+          },
+          {
+            "id": "radon;NTestsover4",
+            "label": "Total Tests > 4 pCi/L"
+          },
+          {
+            "id": "radon;PctOver4",
+            "label": "% Tests > 4 pCi/L"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Cancer Screening & Prevention",
+    "children": [
+      {
+        "id": "rfandscreening;Met_Breast_Screen",
+        "label": "Met Breast Screening Recs"
+      },
+      {
+        "id": "rfandscreening;Met_Colon_Screen",
+        "label": "Met Colorectal Screening Recs"
+      },
+      {
+        "id": "hpv;Up-To-Date Percent",
+        "label": "% Teens HPV Vax Up-To-Date"
+      }
+    ]
+  },
+  {
+    "label": "Other Health Conditions & Behaviors",
+    "children": [
+      {
+        "label": "Diagnosed With",
+        "children": [
+          {
+            "id": "rfandscreening;Asthma",
+            "label": "Asthma"
+          },
+          {
+            "id": "rfandscreening;Cognitive_Disability",
+            "label": "Cognitive Disability"
+          },
+          {
+            "id": "rfandscreening;COPD",
+            "label": "COPD"
+          },
+          {
+            "id": "rfandscreening;Depression",
+            "label": "Depression"
+          },
+          {
+            "id": "rfandscreening;Diabetes_DX",
+            "label": "Diabetes"
+          },
+          {
+            "id": "rfandscreening;CHD",
+            "label": "Heart Disease"
+          },
+          {
+            "id": "rfandscreening;High_BP",
+            "label": "High Blood Pressure"
+          },
+          {
+            "id": "rfandscreening;High_Cholesterol",
+            "label": "High Cholesterol"
+          },
+          {
+            "id": "rfandscreening;Had_Stroke",
+            "label": "Stroke"
+          }
+        ]
+      },
+      {
+        "label": "Disabilities",
+        "children": [
+          {
+            "id": "rfandscreening;No_Teeth",
+            "label": "All Adult Teeth Lost"
+          },
+          {
+            "id": "rfandscreening;Hearing_Disability",
+            "label": "Hearing"
+          },
+          {
+            "id": "rfandscreening;Independent_Living_Disability",
+            "label": "Independent Living"
+          },
+          {
+            "id": "rfandscreening;Mobility_Disability",
+            "label": "Mobility"
+          },
+          {
+            "id": "rfandscreening;Selfcare_Disability",
+            "label": "Self-care"
+          },
+          {
+            "id": "rfandscreening;Vision_Disability",
+            "label": "Vision"
+          }
+        ]
+      },
+      {
+        "label": "Insecurities",
+        "children": [
+          {
+            "id": "rfandscreening;Food_Insecure",
+            "label": "Food (Last 12 Months)"
+          },
+          {
+            "id": "rfandscreening;Housing_Insecure",
+            "label": "Housing (Last 12 Months)"
+          },
+          {
+            "id": "rfandscreening;Lacked_Reliable_Transportation",
+            "label": "Reliable Transportation (Last 12 Months)"
+          },
+          {
+            "id": "rfandscreening;Lacked_Social_Emotional_Support",
+            "label": "Social/Emotional Support (Last 12 Months)"
+          }
+        ]
+      },
+      {
+        "label": "Reported Conditions",
+        "children": [
+          {
+            "id": "rfandscreening;Bad_Health",
+            "label": "Fair/Poor Overall Health"
+          },
+          {
+            "id": "rfandscreening;Poor_Mental",
+            "label": "Frequent Mental Health Distress"
+          },
+          {
+            "id": "rfandscreening;Poor_Physical",
+            "label": "Frequent Physical Health Distress"
+          },
+          {
+            "id": "rfandscreening;Recent_Checkup",
+            "label": "Medical Checkup in Last Year"
+          },
+          {
+            "id": "rfandscreening;Recent_Dentist",
+            "label": "Dental Visit in Last Year"
+          },
+          {
+            "id": "rfandscreening;Sleep_Debt",
+            "label": "Sleep < 7 Hours a Night"
+          },
+          {
+            "id": "rfandscreening;Socially_Isolated",
+            "label": "Socially Isolated in Last 12 Months"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Social Determinants Of Health",
+    "children": [
+      {
+        "label": "Economics & Insurance",
+        "children": [
+          {
+            "id": "economy;Annual Labor Force Participation Rate",
+            "label": "Annual Labor Force Participation"
+          },
+          {
+            "id": "economy;Annual Unemployment Rate",
+            "label": "Annual Unemployment Rate"
+          },
+          {
+            "id": "economy;Below Poverty",
+            "label": "Living Below Poverty"
+          },
+          {
+            "id": "economy;Household Income",
+            "label": "Household Income"
+          },
+          {
+            "id": "economy;Insurance Coverage",
+            "label": "Insured"
+          },
+          {
+            "id": "economy;Medicaid Enrollment",
+            "label": "Enrolled in Medicaid"
+          },
+          {
+            "id": "economy;Received Public Assistance",
+            "label": "Received TANF or SNAP Public Assistance"
+          },
+          {
+            "id": "economy;Uninsured",
+            "label": "Uninsured"
+          }
+        ]
+      },
+      {
+        "label": "Environment",
+        "children": [
+          {
+            "id": "environment;Diesel PM",
+            "label": "Diesel Particulate Matter (Annual AVG mcg/m^3)"
+          },
+          {
+            "id": "environment;Drinking Water Noncompliance",
+            "label": "Drinking Water Non-Compliance"
+          },
+          {
+            "id": "environment;Hazardous Waste Proximity",
+            "label": "Hazardous Waste Proximity"
+          },
+          {
+            "id": "environment;Lead Paint",
+            "label": "Housing Units Built Pre-1960"
+          },
+          {
+            "id": "environment;Nitrogen Dioxide",
+            "label": "Nitrogen Dioxide (Annual AVG ppb)"
+          },
+          {
+            "id": "environment;Ozone",
+            "label": "Ozone (Annual AVG ppb)"
+          },
+          {
+            "id": "environment;PM25",
+            "label": "Particulate Matter 2.5 (Annual AVG mcg/m^3)"
+          },
+          {
+            "id": "environment;RMP Proximity",
+            "label": "Risk Management Plan Facility Proximity"
+          },
+          {
+            "id": "environment;Superfund Proximity",
+            "label": "Superfund Proximity"
+          },
+          {
+            "id": "environment;Toxics Release to Air",
+            "label": "Toxic Releases to Air"
+          },
+          {
+            "id": "environment;Traffic Proximity",
+            "label": "Traffic Volume"
+          },
+          {
+            "id": "environment;Underground Storage Tanks",
+            "label": "Underground Storage Tanks"
+          },
+          {
+            "id": "environment;Water Discharge",
+            "label": "Toxic Water Discharge"
+          }
+        ]
+      },
+      {
+        "label": "Housing & Transportation",
+        "children": [
+          {
+            "id": "housingtrans;Median Gross Rent",
+            "label": "Median Gross Rent"
+          },
+          {
+            "id": "housingtrans;Rent Burden (40% Income)",
+            "label": "High Rent Burden"
+          },
+          {
+            "id": "housingtrans;Median Home Value",
+            "label": "Median Home Value"
+          },
+          {
+            "id": "housingtrans;Median Monthly Mortgage",
+            "label": "Median Monthly Mortgage"
+          },
+          {
+            "id": "housingtrans;Crowded Housing",
+            "label": "Crowded Homes"
+          },
+          {
+            "id": "housingtrans;Lack Complete Plumbing",
+            "label": "Homes w/o Complete Plumbing"
+          },
+          {
+            "id": "housingtrans;No Home Broadband",
+            "label": "Homes w/o Broadband Internet"
+          },
+          {
+            "id": "housingtrans;No Vehicle",
+            "label": "No Household Vehicle"
+          },
+          {
+            "id": "housingtrans;Owner Occupied Housing",
+            "label": "Owner-Occupied Housing Units"
+          },
+          {
+            "id": "housingtrans;Single Parent Household",
+            "label": "Single Parent Homes"
+          },
+          {
+            "id": "housingtrans;Multi-Unit Structures",
+            "label": "Housing in Multi-Unit Structures"
+          },
+          {
+            "id": "housingtrans;Mobile Homes",
+            "label": "Housing in Mobile Homes"
+          },
+          {
+            "id": "housingtrans;Vacancy Rate",
+            "label": "Vacant Housing"
+          }
+        ]
+      },
+      {
+        "label": "Sociodemographic Disparities",
+        "children": [
+          {
+            "id": "disparities;Economic Segregation",
+            "label": "Economic Segregation"
+          },
+          {
+            "id": "disparities;Gender Pay Gap",
+            "label": "Gender Pay Gap"
+          },
+          {
+            "id": "disparities;Gini Coefficient",
+            "label": "Income Inequality (Gini Coefficient)"
+          },
+          {
+            "id": "disparities;Lack_English_Prof",
+            "label": "Lack Proficiency in English"
+          },
+          {
+            "id": "disparities;Living Below Poverty (Black)",
+            "label": "Black Population Below Poverty"
+          },
+          {
+            "id": "disparities;Living Below Poverty (Hispanic)",
+            "label": "Hispanic Population Below Poverty"
+          },
+          {
+            "id": "disparities;Racial Segregation",
+            "label": "Racial Segregation"
+          },
+          {
+            "id": "disparities;Racial Economic Segregation",
+            "label": "Racial Economic Segregation"
+          },
+          {
+            "id": "disparities;Uninsured Children",
+            "label": "Children w/o Health Insurance"
+          },
+          {
+            "id": "disparities;Uninsured (Black)",
+            "label": "Black Population w/o Health Insurance"
+          },
+          {
+            "id": "disparities;Uninsured (Hispanic)",
+            "label": "Hispanic Population w/o Health Insurance"
+          }
+        ]
+      }
+    ]
+  }
+]

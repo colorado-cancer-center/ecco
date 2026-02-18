@@ -1,5 +1,5 @@
 import type { FeatureCollection, Geometry } from "geojson";
-import { find, findKey, mapValues } from "lodash";
+import { find, findKey } from "lodash";
 import type { ValueOf } from "type-fest";
 import outreachCounty1 from "./temp/outreach-county-1.json";
 import outreachCounty2 from "./temp/outreach-county-2.json";
@@ -79,7 +79,7 @@ export type Facet = {
   [key: string]: {
     id: string;
     label: string;
-    list?: Facet;
+    children?: Facet;
     factors?: {
       [key: string]: {
         label: string;
@@ -91,27 +91,7 @@ export type Facet = {
 };
 
 /** get hierarchical list of geographic levels, measure categories, and measures */
-export const getFacets = async () => {
-  const data = await request<_Facets>(`${api}/stats/measures`);
-
-  /** transform data into desired format */
-  return mapValues(data, ({ label, categories }, id) => ({
-    /** geographic level */
-    id,
-    label,
-    list: mapValues(categories, ({ label, measures }, id) => ({
-      /** measure category */
-      id,
-      label,
-      list: mapValues(measures, ({ label, factors }, id) => ({
-        /** measure */
-        id,
-        label,
-        factors,
-      })),
-    })),
-  })) satisfies Facet;
-};
+export const getFacets = () => request<_Facets>(`${api}/stats/measures`);
 
 export type Facets = Awaited<ReturnType<typeof getFacets>>;
 
@@ -123,14 +103,17 @@ type _LocationList = {
 /** extra hard-coded location list entries */
 /** TEMPORARY: should eventually come from backend */
 export const extraLocationList = {
-  "Outreach and Interventions": {
-    Events: "outreach-events",
-    Newspapers: "outreach-newspapers",
-    "FIT Kits": "outreach-fit-kits",
-    "Radon Kits": "outreach-radon-kits",
-    "2morrow": "outreach-2morrow-county",
+  "Office of COE: Outreach Sites and Interventions": {
+    "Events Attended": "outreach-events",
+    "Local Newspapers": "outreach-newspapers",
+    "FIT Kits Distributed": "outreach-fit-kits",
+    "Radon Kits Distributed": "outreach-radon-kits",
+    "Tobacco Cessation App Users": "outreach-2morrow-county",
   },
 } as const;
+
+export const outreachLocationKey =
+  "Office of COE: Outreach Sites and Interventions";
 
 /** get listing/metadata of locations */
 export const getLocationList = async () => {
@@ -302,7 +285,7 @@ const extraLocationData = {
   "outreach-radon-kits": outreachRadonKits,
 } satisfies Partial<
   Record<
-    ValueOf<(typeof extraLocationList)["Outreach and Interventions"]>,
+    ValueOf<(typeof extraLocationList)[typeof outreachLocationKey]>,
     unknown
   >
 >;
@@ -316,7 +299,10 @@ export const getLocation = async (
   if (id in extraLocationData) {
     /** get label version of id */
     const type =
-      findKey(extraLocationList["Outreach and Interventions"], id) ?? "";
+      findKey(
+        extraLocationList["Office of COE: Outreach Sites and Interventions"],
+        id,
+      ) ?? "";
 
     return {
       type: "FeatureCollection",
@@ -355,7 +341,7 @@ export const getDownload = (
 ) => {
   const url = new URL(`${api}/stats/${level}/${category}/as-csv`);
   if (measure) url.searchParams.set(measure, measure);
-  return url.toString();
+  window.open(url, "_blank");
 };
 
 /** get download all link */
