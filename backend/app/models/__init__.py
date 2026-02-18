@@ -46,3 +46,6 @@ from .ccc_state_stats import (
     StateCancerMortalityStats,
     StateSociodemographicStats
 )
+from .uccc_responders import (
+    UCCCRespondersCounty,
+)

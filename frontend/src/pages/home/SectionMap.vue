@@ -535,6 +535,16 @@
                 </AppLink>
               </template>
 
+              <template v-if="feature.zip_code">
+                <span>ZIP Code</span>
+                <span>{{ feature.zip_code }}</span>
+              </template>
+
+              <template v-if="feature.area_type">
+                <span>Area Type</span>
+                <span>{{ feature.area_type }}</span>
+              </template>
+
               <template v-if="feature.representative">
                 <span>Representative</span>
                 <span>{{ feature.representative }}</span>
