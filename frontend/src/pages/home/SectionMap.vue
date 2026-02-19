@@ -717,6 +717,7 @@ import {
   watchEffect,
 } from "vue";
 import type { ShallowRef, WatchStopHandle } from "vue";
+import { event } from "vue-gtag";
 import { toBlob } from "html-to-image";
 import {
   clamp,
@@ -960,7 +961,7 @@ const selectedMap = computed(() => ({
   category: selectedCategory.value,
   measure: selectedMeasure.value,
   /** unwrap nested refs */
-  factors: mapValues(selectedFactors.value, (value) => value.value),
+  factors: mapValues(selectedFactors.value, (factor) => factor.value),
   locations: selectedLocations.value,
 }));
 
@@ -1037,15 +1038,36 @@ const selectedMaps = computed(() =>
   ),
 );
 
+/** analytics, capture individual state changes */
+watchEffect(() => event("selectLevel", { _value: selectedLevel.value }));
+watchEffect(() => event("selectCategory", { _value: selectedCategory.value }));
+watchEffect(() => event("selectMeasure", { _value: selectedMeasure.value }));
+watchEffect(() =>
+  event("selectFactors", {
+    _value: mapValues(selectedFactors.value, (factor) => factor.value),
+  }),
+);
+watchEffect(() =>
+  event("selectLocations", { _value: selectedLocations.value }),
+);
+/** (watchEffect's auto-dependency-detection doesn't work here for some reason) */
+watch(compare, () => event("compare", { _value: compare.value }), {
+  deep: true,
+  immediate: true,
+});
+
 /** load maps data */
 const {
   query: loadMapData,
   data: mapData,
   status: mapDataStatus,
 } = useQuery(
-  () =>
+  () => {
+    /** analytics, capture full user selection state in same object */
+    event("loadMapData", { selectedMaps: selectedMaps.value });
+
     /** query all maps in parallel */
-    Promise.all(
+    return Promise.all(
       selectedMaps.value.map(async (selected) => ({
         /** keep input selection */
         selected,
@@ -1088,7 +1110,8 @@ const {
           ),
         ),
       })),
-    ),
+    );
+  },
   [],
   true,
 );
