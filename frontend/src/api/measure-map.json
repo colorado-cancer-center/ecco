@@ -894,5 +894,14 @@
         ]
       }
     ]
+  },
+  {
+    "label": "UCCC Research Participants",
+    "children": [
+      {
+        "id": "ucccresponders;responses",
+        "label": "Total Survey Responses"
+      }
+    ]
   }
 ]
