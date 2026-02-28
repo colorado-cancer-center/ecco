@@ -38,23 +38,25 @@
     <AppHeading level="2">Acknowledge</AppHeading>
 
     <p>
-      If you find this site useful in your academic or research work, we ask
-      that you acknowledge it as a source in your publications, presentations,
-      or other materials. Suggested acknowledgement:
+      If you find this site, software, or data useful in your publications,
+      presentations, or other materials, please consider citing it:
     </p>
 
     <blockquote>
-      Cancer statistics and information were obtained from ECCO ({{ url }}),
-      accessed on [DATE], and supported by the University of Colorado Cancer
-      Center Support Grant (P30CA046934).
+      Jan T Lowery, Faisal Alquaddoomi, Vince Rubinetti, Todd Burus, Cydney T
+      Jardine, Adam C Warren, Jake M Walsh, Evelinn T Borrayo, Sean Davis.
+      <br />
+      Exploring Cancer in Colorado using a novel data platform: the ECCO
+      experience.
+      <br />
+      medRxiv 2026.02.03.26345489; doi.org/10.64898/2026.02.03.26345489
     </blockquote>
 
     <p>
-      By acknowledging our site, you help support our ongoing efforts to provide
+      By acknowledging our work, you help support our ongoing efforts to provide
       accurate and up-to-date cancer statistics to the public, researchers, and
-      healthcare professionals. Your acknowledgement also helps others locate
-      the source of the information, promoting transparency and facilitating
-      further research.
+      healthcare professionals. It also helps others locate the source of the
+      information, promoting transparency and facilitating further research.
     </p>
 
     <p>
@@ -63,12 +65,15 @@
       <AppLink to="/contact">contact us</AppLink>. Thank you for your
       cooperation and for using our site.
     </p>
+
+    <p>
+      This work is supported by the University of Colorado Cancer Center Support
+      Grant (P30CA046934).
+    </p>
   </section>
 </template>
 
 <script setup lang="ts">
 import AppHeading from "@/components/AppHeading.vue";
 import AppLink from "@/components/AppLink.vue";
-
-const { VITE_URL: url } = import.meta.env;
 </script>
