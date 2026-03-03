@@ -58,7 +58,7 @@ SRC_LABELS_TO_LOCATIONS_DATA = {
     },
     "cif": {
         'Colon & Rectal Surgeon': 'colon-rectal-surgeon',
-        'Federally Qualified Health Center (FQHC)': 'fqhc',
+        'FQHC': 'fqhc',
         'Gastroenterology': 'gastroenterology',
         'HPSA Correctional Facility': 'hpsa-correctional-facility',
         'HPSA Federally Qualified Health Center Look A Like': 'hpsa-federally-qualified-health-center-look-a-like',
