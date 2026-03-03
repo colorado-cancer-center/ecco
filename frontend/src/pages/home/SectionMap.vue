@@ -858,6 +858,9 @@ const onTreeDownload = (value = "") => {
   const [category = "", measure = ""] = value.split(";");
   if (!category || !measure) return;
   getDownload(selectedLevel.value, category, measure);
+  event("downloadMeasure", {
+    _value: { level: selectedLevel.value, category, measure },
+  });
 };
 
 /** geographic level options */
@@ -1064,7 +1067,7 @@ const {
 } = useQuery(
   () => {
     /** analytics, capture full user selection state in same object */
-    event("loadMapData", { selectedMaps: selectedMaps.value });
+    event("loadMapData", { _value: selectedMaps.value });
 
     /** query all maps in parallel */
     return Promise.all(
