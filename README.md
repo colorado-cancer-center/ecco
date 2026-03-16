@@ -9,9 +9,9 @@
 
 If you find this site, software, or data useful in your publications, presentations, or other materials, please consider citing it:
 
-> Jan T Lowery, Faisal Alquaddoomi, Vince Rubinetti, Todd Burus, Cydney T Jardine, Adam C Warren, Jake M Walsh, Evelinn T Borrayo, Sean Davis.  
+> Lowery JT, Alquaddoomi F, Rubinetti V, Burus T, Jardine C, Warren AC, Walsh J, Borrayo E, Davis S.  
 > Exploring Cancer in Colorado using a novel data platform: the ECCO experience.  
-> medRxiv 2026.02.03.26345489; doi.org/10.64898/2026.02.03.26345489
+> medRxiv (preprint): 2026.02.03.26345489, doi: 10.64898/2026.02.03.26345489, PMID: 41674638, PMCID: PMC12889761
 
 ## Background
 
