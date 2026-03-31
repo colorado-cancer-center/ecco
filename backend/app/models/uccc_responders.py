@@ -42,7 +42,7 @@ UCCC_RESPONDERS_MODELS = {
 UCCC_RESPONDERS_MEASURE_DESCRIPTIONS = {
     "ucccresponders": {
         "responses": {
-            "label": "Total Responses",
+            "label": "Total Participants",
             "unit": MeasureUnit.COUNT,
         },
     }
