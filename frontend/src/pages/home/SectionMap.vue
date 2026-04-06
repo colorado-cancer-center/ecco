@@ -388,12 +388,14 @@
           <template #top-left-upper>
             <strong>
               {{
-                facets[selectedLevel]?.categories?.[selectedCategory]
-                  ?.measures?.[selectedMeasure]?.label
+                facets[selected.level]?.categories?.[selected.category]
+                  ?.measures?.[selected.measure]?.label
               }}
             </strong>
             <div>
-              {{ facets[selectedLevel]?.categories?.[selectedCategory]?.label }}
+              {{
+                facets[selected.level]?.categories?.[selected.category]?.label
+              }}
             </div>
             <div>
               {{
