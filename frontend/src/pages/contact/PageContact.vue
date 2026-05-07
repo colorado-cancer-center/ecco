@@ -2,7 +2,7 @@
   <section>
     <AppHeading level="1">Contact</AppHeading>
 
-    <div class="row">
+    <div class="flex flex-wrap items-center justify-center gap-2">
       <AppButton
         :icon="faComment"
         to="https://app.smartsheet.com/b/form/e66c076519a34f59a253a9e9e40b9c03"
@@ -18,12 +18,12 @@
       >
     </div>
 
-    <div class="mini-table table">
-      <font-awesome-icon :icon="faFlask" />
+    <div class="mini-table place-content-center mx-auto my-10 gap-[15px]">
+      <font-awesome-icon class="text-dark-gray" :icon="faFlask" />
       <div>Suggest a <b>new data</b> source</div>
-      <font-awesome-icon :icon="faBug" />
+      <font-awesome-icon class="text-dark-gray" :icon="faBug" />
       <div>Report an <b>issue</b></div>
-      <font-awesome-icon :icon="faQuestionCircle" />
+      <font-awesome-icon class="text-dark-gray" :icon="faQuestionCircle" />
       <div>General <b>questions</b> or <b>help</b></div>
     </div>
   </section>
@@ -40,14 +40,4 @@ import AppButton from "@/components/AppButton.vue";
 import AppHeading from "@/components/AppHeading.vue";
 </script>
 
-<style scoped>
-.table {
-  place-content: center;
-  margin: 40px auto;
-  gap: 15px;
-}
 
-.table > svg {
-  color: var(--dark-gray);
-}
-</style>

@@ -1,8 +1,8 @@
 <template>
-  <label class="label">
+  <label class="flex shrink-0 cursor-pointer flex-col items-stretch gap-1">
     <span v-if="!hideLabel">{{ label }}</span>
     <input
-      class="input"
+      class="min-h-10 rounded-md border-none bg-light-gray p-2 transition hover:bg-theme-light"
       type="number"
       :value="modelValue"
       :min="min"
@@ -48,28 +48,3 @@ const onChange = (event: Event) => {
   emit("update:modelValue", value);
 };
 </script>
-
-<style scoped>
-.label {
-  display: flex;
-  flex-shrink: 0;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 10px;
-  cursor: pointer;
-}
-
-.input {
-  min-height: 35px;
-  padding: 5px 10px;
-  border: none;
-  border-radius: var(--rounded);
-  background: var(--light-gray);
-  font: inherit;
-  transition: background var(--fast);
-}
-
-.input:hover {
-  background: var(--theme-light);
-}
-</style>

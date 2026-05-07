@@ -1,11 +1,10 @@
 <template>
-  <div :role="level === 1 ? 'tree' : 'group'" class="tree">
-    <div v-if="level === 1" class="controls">
+  <div :role="level === 1 ? 'tree' : 'group'" class="flex flex-col">
+    <div v-if="level === 1" class="mb-1 flex w-full items-center gap-2">
       <AppInput
         v-if="isRef(search)"
         v-model="search.value"
-        class="search"
-        :icon="faSearch"
+        :icon="Search"
         placeholder="Search"
       />
       <AppButton
@@ -28,7 +27,7 @@
     <div
       v-for="(item, index) in children"
       :key="index"
-      class="tree-item"
+      class="tree-item flex flex-col"
       role="treeitem"
       :aria-selected="isEqual(modelValue, getValue(item))"
       :aria-expanded="isOpen[index]"
@@ -36,9 +35,12 @@
       :aria-setsize="size(children)"
       :aria-posinset="index + 1"
     >
-      <div v-show="match(item)" class="tree-row">
+      <div
+        v-show="match(item)"
+        class="tree-row group/row flex items-center gap-1"
+      >
         <button
-          class="tree-opener"
+          class="grow basis-0 justify-start text-left hover:bg-off-white"
           :disabled="!isEmpty(item.children) && !!unref(search)"
           :data-level="level"
           @click="onClick(index)"
@@ -49,27 +51,33 @@
             :icon="
               isOpen[index] || unref(search) ? faChevronDown : faChevronRight
             "
-            class="icon"
+            class="w-4 shrink-0 text-gray"
           />
 
           <font-awesome-icon
             v-else-if="isEqual(modelValue, getValue(item))"
             :icon="faCheck"
-            class="icon check"
+            class="w-4 shrink-0 text-success"
             data-tree-selected
           />
 
-          <font-awesome-icon v-else :icon="faCircle" class="icon uncheck" />
+          <font-awesome-icon
+            v-else
+            :icon="faCircle"
+            class="w-4 shrink-0 opacity-0"
+          />
 
           <span class="label">
             {{ item.label }}
           </span>
 
-          <span v-if="item.children && !unref(search)" class="count">
+          <span v-if="item.children && !unref(search)" class="text-gray">
             {{ size(item.children).toLocaleString() }}
           </span>
         </button>
-        <div class="tree-action">
+        <div
+          class="flex items-center gap-1 p-0 opacity-0 transition group-hover/row:opacity-100 hover:bg-off-white"
+        >
           <slot :parents="getParents(item)"></slot>
         </div>
       </div>
@@ -92,8 +100,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, isRef, ref, unref, watch, type VNode } from "vue";
-import { isEmpty, isEqual, size } from "lodash";
+import type { VNode } from "vue";
+import type { UseEventBusReturn } from "@vueuse/core";
+import { computed, isRef, ref, unref, watch } from "vue";
+import AppButton from "@/components/AppButton.vue";
+import AppInput from "@/components/AppInput.vue";
+import { findClosest } from "@/util/dom";
+import { sleep } from "@/util/misc";
 import { faCircle } from "@fortawesome/free-regular-svg-icons";
 import {
   faAnglesDown,
@@ -104,12 +117,9 @@ import {
   faCrosshairs,
   faSearch,
 } from "@fortawesome/free-solid-svg-icons";
+import { Search } from "@lucide/vue";
 import { useEventBus } from "@vueuse/core";
-import type { UseEventBusReturn } from "@vueuse/core";
-import AppButton from "@/components/AppButton.vue";
-import AppInput from "@/components/AppInput.vue";
-import { findClosest } from "@/util/dom";
-import { sleep } from "@/util/misc";
+import { isEmpty, isEqual, size } from "lodash";
 
 /** one item in tree */
 type Item = {
@@ -308,12 +318,7 @@ watch(() => children, closeAll, { immediate: true, deep: true });
 </script>
 
 <style scoped>
-.tree,
-.tree-item {
-  display: flex;
-  flex-direction: column;
-}
-
+/* Nested tree indentation with connecting vertical line */
 .tree-item:not([aria-level="1"]) {
   position: relative;
   padding-left: 20px;
@@ -329,66 +334,8 @@ watch(() => children, closeAll, { immediate: true, deep: true });
   content: "";
 }
 
-.tree-item[aria-selected="true"] .tree-opener {
+/* Highlight selected item's opener */
+.tree-item[aria-selected="true"] button[data-level] {
   background: var(--off-white);
-}
-
-.controls {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  margin-bottom: 5px;
-  gap: 5px;
-}
-
-.tree-row {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.tree-opener {
-  flex-grow: 1;
-  flex-basis: 0;
-  justify-content: flex-start;
-  text-align: left;
-}
-
-.tree-action {
-  display: flex;
-  align-items: center;
-  padding: 0;
-  gap: 5px;
-  opacity: 0;
-  transition:
-    opacity var(--fast),
-    background var(--fast);
-}
-
-.tree-row:hover .tree-action {
-  opacity: 1;
-}
-
-.tree-action:hover,
-.tree-opener:hover {
-  background: var(--off-white);
-}
-
-.icon {
-  flex-shrink: 0;
-  width: 20px;
-  color: var(--gray);
-}
-
-.check {
-  color: var(--success);
-}
-
-.uncheck {
-  opacity: 0;
-}
-
-.count {
-  color: var(--gray);
 }
 </style>

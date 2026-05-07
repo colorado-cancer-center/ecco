@@ -1,14 +1,13 @@
 <template>
   <div
     ref="frameElement"
-    class="frame"
+    class="relative transition"
     :style="{
       '--zoom': immediateZoom,
       '--label-opacity': geometryOpacity,
     }"
   >
-    <!-- map root  -->
-    <div ref="mapElement" v-bind="$attrs" class="map" />
+    <div ref="mapElement" v-bind="$attrs" class="size-full" />
 
     <!-- legends -->
     <template v-if="showLegends">
@@ -89,7 +88,7 @@
       class="legend popup"
     >
       <AppButton
-        class="popup-close"
+        class="popup-close hover:text-theme absolute top-0 right-0 bg-transparent! text-gray"
         aria-label="Close popup"
         @click="selectedFeature = undefined"
       >
@@ -118,6 +117,9 @@ export const noDataEntry = {
 </script>
 
 <script setup lang="ts">
+import type { FeatureCollection } from "geojson";
+import type { FeatureLike } from "ol/Feature";
+import type { Geometry } from "ol/geom";
 import {
   computed,
   nextTick,
@@ -129,14 +131,20 @@ import {
   watch,
   watchEffect,
 } from "vue";
+import { type Unit } from "@/api";
+import hatch from "@/assets/hatch.svg?no-inline";
+import { getGradient, gradientOptions } from "@/components/gradient";
+import { backgroundOptions } from "@/components/tile-providers";
+import { formatValue, normalizedApply } from "@/util/math";
+import { forceHex, getBbox, getCssVar, sleep, waitFor } from "@/util/misc";
+import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import { useElementSize } from "@vueuse/core";
 import * as d3 from "d3";
-import type { FeatureCollection } from "geojson";
 import { debounce, isEmpty, mapValues, upperFirst } from "lodash";
 import { Feature, Map, Overlay, View } from "ol";
 import { pointerMove } from "ol/events/condition";
-import type { FeatureLike } from "ol/Feature";
 import GeoJSON from "ol/format/GeoJSON";
-import { Point, type Geometry } from "ol/geom";
+import { Point } from "ol/geom";
 import MouseWheelZoom from "ol/interaction/MouseWheelZoom";
 import Select from "ol/interaction/Select";
 import TileLayer from "ol/layer/Tile";
@@ -144,14 +152,6 @@ import VectorLayer from "ol/layer/Vector";
 import { XYZ } from "ol/source";
 import VectorSource from "ol/source/Vector";
 import { Fill, Icon, Stroke, Style, Text } from "ol/style";
-import { faXmark } from "@fortawesome/free-solid-svg-icons";
-import { useElementSize } from "@vueuse/core";
-import { type Unit } from "@/api";
-import hatch from "@/assets/hatch.svg?no-inline";
-import { getGradient, gradientOptions } from "@/components/gradient";
-import { backgroundOptions } from "@/components/tile-providers";
-import { formatValue, normalizedApply } from "@/util/math";
-import { forceHex, getBbox, getCssVar, sleep, waitFor } from "@/util/misc";
 import AppButton from "./AppButton.vue";
 import { getMarkers } from "./markers";
 
@@ -914,19 +914,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.frame {
-  position: relative;
-  transition:
-    opacity var(--fast),
-    box-shadow var(--fast),
-    filter var(--fast);
-}
-
-.map {
-  width: 100%;
-  height: 100%;
-}
-
+/* Legends: positioned absolutely over the map */
 .legend {
   display: flex;
   z-index: 9;
@@ -967,6 +955,7 @@ onUnmounted(() => {
   display: none;
 }
 
+/* Color scale grid (uses dynamic --cols CSS variable) */
 .scale {
   display: grid;
   grid-template-rows: 20px;
@@ -998,14 +987,11 @@ onUnmounted(() => {
   overflow-wrap: break-word;
 }
 
-.symbol {
-  display: contents;
-}
-
 .symbol > * {
   place-self: center;
 }
 
+/* Geometry labels (uses dynamic CSS variables: --zoom, --geometry-label-opacity) */
 .geometry-label {
   display: flex;
   flex-direction: column;
@@ -1040,6 +1026,7 @@ onUnmounted(() => {
   gap: 1px;
 }
 
+/* Popup with caret */
 .popup {
   --caret: 10px;
   position: relative;
@@ -1062,18 +1049,6 @@ onUnmounted(() => {
   clip-path: polygon(200% -100%, 200% 200%, -100% 200%);
 }
 
-.popup-close {
-  position: absolute;
-  top: 0;
-  right: 0;
-  background: none !important;
-  color: var(--gray);
-}
-
-.popup-close:hover {
-  color: var(--theme);
-}
-
 .popup > :nth-child(2) {
   margin-right: 15px;
 }
@@ -1085,6 +1060,7 @@ onUnmounted(() => {
   display: none;
 }
 
+/* Attribution overlay */
 .attribution {
   position: absolute;
   bottom: 0;

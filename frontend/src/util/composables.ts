@@ -1,12 +1,21 @@
-import { computed, nextTick, onMounted, ref, shallowRef, watch } from "vue";
 import type { Ref } from "vue";
-import { debounce, round } from "lodash";
+import {
+  computed,
+  nextTick,
+  onMounted,
+  ref,
+  shallowRef,
+  watch,
+  watchEffect,
+} from "vue";
+import { frame } from "@/util/misc";
 import {
   useMutationObserver,
   useResizeObserver,
   useScroll,
   useUrlSearchParams,
 } from "@vueuse/core";
+import { debounce, round } from "lodash";
 
 /**
  * reactive variable synced with url params, as object of strings. only supports
@@ -172,4 +181,36 @@ export const useQuery = <Data, Args extends unknown[]>(
   };
 
   return { query, data, status };
+};
+
+/** control expanding/collapsing height of element with transition */
+export const useAutoHeight = (
+  ref: Ref<HTMLElement | null>,
+  open: Ref<boolean>,
+) => {
+  watchEffect((onCleanup) => {
+    const element = ref.value;
+    if (!element) return;
+
+    /** reset height so content can size naturally */
+    const reset = () => (element.style.maxHeight = "");
+
+    if (open.value) {
+      /** set height to content height */
+      element.style.maxHeight = element.scrollHeight + "px";
+      /** reset after transition */
+      element.addEventListener("transitionend", reset, { once: true });
+    } else {
+      /** set starting height */
+      element.style.maxHeight = element.scrollHeight + "px";
+      frame().then(() => {
+        /** collapse */
+        element.style.maxHeight = "0px";
+      });
+    }
+
+    onCleanup(() => {
+      element.removeEventListener("transitionend", reset);
+    });
+  });
 };

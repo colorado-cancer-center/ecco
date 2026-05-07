@@ -1,18 +1,24 @@
 <template>
   <section
-    :class="['alert', dismissed && 'dismissed']"
-    :aria-hidden="dismissed"
+    ref="alert"
+    :class="[
+      'overflow-y-clip transition-all [--content:300]',
+      open ? '' : 'py-0',
+    ]"
+    :aria-hidden="open"
   >
     <slot />
-    <AppButton class="dismiss" :icon="faXmark" :accent="true" @click="onClick"
-      >Dismiss</AppButton
-    >
+    <AppButton :accent="true" @click="onClick">
+      Dismiss
+      <X />
+    </AppButton>
   </section>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from "vue";
-import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import { onMounted, useTemplateRef } from "vue";
+import { useAutoHeight } from "@/util/composables";
+import { X } from "@lucide/vue";
 import { useSessionStorage } from "@vueuse/core";
 import AppButton from "./AppButton.vue";
 
@@ -22,8 +28,15 @@ type Slots = {
 
 defineSlots<Slots>();
 
-/** dismissed state, persisted for duration of browser session */
-const dismissed = useSessionStorage("dismiss", false);
+/** for debugging */
+// window.sessionStorage.clear();
+
+/** open state, persisted for duration of browser session */
+const open = useSessionStorage("popup", true);
+
+const alert = useTemplateRef("alert");
+
+useAutoHeight(alert, open);
 
 onMounted(() => {
   /** always remember dismissal in dev mode */
@@ -40,43 +53,13 @@ onMounted(() => {
   if (refresh) return;
 
   /** reset to showing alert */
-  dismissed.value = false;
+  open.value = true;
 });
 
 const onClick = () => {
-  dismissed.value = true;
+  open.value = false;
   /** force map auto-height re-adjust */
   window.scrollBy({ top: 1 });
   window.scrollBy({ top: -1 });
 };
 </script>
-
-<style scoped>
-.alert {
-  --col: 1500px;
-  position: relative;
-  height: calc-size(auto);
-  height: calc-size(auto);
-  padding: 40px max(calc((100% - var(--col)) / 2), 40px);
-  background: var(--theme-light);
-  text-align: center;
-  transition:
-    height var(--slow),
-    padding var(--slow);
-}
-
-.dismissed {
-  height: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-  overflow: hidden;
-}
-
-.alert > :first-of-type {
-  margin-top: 0 !important;
-}
-
-.dismiss {
-  margin-top: 20px;
-}
-</style>

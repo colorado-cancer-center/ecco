@@ -1,7 +1,7 @@
 <template>
-  <div class="columns" :style="{ '--cols': mapCols }">
+  <div class="columns my-10 grid gap-10" :style="{ '--cols': mapCols }">
     <!-- left panel -->
-    <div class="left-panel" role="group">
+    <div class="flex flex-col gap-4 text-left" role="group">
       <!-- category/measure selection -->
       <AppTree
         :children="measureMap"
@@ -36,11 +36,11 @@
 
       <!-- factors -->
       <template v-if="!isEmpty(factors)">
-        <div class="factors">
+        <div class="grid grid-cols-[min-content_1fr] items-center gap-2">
           <template v-for="(factor, index) in factors" :key="index">
             <AppSelect
               v-if="selectedFactors[index]"
-              class="factor"
+              class="factor contents"
               :model-value="selectedFactors[index]?.value || ''"
               :label="factor.label"
               :options="
@@ -68,7 +68,7 @@
       />
 
       <!-- multi-map compare -->
-      <AppAccordion label="Compare">
+      <AppCollapsible label="Compare">
         <div class="control-row">
           <AppButton
             v-if="inCompare()"
@@ -100,9 +100,11 @@
         </div>
 
         <template v-if="compare.length">
-          <div class="row">Comparing {{ compare.length }} map(s):</div>
+          <div class="flex flex-wrap items-center justify-center gap-2"
+            >Comparing {{ compare.length }} map(s):</div
+          >
 
-          <div class="compare-thumbnails">
+          <div class="grid grid-cols-3 place-items-center gap-2">
             <template v-for="(map, index) in compare" :key="index">
               <AppButton
                 v-if="index < compare.length"
@@ -137,9 +139,9 @@
             Remove All
           </AppButton>
         </template>
-      </AppAccordion>
+      </AppCollapsible>
 
-      <AppAccordion label="Customization">
+      <AppCollapsible label="Customization">
         <!-- legend -->
         <AppCheckbox
           v-model="showLegends"
@@ -148,7 +150,7 @@
         />
 
         <!-- gradient -->
-        <div class="side-control">
+        <div class="grid grid-cols-[1fr_min-content] items-end gap-2">
           <AppSelect
             v-model="selectedGradient"
             v-tooltip="'Gradient to use for coloring map data'"
@@ -159,7 +161,7 @@
               <svg
                 :viewBox="`0 0 10 1`"
                 preserveAspectRatio="none"
-                class="gradient-preview"
+                class="gradient-preview h-[1em] max-w-[100px]"
                 :style="{ scale: flipGradient ? '-1 1' : '' }"
               >
                 <defs>
@@ -199,37 +201,37 @@
           tooltip="Provider to use for background map layer"
         >
           <template #preview="{ option }">
-            <div class="image-preview">
+            <div
+              class="image-preview size-[2em] shrink-0 overflow-hidden bg-gray"
+            >
               <img :src="option?.image" alt="" />
             </div>
           </template>
         </AppSelect>
 
-        <div class="control-row">
-          <!-- scale min/max -->
-          <AppCheckbox
-            v-model="manualMinMax"
-            v-tooltip="'Manually set scale min/max'"
-            label="Manual min/max"
+        <!-- scale min/max -->
+        <AppCheckbox
+          v-model="manualMinMax"
+          v-tooltip="'Manually set scale min/max'"
+          label="Manual min/max"
+        />
+        <div v-if="manualMinMax" class="grid grid-cols-2 gap-2">
+          <AppNumber
+            v-model="manualMin"
+            v-tooltip="'Manual scale min'"
+            :min="-Infinity"
+            :max="Infinity"
+            :step="0.01"
+            label="Min"
           />
-          <template v-if="manualMinMax">
-            <AppNumber
-              v-model="manualMin"
-              v-tooltip="'Manual scale min'"
-              :min="-Infinity"
-              :max="Infinity"
-              :step="0.01"
-              label="Min"
-            />
-            <AppNumber
-              v-model="manualMax"
-              v-tooltip="'Manual scale max'"
-              :min="-Infinity"
-              :max="Infinity"
-              :step="0.01"
-              label="Max"
-            />
-          </template>
+          <AppNumber
+            v-model="manualMax"
+            v-tooltip="'Manual scale max'"
+            :min="-Infinity"
+            :max="Infinity"
+            :step="0.01"
+            label="Max"
+          />
         </div>
 
         <!-- scale steps -->
@@ -275,35 +277,31 @@
         </div>
 
         <!-- layer opacities -->
-        <div class="control-row">
-          <AppSlider
-            v-model="backgroundOpacity"
-            v-tooltip="'Transparency of background layer'"
-            label="Bg. trans."
-          />
-
-          <AppSlider
-            v-model="geometryOpacity"
-            v-tooltip="'Transparency of geometry layer'"
-            label="Geom. trans."
-          />
-
-          <AppSlider
-            v-model="locationOpacity"
-            v-tooltip="'Transparency of selected locations layer'"
-            label="Loc. trans."
-          />
-        </div>
+        <AppSlider
+          v-model="backgroundOpacity"
+          v-tooltip="'Transparency of background layer'"
+          label="Background transparency"
+        />
+        <AppSlider
+          v-model="geometryOpacity"
+          v-tooltip="'Transparency of geometry layer'"
+          label="Geometry transparency"
+        />
+        <AppSlider
+          v-model="locationOpacity"
+          v-tooltip="'Transparency of selected locations layer'"
+          label="Location transparency"
+        />
 
         <!-- dimensions -->
         <label
           v-tooltip="
             'Exact dimensions of map. Useful to set before downloading as image. Leave as 0 to fit to page.'
           "
-          class="dimensions-label"
+          class="flex cursor-pointer flex-col items-stretch gap-1"
         >
           <span>Map dimensions</span>
-          <div class="dimensions">
+          <div class="grid grid-cols-[1fr_min-content_1fr] items-center gap-2">
             <AppNumber
               v-model="mapWidth"
               label="Map width"
@@ -330,13 +328,13 @@
           @click="reset"
           >Reset</AppButton
         >
-      </AppAccordion>
+      </AppCollapsible>
     </div>
 
     <!-- right panel -->
     <div
       ref="rightPanelElement"
-      class="right-panel"
+      class="sticky top-4 flex min-h-0 min-w-0 flex-col items-stretch gap-4"
       :style="{ height: autoRightPanelHeight }"
     >
       <!-- map -->
@@ -665,10 +663,12 @@
       </div>
 
       <!-- actions -->
-      <div class="row actions">
-        <div class="row">
+      <div
+        class="actions flex flex-wrap items-center justify-center gap-4"
+      >
+        <div class="flex flex-wrap items-center justify-center gap-2">
           <AppButton
-            v-tooltip="'Download selected map(s) view as PNG'"
+            v-tooltip="'Download map(s) as PNG'"
             :icon="faDownload"
             :accent="true"
             @click="download"
@@ -701,12 +701,12 @@
           </AppButton>
         </div>
 
-        <div class="row note">
+        <div class="flex grow flex-wrap items-center justify-center gap-2">
           <font-awesome-icon :icon="faHandPointer" />Click on a
           {{ selectedLevel }} or location to see more info.
         </div>
 
-        <div class="row">
+        <div class="flex flex-wrap items-center justify-center gap-2">
           <AppButton to="/contact" :icon="faComment" :flip="true" :accent="true"
             >Feedback</AppButton
           >
@@ -724,6 +724,16 @@
 </template>
 
 <script setup lang="ts">
+import type { ShallowRef, WatchStopHandle } from "vue";
+import type {
+  Facets,
+  GeoProps,
+  LocationList,
+  LocationProps,
+  Values,
+} from "@/api";
+import type { Entry, Option } from "@/components/AppSelect.vue";
+import type { Expand, Update } from "@/util/types";
 import {
   computed,
   onMounted,
@@ -735,19 +745,40 @@ import {
   watch,
   watchEffect,
 } from "vue";
-import type { ShallowRef, WatchStopHandle } from "vue";
 import { event } from "vue-gtag";
-import { toBlob } from "html-to-image";
 import {
-  clamp,
-  isEmpty,
-  isEqual,
-  kebabCase,
-  mapValues,
-  orderBy,
-  pick,
-  uniqWith,
-} from "lodash";
+  extraLocationList,
+  getDownload,
+  getGeo,
+  getLocation,
+  getSourceCitation,
+  getValues,
+  outreachLocationKey,
+} from "@/api";
+import measureMap from "@/api/measure-map.json";
+import AppButton from "@/components/AppButton.vue";
+import AppCheckbox from "@/components/AppCheckbox.vue";
+import AppCollapsible from "@/components/AppCollapsible.vue";
+import AppLink from "@/components/AppLink.vue";
+import AppMap from "@/components/AppMap.vue";
+import AppNumber from "@/components/AppNumber.vue";
+import AppSelect from "@/components/AppSelect.vue";
+import AppSlider from "@/components/AppSlider.vue";
+import AppTree from "@/components/AppTree.vue";
+import { gradientOptions } from "@/components/gradient";
+import { colors } from "@/components/markers";
+import { backgroundOptions } from "@/components/tile-providers";
+import {
+  arrayParam,
+  jsonParam,
+  numberParam,
+  stringParam,
+  useQuery,
+  useUrlParam,
+} from "@/util/composables";
+import { downloadPng } from "@/util/download";
+import { formatValue, round } from "@/util/math";
+import { copy, sleep, waitFor } from "@/util/misc";
 import {
   faComment,
   faHandPointer,
@@ -768,48 +799,17 @@ import {
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { useElementBounding, useFullscreen, useWindowSize } from "@vueuse/core";
-import type {
-  Facets,
-  GeoProps,
-  LocationList,
-  LocationProps,
-  Values,
-} from "@/api";
+import { toBlob } from "html-to-image";
 import {
-  extraLocationList,
-  getDownload,
-  getGeo,
-  getLocation,
-  getSourceCitation,
-  getValues,
-  outreachLocationKey,
-} from "@/api";
-import measureMap from "@/api/measure-map.json";
-import AppAccordion from "@/components/AppAccordion.vue";
-import AppButton from "@/components/AppButton.vue";
-import AppCheckbox from "@/components/AppCheckbox.vue";
-import AppLink from "@/components/AppLink.vue";
-import AppMap from "@/components/AppMap.vue";
-import AppNumber from "@/components/AppNumber.vue";
-import AppSelect from "@/components/AppSelect.vue";
-import type { Entry, Option } from "@/components/AppSelect.vue";
-import AppSlider from "@/components/AppSlider.vue";
-import AppTree from "@/components/AppTree.vue";
-import { gradientOptions } from "@/components/gradient";
-import { colors } from "@/components/markers";
-import { backgroundOptions } from "@/components/tile-providers";
-import {
-  arrayParam,
-  jsonParam,
-  numberParam,
-  stringParam,
-  useQuery,
-  useUrlParam,
-} from "@/util/composables";
-import { downloadPng } from "@/util/download";
-import { formatValue, round } from "@/util/math";
-import { copy, sleep, waitFor } from "@/util/misc";
-import type { Expand, Update } from "@/util/types";
+  clamp,
+  isEmpty,
+  isEqual,
+  kebabCase,
+  mapValues,
+  orderBy,
+  pick,
+  uniqWith,
+} from "lodash";
 
 type Value = NonNullable<Values>["values"][string];
 
@@ -1346,38 +1346,22 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
 </script>
 
 <style scoped>
+/* Two-column layout: sidebar + map. Collapses to single column on mobile */
 .columns {
-  display: grid;
   grid-template-columns: 360px 1fr;
-  margin: 40px 0;
-  gap: 40px;
 }
 
-.left-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  text-align: left;
+@media (max-width: 800px) {
+  .columns {
+    grid-template-columns: 1fr;
+  }
+
+  .map-grid {
+    height: 90vh;
+  }
 }
 
-.factors {
-  display: grid;
-  grid-template-columns: min-content 1fr;
-  align-items: center;
-  gap: 10px;
-}
-
-.factor {
-  display: contents;
-}
-
-.side-control {
-  display: grid;
-  grid-template-columns: 1fr min-content;
-  align-items: flex-end;
-  gap: 10px;
-}
-
+/* auto-fit control row */
 .control-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
@@ -1385,22 +1369,18 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
   gap: 15px;
 }
 
+/* Map loading preview */
 .preview {
   filter: contrast(0.5) saturate(0) brightness(1.25);
 }
 
+/* Highlighted map in compare mode */
 .highlight {
   z-index: 10;
   box-shadow: 0 0 0 10px var(--theme);
 }
 
-.compare-thumbnails {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  place-items: center;
-  gap: 10px;
-}
-
+/* Compare thumbnail: aspect-ratio button with image hover */
 .compare-thumbnail {
   position: relative;
   aspect-ratio: 2 / 1;
@@ -1425,34 +1405,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
   opacity: 0.25;
 }
 
-.dimensions-label {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 10px;
-  cursor: pointer;
-}
-
-.dimensions {
-  display: grid;
-  grid-template-columns: 1fr min-content 1fr;
-  align-items: center;
-  gap: 10px;
-}
-
-.gradient-preview {
-  max-width: 100px;
-  height: 1em;
-}
-
-.image-preview {
-  flex-shrink: 0;
-  width: 2em;
-  height: 2em;
-  overflow: hidden;
-  background: var(--gray);
-}
-
+/* Background image preview with map-centering offset */
 .image-preview img {
   width: 100%;
   height: 100%;
@@ -1461,17 +1414,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
   scale: 5;
 }
 
-.right-panel {
-  display: flex;
-  position: sticky;
-  top: 20px;
-  flex-direction: column;
-  align-items: stretch;
-  min-width: 0;
-  min-height: 0;
-  gap: 20px;
-}
-
+/* Map grid (uses dynamic --cols, --width, --height CSS variables) */
 .map-grid {
   display: grid;
   grid-template-columns: repeat(var(--cols), 1fr);
@@ -1483,29 +1426,13 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
   transition: opacity var(--fast);
 }
 
-@media (max-width: 800px) {
-  .columns {
-    grid-template-columns: 1fr;
-  }
-
-  .map-grid {
-    height: 90vh;
-  }
-}
-
+/* Source link vertical alignment */
 .source > a,
 .source > button {
   vertical-align: middle;
 }
 
-.actions {
-  gap: 20px;
-}
-
-.note {
-  flex-grow: 1;
-}
-
+/* Check badge: colored square with icon (uses --color CSS variable) */
 .check {
   display: flex;
   align-items: center;

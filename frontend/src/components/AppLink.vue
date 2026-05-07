@@ -1,5 +1,5 @@
 <template>
-  <component :is="component" :[toAttr]="to" :target="target" class="link">
+  <component :is="component" :[toAttr]="to" :target="target">
     <slot />
   </component>
 </template>
@@ -35,12 +35,3 @@ const toAttr = computed(() => (external.value ? "href" : "to"));
 
 const target = computed(() => ((newTab ?? external.value) ? "_blank" : ""));
 </script>
-
-<style scoped>
-.link:has(svg) {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5em;
-}
-</style>

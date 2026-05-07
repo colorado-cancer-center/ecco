@@ -12,7 +12,7 @@
       >.
     </p>
 
-    <div class="center">
+    <div class="text-center">
       <AppButton
         v-tooltip="'Download all sources data in CSV format'"
         :icon="faTable"
@@ -86,7 +86,7 @@
       style="display: contents"
       v-html="descriptions[source.id]"
     />
-    <p v-else class="center">
+    <p v-else class="text-center">
       <i>Description coming soon</i>
     </p>
   </section>

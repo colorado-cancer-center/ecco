@@ -1,6 +1,12 @@
 <template>
-  <label :class="multi ? 'multi' : 'single'">
-    <div class="label" :style="{ gridColumn: multi ? 'span 2' : '' }">
+  <label
+    :class="
+      multi
+        ? 'grid grid-cols-[1fr_min-content] gap-x-2 gap-y-1'
+        : 'grid grid-cols-1 gap-y-1'
+    "
+  >
+    <div :class="multi ? 'col-span-2' : ''">
       {{ label }}
     </div>
 
@@ -21,12 +27,10 @@
         <ListboxButton as="template">
           <AppButton
             v-tooltip="tooltip"
-            :icon="open ? faCaretUp : faCaretDown"
-            :flip="true"
-            class="box"
+            class="overflow-auto [&_.icon]:text-gray"
             @keydown="onKeypress"
           >
-            <span class="box-label">
+            <span class="grow truncate text-left">
               {{ selectedLabel }}
             </span>
             <slot
@@ -34,11 +38,15 @@
               name="preview"
               :option="selectedOption"
             />
+            <ChevronUp v-if="open" class="text-dark-gray" />
+            <ChevronDown v-else class="text-dark-gray" />
           </AppButton>
         </ListboxButton>
 
         <!-- dropdown -->
-        <ListboxOptions class="list">
+        <ListboxOptions
+          class="list-none overflow-y-auto overscroll-none rounded-md bg-white shadow-md"
+        >
           <template v-for="(option, index) in options" :key="index">
             <!-- regular option -->
             <ListboxOption
@@ -48,19 +56,21 @@
               :value="option"
             >
               <li
-                :class="['item', { active, selected }]"
+                :class="[
+                  'flex cursor-pointer items-center p-2 transition',
+                  { 'bg-light-gray': active, 'bg-theme-light': selected },
+                ]"
                 @vue:mounted="(node: VNode) => selected && onDropdownOpen(node)"
               >
-                <font-awesome-icon
-                  :style="{ opacity: selected ? 1 : 0 }"
-                  :icon="faCheck"
-                />
-                <span class="item-label">{{ option.label }}</span>
+                <Check :style="{ opacity: selected ? 1 : 0 }" />
+                <span class="grow">{{ option.label }}</span>
                 <slot name="preview" :option="option" />
               </li>
             </ListboxOption>
             <!-- group option -->
-            <li v-else class="group item">{{ option.group }}</li>
+            <li v-else class="flex items-center gap-2 p-2 font-bold">
+              {{ option.group }}
+            </li>
           </template>
         </ListboxOptions>
       </Float>
@@ -69,22 +79,19 @@
     <AppButton
       v-if="multi"
       v-tooltip="'Deselect all'"
-      :icon="faXmark"
       @click="$emit('update:modelValue', [])"
-    />
+    >
+      <X />
+    </AppButton>
   </label>
 </template>
 
 <script setup lang="ts" generic="O extends Option">
 import type { VNode } from "vue";
 import { computed } from "vue";
+import AppButton from "@/components/AppButton.vue";
+import { frame } from "@/util/misc";
 import { size } from "@floating-ui/dom";
-import {
-  faCaretDown,
-  faCaretUp,
-  faCheck,
-  faXmark,
-} from "@fortawesome/free-solid-svg-icons";
 import { Float } from "@headlessui-float/vue";
 import {
   Listbox,
@@ -92,8 +99,7 @@ import {
   ListboxOption,
   ListboxOptions,
 } from "@headlessui/vue";
-import AppButton from "@/components/AppButton.vue";
-import { frame } from "@/util/misc";
+import { Check, ChevronDown, ChevronUp, X } from "@lucide/vue";
 
 export type Option = {
   id: string;
@@ -235,83 +241,3 @@ const onKeypress = async ({ key }: KeyboardEvent) => {
   }
 };
 </script>
-
-<style scoped>
-.multi,
-.single {
-  display: grid;
-  gap: 10px;
-  cursor: pointer;
-}
-
-.multi {
-  grid-template-columns: 1fr min-content;
-}
-
-.single {
-  grid-template-columns: 1fr;
-}
-
-.box {
-  overflow: auto;
-}
-
-.box :deep(.icon) {
-  color: var(--gray);
-}
-
-.box-label {
-  flex-grow: 1;
-  overflow: hidden;
-  text-align: left;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.list {
-  margin: 0;
-  padding: 0;
-  overflow-y: auto;
-  overscroll-behavior: none;
-  border-radius: var(--rounded);
-  background: var(--white);
-  box-shadow: var(--shadow);
-}
-
-.item {
-  display: flex;
-  align-items: center;
-  padding: 5px 10px;
-  gap: 10px;
-  line-height: var(--compact);
-  list-style: none;
-  cursor: pointer;
-}
-
-.item-label {
-  flex-grow: 1;
-}
-
-.active {
-  background: var(--light-gray);
-}
-
-.selected {
-  background: var(--theme-light);
-}
-
-.group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: var(--bold);
-  cursor: unset;
-}
-
-.group::after {
-  flex-grow: 1;
-  height: 1px;
-  background: var(--gray);
-  content: "";
-}
-</style>

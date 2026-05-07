@@ -1,7 +1,7 @@
 <template>
-  <div class="status">
-    <font-awesome-icon
-      :icon="code.icon"
+  <div class="my-10 flex items-center justify-center gap-2 p-4 shadow-md">
+    <component
+      :is="code.icon"
       :style="{ color: code.color }"
       :class="code.class"
     />
@@ -11,13 +11,9 @@
 </template>
 
 <script setup lang="ts">
+import type { Component } from "vue";
 import { computed } from "vue";
-import {
-  faCheckCircle,
-  faXmarkCircle,
-} from "@fortawesome/free-regular-svg-icons";
-import { faGear, faInfoCircle } from "@fortawesome/free-solid-svg-icons";
-import type { IconDefinition } from "@fortawesome/free-solid-svg-icons";
+import { CheckCircle, Cog, Info, XCircle } from "@lucide/vue";
 
 type Props = {
   status: Status;
@@ -32,7 +28,7 @@ type Slots = {
 defineSlots<Slots>();
 
 type Code = {
-  icon: IconDefinition;
+  icon: Component;
   color: string;
   text: string;
   class?: string;
@@ -42,39 +38,27 @@ export type Status = keyof typeof codes;
 
 const codes = {
   info: {
-    icon: faInfoCircle,
+    icon: Info,
     text: "Info",
-    color: "var(--dark-gray)",
+    color: "color-dark-gray",
   },
   loading: {
-    icon: faGear,
+    icon: Cog,
     text: "Loading",
-    color: "var(--dark-gray)",
-    class: "fa-spin",
+    color: "color-dark-gray",
+    class: "animate-spin",
   },
   success: {
-    icon: faCheckCircle,
+    icon: CheckCircle,
     text: "Success",
-    color: "var(--success)",
+    color: "color-success",
   },
   error: {
-    icon: faXmarkCircle,
+    icon: XCircle,
     text: "Error",
-    color: "var(--error)",
+    color: "color-error",
   },
 };
 
 const code = computed<Code>(() => codes[status] || codes.info);
 </script>
-
-<style scoped>
-.status {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 40px 0;
-  padding: 20px;
-  gap: 10px;
-  box-shadow: var(--shadow);
-}
-</style>

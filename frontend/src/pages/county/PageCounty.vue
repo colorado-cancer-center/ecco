@@ -15,7 +15,7 @@
     </template>
 
     <template v-else>
-      <AppMap ref="map" class="map" :geometry="geometry" :highlight="id">
+      <AppMap ref="map" class="map w-full h-[400px]" :geometry="geometry" :highlight="id">
         <template #popup="{ feature }">
           <!-- link to full data -->
           <AppButton
@@ -34,19 +34,18 @@
     <section id="county" class="wide">
       <AppSelect
         v-model="filter"
-        class="select"
+        class="w-[300px] mx-auto"
         :options="filterOptions"
         label="Measures"
       />
 
-      <p class="center">
-        <span class="county-label">{{ countyData?.name }}</span>
+      <p class="text-center">
         vs.
         <span class="state-label">Colorado</span>
       </p>
 
       <template v-if="filter === 'basic'">
-        <p class="center">
+        <p class="text-center">
           <strong>Population</strong>: &nbsp;&nbsp;
           <span class="county-label">
             {{
@@ -69,13 +68,13 @@
         </div>
       </template>
 
-      <div v-else-if="countyData && filter === 'all'" class="grid">
+      <div v-else-if="countyData && filter === 'all'" class="grid grid-cols-[repeat(auto-fit,minmax(min(400px,100%),1fr))] items-start gap-x-[60px] gap-y-10">
         <template
           v-for="(category, categoryKey) in countyData.categories"
           :key="categoryKey"
         >
-          <div class="cell">
-            <div level="2" class="cell-heading">
+          <div class="grid grid-cols-[1fr_max-content_10px_max-content] items-center gap-x-4 gap-y-2 [&>:first-child]:col-span-full">
+            <div level="2" class="flex col-span-full items-center gap-2 font-bold">
               {{ category.label }}
             </div>
 
@@ -86,7 +85,7 @@
               <dt>{{ measure.label }}</dt>
               <dd
                 v-tooltip="formatValue(measure.value, measure.unit)"
-                class="county-label"
+                class="county-label relative z-0 px-1 py-[2px] rounded-md text-center bg-accent-a-light"
               >
                 {{ formatValue(measure.value, measure.unit, true) }}
               </dd>
@@ -99,17 +98,17 @@
               >
                 <span
                   v-if="measure.value > measure.state_value"
-                  class="compare-symbol"
+                  class="text-gray"
                   >{{ ">" }}</span
                 >
                 <span
                   v-else-if="measure.value < measure.state_value"
-                  class="compare-symbol"
+                  class="text-gray"
                   >{{ "<" }}</span
                 >
                 <span
                   v-else-if="measure.value === measure.state_value"
-                  class="compare-symbol"
+                  class="text-gray"
                   >{{ "=" }}</span
                 >
               </template>
@@ -121,7 +120,7 @@
                   measure.state_value !== null
                 "
                 v-tooltip="formatValue(measure.state_value, measure.unit)"
-                class="state-label"
+                class="state-label relative z-0 px-1 py-[2px] rounded-md text-center bg-accent-b-light"
                 aria-label="State value"
               >
                 {{ formatValue(measure.state_value, measure.unit, true) }}
@@ -237,60 +236,8 @@ watch(countyData, () => (appTitle.value = [countyData.value?.name ?? ""]));
 </script>
 
 <style scoped>
-:deep(.map) {
-  width: 100%;
-  height: 400px;
-}
-
-.select {
-  width: 300px;
-  margin: 0 auto;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr));
-  align-items: flex-start;
-  gap: 40px 60px;
-}
-
+/* grid > first child spans 3 rows - can't express this as a Tailwind utility */
 .grid > :first-child {
   grid-row: 1 / span 3;
-}
-
-.cell {
-  display: grid;
-  grid-template-columns: 1fr max-content 10px max-content;
-  align-items: center;
-  gap: 10px 20px;
-}
-
-.cell-heading {
-  display: flex;
-  grid-column: 1 / -1;
-  align-items: center;
-  gap: 10px;
-  font-weight: var(--bold);
-}
-
-.county-label,
-.state-label {
-  z-index: 0;
-  position: relative;
-  padding: 2px 5px;
-  border-radius: var(--rounded);
-  text-align: center;
-}
-
-.county-label {
-  background: var(--accent-a-light);
-}
-
-.state-label {
-  background: var(--accent-b-light);
-}
-
-.compare-symbol {
-  color: var(--gray);
 }
 </style>

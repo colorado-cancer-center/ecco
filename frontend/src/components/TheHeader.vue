@@ -1,16 +1,16 @@
 <template>
-  <header class="header">
+  <header class="flex flex-wrap items-center justify-between p-4 gap-2 max-[800px]:flex-col max-[800px]:text-center">
     <AppLink to="/">
-      <div class="pretitle">University of Colorado Cancer Center's</div>
+      <div class="text-[0.9rem] tracking-[0.009em]">University of Colorado Cancer Center's</div>
       <div>
         <span class="title">
-          <b>E</b>xploring <b>C</b>ancer in <b>Co</b>lorado
+          <b class="font-[800]">E</b>xploring <b class="font-[800]">C</b>ancer in <b class="font-[800]">Co</b>lorado
         </span>
-        <span class="subtitle">&nbsp;(ECCO)</span>
+        <span class="text-[0.9rem] opacity-50">&nbsp;(ECCO)</span>
       </div>
     </AppLink>
 
-    <nav class="nav">
+    <nav class="flex flex-wrap justify-center gap-2 uppercase">
       <template v-for="(route, index) of routes" :key="index">
         <AppLink
           v-if="route.meta?.header"
@@ -31,44 +31,7 @@ import { routes } from "@/pages";
 </script>
 
 <style scoped>
-.header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px;
-  gap: 10px;
-}
-
-@media (max-width: 800px) {
-  .header {
-    flex-direction: column;
-    text-align: center;
-  }
-}
-
-.pretitle {
-  font-size: 0.9rem;
-  letter-spacing: 0.009em;
-}
-
-.title > b {
-  font-weight: var(--extra-bold);
-}
-
-.subtitle {
-  font-size: 0.9rem;
-  opacity: 0.5;
-}
-
-.nav {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-  text-transform: uppercase;
-}
-
+/* Animated underline for nav links */
 .nav-link {
   display: flex;
   position: relative;

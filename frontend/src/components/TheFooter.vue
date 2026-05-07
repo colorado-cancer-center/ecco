@@ -1,16 +1,19 @@
 <template>
-  <footer class="footer">
+  <footer class="flex items-center justify-between p-4 gap-4">
     <AppLink
-      class="logo"
+      class="h-[2em]"
       to="https://medschool.cuanschutz.edu/colorado-cancer-center"
     >
-      <img src="@/assets/logo.png" :alt="'Presented by...'" />
+      <img src="@/assets/logo.png" class="h-full" :alt="'Presented by...'" />
     </AppLink>
-    <span class="links">
-      <AppLink to="https://github.com/colorado-cancer-center/ecco"
+    <span class="flex flex-wrap justify-center gap-4">
+      <AppLink
+        class="hover:underline"
+        to="https://github.com/colorado-cancer-center/ecco"
         >Source Code</AppLink
       >
       <AppLink
+        class="hover:underline"
         to="https://github.com/colorado-cancer-center/ecco/blob/main/LICENSE"
         >License</AppLink
       >
@@ -23,36 +26,9 @@ import AppLink from "@/components/AppLink.vue";
 </script>
 
 <style scoped>
-.footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px;
-  gap: 20px;
-}
-
 @media (max-width: 500px) {
-  .footer {
+  footer {
     flex-direction: column;
   }
-}
-
-.logo {
-  height: 2em;
-}
-
-.logo img {
-  height: 100%;
-}
-
-.links {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
-}
-
-.links a:hover {
-  text-decoration: underline;
 }
 </style>
