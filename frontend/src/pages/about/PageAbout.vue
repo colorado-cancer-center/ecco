@@ -59,14 +59,6 @@
       10.64898/2026.02.03.26345489, PMID: 41674638, PMCID: PMC12889761
     </blockquote>
 
-    <AppButton
-      v-tooltip="'Copy citation text to clipboard'"
-      :icon="faFeatherPointed"
-      @click="copy(citation)"
-    >
-      Copy Citation
-    </AppButton>
-
     <p>
       By acknowledging our work, you help support our ongoing efforts to provide
       accurate and up-to-date cancer statistics to the public, researchers, and

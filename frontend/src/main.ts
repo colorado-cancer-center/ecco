@@ -20,6 +20,6 @@ app.use(VueTippy, tippyOptions);
 app.directive("stop", stop);
 
 if (window.location.hostname === new URL(import.meta.env.VITE_URL).hostname)
-  app.use(createGtag({ tagId: "G-XESEVBEL2X", pageTracker: { router } }));
+  createGtag({ tagId: "G-XESEVBEL2X", pageTracker: { router } });
 
 app.mount("#app");
