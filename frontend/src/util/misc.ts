@@ -42,3 +42,9 @@ export const toHex = (value = 0) =>
   Math.floor(value * 255)
     .toString(16)
     .padStart(2, "0");
+
+/** copy text to clipboard */
+export const copy = async (text: string) => {
+  await navigator.clipboard.writeText(text);
+  window.alert("Copied to clipboard");
+};
