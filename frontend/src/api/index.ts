@@ -426,4 +426,4 @@ export type Sources = Awaited<ReturnType<typeof getSources>>;
 
 /** get source citation */
 export const getSourceCitation = (source: Sources[number]) =>
-  [source.name, source.date, source.link].filter(Boolean).join("\n");
+  [source.name, source.link].filter(Boolean).join("\n");

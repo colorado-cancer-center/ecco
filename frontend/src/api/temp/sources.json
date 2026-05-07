@@ -18,23 +18,23 @@
   {
     "id": "BLS",
     "name": "Bureau of Labor Statistics",
-    "data_description": "",
-    "date": "",
+    "data_description": "Unemployment",
+    "date": "Monthly",
     "date_description": "",
     "link": "https://www.bls.gov/"
   },
   {
     "id": "PLACES",
     "name": "PLACES",
-    "data_description": "",
-    "date": "",
+    "data_description": "Health Risk Factors",
+    "date": "2019/2020",
     "date_description": "",
-    "link": ""
+    "link": "https://www.cdc.gov/places"
   },
   {
     "id": "ERS",
     "name": "Economic Research Service",
-    "data_description": "",
+    "data_description": "Food Deserts",
     "date": "",
     "date_description": "",
     "link": "https://www.ers.usda.gov/data-products/food-access-research-atlas"
@@ -42,15 +42,15 @@
   {
     "id": "FCC",
     "name": "Federal Communications Commission",
-    "data_description": "",
-    "date": "",
+    "data_description": "Internet Access",
+    "date": "Previous Year",
     "date_description": "",
     "link": "https://www.fcc.gov/general/broadband-deployment-data-fcc-form-477"
   },
   {
     "id": "EJScreen",
     "name": "Environmental Justice Screening",
-    "data_description": "",
+    "data_description": "Environmental factors",
     "date": "",
     "date_description": "",
     "link": "https://www.epa.gov/ejscreen"
@@ -58,7 +58,7 @@
   {
     "id": "SDWIS",
     "name": "Safe Drinking Water Information System",
-    "data_description": "",
+    "data_description": "Water Safety",
     "date": "",
     "date_description": "",
     "link": "https://www.epa.gov/ground-water-and-drinking-water/safe-drinking-water-information-system-sdwis-federal-reporting"
@@ -66,7 +66,7 @@
   {
     "id": "Envirofacts",
     "name": "Envirofacts",
-    "data_description": "",
+    "data_description": "Environmental Risks",
     "date": "",
     "date_description": "",
     "link": "https://enviro.epa.gov/"
@@ -74,31 +74,31 @@
   {
     "id": "HRSA",
     "name": "Health Resources & Services Administration",
-    "data_description": "",
-    "date": "",
+    "data_description": "Health Clinics/Centers",
+    "date": "Monthly",
     "date_description": "",
     "link": "https://data.hrsa.gov/data/about"
   },
   {
     "id": "LCSR",
     "name": "Lung Cancer Screening Registry",
-    "data_description": "",
-    "date": "",
+    "data_description": "Lung Cancer Screening Sites",
+    "date": "Monthly",
     "date_description": "",
     "link": "https://www.acr.org/Clinical-Resources/Lung-Cancer-Screening-Resources/LCS-Locator-Tool"
   },
   {
     "id": "NPPES",
     "name": "National Plan & Provider Enumeration System",
-    "data_description": "",
-    "date": "",
+    "data_description": "Colo-rectal Resources",
+    "date": "Monthly",
     "date_description": "",
     "link": "https://nppes.cms.hhs.gov/#/"
   },
   {
     "id": "FDA",
     "name": "Food and Drug Administration",
-    "data_description": "",
+    "data_description": "Mammography Sites",
     "date": "",
     "date_description": "",
     "link": "https://www.fda.gov/radiation-emitting-products/consumer-information-mqsa/search-certified-facility"
@@ -106,7 +106,7 @@
   {
     "id": "CDPHE",
     "name": "Colorado Department of Public Health and Environment",
-    "data_description": "",
+    "data_description": "Radon Exposure, HPV Vaccination",
     "date": "",
     "date_description": "",
     "link": "https://cdphe.colorado.gov/"

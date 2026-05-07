@@ -35,8 +35,7 @@
         <tr>
           <th>Source</th>
           <th>Data</th>
-          <th>Date(s)</th>
-          <th>Date Description</th>
+          <th>Dates</th>
           <th>Cite</th>
         </tr>
       </thead>
@@ -49,8 +48,7 @@
             </AppLink>
           </td>
           <td>{{ source.data_description }}</td>
-          <td>{{ source.date }}</td>
-          <td>{{ source.date_description }}</td>
+          <td>{{ source.date }}<br />{{ source.date_description }}</td>
           <td>
             <AppButton
               v-tooltip="'Copy citation text to clipboard'"
