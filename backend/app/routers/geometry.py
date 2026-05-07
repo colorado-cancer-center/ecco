@@ -3,6 +3,7 @@ API endpoints that return geometry, e.g. county/tract boundaries.
 """
 
 from fastapi import Depends
+from fastapi_cache.decorator import cache
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -23,6 +24,7 @@ router = APIRouter()
 # ============================================================================
 
 @router.get("/counties", response_model=list[County])
+@cache()
 async def get_counties(session: AsyncSession = Depends(get_session)):
     """
     Returns metadata and geometry for counties. The geometry itself is in the
@@ -34,6 +36,7 @@ async def get_counties(session: AsyncSession = Depends(get_session)):
     return counties
 
 @router.get("/tracts", response_model=list[Tract])
+@cache()
 async def get_tracts(session: AsyncSession = Depends(get_session)):
     """
     Returns metadata and geometry for tracts. The geometry itself is in the
@@ -44,6 +47,7 @@ async def get_tracts(session: AsyncSession = Depends(get_session)):
     return tracts
 
 @router.get("/healthregions", response_model=list[HealthRegion])
+@cache()
 async def get_healthregions(session: AsyncSession = Depends(get_session)):
     """
     Returns metadata and geometry for health regions, combinations of counties

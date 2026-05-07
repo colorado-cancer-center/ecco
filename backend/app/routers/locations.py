@@ -4,6 +4,7 @@ and legislative district maps.
 """
 
 from fastapi import Depends
+from fastapi_cache.decorator import cache
 from pydantic import BaseModel
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -24,6 +25,7 @@ router = APIRouter()
 # ============================================================================
 
 @router.get("/locations", response_model=dict[str, dict[str, str]])
+@cache()
 async def get_location_categories(session: AsyncSession = Depends(get_session)):
     """
     Returns all location categories and IDs to associated locations.
@@ -47,6 +49,7 @@ async def get_location_categories(session: AsyncSession = Depends(get_session)):
     return response
 
 @router.get("/locations/by-category/{category_id}", response_model=list[Location])
+@cache()
 async def get_locations(category_id: str, session: AsyncSession = Depends(get_session)):
     """
     Returns all locations for a given category. The geometry itself is in the
@@ -63,6 +66,7 @@ async def get_locations(category_id: str, session: AsyncSession = Depends(get_se
     return locations
 
 @router.get("/locations/{location_id}", response_model=Location)
+@cache()
 async def get_location_by_id(location_id: str, session: AsyncSession = Depends(get_session)):
     """
     Returns specific locations by ID. The geometry itself is in the

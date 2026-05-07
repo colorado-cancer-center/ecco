@@ -5,6 +5,14 @@
 
 [**⭐️⭐️ View the Site ⭐️⭐️**](https://coe-ecco.org/)
 
+## Citation
+
+If you find this site, software, or data useful in your publications, presentations, or other materials, please consider citing it:
+
+> Lowery JT, Alquaddoomi F, Rubinetti V, Burus T, Jardine C, Warren AC, Walsh J, Borrayo E, Davis S.  
+> Exploring Cancer in Colorado using a novel data platform: the ECCO experience.  
+> medRxiv (preprint): 2026.02.03.26345489, doi: 10.64898/2026.02.03.26345489, PMID: 41674638, PMCID: PMC12889761
+
 ## Background
 
 Cancer Centers, including the University of Colorado Cancer Center, need to provide updated and reliable information to make informed decisions about how best to impact care in their catchment areas.

@@ -56,7 +56,7 @@ const emit = defineEmits<Emits>();
   padding: 5px;
   border: none;
   background: none;
-  color: var(--off-black);
+  color: var(--dark-gray);
   font-size: 1.25em;
   cursor: pointer;
 }

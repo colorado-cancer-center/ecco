@@ -72,7 +72,7 @@ wait_for_container_healthy() {
 
 # if we haven't been forced to create a release, ask the user if they'd like to
 if [[ "${ACQUIRE_RELEASE}" = "0" ]] && [[ "${NONINTERACTIVE}" = "0" ]]; then
-    read -p "Do you want to obtain a new release before importing data? (y/n) " -n 1 -r ; echo
+    read -p "Do you want to obtain a new release before importing data? (y/N) " -n 1 -r ; echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         ACQUIRE_RELEASE=1
     fi
@@ -109,7 +109,7 @@ echo "  - Latest staging folder date: ${LATEST_STAGING}"
 # if they haven't forced it already, ask the user if they want to purge the
 # database before import
 if [[ "${DELETE_DB_BEFORE_IMPORT}" = "0" ]] && [[ "${NONINTERACTIVE}" = "0" ]]; then
-    read -p "Do you want to purge the database before importing data? (y/n) " -n 1 -r ; echo
+    read -p "Do you want to purge the database before importing data? (y/N) " -n 1 -r ; echo
 
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         DELETE_DB_BEFORE_IMPORT=1
@@ -150,6 +150,7 @@ cd /app
 ./commands/import_uv_data.py '/data/reference/ccc-team-data/environmental/UV data 2020_2024.xlsx'
 ./commands/import_vaping_data.py '/data/reference/vaping/sheets/youth/HKCS.Teen.VAPE.071525.csv' '/data/reference/vaping/sheets/adult/ECCO_ECIGREQUEST_BRFSS23_HSRSTATS.xlsx'
 ./commands/import_ccc_state_stats.py /data/reference/ccc-team-data/ECCO_IncAverages.xlsx
+./commands/import_uccc_responders.py /data/reference/ccc-team-data/uccc-research/PRMS.Zipcodes.for.CO.Adult.only.xlsx
 EOF
 
 # get into the database and make a new dump, which will be saved in /db-exports

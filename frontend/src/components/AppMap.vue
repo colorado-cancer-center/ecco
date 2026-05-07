@@ -1028,7 +1028,7 @@ onUnmounted(() => {
 .geometry-label > :first-child {
   width: min-content;
   line-height: 1;
-  -webkit-text-stroke: 3px black;
+  -webkit-text-stroke: 3px var(--black);
   paint-order: stroke fill;
 }
 
@@ -1056,7 +1056,7 @@ onUnmounted(() => {
   height: var(--caret);
   translate: -50% -50%;
   rotate: 45deg;
-  background: white;
+  background: var(--white);
   box-shadow: var(--shadow);
   content: "";
   clip-path: polygon(200% -100%, 200% 200%, -100% 200%);

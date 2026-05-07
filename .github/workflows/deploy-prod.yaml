@@ -31,6 +31,7 @@ jobs:
             echo $PWD && \
             git pull && ( echo "$( git rev-parse HEAD ) - $( date )" ) >> deploys.txt && \
             ./run_stack.sh prod && \
+            docker restart ecco-memcached-1 && \
             exit $( docker container wait ecco-frontend-1 )
           EOF
           rm /tmp/ssh_key

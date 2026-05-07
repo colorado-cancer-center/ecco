@@ -23,7 +23,7 @@ type Props = {
   status: Status;
 };
 
-const { status = "info" } = defineProps<Props>();
+const { status } = defineProps<Props>();
 
 type Slots = {
   default?: () => unknown;

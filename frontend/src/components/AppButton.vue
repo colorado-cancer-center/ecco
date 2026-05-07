@@ -35,14 +35,18 @@ const component = computed(() => (to ? AppLink : "button"));
 
 <style scoped>
 .button {
+  background: var(--light-gray);
+  color: var(--black);
+}
+
+a.button {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 35px;
   padding: 5px 10px;
   gap: 10px;
   border-radius: var(--rounded);
-  background: var(--light-gray);
-  color: var(--black);
   text-decoration: none;
 }
 

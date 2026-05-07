@@ -138,7 +138,7 @@ export const useQuery = <Data, Args extends unknown[]>(
   /** https://github.com/vuejs/composition-api/issues/483 */
 
   /** latest query id, unique to this useQuery instance */
-  let latest: Symbol;
+  let latest: symbol;
 
   /** wrapped query function */
   const query = async (...args: Args): Promise<void> => {
