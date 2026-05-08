@@ -81,8 +81,6 @@
 </template>
 
 <script setup lang="ts">
-import { faFeatherPointed } from "@fortawesome/free-solid-svg-icons";
-import AppButton from "@/components/AppButton.vue";
 import AppHeading from "@/components/AppHeading.vue";
 import AppLink from "@/components/AppLink.vue";
 </script>

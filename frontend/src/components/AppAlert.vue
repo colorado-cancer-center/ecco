@@ -1,14 +1,11 @@
 <template>
   <section
     ref="alert"
-    :class="[
-      'overflow-y-clip transition-all [--content:300]',
-      open ? '' : 'py-0',
-    ]"
+    :class="['overflow-y-clip transition-all', open ? '' : 'py-0']"
     :aria-hidden="open"
   >
     <slot />
-    <AppButton :accent="true" @click="onClick">
+    <AppButton :accent="true" class="self-center" @click="onClick">
       Dismiss
       <X />
     </AppButton>

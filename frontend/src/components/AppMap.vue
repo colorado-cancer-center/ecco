@@ -1,7 +1,7 @@
 <template>
   <div
     ref="frameElement"
-    class="relative transition"
+    class="relative transition-all"
     :style="{
       '--zoom': immediateZoom,
       '--label-opacity': geometryOpacity,
@@ -13,21 +13,21 @@
     <template v-if="showLegends">
       <div
         v-if="$slots['top-left-upper'] || $slots['top-left-lower']"
-        class="legend top-left"
+        class="absolute top-4 left-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
       >
         <slot name="top-left-upper" />
 
         <!-- scale key -->
         <div
           v-if="scale.steps.length"
-          class="scale"
+          class="grid grid-cols-[repeat(var(--cols),1fr)] grid-rows-[--spacing(6)] gap-y-1"
           :style="{ '--cols': scale.steps.length }"
         >
           <div
             v-for="(step, index) of scale.steps"
             :key="index"
             v-tooltip="step.tooltip"
-            class="scale-color"
+            class="relative size-full after:absolute after:inset-0 after:[background-image:var(--image)] after:opacity-50 after:content-['']"
             tabindex="0"
             :style="{
               backgroundColor: step.color,
@@ -37,7 +37,7 @@
           <div
             v-for="(step, index) of scale.steps"
             :key="index"
-            class="scale-label"
+            class="max-w-12 px-1 text-center wrap-break-word"
           >
             {{ step.label }}
           </div>
@@ -45,26 +45,35 @@
 
         <slot name="top-left-lower" />
       </div>
-      <div v-if="$slots['top-right']" class="legend top-right">
+      <div
+        v-if="$slots['top-right']"
+        class="absolute top-4 right-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
+      >
         <slot name="top-right" />
       </div>
       <div
         v-if="$slots['bottom-right'] || !isEmpty(symbols)"
-        class="legend bottom-right"
+        class="absolute right-4 bottom-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
       >
         <slot name="bottom-right" />
 
         <!-- symbol key -->
-        <div v-if="!isEmpty(symbols)" class="mini-table">
+        <div
+          v-if="!isEmpty(symbols)"
+          class="grid grid-cols-[auto_auto] items-center gap-4"
+        >
           <template v-for="(symbol, label) of symbols" :key="label">
             <template v-if="symbol">
-              <div class="symbol" v-html="symbol.html" />
-              <small>{{ label }}</small>
+              <div v-html="symbol.html" />
+              <div class="text-sm">{{ label }}</div>
             </template>
           </template>
         </div>
       </div>
-      <div v-if="$slots['bottom-left']" class="legend bottom-left">
+      <div
+        v-if="$slots['bottom-left']"
+        class="absolute bottom-4 left-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
+      >
         <slot name="bottom-left" />
       </div>
     </template>
@@ -74,7 +83,7 @@
       v-for="(feature, index) of geometryFeaturesWLabels"
       :key="index"
       ref="geometryLabelElements"
-      class="geometry-label"
+      class="pointer-events-none flex flex-col items-center gap-1 rounded-md text-center text-[calc(var(--zoom)*2px)] text-white select-none text-stroke-1.5 text-stroke-black *:not-first:flex *:not-first:flex-wrap *:not-first:items-center *:not-first:justify-center *:not-first:gap-1"
     >
       <div>{{ feature.get("label") }}</div>
       <slot name="geometry-label" :feature="feature.getProperties()" />
@@ -85,19 +94,22 @@
       v-if="$slots['popup'] && selectedFeature"
       ref="popupElement"
       v-stop
-      class="legend popup"
+      class="relative z-100! flex max-h-full w-100 max-w-max translate-y-[calc(--spacing(2)*-1.414)] flex-col gap-2 rounded-md bg-white p-4 shadow-md after:absolute after:top-full after:left-1/2 after:size-2 after:-translate-1/2 after:rotate-45 after:bg-white after:shadow-md after:content-[''] after:[clip-path:polygon(200%_-100%,200%_200%,-100%_200%)]"
     >
-      <AppButton
-        class="popup-close hover:text-theme absolute top-0 right-0 bg-transparent! text-gray"
+      <button
+        class="absolute top-0 right-0 min-h-8 min-w-8 text-gray hover:text-theme-dark"
         aria-label="Close popup"
         @click="selectedFeature = undefined"
       >
-        <font-awesome-icon :icon="faXmark" />
-      </AppButton>
+        <X />
+      </button>
       <slot name="popup" :feature="selectedFeature.getProperties()" />
     </div>
 
-    <div class="attribution" v-html="attribution" />
+    <div
+      class="absolute bottom-0 left-0 max-w-1/2 bg-white/50 p-0.5 text-xs text-balance"
+      v-html="attribution"
+    />
   </div>
 </template>
 
@@ -133,11 +145,11 @@ import {
 } from "vue";
 import { type Unit } from "@/api";
 import hatch from "@/assets/hatch.svg?no-inline";
-import { getGradient, gradientOptions } from "@/components/gradient";
 import { backgroundOptions } from "@/components/background";
+import { getGradient, gradientOptions } from "@/components/gradient";
 import { formatValue, normalizedApply } from "@/util/math";
 import { forceHex, getBbox, getCssVar, sleep, waitFor } from "@/util/misc";
-import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import { X } from "@lucide/vue";
 import { useElementSize } from "@vueuse/core";
 import * as d3 from "d3";
 import { debounce, isEmpty, mapValues, upperFirst } from "lodash";
@@ -152,7 +164,6 @@ import VectorLayer from "ol/layer/Vector";
 import { XYZ } from "ol/source";
 import VectorSource from "ol/source/Vector";
 import { Fill, Icon, Stroke, Style, Text } from "ol/style";
-import AppButton from "./AppButton.vue";
 import { getMarkers } from "./markers";
 
 const frameElement = useTemplateRef("frameElement");
@@ -913,168 +924,8 @@ onUnmounted(() => {
 });
 </script>
 
-<style scoped>
-/* Legends: positioned absolutely over the map */
-.legend {
-  display: flex;
-  z-index: 9;
-  position: absolute;
-  flex-direction: column;
-  max-width: min(250px, calc(100% - 20px));
-  max-height: calc(100% - 20px);
-  padding: 20px;
-  overflow: hidden;
-  gap: 10px;
-  border-radius: var(--rounded);
-  background: var(--white);
-  box-shadow: var(--shadow);
-  --spacing: 10px;
-}
-
-.top-left {
-  top: var(--spacing);
-  left: var(--spacing);
-}
-
-.top-right {
-  top: var(--spacing);
-  right: var(--spacing);
-}
-
-.bottom-right {
-  right: var(--spacing);
-  bottom: var(--spacing);
-}
-
-.bottom-left {
-  bottom: var(--spacing);
-  left: var(--spacing);
-}
-
-.legend:empty {
-  display: none;
-}
-
-/* Color scale grid (uses dynamic --cols CSS variable) */
-.scale {
-  display: grid;
-  grid-template-rows: 20px;
-  grid-template-columns: repeat(var(--cols), 1fr);
-  justify-items: center;
-  gap: 5px 0;
-}
-
-.scale-color {
-  position: relative;
-  width: 100%;
-  max-width: 75px;
-  height: 100%;
-}
-
-.scale-color::after {
-  position: absolute;
-  inset: 0;
-  background-image: var(--image);
-  content: "";
-  opacity: 0.5;
-}
-
-.scale-label {
-  max-width: 60px;
-  padding: 0 5px;
-  overflow: visible;
-  text-align: center;
-  overflow-wrap: break-word;
-}
-
-.symbol > * {
-  place-self: center;
-}
-
-/* Geometry labels (uses dynamic CSS variables: --zoom, --geometry-label-opacity) */
-.geometry-label {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  border-radius: var(--rounded);
-  color: var(--white);
-  font-size: calc(var(--zoom) * 1.75px);
-  text-align: center;
-  opacity: calc(var(--geometry-label-opacity) * 2);
-  pointer-events: none;
-  user-select: none;
-}
-
-:deep(*:has(> .geometry-label)) {
-  pointer-events: none !important;
-  user-select: none !important;
-}
-
-.geometry-label > :first-child {
-  width: min-content;
-  line-height: 1;
-  -webkit-text-stroke: 3px var(--black);
-  paint-order: stroke fill;
-}
-
-.geometry-label > :not(:first-child) {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 1px;
-}
-
-/* Popup with caret */
-.popup {
-  --caret: 10px;
-  position: relative;
-  width: 400px;
-  max-width: max-content;
-  translate: 0 calc(var(--caret) * -1.414);
-}
-
-.popup::after {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  width: var(--caret);
-  height: var(--caret);
-  translate: -50% -50%;
-  rotate: 45deg;
-  background: var(--white);
-  box-shadow: var(--shadow);
-  content: "";
-  clip-path: polygon(200% -100%, 200% 200%, -100% 200%);
-}
-
-.popup > :nth-child(2) {
-  margin-right: 15px;
-}
-
-:deep(.popup .popup-close + hr),
-:deep(.popup hr:last-child),
-:deep(.popup hr:has(+ hr)),
-:deep(.popup hr + .mini-table:empty + hr) {
-  display: none;
-}
-
-/* Attribution overlay */
-.attribution {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  max-width: 50%;
-  padding: 2px 5px;
-  background: color-mix(in srgb, var(--white), transparent 25%);
-  font-size: 12px;
-  text-wrap: balance;
-}
-</style>
-
 <style>
 .ol-overlaycontainer {
-  z-index: 10 !important;
+  z-index: 100 !important;
 }
 </style>

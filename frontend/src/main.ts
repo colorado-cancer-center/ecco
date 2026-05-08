@@ -7,14 +7,11 @@ import VueTippy from "vue-tippy";
 import { router } from "@/pages";
 import { stop } from "@/stop";
 import { tippyOptions } from "@/tooltip";
-import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import App from "./App.vue";
 
 console.debug(import.meta, import.meta.env);
 
 const app = createApp(App);
-
-app.component("FontAwesomeIcon", FontAwesomeIcon);
 
 app.use(router);
 app.use(VueTippy, tippyOptions);

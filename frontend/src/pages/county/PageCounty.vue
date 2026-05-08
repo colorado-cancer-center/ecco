@@ -1,147 +1,159 @@
 <template>
-  <section>
-    <AppHeading level="1"
-      >Data for {{ countyData?.name || route.params.id }}</AppHeading
-    >
+  <section style="--content: 300">
+    <AppHeading level="1" class="self-center">
+      {{ data?.name || route.params.id }}
+    </AppHeading>
 
-    <!-- loading/error status -->
-    <template v-if="countyDataStatus === 'error' || geometryStatus == 'error'">
-      <AppStatus status="error" />
-    </template>
-    <template
-      v-else-if="countyDataStatus === 'loading' || geometryStatus == 'loading'"
-    >
-      <AppStatus status="loading" />
-    </template>
-
-    <template v-else>
-      <AppMap ref="map" class="map w-full h-[400px]" :geometry="geometry" :highlight="id">
-        <template #popup="{ feature }">
-          <!-- link to full data -->
-          <AppButton
-            :icon="faExternalLinkAlt"
-            :to="`/county/${feature.id}`"
-            :flip="true"
-            :new-tab="true"
-            >See All Data</AppButton
-          >
-        </template>
-      </AppMap>
-    </template>
-  </section>
-
-  <template v-if="countyDataStatus === 'success'">
-    <section id="county" class="wide">
-      <AppSelect
-        v-model="filter"
-        class="w-[300px] mx-auto"
-        :options="filterOptions"
-        label="Measures"
+    <div class="grid grid-cols-3 place-items-center gap-8 max-md:grid-cols-1">
+      <template v-if="geometryStatus == 'error'">
+        <AppStatus status="error" class="size-full" />
+      </template>
+      <template v-else-if="geometryStatus == 'loading'">
+        <AppStatus status="loading" class="size-full" />
+      </template>
+      <AppMap
+        v-else
+        ref="map"
+        class="aspect-video w-100 max-w-full"
+        :geometry="geometry"
+        :highlight="id"
       />
 
-      <p class="text-center">
-        vs.
-        <span class="state-label">Colorado</span>
-      </p>
+      <template v-if="dataStatus == 'error'">
+        <AppStatus status="error" />
+      </template>
+      <template v-else-if="dataStatus == 'loading'">
+        <AppStatus status="loading" />
+      </template>
+      <div class="flex flex-col items-start gap-8">
+        <AppSelect
+          v-model="filter"
+          class="w-30"
+          :options="filterOptions"
+          label="Data"
+        />
 
-      <template v-if="filter === 'basic'">
         <p class="text-center">
-          <strong>Population</strong>: &nbsp;&nbsp;
-          <span class="county-label">
+          <span class="rounded-md bg-accent-a-light p-1">{{ data?.name }}</span>
+          vs.
+          <span class="rounded-md bg-accent-b-light p-1">Colorado</span>
+        </p>
+
+        <p class="text-center">
+          <strong>Population</strong>{{ " " }}
+          <span class="rounded-md bg-accent-a-light p-1">
             {{
               formatValue(
-                countyData?.categories.sociodemographics?.measures.Total
-                  ?.value ?? "-",
+                data?.categories.sociodemographics?.measures.Total?.value ??
+                  "-",
+              )
+            }}
+          </span>
+          vs.
+          <span class="rounded-md bg-accent-b-light p-1">
+            {{
+              formatValue(
+                data?.categories.sociodemographics?.measures.Total
+                  ?.state_value ?? "-",
               )
             }}
           </span>
         </p>
-        <div class="charts">
-          <AppBarChart
-            v-for="(chart, index) in chartData"
-            :key="index"
-            :title="chart.title"
-            :data="chart.data"
-            :unit="chart.unit"
-            :order="chart.order"
-          />
-        </div>
-      </template>
+      </div>
+    </div>
+  </section>
 
-      <div v-else-if="countyData && filter === 'all'" class="grid grid-cols-[repeat(auto-fit,minmax(min(400px,100%),1fr))] items-start gap-x-[60px] gap-y-10">
-        <template
-          v-for="(category, categoryKey) in countyData.categories"
-          :key="categoryKey"
+  <section v-if="dataStatus === 'success'">
+    <template v-if="filter === 'basic'">
+      <div
+        class="grid grid-cols-[repeat(auto-fit,minmax(min(--spacing(100),100%),1fr))] place-content-center place-items-center gap-16"
+      >
+        <AppBarChart
+          v-for="(chart, index) in chartData"
+          :key="index"
+          :title="chart.title"
+          :data="chart.data"
+          :unit="chart.unit"
+          :order="chart.order"
+        />
+      </div>
+    </template>
+
+    <div
+      v-else-if="data && filter === 'all'"
+      class="grid grid-cols-[repeat(auto-fit,minmax(min(--spacing(100),100%),1fr))] items-start gap-16"
+    >
+      <template
+        v-for="(category, categoryKey) in data.categories"
+        :key="categoryKey"
+      >
+        <div
+          class="grid grid-cols-[1fr_max-content_10px_max-content] items-center gap-x-4 gap-y-2 *:first:col-span-full"
         >
-          <div class="grid grid-cols-[1fr_max-content_10px_max-content] items-center gap-x-4 gap-y-2 [&>:first-child]:col-span-full">
-            <div level="2" class="flex col-span-full items-center gap-2 font-bold">
-              {{ category.label }}
-            </div>
+          <div class="col-span-full flex items-center gap-2 font-bold">
+            {{ category.label }}
+          </div>
+
+          <template
+            v-for="(measure, measureKey) in category.measures"
+            :key="measureKey"
+          >
+            <dt>{{ measure.label }}</dt>
+            <dd
+              v-tooltip="formatValue(measure.value, measure.unit)"
+              class="relative z-0 rounded-md bg-accent-a-light p-1 text-center"
+            >
+              {{ formatValue(measure.value, measure.unit, true) }}
+            </dd>
 
             <template
-              v-for="(measure, measureKey) in category.measures"
-              :key="measureKey"
+              v-if="
+                measure.state_value !== undefined &&
+                measure.state_value !== null
+              "
             >
-              <dt>{{ measure.label }}</dt>
-              <dd
-                v-tooltip="formatValue(measure.value, measure.unit)"
-                class="county-label relative z-0 px-1 py-[2px] rounded-md text-center bg-accent-a-light"
-              >
-                {{ formatValue(measure.value, measure.unit, true) }}
-              </dd>
-
-              <template
-                v-if="
-                  measure.state_value !== undefined &&
-                  measure.state_value !== null
-                "
-              >
-                <span
-                  v-if="measure.value > measure.state_value"
-                  class="text-gray"
-                  >{{ ">" }}</span
-                >
-                <span
-                  v-else-if="measure.value < measure.state_value"
-                  class="text-gray"
-                  >{{ "<" }}</span
-                >
-                <span
-                  v-else-if="measure.value === measure.state_value"
-                  class="text-gray"
-                  >{{ "=" }}</span
-                >
-              </template>
-
-              <span v-else></span>
               <span
-                v-if="
-                  measure.state_value !== undefined &&
-                  measure.state_value !== null
-                "
-                v-tooltip="formatValue(measure.state_value, measure.unit)"
-                class="state-label relative z-0 px-1 py-[2px] rounded-md text-center bg-accent-b-light"
-                aria-label="State value"
+                v-if="measure.value > measure.state_value"
+                class="text-gray"
+                >{{ ">" }}</span
               >
-                {{ formatValue(measure.state_value, measure.unit, true) }}
-              </span>
-              <span v-else></span>
+              <span
+                v-else-if="measure.value < measure.state_value"
+                class="text-gray"
+                >{{ "<" }}</span
+              >
+              <span
+                v-else-if="measure.value === measure.state_value"
+                class="text-gray"
+                >{{ "=" }}</span
+              >
             </template>
-          </div>
-        </template>
-      </div>
-    </section>
-  </template>
+
+            <span v-else></span>
+            <span
+              v-if="
+                measure.state_value !== undefined &&
+                measure.state_value !== null
+              "
+              v-tooltip="formatValue(measure.state_value, measure.unit)"
+              class="relative z-0 rounded-md bg-accent-b-light p-1 text-center"
+              aria-label="State value"
+            >
+              {{ formatValue(measure.state_value, measure.unit, true) }}
+            </span>
+            <span v-else></span>
+          </template>
+        </div>
+      </template>
+    </div>
+  </section>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
-import { fromPairs, mapValues, orderBy, startCase, toPairs } from "lodash";
-import { faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
 import { getCountyData, getGeo } from "@/api";
 import AppBarChart from "@/components/AppBarChart.vue";
-import AppButton from "@/components/AppButton.vue";
 import AppHeading from "@/components/AppHeading.vue";
 import AppMap from "@/components/AppMap.vue";
 import AppSelect from "@/components/AppSelect.vue";
@@ -149,6 +161,7 @@ import AppStatus from "@/components/AppStatus.vue";
 import { appTitle } from "@/meta";
 import { useQuery } from "@/util/composables";
 import { formatValue } from "@/util/math";
+import { fromPairs, mapValues, orderBy, startCase, toPairs } from "lodash";
 import basicMeasures from "./basic-measures.json";
 
 const route = useRoute();
@@ -177,9 +190,9 @@ onMounted(loadGeometry);
 
 /** get data for selected county */
 const {
-  query: loadCountyData,
-  data: countyData,
-  status: countyDataStatus,
+  query: loadData,
+  data,
+  status: dataStatus,
 } = useQuery(
   async () => {
     if (!id.value) return;
@@ -199,19 +212,17 @@ const {
   { FIPS: "", name: "", categories: {} },
 );
 
-watch(() => route.params.id, loadCountyData, { immediate: true });
+watch(() => route.params.id, loadData, { immediate: true });
 
 /** get select chart data from county data */
 const chartData = computed(() =>
-  countyData.value
+  data.value
     ? basicMeasures.map(({ title, showStateLevel, measures }) => {
         /** full value info for each measure */
         const measureValues = Object.fromEntries(
           measures.map(([category, measure]) => [
             startCase(measure),
-            countyData.value?.categories[category ?? ""]?.measures[
-              measure ?? ""
-            ],
+            data.value?.categories[category ?? ""]?.measures[measure ?? ""],
           ]),
         );
 
@@ -232,12 +243,5 @@ const chartData = computed(() =>
 );
 
 /** update tab title */
-watch(countyData, () => (appTitle.value = [countyData.value?.name ?? ""]));
+watch(data, () => (appTitle.value = [data.value?.name ?? ""]));
 </script>
-
-<style scoped>
-/* grid > first child spans 3 rows - can't express this as a Tailwind utility */
-.grid > :first-child {
-  grid-row: 1 / span 3;
-}
-</style>

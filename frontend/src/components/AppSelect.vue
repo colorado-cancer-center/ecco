@@ -27,7 +27,7 @@
         <ListboxButton as="template">
           <AppButton
             v-tooltip="tooltip"
-            class="overflow-auto [&_.icon]:text-gray"
+            class="overflow-auto"
             @keydown="onKeypress"
           >
             <span :class="['grow text-left', truncate && 'truncate']">

@@ -1,5 +1,9 @@
 <template>
-  <v-chart ref="chart" class="h-auto w-full" :option="option" />
+  <v-chart
+    ref="chart"
+    class="aspect-video rounded-md shadow-md"
+    :option="option"
+  />
 </template>
 
 <script setup lang="ts">

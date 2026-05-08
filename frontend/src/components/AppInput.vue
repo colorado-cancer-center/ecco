@@ -1,11 +1,11 @@
 <template>
   <div
-    class="relative flex min-w-0 rounded-md bg-light-gray transition hover:bg-theme-light"
+    class="relative flex grow rounded-md bg-light-gray transition hover:bg-theme-light"
     :class="$attrs.class"
   >
     <input
       v-bind="omit($attrs, 'class')"
-      class="min-w-0 rounded-md p-2"
+      class="size-full min-h-10 min-w-0 rounded-md p-2"
       :style="{ paddingRight: sideSize.width.value + 'px' }"
       :value="modelValue"
       @input="

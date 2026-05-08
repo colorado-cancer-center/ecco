@@ -39,7 +39,7 @@
       <div v-show="match(item)" class="flex items-center gap-2">
         <!-- expand/collapse/select -->
         <button
-          class="grow basis-0 justify-start gap-2 rounded-md p-1 text-left hover:bg-light-gray"
+          class="min-h-8 grow basis-0 justify-start gap-2 rounded-md p-1 text-left hover:bg-light-gray"
           :disabled="!isEmpty(item.children) && !!unref(search)"
           :data-level="level"
           @click="onClick(index)"
@@ -311,26 +311,3 @@ const onKey = (event: KeyboardEvent, index: number) => {
 /** when children change, reset open states */
 watch(() => children, closeAll, { immediate: true, deep: true });
 </script>
-
-<style scoped>
-/* Nested tree indentation with connecting vertical line */
-.tree-item:not([aria-level="1"]) {
-  position: relative;
-  padding-left: 20px;
-}
-
-.tree-item:not([aria-level="1"])::before {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: calc(20px - 2px);
-  width: 2px;
-  background: var(--off-white);
-  content: "";
-}
-
-/* Highlight selected item's opener */
-.tree-item[aria-selected="true"] button[data-level] {
-  background: var(--off-white);
-}
-</style>
