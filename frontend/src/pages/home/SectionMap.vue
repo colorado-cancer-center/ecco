@@ -33,9 +33,8 @@
         </AppTree>
       </div>
 
-      <p>
+      <p v-if="selectedLevel === 'tract' || noData">
         <AppLink
-          v-if="selectedLevel === 'tract' || noData"
           to="/sources#suppressed-values"
           :new-tab="true"
           class="inline-flex items-center gap-1"
@@ -101,6 +100,7 @@
             Add
           </AppButton>
           <AppButton
+            v-if="compare.length"
             v-tooltip="'Remove all maps from comparison and reset'"
             @click="compare = []"
           >
@@ -108,7 +108,7 @@
             Clear
           </AppButton>
           <AppButton
-            v-show="showPreview && compare.length && !inCompare()"
+            v-if="showPreview && compare.length && !inCompare()"
             v-tooltip="'Hide preview of selected map'"
             v-bind="highlightListeners(thumbnails.length - 1)"
             @click="showPreview = false"

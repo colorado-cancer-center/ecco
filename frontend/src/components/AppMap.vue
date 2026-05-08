@@ -37,7 +37,7 @@
           <div
             v-for="(step, index) of scale.steps"
             :key="index"
-            class="max-w-12 px-1 text-center wrap-break-word"
+            class="px-1 text-center wrap-break-word"
           >
             {{ step.label }}
           </div>
