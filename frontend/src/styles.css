@@ -1,13 +1,17 @@
 @import "tailwindcss";
 
 @theme {
+  --breakpoint-sm: 30rem;
+  --breakpoint-md: 55rem;
+  --breakpoint-lg: 70rem;
+
   --color-theme-light: hsl(35, 75%, 85%);
   --color-theme-dark: hsl(25, 50%, 40%);
 
   --color-white: hsl(30, 10%, 100%);
-  --color-off-white: hsl(30, 10%, 96%);
-  --color-light-gray: hsl(30, 10%, 90%);
-  --color-gray: hsl(30, 10%, 80%);
+  --color-off-white: hsl(30, 10%, 97%);
+  --color-light-gray: hsl(30, 10%, 92%);
+  --color-gray: hsl(30, 10%, 70%);
   --color-dark-gray: hsl(30, 10%, 30%);
   --color-black: hsl(30, 10%, 0%);
 
@@ -52,8 +56,8 @@
   }
 
   section {
-    --content: 9999;
-    @apply flex flex-col items-center gap-8 px-[max(--spacing(12),(100%---spacing(1)*var(--content))/2)] py-12;
+    --content: 300;
+    @apply flex flex-col gap-8 px-[max(--spacing(12),(100%---spacing(1)*var(--content))/2)] py-12;
   }
 
   section:nth-child(odd) {
@@ -77,15 +81,41 @@
   }
 
   a {
-    @apply text-theme-dark underline hover:text-current;
+    @apply text-theme-dark transition hover:text-current;
+  }
+
+  p a,
+  td a {
+    @apply underline;
   }
 
   p {
     @apply leading-loose;
   }
 
+  blockquote {
+    @apply bg-light-gray rounded-md p-4 pl-4 leading-loose;
+  }
+
   button {
-    @apply inline-flex cursor-pointer items-center justify-center;
+    @apply inline-flex cursor-pointer items-center justify-center transition;
+  }
+
+  table {
+    @apply border-collapse;
+  }
+
+  th,
+  td {
+    @apply p-2 text-left;
+  }
+
+  thead tr {
+    @apply bg-theme-light!;
+  }
+
+  tbody tr {
+    @apply even:bg-off-white odd:bg-white;
   }
 
   .lucide {
@@ -93,6 +123,6 @@
   }
 }
 
-@utility trim {
-  text-box: trim-both text;
+@utility table-wrapper {
+  @apply overflow-x-auto;
 }

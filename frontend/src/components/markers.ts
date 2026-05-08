@@ -1,40 +1,36 @@
 import { max, sum } from "lodash";
-import { icon as getHtml } from "@fortawesome/fontawesome-svg-core";
 import {
-  faCircle,
-  faClover,
-  faDiamond,
-  faFlag,
-  faLocationArrow,
-  faLocationCrosshairs,
-  faLocationPin,
-  faMapPin,
-  faSquare,
-  faStar,
-  faStarOfLife,
-  faThumbTack,
-} from "@fortawesome/free-solid-svg-icons";
-import palette from "./colors.json";
+  Circle,
+  Diamond,
+  Flag,
+  MapPin,
+  Navigation,
+  Pin,
+  Square,
+  Star,
+} from "lucide-static";
+import palette from "tailwindcss/colors";
 
 /**
- * choose shapes from font-awesome that look neutral (don't imply any good/bad
- * connotation). put simpler shapes first. also be careful that similar looking
- * shapes don't get assigned similar looking colors.
+ * choose shapes that look neutral (don't imply any good/bad connotation). put
+ * simpler shapes first. also be careful that similar looking shapes don't get
+ * assigned similar looking colors
  */
+const parser = new DOMParser();
 const icons = [
-  faCircle,
-  faSquare,
-  faDiamond,
-  faLocationPin,
-  faStar,
-  faStarOfLife,
-  faFlag,
-  faClover,
-  faLocationArrow,
-  faMapPin,
-  faThumbTack,
-  faLocationCrosshairs,
-];
+  Circle,
+  Square,
+  Diamond,
+  MapPin,
+  Star,
+  Flag,
+  Navigation,
+  Pin,
+].map(
+  (icon) =>
+    /** extract just inner html (paths) of svg source */
+    parser.parseFromString(icon, "image/svg+xml").documentElement.innerHTML,
+);
 
 type Icon = (typeof icons)[number];
 
@@ -111,10 +107,10 @@ const getMarker = (
   svg.setAttribute("xmlns", ns);
   document.body.append(svg);
 
-  /** use font-awesome point marker */
+  /** use icon point marker */
   if (type === "Point") {
     /** get html of next icon */
-    svg.innerHTML = getHtml(icon).node[0]!.innerHTML;
+    svg.innerHTML = icon;
 
     /** get bounds */
     let { x, y, width, height } = svg.getBBox();
@@ -125,13 +121,15 @@ const getMarker = (
     const stroke = 1 * (height / size);
 
     /** styles */
-    svg.style.color = color;
-    svg.style.stroke = "black";
-    svg.style.strokeWidth = String(stroke * 2);
-    svg.style.strokeLinecap = "round";
-    svg.style.strokeLinejoin = "round";
+    svg.setAttribute("fill", color);
+    svg.setAttribute("stroke", "black");
+    svg.setAttribute("stroke-width", String(stroke * 2));
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
     svg.style.paintOrder = "stroke fill";
     svg.style.overflow = "visible";
+
+    console.log(svg);
 
     /** expand view box to include stroke */
     x -= stroke;
@@ -153,10 +151,10 @@ const getMarker = (
     const height = 40;
 
     /** styles */
-    svg.style.fill = "none";
-    svg.style.stroke = color;
-    svg.style.strokeWidth = String(stroke);
-    svg.style.strokeDasharray = dash.join(" ");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", color);
+    svg.setAttribute("stroke-width", String(stroke));
+    svg.setAttribute("stroke-dasharray", dash.join(" "));
 
     /** create dash */
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");

@@ -9,7 +9,10 @@
     {
       "files": "*.!(css)",
       "options": {
-        "plugins": ["@ianvs/prettier-plugin-sort-imports"],
+        "plugins": [
+          "@ianvs/prettier-plugin-sort-imports",
+          "prettier-plugin-jsdoc"
+        ],
         "importOrder": [
           "<TYPES>^vue",
           "<TYPES>^[^~/.]",
@@ -26,7 +29,8 @@
           "^../"
         ],
         "importOrderParserPlugins": ["typescript", "importAssertions"],
-        "htmlWhitespaceSensitivity": "strict"
+        "htmlWhitespaceSensitivity": "strict",
+        "jsdocCapitalizeDescription": false
       }
     }
   ]

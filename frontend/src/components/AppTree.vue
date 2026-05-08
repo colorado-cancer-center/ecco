@@ -1,33 +1,33 @@
 <template>
   <div :role="level === 1 ? 'tree' : 'group'" class="flex flex-col">
-    <div v-if="level === 1" class="mb-1 flex w-full items-center gap-2">
+    <!-- top controls -->
+    <div v-if="level === 1" class="mb-2 flex gap-2">
       <AppInput
         v-if="isRef(search)"
         v-model="search.value"
         :icon="Search"
         placeholder="Search"
       />
-      <AppButton
-        v-tooltip="'Go to selected'"
-        :icon="faCrosshairs"
-        @click="onSeeSelected"
-      />
-      <AppButton
-        v-tooltip="'Open all'"
-        :icon="faAnglesDown"
-        @click="onOpenAll"
-      />
-      <AppButton
-        v-tooltip="'Close all'"
-        :icon="faAnglesUp"
-        @click="onCloseAll"
-      />
+      <AppButton v-tooltip="'Open to selected'" @click="onSeeSelected">
+        <Crosshair />
+      </AppButton>
+      <AppButton v-tooltip="'Open all'" @click="onOpenAll">
+        <ChevronsDown />
+      </AppButton>
+      <AppButton v-tooltip="'Close all'" @click="onCloseAll">
+        <ChevronsUp />
+      </AppButton>
     </div>
 
+    <!-- list -->
     <div
       v-for="(item, index) in children"
       :key="index"
-      class="tree-item flex flex-col"
+      :class="[
+        'relative flex flex-col',
+        level !== 1 &&
+          'relative pl-4 before:absolute before:inset-y-0 before:left-3.5 before:w-0.5 before:bg-off-white',
+      ]"
       role="treeitem"
       :aria-selected="isEqual(modelValue, getValue(item))"
       :aria-expanded="isOpen[index]"
@@ -35,53 +35,50 @@
       :aria-setsize="size(children)"
       :aria-posinset="index + 1"
     >
-      <div
-        v-show="match(item)"
-        class="tree-row group/row flex items-center gap-1"
-      >
+      <!-- row -->
+      <div v-show="match(item)" class="flex items-center gap-2">
+        <!-- expand/collapse/select -->
         <button
-          class="grow basis-0 justify-start text-left hover:bg-off-white"
+          class="grow basis-0 justify-start gap-2 rounded-md p-1 text-left hover:bg-light-gray"
           :disabled="!isEmpty(item.children) && !!unref(search)"
           :data-level="level"
           @click="onClick(index)"
           @keydown="onKey($event, index)"
         >
-          <font-awesome-icon
-            v-if="!isEmpty(item.children)"
-            :icon="
-              isOpen[index] || unref(search) ? faChevronDown : faChevronRight
-            "
-            class="w-4 shrink-0 text-gray"
-          />
+          <!-- expand/collapse icon -->
+          <template v-if="!isEmpty(item.children)">
+            <ChevronDown
+              v-if="isOpen[index] || unref(search)"
+              class="text-gray"
+            />
+            <ChevronRight v-else class="text-gray" />
+          </template>
+          <!-- selection icon -->
+          <template v-else>
+            <Check
+              v-if="isEqual(modelValue, getValue(item))"
+              class="text-success"
+              data-tree-selected
+            />
+            <Check v-else class="opacity-0" />
+          </template>
 
-          <font-awesome-icon
-            v-else-if="isEqual(modelValue, getValue(item))"
-            :icon="faCheck"
-            class="w-4 shrink-0 text-success"
-            data-tree-selected
-          />
-
-          <font-awesome-icon
-            v-else
-            :icon="faCircle"
-            class="w-4 shrink-0 opacity-0"
-          />
-
-          <span class="label">
+          <!-- text label -->
+          <span>
             {{ item.label }}
           </span>
 
+          <!-- count -->
           <span v-if="item.children && !unref(search)" class="text-gray">
             {{ size(item.children).toLocaleString() }}
           </span>
         </button>
-        <div
-          class="flex items-center gap-1 p-0 opacity-0 transition group-hover/row:opacity-100 hover:bg-off-white"
-        >
-          <slot :parents="getParents(item)"></slot>
-        </div>
+
+        <!-- action -->
+        <slot :parents="getParents(item)" />
       </div>
 
+      <!-- children items -->
       <AppTree
         v-show="item.children && (isOpen[index] || unref(search))"
         :children="item.children"
@@ -107,17 +104,15 @@ import AppButton from "@/components/AppButton.vue";
 import AppInput from "@/components/AppInput.vue";
 import { findClosest } from "@/util/dom";
 import { sleep } from "@/util/misc";
-import { faCircle } from "@fortawesome/free-regular-svg-icons";
 import {
-  faAnglesDown,
-  faAnglesUp,
-  faCheck,
-  faChevronDown,
-  faChevronRight,
-  faCrosshairs,
-  faSearch,
-} from "@fortawesome/free-solid-svg-icons";
-import { Search } from "@lucide/vue";
+  Check,
+  ChevronDown,
+  ChevronRight,
+  ChevronsDown,
+  ChevronsUp,
+  Crosshair,
+  Search,
+} from "@lucide/vue";
 import { useEventBus } from "@vueuse/core";
 import { isEmpty, isEqual, size } from "lodash";
 

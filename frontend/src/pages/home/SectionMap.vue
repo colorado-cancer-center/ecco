@@ -1,29 +1,34 @@
 <template>
   <div class="columns my-10 grid gap-10" :style="{ '--cols': mapCols }">
     <!-- left panel -->
-    <div class="flex flex-col gap-4 text-left" role="group">
-      <!-- category/measure selection -->
-      <AppTree
-        :children="measureMap"
-        :model-value="treeValue"
-        @update:model-value="onTreeChange"
-      >
-        <template #default="{ parents }">
-          <AppButton
-            v-if="parents.at(-1)?.id"
-            v-tooltip="'Download measure data'"
-            :icon="faDownload"
-            @click="onTreeDownload(parents.at(-1)?.id)"
-          />
-        </template>
-      </AppTree>
-
+    <div class="flex flex-col gap-8 text-left" role="group">
       <!-- level selection -->
       <AppSelect
         v-model="selectedLevel"
         label="Geographic level"
         :options="levelOptions"
       />
+
+      <!-- category/measure selection -->
+      <div class="flex flex-col gap-1">
+        Data
+        <AppTree
+          :children="measureMap"
+          :model-value="treeValue"
+          @update:model-value="onTreeChange"
+        >
+          <template #default="{ parents }">
+            <button
+              v-if="parents.at(-1)?.id"
+              v-tooltip="'Download measure data'"
+              class="aspect-square rounded-md p-1 text-gray hover:text-black"
+              @click="onTreeDownload(parents.at(-1)?.id)"
+            >
+              <Download />
+            </button>
+          </template>
+        </AppTree>
+      </div>
 
       <AppLink
         v-if="selectedLevel === 'tract' || noData"
@@ -156,12 +161,13 @@
             v-tooltip="'Gradient to use for coloring map data'"
             label="Gradient"
             :options="gradientOptions"
+            :truncate="true"
           >
             <template #preview="{ option }">
               <svg
                 :viewBox="`0 0 10 1`"
                 preserveAspectRatio="none"
-                class="gradient-preview h-[1em] max-w-[100px]"
+                class=""
                 :style="{ scale: flipGradient ? '-1 1' : '' }"
               >
                 <defs>
@@ -663,9 +669,7 @@
       </div>
 
       <!-- actions -->
-      <div
-        class="actions flex flex-wrap items-center justify-center gap-4"
-      >
+      <div class="actions flex flex-wrap items-center justify-center gap-4">
         <div class="flex flex-wrap items-center justify-center gap-2">
           <AppButton
             v-tooltip="'Download map(s) as PNG'"
@@ -765,9 +769,9 @@ import AppNumber from "@/components/AppNumber.vue";
 import AppSelect from "@/components/AppSelect.vue";
 import AppSlider from "@/components/AppSlider.vue";
 import AppTree from "@/components/AppTree.vue";
-import { gradientOptions } from "@/components/gradient";
+import { backgroundOptions, defaultBackground } from "@/components/background";
+import { defaultGradient, gradientOptions } from "@/components/gradient";
 import { colors } from "@/components/markers";
-import { backgroundOptions } from "@/components/tile-providers";
 import {
   arrayParam,
   jsonParam,
@@ -798,6 +802,7 @@ import {
   faPlus,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
+import { Download } from "@lucide/vue";
 import { useElementBounding, useFullscreen, useWindowSize } from "@vueuse/core";
 import { toBlob } from "html-to-image";
 import {
@@ -849,8 +854,8 @@ const long = useUrlParam("long", numberParam, 0);
 
 /** map style state */
 const showLegends = ref(true);
-const selectedBackground = ref(backgroundOptions[0]!.id || "");
-const selectedGradient = ref(gradientOptions[3]!.id || "");
+const selectedBackground = ref(defaultBackground);
+const selectedGradient = ref(defaultGradient);
 const backgroundOpacity = ref(1);
 const geometryOpacity = ref(0.75);
 const locationOpacity = ref(1);
@@ -1181,8 +1186,8 @@ const reset = async () => {
   lat.value = 0;
   long.value = 0;
   showLegends.value = true;
-  selectedBackground.value = backgroundOptions[0]?.id || "";
-  selectedGradient.value = gradientOptions[3]?.id || "";
+  selectedBackground.value = defaultBackground;
+  selectedGradient.value = defaultGradient;
   backgroundOpacity.value = 1;
   geometryOpacity.value = 0.75;
   locationOpacity.value = 1;

@@ -134,7 +134,7 @@ import {
 import { type Unit } from "@/api";
 import hatch from "@/assets/hatch.svg?no-inline";
 import { getGradient, gradientOptions } from "@/components/gradient";
-import { backgroundOptions } from "@/components/tile-providers";
+import { backgroundOptions } from "@/components/background";
 import { formatValue, normalizedApply } from "@/util/math";
 import { forceHex, getBbox, getCssVar, sleep, waitFor } from "@/util/misc";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";

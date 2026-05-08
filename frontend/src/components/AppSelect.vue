@@ -30,7 +30,7 @@
             class="overflow-auto [&_.icon]:text-gray"
             @keydown="onKeypress"
           >
-            <span class="grow truncate text-left">
+            <span :class="['grow text-left', truncate && 'truncate']">
               {{ selectedLabel }}
             </span>
             <slot
@@ -63,7 +63,9 @@
                 @vue:mounted="(node: VNode) => selected && onDropdownOpen(node)"
               >
                 <Check :style="{ opacity: selected ? 1 : 0 }" />
-                <span class="grow">{{ option.label }}</span>
+                <span :class="['grow', truncate && 'truncate']">
+                  {{ option.label }}
+                </span>
                 <slot name="preview" :option="option" />
               </li>
             </ListboxOption>
@@ -119,6 +121,7 @@ type Props = {
   multi?: boolean;
   modelValue: O["id"] | O["id"][];
   tooltip?: string;
+  truncate?: boolean;
 };
 
 const {
@@ -127,6 +130,7 @@ const {
   multi = false,
   modelValue,
   tooltip = "",
+  truncate = false,
 } = defineProps<Props>();
 
 type Emits = {
@@ -136,10 +140,7 @@ type Emits = {
 const emit = defineEmits<Emits>();
 
 type Slots = {
-  /**
-   * extra preview element to show for each option in dropdown and selected
-   * option in label
-   */
+  /** extra preview for each option in dropdown and selected label */
   preview: (props: { option?: O }) => unknown;
 };
 

@@ -2,7 +2,7 @@
   <component
     :is="component"
     :class="[
-      'inline-flex min-h-10 min-w-10 shrink-0 items-center justify-center gap-2 rounded-md p-2 no-underline transition trim',
+      'inline-flex shrink-0 items-center justify-center gap-2 rounded-md p-2 no-underline',
       accent
         ? 'bg-dark-gray text-white hover:bg-theme-dark'
         : 'bg-light-gray text-black hover:bg-theme-light',

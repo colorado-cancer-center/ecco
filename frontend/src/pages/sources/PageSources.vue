@@ -15,11 +15,11 @@
     <div class="text-center">
       <AppButton
         v-tooltip="'Download all sources data in CSV format'"
-        :icon="faTable"
         :to="getDownloadAll()"
         :accent="true"
       >
         Download All Data
+        <Download />
       </AppButton>
     </div>
   </section>
@@ -52,9 +52,10 @@
           <td>
             <AppButton
               v-tooltip="'Copy citation text to clipboard'"
-              :icon="faFeatherPointed"
               @click="copy(getSourceCitation(source))"
-            />
+            >
+              <Feather />
+            </AppButton>
           </td>
         </tr>
       </tbody>
@@ -143,10 +144,6 @@
 
 <script setup lang="ts">
 import { onMounted, onUpdated } from "vue";
-import { kebabCase } from "lodash";
-import { micromark } from "micromark";
-import { gfmTable, gfmTableHtml } from "micromark-extension-gfm-table";
-import { faFeatherPointed, faTable } from "@fortawesome/free-solid-svg-icons";
 import { getDownloadAll, getSourceCitation, getSources } from "@/api";
 import AppButton from "@/components/AppButton.vue";
 import AppHeading from "@/components/AppHeading.vue";
@@ -154,6 +151,10 @@ import AppLink from "@/components/AppLink.vue";
 import AppStatus from "@/components/AppStatus.vue";
 import { useQuery } from "@/util/composables";
 import { copy } from "@/util/misc";
+import { Download, Feather } from "@lucide/vue";
+import { kebabCase } from "lodash";
+import { micromark } from "micromark";
+import { gfmTable, gfmTableHtml } from "micromark-extension-gfm-table";
 
 /** load sources metadata */
 const {

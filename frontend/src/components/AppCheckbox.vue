@@ -1,7 +1,7 @@
 <template>
   <SwitchGroup>
     <div
-      class="flex min-h-10 items-center rounded-md transition hover:bg-theme-light"
+      class="flex items-center rounded-md bg-light-gray p-1 transition hover:bg-theme-light"
     >
       <Switch
         :model-value="modelValue"
