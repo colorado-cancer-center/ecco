@@ -129,8 +129,6 @@ const getMarker = (
     svg.style.paintOrder = "stroke fill";
     svg.style.overflow = "visible";
 
-    console.log(svg);
-
     /** expand view box to include stroke */
     x -= stroke;
     y -= stroke;

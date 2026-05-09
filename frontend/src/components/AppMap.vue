@@ -11,8 +11,10 @@
 
     <!-- legends -->
     <template v-if="showLegends">
+      <!-- top left legend -->
       <div
         v-if="$slots['top-left-upper'] || $slots['top-left-lower']"
+        ref="topLeftLegend"
         class="absolute top-4 left-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
       >
         <slot name="top-left-upper" />
@@ -45,14 +47,20 @@
 
         <slot name="top-left-lower" />
       </div>
+
+      <!-- top right legend -->
       <div
         v-if="$slots['top-right']"
+        ref="topRightLegend"
         class="absolute top-4 right-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
       >
         <slot name="top-right" />
       </div>
+
+      <!-- bottom right legend -->
       <div
         v-if="$slots['bottom-right'] || !isEmpty(symbols)"
+        ref="bottomRightLegend"
         class="absolute right-4 bottom-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
       >
         <slot name="bottom-right" />
@@ -70,8 +78,11 @@
           </template>
         </div>
       </div>
+
+      <!-- bottom left legend -->
       <div
         v-if="$slots['bottom-left']"
+        ref="bottomLeftLegend"
         class="absolute bottom-4 left-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
       >
         <slot name="bottom-left" />
@@ -83,7 +94,7 @@
       v-for="(feature, index) of geometryFeaturesWLabels"
       :key="index"
       ref="geometryLabelElements"
-      class="pointer-events-none flex flex-col items-center gap-1 rounded-md text-center text-[calc(var(--zoom)*2px)] text-white select-none text-stroke-1.5 text-stroke-black *:not-first:flex *:not-first:flex-wrap *:not-first:items-center *:not-first:justify-center *:not-first:gap-1"
+      class="flex flex-col items-center gap-1 rounded-md text-center text-[calc(var(--zoom)*2px)] text-white select-none text-stroke-1.5 text-stroke-black *:not-first:flex *:not-first:flex-wrap *:not-first:items-center *:not-first:justify-center *:not-first:gap-1 [:has(>&)]:pointer-events-none"
     >
       <div>{{ feature.get("label") }}</div>
       <slot name="geometry-label" :feature="feature.getProperties()" />
@@ -94,8 +105,9 @@
       v-if="$slots['popup'] && selectedFeature"
       ref="popupElement"
       v-stop
-      class="relative z-100! flex max-h-full w-100 max-w-max translate-y-[calc(--spacing(2)*-1.414)] flex-col gap-2 rounded-md bg-white p-4 shadow-md after:absolute after:top-full after:left-1/2 after:size-2 after:-translate-1/2 after:rotate-45 after:bg-white after:shadow-md after:content-[''] after:[clip-path:polygon(200%_-100%,200%_200%,-100%_200%)]"
+      class="relative z-100! flex max-h-full w-100 max-w-max translate-y-[calc(--spacing(2)*-1.414)] flex-col gap-2 rounded-md bg-white p-4 shadow-md after:absolute after:top-full after:left-1/2 after:size-2 after:-translate-1/2 after:rotate-45 after:bg-white after:shadow-md after:content-[''] after:[clip-path:polygon(200%_-100%,200%_200%,-100%_200%)] *:first:pr-6"
     >
+      <slot name="popup" :feature="selectedFeature.getProperties()" />
       <button
         class="absolute top-0 right-0 min-h-8 min-w-8 text-gray hover:text-theme-dark"
         aria-label="Close popup"
@@ -103,7 +115,6 @@
       >
         <X />
       </button>
-      <slot name="popup" :feature="selectedFeature.getProperties()" />
     </div>
 
     <div
@@ -129,6 +140,7 @@ export const noDataEntry = {
 </script>
 
 <script setup lang="ts">
+import type { Ref } from "vue";
 import type { FeatureCollection } from "geojson";
 import type { FeatureLike } from "ol/Feature";
 import type { Geometry } from "ol/geom";
@@ -148,7 +160,7 @@ import hatch from "@/assets/hatch.svg?no-inline";
 import { backgroundOptions } from "@/components/background";
 import { getGradient, gradientOptions } from "@/components/gradient";
 import { formatValue, normalizedApply } from "@/util/math";
-import { forceHex, getBbox, getCssVar, sleep, waitFor } from "@/util/misc";
+import { forceHex, getCssVar, sleep, waitFor } from "@/util/misc";
 import { X } from "@lucide/vue";
 import { useElementSize } from "@vueuse/core";
 import * as d3 from "d3";
@@ -170,6 +182,10 @@ const frameElement = useTemplateRef("frameElement");
 const mapElement = useTemplateRef("mapElement");
 const popupElement = useTemplateRef("popupElement");
 const geometryLabelElements = useTemplateRef("geometryLabelElements");
+const topLeftLegend = useTemplateRef("topLeftLegend");
+const topRightLegend = useTemplateRef("topRightLegend");
+const bottomRightLegend = useTemplateRef("bottomRightLegend");
+const bottomLeftLegend = useTemplateRef("bottomLeftLegend");
 
 const theme = forceHex(getCssVar("--theme"));
 
@@ -676,6 +692,7 @@ watchEffect(async (onCleanup) => {
       element,
       position: latlongToXy(cent_lat, cent_long),
       positioning: "center-center",
+      className: "pointer-events-none!",
     });
     map.addOverlay(overlay);
     onCleanup(() => {
@@ -725,7 +742,10 @@ map.on("click", ({ pixel }) => {
 });
 
 /** popup object */
-const popup = new Overlay({ stopEvent: false, positioning: "bottom-center" });
+const popup = new Overlay({
+  stopEvent: false,
+  positioning: "bottom-center",
+});
 
 /** add popup to map */
 map.addOverlay(popup);
@@ -751,7 +771,7 @@ watchEffect(async () => {
   await nextTick();
 
   /** move view if needed */
-  popup.panIntoView({ animation: { duration: 100 } });
+  popup.panIntoView({ animation: { duration: 0 } });
 });
 
 /** change cursor to indicate click-ability */
@@ -842,9 +862,14 @@ const fit = () => {
   /** make room for legends */
   if (showLegends) {
     /** increase padding based on corner legend panel dimensions */
-    const padCorner = (v: "top" | "bottom", h: "left" | "right") => {
+    const padCorner = (
+      v: "top" | "bottom",
+      h: "left" | "right",
+      legend: Ref<HTMLElement | null>,
+    ) => {
       /** get client size of legend elements */
-      const { width, height } = getBbox(`.legend.${v}-${h}`);
+      const { width, height } =
+        legend.value?.getBoundingClientRect() ?? new DOMRect(0, 0, 1, 1);
       if (mapWidth.value > mapHeight.value)
         /** if map landscape aspect ratio */
         padding[h] = Math.max(width, padding[h]);
@@ -853,14 +878,14 @@ const fit = () => {
         padding[v] = Math.max(height, padding[v]);
     };
     /** pad each corner */
-    padCorner("top", "left");
-    padCorner("top", "right");
-    padCorner("bottom", "left");
-    padCorner("bottom", "right");
+    padCorner("top", "left", topLeftLegend);
+    padCorner("top", "right", topRightLegend);
+    padCorner("bottom", "left", bottomLeftLegend);
+    padCorner("bottom", "right", bottomRightLegend);
   }
 
   const { top, right, bottom, left } = padding;
-  /** fit view. add some extra padding. */
+  /** fit view, add some extra padding */
   view.fit(extent, {
     padding: [top, right, bottom, left].map((v) => v + 20),
   });

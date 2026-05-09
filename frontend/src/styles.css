@@ -151,3 +151,12 @@
   -webkit-text-stroke-color: --value(--color-*);
   paint-order: stroke;
 }
+
+.tippy-box {
+  @apply bg-dark-gray rounded-md p-1 leading-relaxed! text-white;
+  font: inherit;
+}
+
+.tippy-arrow {
+  @apply text-dark-gray;
+}

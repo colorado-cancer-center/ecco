@@ -8,14 +8,14 @@
         :icon="Search"
         placeholder="Search"
       />
-      <AppButton v-tooltip="'Open to selected'" @click="onSeeSelected">
-        <Crosshair />
+      <AppButton v-tooltip="'Collapse all'" @click="onCloseAll">
+        <ChevronsUp />
       </AppButton>
-      <AppButton v-tooltip="'Open all'" @click="onOpenAll">
+      <AppButton v-tooltip="'Expand all'" @click="onOpenAll">
         <ChevronsDown />
       </AppButton>
-      <AppButton v-tooltip="'Close all'" @click="onCloseAll">
-        <ChevronsUp />
+      <AppButton v-tooltip="'Expand to selected'" @click="onSeeSelected">
+        <Crosshair />
       </AppButton>
     </div>
 
@@ -57,10 +57,10 @@
           <template v-else>
             <Check
               v-if="isEqual(modelValue, getValue(item))"
-              class="text-success"
+              class="shrink-0 text-success"
               data-tree-selected
             />
-            <Check v-else class="opacity-0" />
+            <Check v-else class="shrink-0 opacity-0" />
           </template>
 
           <!-- text label -->

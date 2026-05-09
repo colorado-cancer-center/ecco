@@ -8,11 +8,6 @@ export const sleep = (ms = 0) =>
 export const frame = () =>
   new Promise((resolve) => window.requestAnimationFrame(resolve));
 
-/** safe get bbox */
-export const getBbox = (selector: string): DOMRect =>
-  document.querySelector(selector)?.getBoundingClientRect() ||
-  new DOMRect(0, 0, 1, 1);
-
 /** wait for function to return something, checking periodically */
 export const waitFor = async <Result>(
   func: () => Result,

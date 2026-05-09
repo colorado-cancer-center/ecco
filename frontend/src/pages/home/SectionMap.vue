@@ -128,7 +128,7 @@
                 v-if="index < compare.length"
                 v-tooltip="'Remove map from comparison'"
                 v-bind="highlightListeners(index)"
-                class="group relative aspect-2/1 size-full"
+                class="group relative aspect-2/1 w-full"
                 @click="toggleCompare(map)"
               >
                 <Minus />
@@ -136,7 +136,7 @@
                   v-if="thumbnails[index]"
                   :src="thumbnails[index]"
                   alt=""
-                  class="absolute size-full object-contain object-center group-hover:opacity-25"
+                  class="absolute size-full object-contain object-center group-hover:opacity-0"
                 />
               </AppButton>
             </template>
@@ -150,7 +150,7 @@
               v-tooltip="
                 'Select new measure/locations/etc. to compare another map'
               "
-              class="size-full rounded-md border border-gray"
+              class="aspect-2/1 w-full rounded-md border border-gray"
             />
           </div>
         </template>
@@ -409,7 +409,7 @@
                   ?.measures?.[selected.measure]?.label
               }}
             </strong>
-            <div class="text-sm">Per {{ selected.level }}</div>
+            <div class="text-sm">{{ upperFirst(selected.level) }}</div>
             <div>
               {{
                 Object.values(selected.factors)
@@ -510,6 +510,7 @@
                 "
               >
                 <dt>
+                  <i>{{ selected.measure }}</i>
                   {{ feature.aac ? "Rate" : "Value" }}
                 </dt>
                 <dd>
@@ -533,7 +534,9 @@
               </template>
 
               <template v-else>
-                <dt>Value</dt>
+                <dt>
+                  <i>{{ selected.measure }}</i> Value
+                </dt>
                 <dd>-</dd>
               </template>
 
@@ -828,6 +831,7 @@ import {
   orderBy,
   pick,
   uniqWith,
+  upperFirst,
 } from "lodash";
 
 type Value = NonNullable<Values>["values"][string];

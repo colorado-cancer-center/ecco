@@ -8,7 +8,6 @@
         ><span class="font-light">ancer in</span> <b>Co</b
         ><span class="font-light">lorado</span>
       </span>
-      <span class="text-xs font-light text-dark-gray">(ECCO)</span>
       <span class="text-xs font-light text-dark-gray">
         University of Colorado Cancer Center
       </span>
