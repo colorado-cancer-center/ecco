@@ -9,10 +9,10 @@
         placeholder="Search"
       />
       <AppButton v-tooltip="'Collapse all'" @click="onCloseAll">
-        <ChevronsUp />
+        <ListChevronsDownUp />
       </AppButton>
       <AppButton v-tooltip="'Expand all'" @click="onOpenAll">
-        <ChevronsDown />
+        <ListChevronsUpDown />
       </AppButton>
       <AppButton v-tooltip="'Expand to selected'" @click="onSeeSelected">
         <Crosshair />
@@ -108,9 +108,9 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
-  ChevronsDown,
-  ChevronsUp,
   Crosshair,
+  ListChevronsDownUp,
+  ListChevronsUpDown,
   Search,
 } from "@lucide/vue";
 import { useEventBus } from "@vueuse/core";
