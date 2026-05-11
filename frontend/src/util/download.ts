@@ -20,5 +20,5 @@ export const downloadPng = (data: BlobPart, filename: Filename) =>
   download(data, filename, "image/png");
 
 /** download string as file */
-export const downloadString = (data: string, filename: Filename) =>
-  download(data, filename, "text/plain");
+export const downloadJson = (data: unknown, filename: Filename) =>
+  download(JSON.stringify(data), filename, "application/json");

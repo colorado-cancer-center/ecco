@@ -812,7 +812,7 @@ import {
   useQuery,
   useUrlParam,
 } from "@/util/composables";
-import { downloadPng, downloadString } from "@/util/download";
+import { downloadJson, downloadPng } from "@/util/download";
 import { formatValue, round } from "@/util/math";
 import { copy, sleep, waitFor } from "@/util/misc";
 import {
@@ -1379,7 +1379,7 @@ const downloadMapGeo = async () => {
   for (const map of mapElement.value) {
     const geo = map?.getGeo();
     if (!geo) continue;
-    downloadString(JSON.stringify(geo), "map-geo");
+    downloadJson(geo, "map-geo");
   }
 };
 
