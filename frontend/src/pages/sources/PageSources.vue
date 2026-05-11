@@ -165,11 +165,6 @@ const {
 
 onMounted(loadSources);
 
-const imports = import.meta.glob<string>("./*.md", {
-  query: "raw",
-  eager: true,
-});
-
 /** load source description markdown files */
 const descriptions = Object.fromEntries(
   Object.entries(
