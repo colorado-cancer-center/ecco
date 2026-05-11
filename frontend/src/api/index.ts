@@ -245,6 +245,7 @@ type _Values = {
   order?: string[];
   /** where data came from */
   source?: string;
+  source_url?: string;
 };
 
 /** get values data */
@@ -267,8 +268,8 @@ export const getValues = async (
     ...data,
     source: {
       id: "",
-      name: data.source ?? "",
-      link: "",
+      name: data.source || "",
+      link: data.source_url || "",
       date: "",
       date_description: "",
       data_description: "",
@@ -402,16 +403,6 @@ type _CountyData = {
 /** get all data for particular county */
 export const getCountyData = (id: string) =>
   request<_CountyData>(`${api}/stats/by-county/${id}`);
-
-/** source metadata */
-type _Sources = {
-  id: string;
-  name: string;
-  data_description: string;
-  date: string;
-  date_description: string;
-  link: string;
-}[];
 
 /** get source metadata */
 export const getSources = async () => sources;
