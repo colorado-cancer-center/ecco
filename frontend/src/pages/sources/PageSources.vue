@@ -165,13 +165,21 @@ const {
 
 onMounted(loadSources);
 
+const imports = import.meta.glob<string>("./*.md", {
+  query: "raw",
+  eager: true,
+});
+
 /** load source description markdown files */
 const descriptions = Object.fromEntries(
   Object.entries(
-    import.meta.glob<string>("./*.md", { query: "raw", eager: true }),
+    import.meta.glob<{ default: string }>("./*.md", {
+      query: "raw",
+      eager: true,
+    }),
   ).map(([key, value]) => [
     key.replace(/^\.\/(.*)\.md$/, "$1"),
-    micromark(value, {
+    micromark(value.default, {
       extensions: [gfmTable()],
       htmlExtensions: [gfmTableHtml()],
     }),
