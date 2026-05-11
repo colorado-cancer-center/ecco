@@ -2,16 +2,19 @@
   <header
     class="flex flex-wrap items-center justify-between gap-2 p-4 max-md:flex-col max-md:text-center"
   >
-    <AppLink to="/" class="flex items-baseline gap-4 text-black">
-      <span>
+    <div class="flex items-baseline gap-4 text-black">
+      <AppLink to="/">
         <b>E</b><span class="font-light">xploring</span> <b>C</b
         ><span class="font-light">ancer in</span> <b>Co</b
         ><span class="font-light">lorado</span>
-      </span>
-      <span class="text-xs font-light text-dark-gray">
+      </AppLink>
+      <AppLink
+        to="https://medschool.cuanschutz.edu/colorado-cancer-center"
+        class="text-xs font-light text-dark-gray"
+      >
         University of Colorado Cancer Center
-      </span>
-    </AppLink>
+      </AppLink>
+    </div>
 
     <nav class="flex flex-wrap justify-center gap-4 uppercase">
       <template v-for="(route, index) of routes" :key="index">

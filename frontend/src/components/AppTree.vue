@@ -8,13 +8,16 @@
         :icon="Search"
         placeholder="Search"
       />
-      <AppButton v-tooltip="'Collapse all'" @click="onCloseAll">
+      <AppButton v-tooltip="'Collapse all tree levels'" @click="onCloseAll">
         <ListChevronsDownUp />
       </AppButton>
-      <AppButton v-tooltip="'Expand all'" @click="onOpenAll">
+      <AppButton v-tooltip="'Expand all tree levels'" @click="onOpenAll">
         <ListChevronsUpDown />
       </AppButton>
-      <AppButton v-tooltip="'Expand to selected'" @click="onSeeSelected">
+      <AppButton
+        v-tooltip="'Expand tree to show selected'"
+        @click="onSeeSelected"
+      >
         <Crosshair />
       </AppButton>
     </div>

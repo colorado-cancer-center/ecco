@@ -163,7 +163,7 @@ import { formatValue, normalizedApply } from "@/util/math";
 import { forceHex, getCssVar, sleep, waitFor } from "@/util/misc";
 import { X } from "@lucide/vue";
 import { useElementSize } from "@vueuse/core";
-import * as d3 from "d3";
+import { extent, pairs, range, scaleQuantile, ticks, tickStep } from "d3";
 import { debounce, isEmpty, mapValues, upperFirst } from "lodash";
 import { Feature, Map, Overlay, View } from "ol";
 import { pointerMove } from "ol/events/condition";
@@ -350,22 +350,22 @@ const scale = computed(() => {
 
     /** "nice", approximate number of steps */
     if (niceSteps) {
-      bands = d3.ticks(min, max, scaleSteps);
+      bands = ticks(min, max, scaleSteps);
 
       /** make sure steps always covers/contains range of values (min/max) */
-      const step = d3.tickStep(min, max, scaleSteps);
+      const step = tickStep(min, max, scaleSteps);
       if (bands.at(0)! > min) bands.unshift(bands.at(0)! - step);
       if (bands.at(-1)! < max) bands.push(bands.at(-1)! + step);
     } else {
       /** exact number of steps */
-      bands = d3.range(min, max, (max - min) / scaleSteps).concat([max]);
+      bands = range(min, max, (max - min) / scaleSteps).concat([max]);
     }
 
     /** make sure enough bands */
     if (bands.length < 3) bands = [min, (min + max) / 2, max];
 
     /** range of bands */
-    const [lower = 0, upper = 1] = d3.extent(bands);
+    const [lower = 0, upper = 1] = extent(bands);
 
     /** apply power */
     bands = bands.map((value) =>
@@ -376,7 +376,7 @@ const scale = computed(() => {
 
     /** derive props for each step between points */
     steps.push(
-      ...d3.pairs(bands).map(([lower, upper], index, array) => ({
+      ...pairs(bands).map(([lower, upper], index, array) => ({
         lower,
         upper,
         label:
@@ -400,9 +400,7 @@ const scale = computed(() => {
     /** scale interpolator */
     const getColor = (value?: number | string | null) =>
       typeof value === "number"
-        ? forceHex(
-            d3.scaleQuantile<string>().domain(bands).range(colors)(value),
-          )
+        ? forceHex(scaleQuantile<string>().domain(bands).range(colors)(value))
         : noDataColor;
 
     return { steps, getColor };

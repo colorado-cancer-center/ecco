@@ -33,17 +33,6 @@
         </AppTree>
       </div>
 
-      <p v-if="selectedLevel === 'tract' || noData">
-        <AppLink
-          to="/sources#suppressed-values"
-          :new-tab="true"
-          class="inline-flex items-center gap-1"
-        >
-          Low values may be suppressed
-          <Info />
-        </AppLink>
-      </p>
-
       <!-- factors -->
       <template v-if="!isEmpty(factors)">
         <div class="grid grid-cols-[min-content_1fr] items-center gap-2">
@@ -500,6 +489,16 @@
               Health Statistic Region {{ feature.hs_region }}
             </strong>
 
+            <AppLink
+              v-if="selectedLevel === 'tract' || noData"
+              to="/sources#suppressed-values"
+              :new-tab="true"
+              class="inline-flex items-center gap-1 underline"
+            >
+              Low values may be suppressed
+              <Info />
+            </AppLink>
+
             <dl>
               <!-- main values -->
 
@@ -510,7 +509,10 @@
                 "
               >
                 <dt>
-                  <i>{{ selected.measure }}</i>
+                  <i>{{
+                    facets[selected.level]?.categories?.[selected.category]
+                      ?.measures?.[selected.measure]?.label
+                  }}</i>
                   {{ feature.aac ? "Rate" : "Value" }}
                 </dt>
                 <dd>
@@ -701,10 +703,17 @@
           <AppButton
             v-tooltip="'Download map(s) as PNG'"
             :accent="true"
-            @click="download"
+            @click="downloadMapImage"
           >
             <Download />
             Map
+          </AppButton>
+          <AppButton
+            v-tooltip="'Download map(s) as GeoJSON'"
+            @click="downloadMapGeo"
+          >
+            <Download />
+            Geo
           </AppButton>
           <AppButton
             v-tooltip="'Zoom out'"
@@ -1345,7 +1354,7 @@ watch(
 );
 
 /** download map as png */
-const download = async () => {
+const downloadMapImage = async () => {
   if (!mapGridElement.value) return;
 
   /** convert to image */
@@ -1360,6 +1369,11 @@ const download = async () => {
   });
 
   if (blob) downloadPng(blob, "map");
+};
+
+/** download map as geo data */
+const downloadMapGeo = async () => {
+  if (!mapGridElement.value) return;
 };
 
 /** toggle fullscreen on element */

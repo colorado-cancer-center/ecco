@@ -1,4 +1,4 @@
-import * as d3 from "d3";
+import { color } from "d3";
 
 /** wait ms */
 export const sleep = (ms = 0) =>
@@ -29,8 +29,8 @@ export const getCssVar = (
 ) => getComputedStyle(element).getPropertyValue(name);
 
 /** force color to hex format */
-export const forceHex = (color: string) =>
-  d3.color(color)?.formatHex() || "#000000";
+export const forceHex = (string: string) =>
+  color(string)?.formatHex() || "#000000";
 
 /** convert [0,1] value to two hex digits */
 export const toHex = (value = 0) =>

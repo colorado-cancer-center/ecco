@@ -244,7 +244,8 @@ type _Values = {
   unit: Unit;
   order?: string[];
   /** where data came from */
-  source?: Sources[number];
+  source?: string;
+  source_url?: string;
 };
 
 /** get values data */
@@ -263,10 +264,17 @@ export const getValues = async (
     { measure, ...(filtersString && { filters: filtersString }) },
   );
 
-  /** TEMPORARY TO PREVENT CRASH */
-  data.source = sources[0];
-
-  return data;
+  return {
+    ...data,
+    source: {
+      id: "",
+      name: data.source || "",
+      data_description: "",
+      date: "",
+      date_description: "",
+      link: data.source_url || "",
+    },
+  };
 };
 
 export type Values = Awaited<ReturnType<typeof getValues>>;
@@ -395,16 +403,6 @@ type _CountyData = {
 /** get all data for particular county */
 export const getCountyData = (id: string) =>
   request<_CountyData>(`${api}/stats/by-county/${id}`);
-
-/** source metadata */
-type _Sources = {
-  id: string;
-  name: string;
-  data_description: string;
-  date: string;
-  date_description: string;
-  link: string;
-}[];
 
 /** get source metadata */
 export const getSources = async () => sources;
