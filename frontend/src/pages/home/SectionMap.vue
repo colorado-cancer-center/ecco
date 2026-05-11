@@ -812,7 +812,7 @@ import {
   useQuery,
   useUrlParam,
 } from "@/util/composables";
-import { downloadPng } from "@/util/download";
+import { downloadPng, downloadString } from "@/util/download";
 import { formatValue, round } from "@/util/math";
 import { copy, sleep, waitFor } from "@/util/misc";
 import {
@@ -1353,7 +1353,7 @@ watch(
   { immediate: true },
 );
 
-/** download map as png */
+/** download maps as pngs */
 const downloadMapImage = async () => {
   if (!mapGridElement.value) return;
 
@@ -1371,9 +1371,16 @@ const downloadMapImage = async () => {
   if (blob) downloadPng(blob, "map");
 };
 
-/** download map as geo data */
+/** download maps as geo data */
 const downloadMapGeo = async () => {
-  if (!mapGridElement.value) return;
+  if (!mapElement.value?.length) return;
+
+  /** download json files */
+  for (const map of mapElement.value) {
+    const geo = map?.getGeo();
+    if (!geo) continue;
+    downloadString(JSON.stringify(geo), "map-geo");
+  }
 };
 
 /** toggle fullscreen on element */

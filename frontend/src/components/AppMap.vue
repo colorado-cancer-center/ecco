@@ -923,8 +923,17 @@ onMounted(async () => {
   }
 });
 
+/** get geojson data */
+const getGeo = (): FeatureCollection => ({
+  type: "FeatureCollection",
+  features: [
+    ...geojson.writeFeaturesObject(geometrySource.getFeatures()).features,
+    ...geojson.writeFeaturesObject(locationsSource.getFeatures()).features,
+  ],
+});
+
 /** allow control from parent */
-defineExpose({ zoomIn, zoomOut, fit });
+defineExpose({ zoomIn, zoomOut, fit, getGeo });
 
 /** clean up objects */
 onUnmounted(() => {
