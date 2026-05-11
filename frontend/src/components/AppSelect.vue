@@ -17,7 +17,7 @@
       @update:model-value="onChange"
     >
       <Float
-        :middleware="middleware"
+        :middleware="middleware as any"
         floating-as="template"
         portal
         adaptive-width
@@ -58,7 +58,7 @@
               <li
                 :class="[
                   'flex cursor-pointer items-center p-2 transition',
-                  { 'bg-light-gray': active, 'bg-theme-light': selected },
+                  active ? 'bg-light-gray' : selected ? 'bg-theme-light' : '',
                 ]"
                 @vue:mounted="(node: VNode) => selected && onDropdownOpen(node)"
               >
