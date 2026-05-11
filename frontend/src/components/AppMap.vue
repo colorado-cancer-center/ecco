@@ -187,7 +187,7 @@ const topRightLegend = useTemplateRef("topRightLegend");
 const bottomRightLegend = useTemplateRef("bottomRightLegend");
 const bottomLeftLegend = useTemplateRef("bottomLeftLegend");
 
-const theme = forceHex(getCssVar("--theme"));
+const theme = forceHex(getCssVar("--color-theme-light"));
 
 type Props = {
   /** features */
@@ -791,28 +791,6 @@ watchEffect(() =>
   map.setLayers([backgroundLayer, geometryLayer, locationsLayer]),
 );
 
-/** highlight and zoom in on feature */
-watch(
-  [() => highlight, () => geometry],
-  async () => {
-    if (!highlight || !geometry) return;
-    /** get feature bounds */
-    const extent = geometryFeatures.value
-      /** lookup feature by id */
-      .find((feature) => feature.get("id") === highlight)
-      ?.getGeometry()
-      ?.getExtent();
-    if (!extent) return;
-    /** wait for view to be attached to map */
-    await waitFor(() => !!map.getView());
-    /** fit view to feature bounds */
-    view.fit(extent);
-    /** zoom out a bit to give context of surroundings */
-    view.adjustZoom(-1);
-  },
-  { immediate: true, deep: true },
-);
-
 /** preview image of canvas */
 const thumbnail = ref<Blob | null>(null);
 
@@ -848,10 +826,21 @@ const zoomOut = () => view.setZoom((view.getZoom() ?? 2) - 1);
 /** map client size */
 const { width: mapWidth, height: mapHeight } = useElementSize(frameElement);
 
-/** fit view to geometry layer content */
-const fit = () => {
-  /** get bounding box of content */
-  const extent = geometrySource.getExtent();
+/** fit view to geometry layer content or highlighted feature */
+const fit = async () => {
+  /** wait for view to be attached to map */
+  await waitFor(() => !!map.getView());
+
+  /** get bounding box */
+  const extent = highlight
+    ? /** highlighted feature */
+      geometryFeatures.value
+        /** lookup feature by id */
+        .find((feature) => feature.get("id") === highlight)
+        ?.getGeometry()
+        ?.getExtent()
+    : /** geometry layer */
+      geometrySource.getExtent();
 
   /** check if valid extent (can be infinities if no features) */
   if (!extent || extent.some((value) => !Number.isFinite(value))) return;
@@ -889,6 +878,10 @@ const fit = () => {
   view.fit(extent, {
     padding: [top, right, bottom, left].map((v) => v + 20),
   });
+
+  if (highlight)
+    /** zoom out a bit to give context of surroundings */
+    view.adjustZoom(-1);
 };
 
 /** auto-fit when geometry changes */
