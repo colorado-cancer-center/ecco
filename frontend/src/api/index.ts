@@ -244,7 +244,7 @@ type _Values = {
   unit: Unit;
   order?: string[];
   /** where data came from */
-  source?: Sources[number];
+  source?: string;
 };
 
 /** get values data */
@@ -263,10 +263,17 @@ export const getValues = async (
     { measure, ...(filtersString && { filters: filtersString }) },
   );
 
-  /** TEMPORARY TO PREVENT CRASH */
-  data.source = sources[0];
-
-  return data;
+  return {
+    ...data,
+    source: {
+      id: "",
+      name: data.source ?? "",
+      link: "",
+      date: "",
+      date_description: "",
+      data_description: "",
+    },
+  };
 };
 
 export type Values = Awaited<ReturnType<typeof getValues>>;
