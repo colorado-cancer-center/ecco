@@ -150,7 +150,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch, watchEffect } from "vue";
 import { useRoute } from "vue-router";
 import { getCountyData, getGeo } from "@/api";
 import AppBarChart from "@/components/AppBarChart.vue";
@@ -165,7 +165,6 @@ import { fromPairs, mapValues, orderBy, startCase, toPairs } from "lodash";
 import basicMeasures from "./basic-measures.json";
 
 const route = useRoute();
-const map = ref<InstanceType<typeof AppMap>>();
 
 /** get fips of viewed county */
 const id = computed(() => [route.params.id].flat()[0] ?? "");
@@ -212,6 +211,9 @@ const {
   { FIPS: "", name: "", categories: {} },
 );
 
+/** page title */
+watchEffect(() => (appTitle.value = [data.value?.name ?? ""]));
+
 watch(() => route.params.id, loadData, { immediate: true });
 
 /** get select chart data from county data */
@@ -241,7 +243,4 @@ const chartData = computed(() =>
       })
     : [],
 );
-
-/** update tab title */
-watch(data, () => (appTitle.value = [data.value?.name ?? ""]));
 </script>

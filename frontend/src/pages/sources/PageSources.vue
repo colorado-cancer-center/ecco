@@ -149,12 +149,16 @@ import AppButton from "@/components/AppButton.vue";
 import AppHeading from "@/components/AppHeading.vue";
 import AppLink from "@/components/AppLink.vue";
 import AppStatus from "@/components/AppStatus.vue";
+import { appTitle } from "@/meta";
 import { useQuery } from "@/util/composables";
 import { copy } from "@/util/misc";
 import { Download, Feather } from "@lucide/vue";
 import { kebabCase } from "lodash";
 import { micromark } from "micromark";
 import { gfmTable, gfmTableHtml } from "micromark-extension-gfm-table";
+
+/** page title */
+onMounted(() => (appTitle.value = ["Sources"]));
 
 /** load sources metadata */
 const {

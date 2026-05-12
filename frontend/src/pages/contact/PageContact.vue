@@ -29,7 +29,12 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from "vue";
 import AppButton from "@/components/AppButton.vue";
 import AppHeading from "@/components/AppHeading.vue";
+import { appTitle } from "@/meta";
 import { Bug, Form, Mail } from "@lucide/vue";
+
+/** page title */
+onMounted(() => (appTitle.value = ["Contact"]));
 </script>

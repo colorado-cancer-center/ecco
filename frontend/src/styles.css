@@ -56,7 +56,7 @@
 
   section {
     --content: 300;
-    @apply flex flex-col gap-8 px-[max(--spacing(12),(100%---spacing(1)*var(--content))/2)] py-12;
+    @apply flex flex-col gap-8 px-[max(--spacing(12),(100%-(--spacing(1))*var(--content))/2)] py-12;
   }
 
   section:nth-child(odd) {

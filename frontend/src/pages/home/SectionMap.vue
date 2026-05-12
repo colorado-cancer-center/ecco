@@ -804,6 +804,7 @@ import AppTree from "@/components/AppTree.vue";
 import { backgroundOptions, defaultBackground } from "@/components/background";
 import { defaultGradient, gradientOptions } from "@/components/gradient";
 import { colors } from "@/components/markers";
+import { appTitle } from "@/meta";
 import {
   arrayParam,
   jsonParam,
@@ -895,6 +896,19 @@ const manualMin = ref(0);
 const manualMax = ref(1);
 const mapWidth = ref(0);
 const mapHeight = ref(0);
+
+/** compare state */
+const compare = useUrlParam("compare", jsonParam<Map[]>(), []);
+const showPreview = ref(true);
+
+/** page title */
+watchEffect(() => {
+  const locations = selectedLocations.value.length;
+  appTitle.value = [
+    selectedMeasure.value,
+    locations ? `${locations} locations` : "",
+  ].filter(Boolean);
+});
 
 /** push selected facet values to tree value */
 const treeValue = computed(() => [
@@ -1024,12 +1038,6 @@ const selectedMap = computed(() => ({
 }));
 
 type Map = typeof selectedMap.value;
-
-/** show preview of selected map */
-const showPreview = ref(true);
-
-/** map compare group */
-const compare = useUrlParam("compare", jsonParam<Map[]>(), []);
 
 /** reenable preview state on any change to comparison */
 watch(compare, () => (showPreview.value = true), { deep: true });

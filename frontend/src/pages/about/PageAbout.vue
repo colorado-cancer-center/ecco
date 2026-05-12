@@ -81,6 +81,11 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from "vue";
 import AppHeading from "@/components/AppHeading.vue";
 import AppLink from "@/components/AppLink.vue";
+import { appTitle } from "@/meta";
+
+/** page title */
+onMounted(() => (appTitle.value = ["About"]));
 </script>
