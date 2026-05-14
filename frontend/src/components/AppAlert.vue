@@ -1,7 +1,8 @@
 <template>
   <section
     ref="alert"
-    :class="['overflow-y-clip transition-all', open ? '' : 'py-0']"
+    class="overflow-y-clip transition-all"
+    :class="open ? '' : 'py-0'"
     :aria-hidden="open"
   >
     <slot />

@@ -3,7 +3,6 @@ import {
   Circle,
   Diamond,
   Flag,
-  MapPin,
   Navigation,
   Pin,
   Square,
@@ -17,16 +16,7 @@ import palette from "tailwindcss/colors";
  * assigned similar looking colors
  */
 const parser = new DOMParser();
-const icons = [
-  Circle,
-  Square,
-  Diamond,
-  MapPin,
-  Star,
-  Flag,
-  Navigation,
-  Pin,
-].map(
+const icons = [Circle, Square, Diamond, Star, Flag, Navigation, Pin].map(
   (icon) =>
     /** extract just inner html (paths) of svg source */
     parser.parseFromString(icon, "image/svg+xml").documentElement.innerHTML,

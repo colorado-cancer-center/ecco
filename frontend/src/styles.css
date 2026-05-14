@@ -90,8 +90,12 @@
     @apply leading-loose;
   }
 
+  svg {
+    @apply shrink-0;
+  }
+
   blockquote {
-    @apply rounded-md bg-stone-200 p-4 pl-4 leading-loose;
+    @apply rounded-r-md border-l-2 bg-stone-100 p-2 pl-4 leading-loose;
   }
 
   button {

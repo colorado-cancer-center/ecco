@@ -10,9 +10,13 @@
       screening, treatment, and survivorship.
     </p>
 
-    <p> Presented by the University of Colorado Cancer Center:</p>
+    <p> Presented by the University of Colorado Cancer Center</p>
     <AppLink to="https://medschool.cuanschutz.edu/colorado-cancer-center">
-      <img src="@/assets/logo.png" class="h-20" :alt="'Presented by...'" />
+      <img
+        src="@/assets/logo.png"
+        class="h-20"
+        alt="University of Colorado Cancer Center"
+      />
     </AppLink>
   </section>
 

@@ -26,11 +26,11 @@
     <div
       v-for="(item, index) in children"
       :key="index"
-      :class="[
-        'relative flex flex-col',
+      class="relative flex flex-col"
+      :class="
         level !== 1 &&
-          'relative pl-4 before:absolute before:inset-y-0 before:left-3.5 before:w-0.5 before:bg-stone-50',
-      ]"
+        'relative pl-4 before:absolute before:inset-y-0 before:left-3.5 before:w-0.5 before:bg-stone-50'
+      "
       role="treeitem"
       :aria-selected="isEqual(modelValue, getValue(item))"
       :aria-expanded="isOpen[index]"
@@ -43,6 +43,7 @@
         <!-- expand/collapse/select -->
         <button
           class="min-h-8 grow basis-0 justify-start gap-2 rounded-md p-1 text-left hover:bg-stone-100"
+          :class="isEqual(modelValue, getValue(item)) && 'bg-stone-100'"
           :disabled="!isEmpty(item.children) && !!unref(search)"
           :data-level="level"
           @click="onClick(index)"
@@ -60,10 +61,10 @@
           <template v-else>
             <Check
               v-if="isEqual(modelValue, getValue(item))"
-              class="shrink-0 text-emerald-500"
+              class="text-emerald-500"
               data-tree-selected
             />
-            <Check v-else class="shrink-0 opacity-0" />
+            <Check v-else class="opacity-0" />
           </template>
 
           <!-- text label -->

@@ -167,7 +167,7 @@
                 :viewBox="`0 0 10 1`"
                 preserveAspectRatio="none"
                 class="h-6 w-12"
-                :style="{ scale: flipGradient ? '-1 1' : '' }"
+                :class="flipGradient && '-scale-x-100'"
               >
                 <defs>
                   <linearGradient :id="option?.id">
@@ -349,12 +349,13 @@
         v-if="renderMap"
         ref="mapGridElement"
         class="grid h-(--height) w-(--width) grid-cols-[repeat(var(--cols),1fr)] gap-1 bg-stone-600 shadow-md transition max-md:h-[90dvh]"
-        :class="[mapDataStatus === 'loading' && 'preview']"
+        :class="[
+          mapDataStatus === 'loading' && 'preview',
+          mapHeight ? 'shrink-0' : 'grow',
+        ]"
         :style="{
           '--width': mapWidth ? `${mapWidth}px` : '',
           '--height': mapHeight ? `${mapHeight}px` : '',
-          flexGrow: mapHeight ? '' : 1,
-          flexShrink: mapHeight ? 0 : '',
         }"
       >
         <AppMap

@@ -11,10 +11,8 @@
       <DisclosurePanel as="template" static :unmount="false">
         <div
           ref="panel"
-          :class="[
-            'flex flex-col gap-4 overflow-y-clip px-4 transition-all',
-            open ? 'py-4' : '',
-          ]"
+          class="flex flex-col gap-4 overflow-y-clip px-4 transition-all"
+          :class="open ? 'py-4' : ''"
         >
           <slot />
         </div>

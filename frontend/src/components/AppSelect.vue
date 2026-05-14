@@ -30,7 +30,7 @@
             class="overflow-auto"
             @keydown="onKeypress"
           >
-            <span :class="['grow text-left', truncate && 'truncate']">
+            <span class="grow text-left" :class="truncate && 'truncate'">
               {{ selectedLabel }}
             </span>
             <slot
@@ -56,21 +56,24 @@
               :value="option"
             >
               <li
-                :class="[
-                  'flex cursor-pointer items-center p-2 transition',
-                  active ? 'bg-stone-200' : selected ? 'bg-theme' : '',
-                ]"
+                class="flex cursor-pointer items-center gap-2 p-2 transition"
+                :class="
+                  active ? 'bg-stone-100' : selected ? 'bg-stone-100' : ''
+                "
                 @vue:mounted="(node: VNode) => selected && onDropdownOpen(node)"
               >
-                <Check :style="{ opacity: selected ? 1 : 0 }" />
-                <span :class="['grow', truncate && 'truncate']">
+                <Check
+                  class="text-emerald-500"
+                  :class="selected ? 'opacity-100' : 'opacity-0'"
+                />
+                <span class="grow" :class="truncate && 'truncate'">
                   {{ option.label }}
                 </span>
                 <slot name="preview" :option="option" />
               </li>
             </ListboxOption>
             <!-- group option -->
-            <li v-else class="flex items-center gap-2 p-2 font-bold">
+            <li v-else class="flex items-center gap-2 p-2 pl-4 font-bold">
               {{ option.group }}
             </li>
           </template>
