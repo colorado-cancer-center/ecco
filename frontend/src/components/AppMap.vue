@@ -109,7 +109,7 @@
     >
       <slot name="popup" :feature="selectedFeature.getProperties()" />
       <button
-        class="absolute top-0 right-0 min-h-8 min-w-8 text-gray hover:text-theme-dark"
+        class="absolute top-0 right-0 min-h-8 min-w-8 text-stone-300 hover:text-black"
         aria-label="Close popup"
         @click="selectedFeature = undefined"
       >
@@ -187,7 +187,7 @@ const topRightLegend = useTemplateRef("topRightLegend");
 const bottomRightLegend = useTemplateRef("bottomRightLegend");
 const bottomLeftLegend = useTemplateRef("bottomLeftLegend");
 
-const theme = forceHex(getCssVar("--color-theme-light"));
+const theme = forceHex(getCssVar("--color-theme"));
 
 type Props = {
   /** features */

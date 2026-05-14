@@ -40,23 +40,23 @@ const codes = {
   info: {
     icon: Info,
     text: "Info",
-    color: "color-dark-gray",
+    color: "color-stone-600",
   },
   loading: {
     icon: Cog,
     text: "Loading",
-    color: "color-dark-gray",
+    color: "color-stone-600",
     class: "animate-spin",
   },
   success: {
     icon: CheckCircle,
     text: "Success",
-    color: "color-success",
+    color: "color-emerald-500",
   },
   error: {
     icon: XCircle,
     text: "Error",
-    color: "color-error",
+    color: "color-rose-500",
   },
 };
 

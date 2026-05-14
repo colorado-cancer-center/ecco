@@ -38,8 +38,8 @@
               name="preview"
               :option="selectedOption"
             />
-            <ChevronUp v-if="open" class="text-dark-gray" />
-            <ChevronDown v-else class="text-dark-gray" />
+            <ChevronUp v-if="open" class="text-stone-600" />
+            <ChevronDown v-else class="text-stone-600" />
           </AppButton>
         </ListboxButton>
 
@@ -58,7 +58,7 @@
               <li
                 :class="[
                   'flex cursor-pointer items-center p-2 transition',
-                  active ? 'bg-light-gray' : selected ? 'bg-theme-light' : '',
+                  active ? 'bg-stone-200' : selected ? 'bg-theme' : '',
                 ]"
                 @vue:mounted="(node: VNode) => selected && onDropdownOpen(node)"
               >

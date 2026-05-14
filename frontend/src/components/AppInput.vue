@@ -1,6 +1,6 @@
 <template>
   <div
-    class="relative flex grow rounded-md bg-light-gray transition hover:bg-theme-light"
+    class="relative flex grow rounded-md bg-stone-200 transition hover:bg-stone-100"
     :class="$attrs.class"
   >
     <input
@@ -24,7 +24,7 @@
       <button v-if="modelValue" @click="$emit('update:modelValue', '')">
         <X />
       </button>
-      <div v-else-if="icon" class="grid place-items-center text-gray">
+      <div v-else-if="icon" class="grid place-items-center text-stone-500">
         <component :is="icon" />
       </div>
     </div>

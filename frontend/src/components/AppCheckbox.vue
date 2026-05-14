@@ -1,7 +1,7 @@
 <template>
   <SwitchGroup>
     <div
-      class="flex items-center rounded-md bg-light-gray p-1 transition hover:bg-theme-light"
+      class="flex items-center rounded-md bg-stone-200 p-1 transition hover:bg-theme"
     >
       <Switch
         :model-value="modelValue"
@@ -11,7 +11,7 @@
         "
       >
         <button
-          class="flex cursor-pointer items-center justify-center border-none bg-transparent p-1 text-dark-gray not-focus-visible:outline-none"
+          class="flex cursor-pointer items-center justify-center border-none bg-transparent p-1 text-stone-600 not-focus-visible:outline-none"
         >
           <SquareCheck v-if="modelValue" />
           <Square v-else />

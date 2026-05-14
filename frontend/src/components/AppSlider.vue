@@ -13,9 +13,9 @@
       "
     >
       <span
-        class="relative mb-1 flex h-2 cursor-pointer items-center py-2 text-dark-gray transition hover:text-black"
+        class="relative mb-1 flex h-2 cursor-pointer items-center py-2 text-stone-600 transition hover:text-black"
       >
-        <SliderTrack class="relative h-1 grow rounded-full bg-gray">
+        <SliderTrack class="relative h-1 grow rounded-full bg-stone-300">
           <SliderRange class="absolute h-full rounded-full bg-current" />
         </SliderTrack>
         <SliderThumb :as-child="true">

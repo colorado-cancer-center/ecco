@@ -29,7 +29,7 @@
       :class="[
         'relative flex flex-col',
         level !== 1 &&
-          'relative pl-4 before:absolute before:inset-y-0 before:left-3.5 before:w-0.5 before:bg-off-white',
+          'relative pl-4 before:absolute before:inset-y-0 before:left-3.5 before:w-0.5 before:bg-stone-50',
       ]"
       role="treeitem"
       :aria-selected="isEqual(modelValue, getValue(item))"
@@ -42,7 +42,7 @@
       <div v-show="match(item)" class="flex items-center gap-2">
         <!-- expand/collapse/select -->
         <button
-          class="min-h-8 grow basis-0 justify-start gap-2 rounded-md p-1 text-left hover:bg-light-gray"
+          class="min-h-8 grow basis-0 justify-start gap-2 rounded-md p-1 text-left hover:bg-stone-100"
           :disabled="!isEmpty(item.children) && !!unref(search)"
           :data-level="level"
           @click="onClick(index)"
@@ -52,15 +52,15 @@
           <template v-if="!isEmpty(item.children)">
             <ChevronDown
               v-if="isOpen[index] || unref(search)"
-              class="text-gray"
+              class="text-stone-300"
             />
-            <ChevronRight v-else class="text-gray" />
+            <ChevronRight v-else class="text-stone-300" />
           </template>
           <!-- selection icon -->
           <template v-else>
             <Check
               v-if="isEqual(modelValue, getValue(item))"
-              class="shrink-0 text-success"
+              class="shrink-0 text-emerald-500"
               data-tree-selected
             />
             <Check v-else class="shrink-0 opacity-0" />
@@ -72,7 +72,7 @@
           </span>
 
           <!-- count -->
-          <span v-if="item.children && !unref(search)" class="text-gray">
+          <span v-if="item.children && !unref(search)" class="text-stone-300">
             {{ size(item.children).toLocaleString() }}
           </span>
         </button>

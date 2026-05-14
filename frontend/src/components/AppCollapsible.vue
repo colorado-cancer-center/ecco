@@ -1,6 +1,6 @@
 <template>
   <Disclosure>
-    <div class="flex flex-col rounded-md bg-off-white">
+    <div class="flex flex-col rounded-md bg-stone-50">
       <DisclosureButton as="template">
         <AppButton ref="button" :accent="true" @click="open = !open">
           {{ label }}

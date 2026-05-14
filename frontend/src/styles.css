@@ -5,23 +5,7 @@
   --breakpoint-md: 55rem;
   --breakpoint-lg: 70rem;
 
-  --color-theme-light: hsl(35, 75%, 85%);
-  --color-theme-dark: hsl(25, 50%, 40%);
-
-  --color-white: hsl(30, 10%, 100%);
-  --color-off-white: hsl(30, 10%, 97%);
-  --color-light-gray: hsl(30, 10%, 92%);
-  --color-gray: hsl(30, 10%, 70%);
-  --color-dark-gray: hsl(30, 10%, 30%);
-  --color-black: hsl(30, 10%, 0%);
-
-  --color-accent-a: hsl(200, 35%, 60%);
-  --color-accent-b: hsl(80, 35%, 60%);
-  --color-accent-a-light: hsl(200, 50%, 85%);
-  --color-accent-b-light: hsl(80, 50%, 85%);
-
-  --color-success: hsl(160, 80%, 40%);
-  --color-error: hsl(350, 80%, 60%);
+  --color-theme: hsl(43, 46%, 65%);
 
   --radius-*: initial;
   --radius-md: 8px;
@@ -51,7 +35,7 @@
 
   header,
   footer {
-    @apply bg-theme-light;
+    @apply bg-theme;
   }
 
   section {
@@ -60,7 +44,7 @@
   }
 
   section:nth-child(odd) {
-    @apply bg-off-white;
+    @apply bg-stone-50;
   }
 
   h1 {
@@ -80,12 +64,17 @@
   }
 
   a {
-    @apply text-theme-dark transition hover:text-current;
+    @apply transition;
+  }
+
+  header a,
+  footer a {
+    @apply hover:text-yellow-700;
   }
 
   p a,
   td a {
-    @apply underline;
+    @apply text-yellow-700 underline hover:text-current;
   }
 
   p {
@@ -93,7 +82,7 @@
   }
 
   blockquote {
-    @apply bg-light-gray rounded-md p-4 pl-4 leading-loose;
+    @apply rounded-md bg-stone-200 p-4 pl-4 leading-loose;
   }
 
   button {
@@ -114,11 +103,11 @@
   }
 
   thead tr {
-    @apply bg-theme-light!;
+    @apply bg-theme!;
   }
 
   tbody tr {
-    @apply even:bg-off-white odd:bg-white;
+    @apply odd:bg-white even:bg-stone-50;
   }
 
   dl {
@@ -126,7 +115,7 @@
   }
 
   dt {
-    @apply text-dark-gray;
+    @apply text-stone-600;
   }
 
   dd {
@@ -153,10 +142,10 @@
 }
 
 .tippy-box {
-  @apply bg-dark-gray rounded-md p-1 leading-relaxed! text-white;
+  @apply rounded-md bg-stone-600 p-1 leading-relaxed! text-white;
   font: inherit;
 }
 
 .tippy-arrow {
-  @apply text-dark-gray;
+  @apply text-stone-600;
 }

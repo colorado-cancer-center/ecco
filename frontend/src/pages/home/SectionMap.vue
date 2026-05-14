@@ -14,7 +14,7 @@
 
       <!-- category/measure selection -->
       <div class="flex flex-col gap-1">
-        Data
+        Geographic data
         <AppTree
           :children="measureMap"
           :model-value="treeValue"
@@ -24,7 +24,7 @@
             <button
               v-if="parents.at(-1)?.id"
               v-tooltip="'Download measure data'"
-              class="size-8 rounded-md text-gray hover:text-black"
+              class="size-8 rounded-md text-stone-300 hover:text-black"
               @click="onTreeDownload(parents.at(-1)?.id)"
             >
               <Download />
@@ -60,7 +60,7 @@
       <!-- locations -->
       <AppSelect
         v-model="selectedLocations"
-        label="Locations"
+        label="Resources & Locations"
         :options="locationOptions"
         :multi="true"
         tooltip="Locations and extra info to show on map, e.g. screening centers, clinics, specialists"
@@ -139,7 +139,7 @@
               v-tooltip="
                 'Select new measure/locations/etc. to compare another map'
               "
-              class="aspect-2/1 w-full rounded-md border border-gray"
+              class="aspect-2/1 w-full rounded-md border border-stone-300"
             />
           </div>
         </template>
@@ -206,7 +206,7 @@
           tooltip="Provider to use for background map layer"
         >
           <template #preview="{ option }">
-            <div class="size-12 shrink-0 overflow-hidden bg-gray">
+            <div class="size-12 shrink-0 overflow-hidden bg-stone-300">
               <img
                 :src="option?.image"
                 alt=""
@@ -348,7 +348,7 @@
       <div
         v-if="renderMap"
         ref="mapGridElement"
-        class="grid h-(--height) w-(--width) grid-cols-[repeat(var(--cols),1fr)] gap-1 bg-dark-gray shadow-md transition max-md:h-[90dvh]"
+        class="grid h-(--height) w-(--width) grid-cols-[repeat(var(--cols),1fr)] gap-1 bg-stone-600 shadow-md transition max-md:h-[90dvh]"
         :class="[mapDataStatus === 'loading' && 'preview']"
         :style="{
           '--width': mapWidth ? `${mapWidth}px` : '',
@@ -368,7 +368,7 @@
           :class="[
             showPreview && compare.length && !inCompare(selected) && 'preview',
             index === highlightedThumbnail
-              ? 'z-10 outline-8 outline-theme-dark'
+              ? 'z-10 outline-8 outline-theme'
               : 'outline-8 outline-transparent',
           ]"
           :geometry="geometry"

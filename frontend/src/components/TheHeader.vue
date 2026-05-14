@@ -10,7 +10,7 @@
       </AppLink>
       <AppLink
         to="https://medschool.cuanschutz.edu/colorado-cancer-center"
-        class="text-xs font-light text-dark-gray"
+        class="text-xs font-light text-stone-600"
       >
         University of Colorado Cancer Center
       </AppLink>

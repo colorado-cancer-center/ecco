@@ -2,7 +2,7 @@
   <label class="flex shrink-0 cursor-pointer flex-col items-stretch gap-1">
     <span v-if="!hideLabel">{{ label }}</span>
     <input
-      class="rounded-md border-none bg-light-gray p-2 transition hover:bg-theme-light"
+      class="rounded-md border-none bg-stone-200 p-2 transition hover:bg-theme"
       type="number"
       :value="modelValue"
       :min="min"

@@ -34,14 +34,14 @@
         />
 
         <p class="text-center">
-          <span class="rounded-md bg-accent-a-light p-1">{{ data?.name }}</span>
+          <span class="rounded-md bg-lime-500/25 p-1">{{ data?.name }}</span>
           vs.
-          <span class="rounded-md bg-accent-b-light p-1">Colorado</span>
+          <span class="rounded-md bg-sky-500/25 p-1">Colorado</span>
         </p>
 
         <p class="text-center">
           <strong>Population</strong>{{ " " }}
-          <span class="rounded-md bg-accent-a-light p-1">
+          <span class="rounded-md bg-lime-500/25 p-1">
             {{
               formatValue(
                 data?.categories.sociodemographics?.measures.Total?.value ??
@@ -50,7 +50,7 @@
             }}
           </span>
           vs.
-          <span class="rounded-md bg-accent-b-light p-1">
+          <span class="rounded-md bg-sky-500/25 p-1">
             {{
               formatValue(
                 data?.categories.sociodemographics?.measures.Total
@@ -101,7 +101,7 @@
             <dt>{{ measure.label }}</dt>
             <dd
               v-tooltip="formatValue(measure.value, measure.unit)"
-              class="relative z-0 rounded-md bg-accent-a-light p-1 text-center"
+              class="relative z-0 rounded-md bg-lime-500/25 p-1 text-center"
             >
               {{ formatValue(measure.value, measure.unit, true) }}
             </dd>
@@ -114,17 +114,17 @@
             >
               <span
                 v-if="measure.value > measure.state_value"
-                class="text-gray"
+                class="text-stone-300"
                 >{{ ">" }}</span
               >
               <span
                 v-else-if="measure.value < measure.state_value"
-                class="text-gray"
+                class="text-stone-300"
                 >{{ "<" }}</span
               >
               <span
                 v-else-if="measure.value === measure.state_value"
-                class="text-gray"
+                class="text-stone-300"
                 >{{ "=" }}</span
               >
             </template>
@@ -136,7 +136,7 @@
                 measure.state_value !== null
               "
               v-tooltip="formatValue(measure.state_value, measure.unit)"
-              class="relative z-0 rounded-md bg-accent-b-light p-1 text-center"
+              class="relative z-0 rounded-md bg-sky-500/25 p-1 text-center"
               aria-label="State value"
             >
               {{ formatValue(measure.state_value, measure.unit, true) }}

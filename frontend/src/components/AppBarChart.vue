@@ -62,8 +62,8 @@ watchEffect(() => {
 provide(THEME_KEY, "light");
 
 /** get colors from css theme vars */
-const colorA = getCssVar("--color-accent-a");
-const colorB = getCssVar("--color-accent-b");
+const colorA = getCssVar("--color-lime-500");
+const colorB = getCssVar("--color-sky-500");
 
 /** echarts options */
 const option = computed(() => {
