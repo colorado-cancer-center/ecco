@@ -342,7 +342,7 @@
     <div
       ref="rightPanelElement"
       class="sticky top-4 flex min-h-0 min-w-0 flex-col items-stretch gap-4"
-      :style="{ height: autoRightPanelHeight }"
+      :style="{ height: autoRightPanelHeight + 'px' }"
     >
       <!-- map -->
       <div
@@ -828,7 +828,12 @@ import {
   RefreshCw,
   X,
 } from "@lucide/vue";
-import { useElementBounding, useFullscreen, useWindowSize } from "@vueuse/core";
+import {
+  useElementBounding,
+  useFullscreen,
+  useIntervalFn,
+  useWindowSize,
+} from "@vueuse/core";
 import { toBlob } from "html-to-image";
 import {
   clamp,
@@ -1357,21 +1362,19 @@ watch(mapCols, async () => {
 });
 
 /** auto-adjust right panel/map height */
-const autoRightPanelHeight = ref("");
+const autoRightPanelHeight = ref(0);
 const { top: rightPanelTop } = useElementBounding(rightPanelElement);
 const { height: windowHeight } = useWindowSize();
-watch(
-  [rightPanelTop, windowHeight],
-  () => {
-    if (windowHeight.value < 400) return;
-    if (!rightPanelTop.value) return;
-    if (mapWidth.value || mapHeight.value) return;
-    const top = rightPanelTop.value;
-    const max = windowHeight.value - 20;
-    autoRightPanelHeight.value = clamp(max - top, 400, max) + "px";
-  },
-  { immediate: true },
-);
+useIntervalFn(() => {
+  if (windowHeight.value < 400) return;
+  if (!rightPanelTop.value) return;
+  if (mapWidth.value || mapHeight.value) return;
+  const top = rightPanelTop.value;
+  const max = windowHeight.value - 20;
+  const height = clamp(max - top, 400, max);
+  if (Math.abs(height - autoRightPanelHeight.value) > 1)
+    autoRightPanelHeight.value = height;
+}, 100);
 
 /** download maps as pngs */
 const downloadMapImage = async () => {
