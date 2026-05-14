@@ -6,11 +6,10 @@
       demographics, cancer burden & disparities, risk factors, health behaviors,
       and environmental exposures, and local resources like cancer prevention,
       screening, treatment, and survivorship.
-      <i
-        >This tool is intended to support research, community inquiries, and
-        outreach activities. It should not be used to guide clinical
-        decisions.</i
-      >
+      <i>
+        This tool is intended to support research, community inquiries, and
+        outreach activities. It should not be used to guide clinical decisions.
+      </i>
     </p>
   </AppAlert>
 </template>

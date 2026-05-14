@@ -1,12 +1,21 @@
 <template>
-  <v-chart ref="chart" class="chart" :option="option" />
+  <v-chart
+    ref="chart"
+    class="aspect-video rounded-md shadow-md"
+    :option="option"
+  />
 </template>
 
 <script setup lang="ts">
-import { computed, provide, ref, watchEffect } from "vue";
 import type { ComponentInstance } from "vue";
-import VChart, { THEME_KEY } from "vue-echarts";
+import type { Unit } from "@/api";
 import type { EChartsOption } from "echarts";
+import { computed, provide, ref, watchEffect } from "vue";
+import VChart, { THEME_KEY } from "vue-echarts";
+import { noDataEntry } from "@/components/AppMap.vue";
+import { formatValue } from "@/util/math";
+import { getCssVar } from "@/util/misc";
+import { useElementSize } from "@vueuse/core";
 import { BarChart, PictorialBarChart } from "echarts/charts";
 import {
   GridComponent,
@@ -16,11 +25,6 @@ import {
 import { use } from "echarts/core";
 import { SVGRenderer } from "echarts/renderers";
 import { uniq } from "lodash";
-import { useElementSize } from "@vueuse/core";
-import type { Unit } from "@/api";
-import { noDataEntry } from "@/components/AppMap.vue";
-import { formatValue } from "@/util/math";
-import { getCssVar } from "@/util/misc";
 
 use([
   SVGRenderer,
@@ -58,8 +62,8 @@ watchEffect(() => {
 provide(THEME_KEY, "light");
 
 /** get colors from css theme vars */
-const colorA = getCssVar("--accent-a");
-const colorB = getCssVar("--accent-b");
+const colorA = getCssVar("--color-lime-500");
+const colorB = getCssVar("--color-sky-500");
 
 /** echarts options */
 const option = computed(() => {
@@ -159,10 +163,3 @@ const option = computed(() => {
   return options;
 });
 </script>
-
-<style scoped>
-.chart {
-  width: 100%;
-  height: unset;
-}
-</style>

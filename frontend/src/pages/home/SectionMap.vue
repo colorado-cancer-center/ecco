@@ -1,23 +1,10 @@
 <template>
-  <div class="columns" :style="{ '--cols': mapCols }">
+  <div
+    class="grid grid-cols-[--spacing(100)_1fr] gap-8 max-md:grid-cols-1"
+    :style="{ '--cols': mapCols }"
+  >
     <!-- left panel -->
-    <div class="left-panel" role="group">
-      <!-- category/measure selection -->
-      <AppTree
-        :children="measureMap"
-        :model-value="treeValue"
-        @update:model-value="onTreeChange"
-      >
-        <template #default="{ parents }">
-          <AppButton
-            v-if="parents.at(-1)?.id"
-            v-tooltip="'Download measure data'"
-            :icon="faDownload"
-            @click="onTreeDownload(parents.at(-1)?.id)"
-          />
-        </template>
-      </AppTree>
-
+    <div class="flex flex-col gap-8 text-left" role="group">
       <!-- level selection -->
       <AppSelect
         v-model="selectedLevel"
@@ -25,22 +12,34 @@
         :options="levelOptions"
       />
 
-      <AppLink
-        v-if="selectedLevel === 'tract' || noData"
-        to="/sources#suppressed-values"
-        :new-tab="true"
-      >
-        Low values may be suppressed
-        <font-awesome-icon :icon="faQuestionCircle" />
-      </AppLink>
+      <!-- category/measure selection -->
+      <div class="flex flex-col gap-1">
+        Geographic data
+        <AppTree
+          :children="measureMap"
+          :model-value="treeValue"
+          @update:model-value="onTreeChange"
+        >
+          <template #default="{ parents }">
+            <button
+              v-if="parents.at(-1)?.id"
+              v-tooltip="'Download measure data'"
+              class="size-8 rounded-md text-stone-300 hover:text-black"
+              @click="onTreeDownload(parents.at(-1)?.id)"
+            >
+              <Download />
+            </button>
+          </template>
+        </AppTree>
+      </div>
 
       <!-- factors -->
       <template v-if="!isEmpty(factors)">
-        <div class="factors">
+        <div class="grid grid-cols-[min-content_1fr] items-center gap-2">
           <template v-for="(factor, index) in factors" :key="index">
             <AppSelect
               v-if="selectedFactors[index]"
-              class="factor"
+              class="contents!"
               :model-value="selectedFactors[index]?.value || ''"
               :label="factor.label"
               :options="
@@ -61,33 +60,41 @@
       <!-- locations -->
       <AppSelect
         v-model="selectedLocations"
-        label="Locations"
+        label="Resources & Extras"
         :options="locationOptions"
         :multi="true"
-        tooltip="Locations and extra info to show on map, e.g. screening centers, clinics, specialists"
+        tooltip="Resources, extra info, and other locations to show on map, e.g. screening centers, clinics, specialists"
       />
 
       <!-- multi-map compare -->
-      <AppAccordion label="Compare">
-        <div class="control-row">
+      <AppCollapsible label="Compare">
+        <div class="grid grid-cols-3 gap-2">
           <AppButton
             v-if="inCompare()"
             v-tooltip="'Remove selected map from comparison'"
             v-bind="highlightListeners(findInCompare())"
-            :icon="faMinus"
             @click="toggleCompare()"
           >
+            <Minus />
             Remove
           </AppButton>
           <AppButton
             v-else
             v-tooltip="'Add selected map to comparison'"
             v-bind="highlightListeners(thumbnails.length - 1)"
-            :icon="faPlus"
             :disabled="compare.length >= maxCompare"
             @click="toggleCompare()"
           >
+            <Plus />
             Add
+          </AppButton>
+          <AppButton
+            v-if="compare.length"
+            v-tooltip="'Remove all maps from comparison and reset'"
+            @click="compare = []"
+          >
+            <X />
+            Clear
           </AppButton>
           <AppButton
             v-if="showPreview && compare.length && !inCompare()"
@@ -100,19 +107,26 @@
         </div>
 
         <template v-if="compare.length">
-          <div class="row">Comparing {{ compare.length }} map(s):</div>
+          <div class="flex flex-wrap items-center justify-center gap-2">
+            Comparing {{ compare.length }} map(s):
+          </div>
 
-          <div class="compare-thumbnails">
+          <div class="grid grid-cols-3 place-items-center gap-2">
             <template v-for="(map, index) in compare" :key="index">
               <AppButton
                 v-if="index < compare.length"
                 v-tooltip="'Remove map from comparison'"
                 v-bind="highlightListeners(index)"
-                class="compare-thumbnail"
-                :icon="faMinus"
+                class="group relative aspect-2/1 w-full"
                 @click="toggleCompare(map)"
               >
-                <img v-if="thumbnails[index]" :src="thumbnails[index]" alt="" />
+                <Minus />
+                <img
+                  v-if="thumbnails[index]"
+                  :src="thumbnails[index]"
+                  alt=""
+                  class="absolute size-full object-contain object-center group-hover:opacity-0"
+                />
               </AppButton>
             </template>
 
@@ -125,21 +139,13 @@
               v-tooltip="
                 'Select new measure/locations/etc. to compare another map'
               "
-              class="compare-thumbnail"
+              class="aspect-2/1 w-full rounded-md border border-stone-300"
             />
           </div>
-
-          <AppButton
-            v-tooltip="'Remove all maps from comparison and reset'"
-            :icon="faXmark"
-            @click="compare = []"
-          >
-            Remove All
-          </AppButton>
         </template>
-      </AppAccordion>
+      </AppCollapsible>
 
-      <AppAccordion label="Customization">
+      <AppCollapsible label="Customization">
         <!-- legend -->
         <AppCheckbox
           v-model="showLegends"
@@ -148,19 +154,20 @@
         />
 
         <!-- gradient -->
-        <div class="side-control">
+        <div class="grid grid-cols-[1fr_min-content] items-end gap-2">
           <AppSelect
             v-model="selectedGradient"
             v-tooltip="'Gradient to use for coloring map data'"
             label="Gradient"
             :options="gradientOptions"
+            :truncate="true"
           >
             <template #preview="{ option }">
               <svg
                 :viewBox="`0 0 10 1`"
                 preserveAspectRatio="none"
-                class="gradient-preview"
-                :style="{ scale: flipGradient ? '-1 1' : '' }"
+                class="h-6 w-12"
+                :class="flipGradient && '-scale-x-100'"
               >
                 <defs>
                   <linearGradient :id="option?.id">
@@ -199,41 +206,43 @@
           tooltip="Provider to use for background map layer"
         >
           <template #preview="{ option }">
-            <div class="image-preview">
-              <img :src="option?.image" alt="" />
+            <div class="size-12 shrink-0 overflow-hidden bg-stone-300">
+              <img
+                :src="option?.image"
+                alt=""
+                class="size-full translate-x-14/10 translate-y-7/10 scale-500"
+              />
             </div>
           </template>
         </AppSelect>
 
-        <div class="control-row">
-          <!-- scale min/max -->
-          <AppCheckbox
-            v-model="manualMinMax"
-            v-tooltip="'Manually set scale min/max'"
-            label="Manual min/max"
+        <!-- scale min/max -->
+        <AppCheckbox
+          v-model="manualMinMax"
+          v-tooltip="'Manually set scale min/max'"
+          label="Manual min/max"
+        />
+        <div v-if="manualMinMax" class="grid grid-cols-2 gap-2">
+          <AppNumber
+            v-model="manualMin"
+            v-tooltip="'Manual scale min'"
+            :min="-Infinity"
+            :max="Infinity"
+            :step="0.01"
+            label="Min"
           />
-          <template v-if="manualMinMax">
-            <AppNumber
-              v-model="manualMin"
-              v-tooltip="'Manual scale min'"
-              :min="-Infinity"
-              :max="Infinity"
-              :step="0.01"
-              label="Min"
-            />
-            <AppNumber
-              v-model="manualMax"
-              v-tooltip="'Manual scale max'"
-              :min="-Infinity"
-              :max="Infinity"
-              :step="0.01"
-              label="Max"
-            />
-          </template>
+          <AppNumber
+            v-model="manualMax"
+            v-tooltip="'Manual scale max'"
+            :min="-Infinity"
+            :max="Infinity"
+            :step="0.01"
+            label="Max"
+          />
         </div>
 
         <!-- scale steps -->
-        <div class="control-row">
+        <div class="grid grid-cols-2 gap-2">
           <AppNumber
             v-model="scalePower"
             v-tooltip="
@@ -264,46 +273,41 @@
             :step="1"
             label="Scale steps"
           />
-
-          <AppCheckbox
-            v-model="niceSteps"
-            v-tooltip="
-              'Adjust number of scale steps to get nice, round intervals (when power = 1)'
-            "
-            label="Nice steps"
-          />
         </div>
+        <AppCheckbox
+          v-model="niceSteps"
+          v-tooltip="
+            'Adjust number of scale steps to get nice, round intervals (when power = 1)'
+          "
+          label="Nice steps"
+        />
 
         <!-- layer opacities -->
-        <div class="control-row">
-          <AppSlider
-            v-model="backgroundOpacity"
-            v-tooltip="'Transparency of background layer'"
-            label="Bg. trans."
-          />
-
-          <AppSlider
-            v-model="geometryOpacity"
-            v-tooltip="'Transparency of geometry layer'"
-            label="Geom. trans."
-          />
-
-          <AppSlider
-            v-model="locationOpacity"
-            v-tooltip="'Transparency of selected locations layer'"
-            label="Loc. trans."
-          />
-        </div>
+        <AppSlider
+          v-model="backgroundOpacity"
+          v-tooltip="'Transparency of background layer'"
+          label="Background transparency"
+        />
+        <AppSlider
+          v-model="geometryOpacity"
+          v-tooltip="'Transparency of geometry layer'"
+          label="Geometry transparency"
+        />
+        <AppSlider
+          v-model="locationOpacity"
+          v-tooltip="'Transparency of resources & extras layer'"
+          label="Locations transparency"
+        />
 
         <!-- dimensions -->
         <label
           v-tooltip="
             'Exact dimensions of map. Useful to set before downloading as image. Leave as 0 to fit to page.'
           "
-          class="dimensions-label"
+          class="flex cursor-pointer flex-col items-stretch gap-1"
         >
           <span>Map dimensions</span>
-          <div class="dimensions">
+          <div class="grid grid-cols-[1fr_min-content_1fr] items-center gap-2">
             <AppNumber
               v-model="mapWidth"
               label="Map width"
@@ -311,7 +315,7 @@
               :max="2000"
               :step="100"
             />
-            <span> &times; </span>
+            <span>&times;</span>
             <AppNumber
               v-model="mapHeight"
               label="Map height"
@@ -324,33 +328,34 @@
 
         <!-- reset -->
         <AppButton
-          v-tooltip="'Reset customizations and map to defaults'"
-          :icon="faArrowsRotate"
+          v-tooltip="'Reset customizations to defaults'"
           :accent="true"
           @click="reset"
-          >Reset</AppButton
         >
-      </AppAccordion>
+          <RefreshCw />
+          Reset
+        </AppButton>
+      </AppCollapsible>
     </div>
 
     <!-- right panel -->
     <div
       ref="rightPanelElement"
-      class="right-panel"
+      class="sticky top-4 flex min-h-0 min-w-0 flex-col items-stretch gap-4"
       :style="{ height: autoRightPanelHeight }"
     >
       <!-- map -->
       <div
         v-if="renderMap"
         ref="mapGridElement"
-        class="map-grid"
-        :class="{ preview: mapDataStatus === 'loading' }"
+        class="grid h-(--height) w-(--width) grid-cols-[repeat(var(--cols),1fr)] gap-1 bg-stone-600 shadow-md transition max-md:h-[90dvh]"
+        :class="[
+          mapDataStatus === 'loading' && 'preview',
+          mapHeight ? 'shrink-0' : 'grow',
+        ]"
         :style="{
           '--width': mapWidth ? `${mapWidth}px` : '',
           '--height': mapHeight ? `${mapHeight}px` : '',
-
-          flexGrow: mapHeight ? '' : 1,
-          flexShrink: mapHeight ? 0 : '',
         }"
       >
         <AppMap
@@ -361,10 +366,12 @@
           v-model:lat="lat"
           v-model:long="long"
           v-model:no-data="noData"
-          :class="{
-            preview: showPreview && compare.length && !inCompare(selected),
-            highlight: index === highlightedThumbnail,
-          }"
+          :class="[
+            showPreview && compare.length && !inCompare(selected) && 'preview',
+            index === highlightedThumbnail
+              ? 'z-10 outline-8 outline-theme'
+              : 'outline-8 outline-transparent',
+          ]"
           :geometry="geometry"
           :locations="locations"
           :values="values?.values"
@@ -387,16 +394,9 @@
           <!-- main legend -->
           <template #top-left-upper>
             <strong>
-              {{
-                facets[selected.level]?.categories?.[selected.category]
-                  ?.measures?.[selected.measure]?.label
-              }}
+              {{ getLabel(selected.category, selected.measure).at(-1) }}
             </strong>
-            <div>
-              {{
-                facets[selected.level]?.categories?.[selected.category]?.label
-              }}
-            </div>
+            <div class="text-sm">{{ upperFirst(selected.level) }}</div>
             <div>
               {{
                 Object.values(selected.factors)
@@ -407,27 +407,18 @@
           </template>
 
           <template #top-left-lower>
-            <div v-if="values?.source" class="source">
-              Source:
+            <div v-if="values?.source" class="flex items-center gap-2">
               <AppLink :to="values.source.link ?? ''">
                 {{ values.source.name ?? "source" }}
               </AppLink>
-              {{ " " }}
-              <AppLink
-                v-tooltip="'Learn more'"
-                :to="`/sources#${kebabCase(values.source.id)}`"
-                data-save-hide
-              >
-                <font-awesome-icon :icon="faInfoCircle" />
-              </AppLink>
-              {{ " " }}
-              <button
+              <AppButton
                 v-tooltip="'Copy citation text to clipboard'"
+                class="min-h-0! min-w-0! p-1!"
                 data-save-hide
                 @click="copy(getSourceCitation(values.source))"
               >
-                <font-awesome-icon :icon="faFeatherPointed" />
-              </button>
+                <Copy />
+              </AppButton>
             </div>
 
             <div v-if="values?.state">
@@ -436,14 +427,17 @@
           </template>
 
           <template v-if="countyWide.length" #top-right>
-            <b>Outreach (county-level)</b>
-            <div class="mini-table">
+            <b>Outreach</b>
+            <div class="grid grid-cols-[auto_auto] items-center gap-4">
               <template
                 v-for="(field, countyIndex) of countyWide"
                 :key="countyIndex"
               >
-                <div class="check" :style="{ '--color': field.color }">
-                  <font-awesome-icon :icon="faCheck" />
+                <div
+                  class="flex size-4 items-center justify-center border border-black text-white"
+                  :style="{ backgroundColor: field.color }"
+                >
+                  <Check />
                 </div>
                 <span>{{ field.label }}</span>
               </template>
@@ -455,20 +449,19 @@
             v-if="countyWide.length"
             #geometry-label="{ feature }: { feature: FeatureInfo }"
           >
-            <div>
+            <div class="grid grid-cols-[auto_auto] items-center gap-4">
               <template
                 v-for="(field, countyIndex) of countyWide"
                 :key="countyIndex"
               >
-                <div
-                  v-if="field.checkKey && feature[field.checkKey]"
-                  class="check"
-                  :style="{ '--color': field.color }"
-                >
-                  <span v-if="field.countKey && feature[field.countKey]">
+                <div v-if="field.checkKey && feature[field.checkKey]">
+                  <span
+                    v-if="field.countKey && feature[field.countKey]"
+                    class="flex size-4 items-center justify-center border border-black text-white"
+                    :style="{ backgroundColor: field.color }"
+                  >
                     {{ feature[field.countKey] }}
                   </span>
-                  <font-awesome-icon v-else :icon="faCheck" />
                 </div>
               </template>
             </div>
@@ -494,43 +487,63 @@
               Health Statistic Region {{ feature.hs_region }}
             </strong>
 
-            <!-- main value -->
+            <AppLink
+              v-if="selectedLevel === 'tract' || noData"
+              to="/sources#suppressed-values"
+              :new-tab="true"
+              class="inline-flex items-center gap-1 underline"
+            >
+              Low values may be suppressed
+              <Info />
+            </AppLink>
 
-            <div class="mini-table">
+            <dl>
+              <!-- main values -->
+
               <template
                 v-if="
                   typeof feature.value === 'number' ||
                   typeof feature.value === 'string'
                 "
               >
-                <span>
+                <dt>
+                  <i>
+                    {{ getLabel(selected.category, selected.measure).at(-1) }}
+                  </i>
                   {{ feature.aac ? "Rate" : "Value" }}
-                </span>
-                <span>{{ formatValue(feature.value, values?.unit) }}</span>
+                </dt>
+                <dd>
+                  {{ formatValue(feature.value, values?.unit) }}
+                </dd>
               </template>
 
               <template
-                v-if="
+                v-else-if="
                   typeof feature.aac === 'number' ||
                   typeof feature.aac === 'string'
                 "
               >
-                <span>Avg. Annual Count</span>
-                <span>{{ formatValue(feature.aac, values?.unit) }}</span>
+                <dt>Avg. Annual Count</dt>
+                <dd>{{ formatValue(feature.aac, values?.unit) }}</dd>
               </template>
 
-              <template v-if="feature.count">
-                <span>Count</span>
-                <span>{{ formatValue(feature.count) }}</span>
+              <template v-else-if="feature.count">
+                <dt>Count</dt>
+                <dd>{{ formatValue(feature.count) }}</dd>
               </template>
-            </div>
 
-            <!-- extra info -->
+              <template v-else>
+                <dt>
+                  <i>{{ selected.measure }}</i> Value
+                </dt>
+                <dd>-</dd>
+              </template>
 
-            <div class="mini-table">
+              <!-- extra info -->
+
               <template v-if="feature.counties">
-                <span>Counties</span>
-                <span>
+                <dt>Counties</dt>
+                <dd>
                   <template
                     v-for="(county, countyIndex) in feature.counties.split(
                       ', ',
@@ -539,184 +552,204 @@
                   >
                     {{ county }}<br />
                   </template>
-                </span>
+                </dd>
               </template>
 
               <template v-if="feature.org">
-                <span>Org</span>
-                <span>{{ feature.org }}</span>
+                <dt>Org</dt>
+                <dd>{{ feature.org }}</dd>
               </template>
 
               <template v-if="typeof feature.link === 'string'">
-                <span>Link</span>
-                <AppLink :to="feature.link">
-                  {{ feature.link.replace(/(https?:\/\/)?(www\.)?/, "") }}
-                </AppLink>
+                <dt>Link</dt>
+                <dd>
+                  <AppLink :to="feature.link">
+                    {{ feature.link.replace(/(https?:\/\/)?(www\.)?/, "") }}
+                  </AppLink>
+                </dd>
               </template>
 
               <template v-if="feature.zip_code">
-                <span>ZIP Code</span>
-                <span>{{ feature.zip_code }}</span>
+                <dt>ZIP Code</dt>
+                <dd>{{ feature.zip_code }}</dd>
               </template>
 
               <template v-if="feature.area_type">
-                <span>Area Type</span>
-                <span>{{ feature.area_type }}</span>
+                <dt>Area Type</dt>
+                <dd>{{ feature.area_type }}</dd>
               </template>
 
               <template v-if="feature.representative">
-                <span>Representative</span>
-                <span>{{ feature.representative }}</span>
+                <dt>Representative</dt>
+                <dd>{{ feature.representative }}</dd>
               </template>
 
               <template v-if="feature.party">
-                <span>Party</span>
-                <span>{{ feature.party }}</span>
+                <dt>Party</dt>
+                <dd>{{ feature.party }}</dd>
               </template>
 
               <template v-if="feature.email">
-                <span>Email</span>
-                <span>{{ feature.email }}</span>
+                <dt>Email</dt>
+                <dd>{{ feature.email }}</dd>
               </template>
 
               <template v-if="feature.address">
-                <span>Address</span>
-                <span>{{ feature.address }}</span>
+                <dt>Address</dt>
+                <dd>{{ feature.address }}</dd>
               </template>
 
               <template v-if="feature.phone">
-                <span>Phone</span>
-                <span>{{ feature.phone }}</span>
+                <dt>Phone</dt>
+                <dd>{{ feature.phone }}</dd>
               </template>
 
               <template v-if="feature.notes">
-                <span>Notes</span>
-                <span>{{ feature.notes }}</span>
+                <dt>Notes</dt>
+                <dd>{{ feature.notes }}</dd>
               </template>
-            </div>
 
-            <!-- outreach -->
+              <!-- outreach -->
 
-            <div v-if="outreachSelected.length" class="mini-table">
-              <template v-if="feature.fit_kits">
-                <AppLink
-                  to="https://medlineplus.gov/ency/patientinstructions/000704.htm"
-                >
-                  FIT Kits
-                </AppLink>
-                <span>{{ formatValue(feature.fit_kits) }}</span>
+              <template v-if="outreachSelected.length">
+                <template v-if="feature.fit_kits">
+                  <dt>
+                    <AppLink
+                      to="https://medlineplus.gov/ency/patientinstructions/000704.htm"
+                    >
+                      FIT Kits
+                    </AppLink>
+                  </dt>
+                  <dd>{{ formatValue(feature.fit_kits) }}</dd>
+                </template>
+
+                <template v-if="feature.radon_kits">
+                  <dt>
+                    <AppLink
+                      to="https://cdphe.colorado.gov/hm/testing-your-home-radon"
+                    >
+                      Radon Kits
+                    </AppLink>
+                  </dt>
+                  <dd>{{ formatValue(feature.radon_kits) }}</dd>
+                </template>
+
+                <template v-if="feature.community_events">
+                  <dt>Community Events</dt>
+                  <dd>{{ formatValue(feature.community_events) }}</dd>
+                </template>
+
+                <template v-if="feature.health_fairs">
+                  <dt>Health Fairs</dt>
+                  <dd>{{ formatValue(feature.health_fairs) }}</dd>
+                </template>
+
+                <template v-if="feature.educational_talks">
+                  <dt>Educational Talks</dt>
+                  <dd>{{ formatValue(feature.educational_talks) }}</dd>
+                </template>
+
+                <template v-if="feature.radio_talks">
+                  <dt>Radio Talks</dt>
+                  <dd>{{ formatValue(feature.radio_talks) }}</dd>
+                </template>
+
+                <template v-if="feature.school_church_events">
+                  <dt>School/Church Events</dt>
+                  <dd>{{ formatValue(feature.school_church_events) }}</dd>
+                </template>
+
+                <template v-if="feature.womens_wellness_centers">
+                  <dt>
+                    <AppLink to="https://cdphe.colorado.gov/wwc">
+                      Women's Wellness Centers
+                    </AppLink>
+                  </dt>
+                  <dd>{{ formatValue(feature.womens_wellness_centers) }}</dd>
+                </template>
+
+                <template v-if="feature['2morrow_signups']">
+                  <dt>
+                    <AppLink
+                      to="https://medschool.cuanschutz.edu/colorado-cancer-center/community/CommunityOutreachEngagement/projects-and-activities/2morrow-health-app"
+                    >
+                      2morrow Signups
+                    </AppLink>
+                  </dt>
+                  <dd>{{ formatValue(feature["2morrow_signups"]) }}</dd>
+                </template>
               </template>
-              <template v-if="feature.radon_kits">
-                <AppLink
-                  to="https://cdphe.colorado.gov/hm/testing-your-home-radon"
-                >
-                  Radon Kits
-                </AppLink>
-                <span>{{ formatValue(feature.radon_kits) }}</span>
-              </template>
-              <template v-if="feature.community_events">
-                <span>Community Events</span>
-                <span>{{ formatValue(feature.community_events) }}</span>
-              </template>
-              <template v-if="feature.health_fairs">
-                <span>Health Fairs</span>
-                <span>{{ formatValue(feature.health_fairs) }}</span>
-              </template>
-              <template v-if="feature.educational_talks">
-                <span>Educational Talks</span>
-                <span>{{ formatValue(feature.educational_talks) }}</span>
-              </template>
-              <template v-if="feature.radio_talks">
-                <span>Radio Talks</span>
-                <span>{{ formatValue(feature.radio_talks) }}</span>
-              </template>
-              <template v-if="feature.school_church_events">
-                <span>School/Church Events</span>
-                <span>{{ formatValue(feature.school_church_events) }}</span>
-              </template>
-              <template v-if="feature.womens_wellness_centers">
-                <AppLink to="https://cdphe.colorado.gov/wwc">
-                  Women's Wellness Centers
-                </AppLink>
-                <span>{{ formatValue(feature.womens_wellness_centers) }}</span>
-              </template>
-              <template v-if="feature['2morrow_signups']">
-                <AppLink
-                  to="https://medschool.cuanschutz.edu/colorado-cancer-center/community/CommunityOutreachEngagement/projects-and-activities/2morrow-health-app"
-                >
-                  2morrow Signups
-                </AppLink>
-                <span>{{ formatValue(feature["2morrow_signups"]) }}</span>
-              </template>
-            </div>
+            </dl>
 
             <!-- actions -->
 
             <AppButton
               v-if="selected.level === 'county' && 'county' in feature"
-              :icon="faExternalLinkAlt"
               :to="`/county/${feature.id}`"
-              :flip="true"
               :new-tab="true"
-              >See All</AppButton
             >
+              All county data
+            </AppButton>
           </template>
         </AppMap>
       </div>
 
       <!-- actions -->
-      <div class="row actions">
-        <div class="row">
+      <div class="flex flex-wrap items-center justify-center gap-4">
+        <div class="flex flex-wrap items-center justify-center gap-2">
           <AppButton
-            v-tooltip="'Download selected map(s) view as PNG'"
-            :icon="faDownload"
+            v-tooltip="'Download map(s) as PNG'"
             :accent="true"
-            @click="download"
+            @click="downloadMapImage"
           >
+            <Download />
             Map
           </AppButton>
           <AppButton
+            v-tooltip="'Download map(s) as GeoJSON'"
+            @click="downloadMapGeo"
+          >
+            <Download />
+            Geo
+          </AppButton>
+          <AppButton
             v-tooltip="'Zoom out'"
-            :icon="faMinus"
             @click="mapElement?.forEach((map) => map?.zoomOut())"
-          />
+          >
+            <Minus />
+          </AppButton>
           <AppButton
             v-tooltip="'Zoom in'"
-            :icon="faPlus"
             @click="mapElement?.forEach((map) => map?.zoomIn())"
-          />
-          <AppButton
-            v-tooltip="'Fit view to data'"
-            :icon="faCropSimple"
-            @click="fit"
           >
+            <Plus />
+          </AppButton>
+          <AppButton v-tooltip="'Fit view to data'" @click="fit">
+            <Crop />
             Fit
           </AppButton>
           <AppButton
             v-tooltip="'View map(s) in full screen'"
-            :icon="faExpand"
             @click="fullscreen"
           >
+            <Fullscreen />
             Fullscreen
           </AppButton>
         </div>
 
-        <div class="row note">
-          <font-awesome-icon :icon="faHandPointer" />Click on a
-          {{ selectedLevel }} or location to see more info.
+        <div class="flex grow flex-wrap items-center justify-center gap-2">
+          <Pointer />Try interacting with the map
         </div>
 
-        <div class="row">
-          <AppButton to="/contact" :icon="faComment" :flip="true" :accent="true"
-            >Feedback</AppButton
-          >
-          <AppButton
-            to="/about#acknowledge"
-            :icon="faFeatherPointed"
-            :flip="true"
-            :accent="true"
-            >Acknowledge</AppButton
-          >
+        <div class="flex flex-wrap items-center justify-center gap-2">
+          <AppButton to="/contact" :accent="true">
+            Feedback
+            <MessageCircle />
+          </AppButton>
+          <AppButton to="/about#acknowledge" :accent="true">
+            Acknowledge
+            <Feather />
+          </AppButton>
         </div>
       </div>
     </div>
@@ -724,6 +757,16 @@
 </template>
 
 <script setup lang="ts">
+import type { ShallowRef, WatchStopHandle } from "vue";
+import type {
+  Facets,
+  GeoProps,
+  LocationList,
+  LocationProps,
+  Values,
+} from "@/api";
+import type { Entry, Option } from "@/components/AppSelect.vue";
+import type { Expand, Update } from "@/util/types";
 import {
   computed,
   onMounted,
@@ -735,46 +778,7 @@ import {
   watch,
   watchEffect,
 } from "vue";
-import type { ShallowRef, WatchStopHandle } from "vue";
 import { event } from "vue-gtag";
-import { toBlob } from "html-to-image";
-import {
-  clamp,
-  isEmpty,
-  isEqual,
-  kebabCase,
-  mapValues,
-  orderBy,
-  pick,
-  uniqWith,
-} from "lodash";
-import {
-  faComment,
-  faHandPointer,
-  faQuestionCircle,
-} from "@fortawesome/free-regular-svg-icons";
-import {
-  faArrowsRotate,
-  faCheck,
-  faCropSimple,
-  faDownload,
-  faExpand,
-  faExternalLinkAlt,
-  faFeatherPointed,
-  faInfoCircle,
-  faLayerGroup,
-  faMinus,
-  faPlus,
-  faXmark,
-} from "@fortawesome/free-solid-svg-icons";
-import { useElementBounding, useFullscreen, useWindowSize } from "@vueuse/core";
-import type {
-  Facets,
-  GeoProps,
-  LocationList,
-  LocationProps,
-  Values,
-} from "@/api";
 import {
   extraLocationList,
   getDownload,
@@ -785,19 +789,19 @@ import {
   outreachLocationKey,
 } from "@/api";
 import measureMap from "@/api/measure-map.json";
-import AppAccordion from "@/components/AppAccordion.vue";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
+import AppCollapsible from "@/components/AppCollapsible.vue";
 import AppLink from "@/components/AppLink.vue";
 import AppMap from "@/components/AppMap.vue";
 import AppNumber from "@/components/AppNumber.vue";
 import AppSelect from "@/components/AppSelect.vue";
-import type { Entry, Option } from "@/components/AppSelect.vue";
 import AppSlider from "@/components/AppSlider.vue";
 import AppTree from "@/components/AppTree.vue";
-import { gradientOptions } from "@/components/gradient";
+import { backgroundOptions, defaultBackground } from "@/components/background";
+import { defaultGradient, gradientOptions } from "@/components/gradient";
 import { colors } from "@/components/markers";
-import { backgroundOptions } from "@/components/tile-providers";
+import { appTitle } from "@/meta";
 import {
   arrayParam,
   jsonParam,
@@ -806,10 +810,36 @@ import {
   useQuery,
   useUrlParam,
 } from "@/util/composables";
-import { downloadPng } from "@/util/download";
+import { downloadJson, downloadPng } from "@/util/download";
 import { formatValue, round } from "@/util/math";
 import { copy, sleep, waitFor } from "@/util/misc";
-import type { Expand, Update } from "@/util/types";
+import {
+  Check,
+  Copy,
+  Crop,
+  Download,
+  Feather,
+  Fullscreen,
+  Info,
+  MessageCircle,
+  Minus,
+  Plus,
+  Pointer,
+  RefreshCw,
+  X,
+} from "@lucide/vue";
+import { useElementBounding, useFullscreen, useWindowSize } from "@vueuse/core";
+import { toBlob } from "html-to-image";
+import {
+  clamp,
+  isEmpty,
+  isEqual,
+  mapValues,
+  orderBy,
+  pick,
+  uniqWith,
+  upperFirst,
+} from "lodash";
 
 type Value = NonNullable<Values>["values"][string];
 
@@ -849,8 +879,8 @@ const long = useUrlParam("long", numberParam, 0);
 
 /** map style state */
 const showLegends = ref(true);
-const selectedBackground = ref(backgroundOptions[0]!.id || "");
-const selectedGradient = ref(gradientOptions[3]!.id || "");
+const selectedBackground = ref(defaultBackground);
+const selectedGradient = ref(defaultGradient);
 const backgroundOpacity = ref(1);
 const geometryOpacity = ref(0.75);
 const locationOpacity = ref(1);
@@ -863,6 +893,19 @@ const manualMin = ref(0);
 const manualMax = ref(1);
 const mapWidth = ref(0);
 const mapHeight = ref(0);
+
+/** compare state */
+const compare = useUrlParam("compare", jsonParam<Map[]>(), []);
+const showPreview = ref(true);
+
+/** page title */
+watchEffect(() => {
+  const locations = selectedLocations.value.length;
+  appTitle.value = [
+    selectedMeasure.value,
+    locations ? `${locations} locations` : "",
+  ].filter(Boolean);
+});
 
 /** push selected facet values to tree value */
 const treeValue = computed(() => [
@@ -895,6 +938,21 @@ const levelOptions = computed<Option[]>(() =>
     )
     .map(([level, { label }]) => ({ id: level, label })),
 );
+
+/** get label parts from selected */
+const getLabel = (category = "", measure = "") => {
+  type Leaf = { id?: string; label?: string; children?: Leaf[] };
+  const selected = `${category};${measure}`;
+  const getPath = (children: Leaf[], path: Leaf[] = []): Leaf[] =>
+    children.flatMap(({ children = [], ...leaf }) =>
+      leaf.id === selected
+        ? [...path, leaf]
+        : getPath(children, [...path, leaf]),
+    );
+  return getPath(measureMap)
+    .map((part) => part.label || "")
+    .filter(Boolean);
+};
 
 /** auto-select facets */
 onMounted(() => {
@@ -992,12 +1050,6 @@ const selectedMap = computed(() => ({
 }));
 
 type Map = typeof selectedMap.value;
-
-/** show preview of selected map */
-const showPreview = ref(true);
-
-/** map compare group */
-const compare = useUrlParam("compare", jsonParam<Map[]>(), []);
 
 /** reenable preview state on any change to comparison */
 watch(compare, () => (showPreview.value = true), { deep: true });
@@ -1181,8 +1233,8 @@ const reset = async () => {
   lat.value = 0;
   long.value = 0;
   showLegends.value = true;
-  selectedBackground.value = backgroundOptions[0]?.id || "";
-  selectedGradient.value = gradientOptions[3]?.id || "";
+  selectedBackground.value = defaultBackground;
+  selectedGradient.value = defaultGradient;
   backgroundOpacity.value = 1;
   geometryOpacity.value = 0.75;
   locationOpacity.value = 1;
@@ -1245,8 +1297,6 @@ const outreachSelected = computed(() =>
 
 /** county overview outreach data */
 const countyWide = computed(() => {
-  if (selectedLevel.value !== "county") return [];
-
   /** get selected overview fields */
   let selected = Object.entries(
     pick(extraLocationList[outreachLocationKey], [
@@ -1323,8 +1373,8 @@ watch(
   { immediate: true },
 );
 
-/** download map as png */
-const download = async () => {
+/** download maps as pngs */
+const downloadMapImage = async () => {
   if (!mapGridElement.value) return;
 
   /** convert to image */
@@ -1341,191 +1391,18 @@ const download = async () => {
   if (blob) downloadPng(blob, "map");
 };
 
+/** download maps as geo data */
+const downloadMapGeo = async () => {
+  if (!mapElement.value?.length) return;
+
+  /** download json files */
+  for (const map of mapElement.value) {
+    const geo = map?.getGeo();
+    if (!geo) continue;
+    downloadJson(geo, "map-geo");
+  }
+};
+
 /** toggle fullscreen on element */
 const { toggle: fullscreen } = useFullscreen(mapGridElement);
 </script>
-
-<style scoped>
-.columns {
-  display: grid;
-  grid-template-columns: 360px 1fr;
-  margin: 40px 0;
-  gap: 40px;
-}
-
-.left-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  text-align: left;
-}
-
-.factors {
-  display: grid;
-  grid-template-columns: min-content 1fr;
-  align-items: center;
-  gap: 10px;
-}
-
-.factor {
-  display: contents;
-}
-
-.side-control {
-  display: grid;
-  grid-template-columns: 1fr min-content;
-  align-items: flex-end;
-  gap: 10px;
-}
-
-.control-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
-  align-items: center;
-  gap: 15px;
-}
-
-.preview {
-  filter: contrast(0.5) saturate(0) brightness(1.25);
-}
-
-.highlight {
-  z-index: 10;
-  box-shadow: 0 0 0 10px var(--theme);
-}
-
-.compare-thumbnails {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  place-items: center;
-  gap: 10px;
-}
-
-.compare-thumbnail {
-  position: relative;
-  aspect-ratio: 2 / 1;
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  overflow: hidden;
-  border: solid 1px var(--light-gray);
-  border-radius: var(--rounded);
-}
-
-.compare-thumbnail img {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center;
-  transition: opacity var(--fast);
-}
-
-.compare-thumbnail:hover img {
-  opacity: 0.25;
-}
-
-.dimensions-label {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 10px;
-  cursor: pointer;
-}
-
-.dimensions {
-  display: grid;
-  grid-template-columns: 1fr min-content 1fr;
-  align-items: center;
-  gap: 10px;
-}
-
-.gradient-preview {
-  max-width: 100px;
-  height: 1em;
-}
-
-.image-preview {
-  flex-shrink: 0;
-  width: 2em;
-  height: 2em;
-  overflow: hidden;
-  background: var(--gray);
-}
-
-.image-preview img {
-  width: 100%;
-  height: 100%;
-  /* center map on particular place (continental US) */
-  translate: 140% 70%;
-  scale: 5;
-}
-
-.right-panel {
-  display: flex;
-  position: sticky;
-  top: 20px;
-  flex-direction: column;
-  align-items: stretch;
-  min-width: 0;
-  min-height: 0;
-  gap: 20px;
-}
-
-.map-grid {
-  display: grid;
-  grid-template-columns: repeat(var(--cols), 1fr);
-  width: var(--width);
-  height: var(--height);
-  gap: 3px;
-  background: var(--dark-gray);
-  box-shadow: var(--shadow);
-  transition: opacity var(--fast);
-}
-
-@media (max-width: 800px) {
-  .columns {
-    grid-template-columns: 1fr;
-  }
-
-  .map-grid {
-    height: 90vh;
-  }
-}
-
-.source > a,
-.source > button {
-  vertical-align: middle;
-}
-
-.actions {
-  gap: 20px;
-}
-
-.note {
-  flex-grow: 1;
-}
-
-.check {
-  display: flex;
-  align-items: center;
-  align-self: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border: solid 1px var(--black);
-  background: var(--color);
-  color: var(--white);
-  font-size: 12px;
-  -webkit-text-stroke: 2px var(--black);
-  paint-order: stroke fill;
-}
-
-.check > svg {
-  height: 0.75em;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 50px;
-}
-</style>

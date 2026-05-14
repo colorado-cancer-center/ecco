@@ -1,9 +1,7 @@
+type Filename = string | string[];
+
 /** download blob as file */
-export const download = (
-  data: BlobPart,
-  filename: string | string[],
-  type: string,
-) => {
+export const download = (data: BlobPart, filename: Filename, type: string) => {
   const blob = new Blob([data], { type });
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -18,5 +16,9 @@ export const download = (
 };
 
 /** download blob as png */
-export const downloadPng = (data: BlobPart, filename: string | string[]) =>
+export const downloadPng = (data: BlobPart, filename: Filename) =>
   download(data, filename, "image/png");
+
+/** download string as file */
+export const downloadJson = (data: unknown, filename: Filename) =>
+  download(JSON.stringify(data), filename, "application/json");

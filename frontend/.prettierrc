@@ -1,10 +1,37 @@
 {
-  "plugins": [
-    "@ianvs/prettier-plugin-sort-imports",
-    "./node_modules/prettier-plugin-jsdoc/dist/index.js",
-    "prettier-plugin-css-order"
-  ],
-  "importOrder": ["^vue", "^[a-zA-Z]", "^@[a-zA-Z]", "^@/", "^./", "^../"],
-  "jsdocCapitalizeDescription": false,
-  "cssDeclarationSorterOrder": "smacss"
+  "overrides": [
+    {
+      "files": "*.css",
+      "options": {
+        "plugins": ["prettier-plugin-tailwindcss"]
+      }
+    },
+    {
+      "files": "*.!(css)",
+      "options": {
+        "plugins": [
+          "@ianvs/prettier-plugin-sort-imports",
+          "prettier-plugin-jsdoc"
+        ],
+        "importOrder": [
+          "<TYPES>^vue",
+          "<TYPES>^[^~/.]",
+          "<TYPES>^~/",
+          "<TYPES>^/",
+          "<TYPES>^./",
+          "<TYPES>^../",
+          "<TYPES>",
+          "^vue",
+          "^[^~/.]",
+          "^~/",
+          "^/",
+          "^./",
+          "^../"
+        ],
+        "importOrderParserPlugins": ["typescript", "importAssertions"],
+        "htmlWhitespaceSensitivity": "strict",
+        "jsdocCapitalizeDescription": false
+      }
+    }
+  ]
 }

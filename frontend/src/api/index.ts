@@ -1,6 +1,6 @@
 import type { FeatureCollection, Geometry } from "geojson";
-import { find, findKey } from "lodash";
 import type { ValueOf } from "type-fest";
+import { find, findKey } from "lodash";
 import outreachCounty1 from "./temp/outreach-county-1.json";
 import outreachCounty2 from "./temp/outreach-county-2.json";
 import outreachCounty3 from "./temp/outreach-county-3.json";
@@ -269,10 +269,10 @@ export const getValues = async (
     source: {
       id: "",
       name: data.source || "",
-      link: data.source_url || "",
+      data_description: "",
       date: "",
       date_description: "",
-      data_description: "",
+      link: data.source_url || "",
     },
   };
 };

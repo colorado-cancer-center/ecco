@@ -1,12 +1,14 @@
-import { startCase } from "lodash";
-import providers from "@/assets/tile-providers.json";
 import type { Option } from "@/components/AppSelect.vue";
+import providers from "@/assets/tile-providers.json";
+import { startCase } from "lodash";
 
 /**
  * https://leaflet-extras.github.io/leaflet-providers/preview/
  * https://github.com/leaflet-extras/leaflet-providers/issues/457
  * https://raw.githubusercontent.com/geopandas/xyzservices/refs/heads/main/provider_sources/leaflet-providers-parsed.json
  */
+
+export const defaultBackground = "Stadia.AlidadeSmooth";
 
 /** some pretty background layer tile providers */
 export const backgroundOptions = (

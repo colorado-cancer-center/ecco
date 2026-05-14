@@ -1,12 +1,13 @@
-import { computed, nextTick, onMounted, ref, shallowRef, watch } from "vue";
 import type { Ref } from "vue";
-import { debounce, round } from "lodash";
+import { computed, nextTick, onMounted, ref, watch, watchEffect } from "vue";
+import { frame } from "@/util/misc";
 import {
   useMutationObserver,
   useResizeObserver,
   useScroll,
   useUrlSearchParams,
 } from "@vueuse/core";
+import { debounce, round } from "lodash";
 
 /**
  * reactive variable synced with url params, as object of strings. only supports
@@ -60,7 +61,6 @@ export const useUrlParam = <T>(
   { parse, stringify }: Param<T>,
   initialValue: T,
 ) => {
-  /** https://github.com/vuejs/composition-api/issues/483 */
   const variable = ref(initialValue);
 
   /** when url changes, update variable */
@@ -134,8 +134,7 @@ export const useQuery = <Data, Args extends unknown[]>(
   const status = ref<"" | "loading" | "error" | "success">("");
 
   /** query results */
-  const data = shallowRef<Data>(defaultValue);
-  /** https://github.com/vuejs/composition-api/issues/483 */
+  const data = ref<Data>(defaultValue);
 
   /** latest query id, unique to this useQuery instance */
   let latest: symbol;
@@ -172,4 +171,36 @@ export const useQuery = <Data, Args extends unknown[]>(
   };
 
   return { query, data, status };
+};
+
+/** control expanding/collapsing height of element with transition */
+export const useAutoHeight = (
+  ref: Ref<HTMLElement | null>,
+  open: Ref<boolean>,
+) => {
+  watchEffect((onCleanup) => {
+    const element = ref.value;
+    if (!element) return;
+
+    /** reset height so content can size naturally */
+    const reset = () => (element.style.maxHeight = "");
+
+    if (open.value) {
+      /** set height to content height */
+      element.style.maxHeight = element.scrollHeight + "px";
+      /** reset after transition */
+      element.addEventListener("transitionend", reset, { once: true });
+    } else {
+      /** set starting height */
+      element.style.maxHeight = element.scrollHeight + "px";
+      frame().then(() => {
+        /** collapse */
+        element.style.maxHeight = "0px";
+      });
+    }
+
+    onCleanup(() => {
+      element.removeEventListener("transitionend", reset);
+    });
+  });
 };

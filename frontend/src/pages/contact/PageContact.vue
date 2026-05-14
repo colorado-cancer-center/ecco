@@ -2,52 +2,39 @@
   <section>
     <AppHeading level="1">Contact</AppHeading>
 
-    <div class="row">
-      <AppButton
-        :icon="faComment"
-        to="https://app.smartsheet.com/b/form/e66c076519a34f59a253a9e9e40b9c03"
-        >Feedback form</AppButton
-      >
-      <AppButton
-        :icon="faGithub"
-        to="https://github.com/colorado-cancer-center/ecco/issues/new/choose"
-        >GitHub</AppButton
-      >
-      <AppButton :icon="faEnvelope" to="mailto:coe@cuanschutz.edu"
-        >Email</AppButton
-      >
-    </div>
+    <p>
+      To suggest a <b>new data</b> source, report an <b>issue</b>, or for
+      general <b>questions</b> or <b>help</b>, please reach out to us:
+    </p>
 
-    <div class="mini-table table">
-      <font-awesome-icon :icon="faFlask" />
-      <div>Suggest a <b>new data</b> source</div>
-      <font-awesome-icon :icon="faBug" />
-      <div>Report an <b>issue</b></div>
-      <font-awesome-icon :icon="faQuestionCircle" />
-      <div>General <b>questions</b> or <b>help</b></div>
+    <div class="flex flex-wrap gap-4">
+      <AppButton
+        to="https://app.smartsheet.com/b/form/e66c076519a34f59a253a9e9e40b9c03"
+      >
+        <Form />
+        Feedback Form
+      </AppButton>
+      <AppButton
+        to="https://github.com/colorado-cancer-center/ecco/issues/new/choose"
+      >
+        <Bug />
+        GitHub
+      </AppButton>
+      <AppButton to="mailto:coe@cuanschutz.edu">
+        <Mail />
+        Email
+      </AppButton>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { faGithub } from "@fortawesome/free-brands-svg-icons";
-import {
-  faComment,
-  faQuestionCircle,
-} from "@fortawesome/free-regular-svg-icons";
-import { faBug, faEnvelope, faFlask } from "@fortawesome/free-solid-svg-icons";
+import { onMounted } from "vue";
 import AppButton from "@/components/AppButton.vue";
 import AppHeading from "@/components/AppHeading.vue";
+import { appTitle } from "@/meta";
+import { Bug, Form, Mail } from "@lucide/vue";
+
+/** page title */
+onMounted(() => (appTitle.value = ["Contact"]));
 </script>
-
-<style scoped>
-.table {
-  place-content: center;
-  margin: 40px auto;
-  gap: 15px;
-}
-
-.table > svg {
-  color: var(--dark-gray);
-}
-</style>

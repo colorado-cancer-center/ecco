@@ -1,8 +1,11 @@
 <template>
-  <div class="container" :class="$attrs.class">
+  <div
+    class="relative flex grow rounded-md bg-stone-200 transition hover:bg-stone-100"
+    :class="$attrs.class"
+  >
     <input
       v-bind="omit($attrs, 'class')"
-      class="input"
+      class="size-full min-h-10 min-w-0 rounded-md p-2"
       :style="{ paddingRight: sideSize.width.value + 'px' }"
       :value="modelValue"
       @input="
@@ -14,29 +17,32 @@
       "
     />
 
-    <div ref="side" class="side">
+    <div
+      ref="side"
+      class="absolute inset-y-0 right-0 aspect-square *:size-full"
+    >
       <button v-if="modelValue" @click="$emit('update:modelValue', '')">
-        <font-awesome-icon :icon="faXmark" />
+        <X />
       </button>
-      <button v-else disabled>
-        <font-awesome-icon :icon="icon" />
-      </button>
+      <div v-else-if="icon" class="grid place-items-center text-stone-500">
+        <component :is="icon" />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import type { Component } from "vue";
 import { useTemplateRef } from "vue";
-import { omit } from "lodash";
-import { faXmark } from "@fortawesome/free-solid-svg-icons";
-import type { IconDefinition } from "@fortawesome/free-solid-svg-icons";
+import { X } from "@lucide/vue";
 import { useElementSize } from "@vueuse/core";
+import { omit } from "lodash";
 
 defineOptions({ inheritAttrs: false });
 
 type Props = {
   modelValue: string;
-  icon?: IconDefinition;
+  icon?: Component;
 };
 
 defineProps<Props>();
@@ -50,26 +56,3 @@ defineEmits<Emits>();
 const sideElement = useTemplateRef("side");
 const sideSize = useElementSize(sideElement, undefined, { box: "border-box" });
 </script>
-
-<style scoped>
-.container {
-  display: flex;
-  position: relative;
-  align-items: center;
-  width: 100%;
-}
-
-.input {
-  flex-grow: 1;
-  background: var(--light-gray);
-}
-
-.side {
-  display: flex;
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  align-items: center;
-}
-</style>

@@ -9,6 +9,15 @@
       and environmental exposures, and local resources like cancer prevention,
       screening, treatment, and survivorship.
     </p>
+
+    <p> Presented by the University of Colorado Cancer Center</p>
+    <AppLink to="https://medschool.cuanschutz.edu/colorado-cancer-center">
+      <img
+        src="@/assets/logo.png"
+        class="h-20"
+        alt="University of Colorado Cancer Center"
+      />
+    </AppLink>
   </section>
 
   <section>
@@ -81,8 +90,11 @@
 </template>
 
 <script setup lang="ts">
-import { faFeatherPointed } from "@fortawesome/free-solid-svg-icons";
-import AppButton from "@/components/AppButton.vue";
+import { onMounted } from "vue";
 import AppHeading from "@/components/AppHeading.vue";
 import AppLink from "@/components/AppLink.vue";
+import { appTitle } from "@/meta";
+
+/** page title */
+onMounted(() => (appTitle.value = ["About"]));
 </script>

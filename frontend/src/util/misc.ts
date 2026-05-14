@@ -1,4 +1,4 @@
-import * as d3 from "d3";
+import { color } from "d3";
 
 /** wait ms */
 export const sleep = (ms = 0) =>
@@ -7,11 +7,6 @@ export const sleep = (ms = 0) =>
 /** wait for repaint */
 export const frame = () =>
   new Promise((resolve) => window.requestAnimationFrame(resolve));
-
-/** safe get bbox */
-export const getBbox = (selector: string): DOMRect =>
-  document.querySelector(selector)?.getBoundingClientRect() ||
-  new DOMRect(0, 0, 1, 1);
 
 /** wait for function to return something, checking periodically */
 export const waitFor = async <Result>(
@@ -34,8 +29,8 @@ export const getCssVar = (
 ) => getComputedStyle(element).getPropertyValue(name);
 
 /** force color to hex format */
-export const forceHex = (color: string) =>
-  d3.color(color)?.formatHex() || "#000000";
+export const forceHex = (string: string) =>
+  color(string)?.formatHex() || "#000000";
 
 /** convert [0,1] value to two hex digits */
 export const toHex = (value = 0) =>

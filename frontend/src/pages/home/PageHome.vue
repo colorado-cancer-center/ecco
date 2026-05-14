@@ -1,6 +1,6 @@
 <template>
   <SectionBanner />
-  <section id="map" class="full">
+  <section id="map" class="[--content:999]">
     <!-- loading/error status -->
     <AppStatus
       v-if="facetsStatus === 'error' || locationListStatus == 'error'"

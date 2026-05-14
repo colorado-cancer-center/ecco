@@ -1,4 +1,4 @@
-import { ref, watch } from "vue";
+import { ref, watchEffect } from "vue";
 
 /**
  * from
@@ -11,8 +11,14 @@ const { VITE_TITLE } = import.meta.env;
 /** multi-part page title as array, gets joined with a | separator */
 export const appTitle = ref<string[]>([VITE_TITLE]);
 
+/** set metadata value */
+const setTag = (property = "", value = "") =>
+  document
+    .querySelector(`meta[name='${property}'], meta[property='${property}']`)
+    ?.setAttribute("content", value);
+
 /** update document title meta tags */
-watch(appTitle, () => {
+watchEffect(() => {
   const title = appTitle.value
     .concat([VITE_TITLE])
     .filter((part) => part)
@@ -23,9 +29,3 @@ watch(appTitle, () => {
   setTag("og:title", title);
   setTag("twitter:title", title);
 });
-
-/** set metadata value */
-const setTag = (property = "", value = "") =>
-  document
-    .querySelector(`meta[name='${property}'], meta[property='${property}']`)
-    ?.setAttribute("content", value);

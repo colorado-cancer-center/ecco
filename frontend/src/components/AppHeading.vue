@@ -1,23 +1,15 @@
 <template>
-  <component :is="tag" :id="link" ref="heading" class="heading">
-    <slot />
-
-    <AppLink
-      v-if="link"
-      :to="'#' + link"
-      class="anchor"
-      :aria-label="'Link to this section'"
-    >
-      <font-awesome-icon :icon="faLink" class="icon" />
+  <component :is="tag" :id="link" ref="heading">
+    <AppLink :to="link" class="contents">
+      <slot />
     </AppLink>
   </component>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, onUpdated, ref, useTemplateRef } from "vue";
-import { kebabCase } from "lodash";
-import { faLink } from "@fortawesome/free-solid-svg-icons";
 import AppLink from "@/components/AppLink.vue";
+import { kebabCase } from "lodash";
 
 type Props = {
   /** heading level */
@@ -50,25 +42,3 @@ const updateLink = () =>
 onMounted(updateLink);
 onUpdated(updateLink);
 </script>
-
-<style scoped>
-.anchor {
-  display: inline-block;
-  width: 0;
-  margin-left: 0.5em;
-  font-size: 0.8em;
-  text-decoration: none;
-  opacity: 0;
-  transition:
-    opacity var(--fast),
-    color var(--fast);
-}
-
-.anchor:focus {
-  opacity: 1;
-}
-
-.heading:hover .anchor {
-  opacity: 1;
-}
-</style>

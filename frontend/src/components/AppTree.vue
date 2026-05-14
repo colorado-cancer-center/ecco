@@ -1,34 +1,36 @@
 <template>
-  <div :role="level === 1 ? 'tree' : 'group'" class="tree">
-    <div v-if="level === 1" class="controls">
+  <div :role="level === 1 ? 'tree' : 'group'" class="flex flex-col">
+    <!-- top controls -->
+    <div v-if="level === 1" class="mb-2 flex gap-2">
       <AppInput
         v-if="isRef(search)"
         v-model="search.value"
-        class="search"
-        :icon="faSearch"
+        :icon="Search"
         placeholder="Search"
       />
+      <AppButton v-tooltip="'Collapse all tree levels'" @click="onCloseAll">
+        <ListChevronsDownUp />
+      </AppButton>
+      <AppButton v-tooltip="'Expand all tree levels'" @click="onOpenAll">
+        <ListChevronsUpDown />
+      </AppButton>
       <AppButton
-        v-tooltip="'Go to selected'"
-        :icon="faCrosshairs"
+        v-tooltip="'Expand tree to show selected'"
         @click="onSeeSelected"
-      />
-      <AppButton
-        v-tooltip="'Open all'"
-        :icon="faAnglesDown"
-        @click="onOpenAll"
-      />
-      <AppButton
-        v-tooltip="'Close all'"
-        :icon="faAnglesUp"
-        @click="onCloseAll"
-      />
+      >
+        <Crosshair />
+      </AppButton>
     </div>
 
+    <!-- list -->
     <div
       v-for="(item, index) in children"
       :key="index"
-      class="tree-item"
+      class="relative flex flex-col"
+      :class="
+        level !== 1 &&
+        'relative pl-4 before:absolute before:inset-y-0 before:left-3.5 before:w-0.5 before:bg-stone-50'
+      "
       role="treeitem"
       :aria-selected="isEqual(modelValue, getValue(item))"
       :aria-expanded="isOpen[index]"
@@ -36,44 +38,51 @@
       :aria-setsize="size(children)"
       :aria-posinset="index + 1"
     >
-      <div v-show="match(item)" class="tree-row">
+      <!-- row -->
+      <div v-show="match(item)" class="flex items-center gap-2">
+        <!-- expand/collapse/select -->
         <button
-          class="tree-opener"
+          class="min-h-8 grow basis-0 justify-start gap-2 rounded-md p-1 text-left hover:bg-stone-100"
+          :class="isEqual(modelValue, getValue(item)) && 'bg-stone-100'"
           :disabled="!isEmpty(item.children) && !!unref(search)"
           :data-level="level"
           @click="onClick(index)"
           @keydown="onKey($event, index)"
         >
-          <font-awesome-icon
-            v-if="!isEmpty(item.children)"
-            :icon="
-              isOpen[index] || unref(search) ? faChevronDown : faChevronRight
-            "
-            class="icon"
-          />
+          <!-- expand/collapse icon -->
+          <template v-if="!isEmpty(item.children)">
+            <ChevronDown
+              v-if="isOpen[index] || unref(search)"
+              class="text-stone-300"
+            />
+            <ChevronRight v-else class="text-stone-300" />
+          </template>
+          <!-- selection icon -->
+          <template v-else>
+            <Check
+              v-if="isEqual(modelValue, getValue(item))"
+              class="text-emerald-500"
+              data-tree-selected
+            />
+            <Check v-else class="opacity-0" />
+          </template>
 
-          <font-awesome-icon
-            v-else-if="isEqual(modelValue, getValue(item))"
-            :icon="faCheck"
-            class="icon check"
-            data-tree-selected
-          />
-
-          <font-awesome-icon v-else :icon="faCircle" class="icon uncheck" />
-
-          <span class="label">
+          <!-- text label -->
+          <span>
             {{ item.label }}
           </span>
 
-          <span v-if="item.children && !unref(search)" class="count">
+          <!-- count -->
+          <span v-if="item.children && !unref(search)" class="text-stone-300">
             {{ size(item.children).toLocaleString() }}
           </span>
         </button>
-        <div class="tree-action">
-          <slot :parents="getParents(item)"></slot>
-        </div>
+
+        <!-- action -->
+        <slot :parents="getParents(item)" />
       </div>
 
+      <!-- children items -->
       <AppTree
         v-show="item.children && (isOpen[index] || unref(search))"
         :children="item.children"
@@ -92,24 +101,24 @@
 </template>
 
 <script setup lang="ts">
-import { computed, isRef, ref, unref, watch, type VNode } from "vue";
-import { isEmpty, isEqual, size } from "lodash";
-import { faCircle } from "@fortawesome/free-regular-svg-icons";
-import {
-  faAnglesDown,
-  faAnglesUp,
-  faCheck,
-  faChevronDown,
-  faChevronRight,
-  faCrosshairs,
-  faSearch,
-} from "@fortawesome/free-solid-svg-icons";
-import { useEventBus } from "@vueuse/core";
+import type { VNode } from "vue";
 import type { UseEventBusReturn } from "@vueuse/core";
+import { computed, isRef, ref, unref, watch } from "vue";
 import AppButton from "@/components/AppButton.vue";
 import AppInput from "@/components/AppInput.vue";
 import { findClosest } from "@/util/dom";
 import { sleep } from "@/util/misc";
+import {
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Crosshair,
+  ListChevronsDownUp,
+  ListChevronsUpDown,
+  Search,
+} from "@lucide/vue";
+import { useEventBus } from "@vueuse/core";
+import { isEmpty, isEqual, size } from "lodash";
 
 /** one item in tree */
 type Item = {
@@ -306,89 +315,3 @@ const onKey = (event: KeyboardEvent, index: number) => {
 /** when children change, reset open states */
 watch(() => children, closeAll, { immediate: true, deep: true });
 </script>
-
-<style scoped>
-.tree,
-.tree-item {
-  display: flex;
-  flex-direction: column;
-}
-
-.tree-item:not([aria-level="1"]) {
-  position: relative;
-  padding-left: 20px;
-}
-
-.tree-item:not([aria-level="1"])::before {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: calc(20px - 2px);
-  width: 2px;
-  background: var(--off-white);
-  content: "";
-}
-
-.tree-item[aria-selected="true"] .tree-opener {
-  background: var(--off-white);
-}
-
-.controls {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  margin-bottom: 5px;
-  gap: 5px;
-}
-
-.tree-row {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.tree-opener {
-  flex-grow: 1;
-  flex-basis: 0;
-  justify-content: flex-start;
-  text-align: left;
-}
-
-.tree-action {
-  display: flex;
-  align-items: center;
-  padding: 0;
-  gap: 5px;
-  opacity: 0;
-  transition:
-    opacity var(--fast),
-    background var(--fast);
-}
-
-.tree-row:hover .tree-action {
-  opacity: 1;
-}
-
-.tree-action:hover,
-.tree-opener:hover {
-  background: var(--off-white);
-}
-
-.icon {
-  flex-shrink: 0;
-  width: 20px;
-  color: var(--gray);
-}
-
-.check {
-  color: var(--success);
-}
-
-.uncheck {
-  opacity: 0;
-}
-
-.count {
-  color: var(--gray);
-}
-</style>

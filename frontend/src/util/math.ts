@@ -1,5 +1,5 @@
-import { upperFirst } from "lodash";
 import type { Unit } from "@/api/index";
+import { upperFirst } from "lodash";
 
 /** format map data value */
 export const formatValue = (
@@ -7,7 +7,7 @@ export const formatValue = (
   unit?: Unit,
   compact = false,
 ): string => {
-  if (typeof value === "string") return upperFirst(value);
+  if (typeof value === "string") return upperFirst(value) || "-";
   const format: Intl.NumberFormatOptions = {};
   format.notation = compact ? "compact" : "standard";
   format.maximumSignificantDigits = compact ? 2 : 5;

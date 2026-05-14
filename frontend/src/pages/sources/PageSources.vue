@@ -12,14 +12,14 @@
       >.
     </p>
 
-    <div class="center">
+    <div class="text-center">
       <AppButton
         v-tooltip="'Download all sources data in CSV format'"
-        :icon="faTable"
         :to="getDownloadAll()"
         :accent="true"
       >
         Download All Data
+        <Download />
       </AppButton>
     </div>
   </section>
@@ -52,9 +52,10 @@
           <td>
             <AppButton
               v-tooltip="'Copy citation text to clipboard'"
-              :icon="faFeatherPointed"
               @click="copy(getSourceCitation(source))"
-            />
+            >
+              <Feather />
+            </AppButton>
           </td>
         </tr>
       </tbody>
@@ -86,7 +87,7 @@
       style="display: contents"
       v-html="descriptions[source.id]"
     />
-    <p v-else class="center">
+    <p v-else class="text-center">
       <i>Description coming soon</i>
     </p>
   </section>
@@ -143,17 +144,21 @@
 
 <script setup lang="ts">
 import { onMounted, onUpdated } from "vue";
-import { kebabCase } from "lodash";
-import { micromark } from "micromark";
-import { gfmTable, gfmTableHtml } from "micromark-extension-gfm-table";
-import { faFeatherPointed, faTable } from "@fortawesome/free-solid-svg-icons";
 import { getDownloadAll, getSourceCitation, getSources } from "@/api";
 import AppButton from "@/components/AppButton.vue";
 import AppHeading from "@/components/AppHeading.vue";
 import AppLink from "@/components/AppLink.vue";
 import AppStatus from "@/components/AppStatus.vue";
+import { appTitle } from "@/meta";
 import { useQuery } from "@/util/composables";
 import { copy } from "@/util/misc";
+import { Download, Feather } from "@lucide/vue";
+import { kebabCase } from "lodash";
+import { micromark } from "micromark";
+import { gfmTable, gfmTableHtml } from "micromark-extension-gfm-table";
+
+/** page title */
+onMounted(() => (appTitle.value = ["Sources"]));
 
 /** load sources metadata */
 const {
@@ -166,15 +171,18 @@ onMounted(loadSources);
 
 /** load source description markdown files */
 const descriptions = Object.fromEntries(
-  Object.entries(import.meta.glob("./*.md", { as: "raw", eager: true })).map(
-    ([key, value]) => [
-      key.replace(/^\.\/(.*)\.md$/, "$1"),
-      micromark(value, {
-        extensions: [gfmTable()],
-        htmlExtensions: [gfmTableHtml()],
-      }),
-    ],
-  ),
+  Object.entries(
+    import.meta.glob<{ default: string }>("./*.md", {
+      query: "raw",
+      eager: true,
+    }),
+  ).map(([key, value]) => [
+    key.replace(/^\.\/(.*)\.md$/, "$1"),
+    micromark(value.default, {
+      extensions: [gfmTable()],
+      htmlExtensions: [gfmTableHtml()],
+    }),
+  ]),
 );
 
 onUpdated(() => {

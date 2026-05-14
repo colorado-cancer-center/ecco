@@ -1,5 +1,5 @@
 <template>
-  <label class="label">
+  <label class="flex flex-col items-stretch gap-1">
     <span>{{ label }}</span>
 
     <SliderRoot
@@ -12,12 +12,17 @@
         (value) => emit('update:modelValue', value?.[0] || min)
       "
     >
-      <span class="root">
-        <SliderTrack class="track">
-          <SliderRange class="range" />
+      <span
+        class="relative mb-1 flex h-2 cursor-pointer items-center py-2 text-stone-600 transition hover:text-black"
+      >
+        <SliderTrack class="relative h-1 grow rounded-full bg-stone-300">
+          <SliderRange class="absolute h-full rounded-full bg-current" />
         </SliderTrack>
         <SliderThumb :as-child="true">
-          <div class="thumb" :aria-label="label" />
+          <div
+            class="absolute size-4 rounded-full bg-current"
+            :aria-label="label"
+          />
         </SliderThumb>
       </span>
     </SliderRoot>
@@ -49,50 +54,3 @@ type Emits = {
 
 const emit = defineEmits<Emits>();
 </script>
-
-<style scoped>
-.label {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 10px;
-}
-
-.root {
-  display: flex;
-  position: relative;
-  align-items: center;
-  height: 10px;
-  margin-bottom: 5px;
-  padding: 10px 0;
-  cursor: pointer;
-  transition: color var(--fast);
-}
-
-.root:hover {
-  color: var(--theme);
-}
-
-.track {
-  position: relative;
-  flex-grow: 1;
-  height: 5px;
-  border-radius: 999px;
-  background: var(--gray);
-}
-
-.range {
-  position: absolute;
-  height: 100%;
-  border-radius: 999px;
-  background: currentColor;
-}
-
-.thumb {
-  position: absolute;
-  width: 15px;
-  height: 15px;
-  border-radius: 999px;
-  background: currentColor;
-}
-</style>
