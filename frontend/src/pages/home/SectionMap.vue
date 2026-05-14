@@ -394,10 +394,7 @@
           <!-- main legend -->
           <template #top-left-upper>
             <strong>
-              {{
-                facets[selected.level]?.categories?.[selected.category]
-                  ?.measures?.[selected.measure]?.label
-              }}
+              {{ getLabel(selected.category, selected.measure).at(-1) }}
             </strong>
             <div class="text-sm">{{ upperFirst(selected.level) }}</div>
             <div>
@@ -510,10 +507,9 @@
                 "
               >
                 <dt>
-                  <i>{{
-                    facets[selected.level]?.categories?.[selected.category]
-                      ?.measures?.[selected.measure]?.label
-                  }}</i>
+                  <i>
+                    {{ getLabel(selected.category, selected.measure).at(-1) }}
+                  </i>
                   {{ feature.aac ? "Rate" : "Value" }}
                 </dt>
                 <dd>
@@ -942,6 +938,21 @@ const levelOptions = computed<Option[]>(() =>
     )
     .map(([level, { label }]) => ({ id: level, label })),
 );
+
+/** get label parts from selected */
+const getLabel = (category = "", measure = "") => {
+  type Leaf = { id?: string; label?: string; children?: Leaf[] };
+  const selected = `${category};${measure}`;
+  const getPath = (children: Leaf[], path: Leaf[] = []): Leaf[] =>
+    children.flatMap(({ children = [], ...leaf }) =>
+      leaf.id === selected
+        ? [...path, leaf]
+        : getPath(children, [...path, leaf]),
+    );
+  return getPath(measureMap)
+    .map((part) => part.label || "")
+    .filter(Boolean);
+};
 
 /** auto-select facets */
 onMounted(() => {
