@@ -10,7 +10,7 @@
       </AppLink>
       <AppLink
         to="https://medschool.cuanschutz.edu/colorado-cancer-center"
-        class="text-xs font-light text-stone-600"
+        class="text-xs font-light"
       >
         University of Colorado Cancer Center
       </AppLink>
@@ -21,10 +21,7 @@
         <AppLink
           v-if="route.meta?.header"
           :to="route.path"
-          :class="[
-            'p-1',
-            route.name === $route.name && 'border-b-2 text-black',
-          ]"
+          :data-active="route.name === $route.name"
         >
           {{ route.name }}
         </AppLink>

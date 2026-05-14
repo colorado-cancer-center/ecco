@@ -69,12 +69,21 @@
 
   header a,
   footer a {
-    @apply hover:text-yellow-700;
+    @apply relative p-1;
+
+    &::after {
+      @apply absolute right-0 bottom-0 left-0 h-0.5 scale-x-0 bg-current transition content-[''];
+    }
+
+    &:hover::after,
+    &[data-active="true"]::after {
+      @apply scale-x-100;
+    }
   }
 
   p a,
   td a {
-    @apply text-yellow-700 underline hover:text-current;
+    @apply text-yellow-800 underline hover:text-current;
   }
 
   p {
