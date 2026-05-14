@@ -155,7 +155,7 @@
 }
 
 .tippy-box {
-  @apply rounded-md bg-stone-600 p-1 leading-relaxed! text-white;
+  @apply rounded-md bg-stone-600 p-1 leading-relaxed! text-white shadow-md shadow-white;
   font: inherit;
 }
 

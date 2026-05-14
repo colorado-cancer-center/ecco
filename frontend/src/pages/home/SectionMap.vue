@@ -60,10 +60,10 @@
       <!-- locations -->
       <AppSelect
         v-model="selectedLocations"
-        label="Resources & Locations"
+        label="Resources & Extras"
         :options="locationOptions"
         :multi="true"
-        tooltip="Locations and extra info to show on map, e.g. screening centers, clinics, specialists"
+        tooltip="Resources, extra info, and other locations to show on map, e.g. screening centers, clinics, specialists"
       />
 
       <!-- multi-map compare -->
@@ -295,8 +295,8 @@
         />
         <AppSlider
           v-model="locationOpacity"
-          v-tooltip="'Transparency of selected locations layer'"
-          label="Location transparency"
+          v-tooltip="'Transparency of resources & extras layer'"
+          label="Locations transparency"
         />
 
         <!-- dimensions -->

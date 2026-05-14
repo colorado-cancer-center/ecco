@@ -1,6 +1,9 @@
 <template>
   <Disclosure>
-    <div class="flex flex-col rounded-md bg-stone-50">
+    <div
+      class="flex flex-col rounded-md bg-stone-50 transition"
+      :class="open && 'shadow-md'"
+    >
       <DisclosureButton as="template">
         <AppButton ref="button" :accent="true" @click="open = !open">
           {{ label }}
