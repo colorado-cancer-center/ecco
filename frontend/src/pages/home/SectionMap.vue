@@ -828,12 +828,7 @@ import {
   RefreshCw,
   X,
 } from "@lucide/vue";
-import {
-  useElementBounding,
-  useFullscreen,
-  useIntervalFn,
-  useWindowSize,
-} from "@vueuse/core";
+import { useFullscreen, useIntervalFn } from "@vueuse/core";
 import { toBlob } from "html-to-image";
 import {
   clamp,
@@ -1363,14 +1358,12 @@ watch(mapCols, async () => {
 
 /** auto-adjust right panel/map height */
 const autoRightPanelHeight = ref(0);
-const { top: rightPanelTop } = useElementBounding(rightPanelElement);
-const { height: windowHeight } = useWindowSize();
 useIntervalFn(() => {
-  if (windowHeight.value < 400) return;
-  if (!rightPanelTop.value) return;
+  const { top } = rightPanelElement.value?.getBoundingClientRect() ?? {};
+  if (window.innerHeight < 400) return;
+  if (!top) return;
   if (mapWidth.value || mapHeight.value) return;
-  const top = rightPanelTop.value;
-  const max = windowHeight.value - 20;
+  const max = window.innerHeight - 20;
   const height = clamp(max - top, 400, max);
   if (Math.abs(height - autoRightPanelHeight.value) > 1)
     autoRightPanelHeight.value = height;
