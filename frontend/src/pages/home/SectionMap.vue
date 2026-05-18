@@ -14,7 +14,7 @@
 
       <!-- category/measure selection -->
       <div class="flex flex-col gap-1">
-        Geographic data
+        Statistics
         <AppTree
           :children="measureMap"
           :model-value="treeValue"
@@ -60,10 +60,10 @@
       <!-- locations -->
       <AppSelect
         v-model="selectedLocations"
-        label="Resources & Extras"
+        label="Resources & Other Locations"
         :options="locationOptions"
         :multi="true"
-        tooltip="Resources, extra info, and other locations to show on map, e.g. screening centers, clinics, specialists"
+        tooltip="Resources and other locations to show on map, e.g. screening centers, clinics, specialists"
       />
 
       <!-- multi-map compare -->
@@ -295,7 +295,7 @@
         />
         <AppSlider
           v-model="locationOpacity"
-          v-tooltip="'Transparency of resources & extras layer'"
+          v-tooltip="'Transparency of resources & locations layer'"
           label="Locations transparency"
         />
 
@@ -487,15 +487,21 @@
               Health Statistic Region {{ feature.hs_region }}
             </strong>
 
-            <AppLink
-              v-if="selectedLevel === 'tract' || noData"
-              to="/sources#suppressed-values"
-              :new-tab="true"
-              class="inline-flex items-center gap-1 underline"
-            >
-              Low values may be suppressed
-              <Info />
-            </AppLink>
+            <p>
+              <AppLink
+                v-if="selectedLevel === 'tract' || noData"
+                to="/sources#suppressed-values"
+                :new-tab="true"
+                class="inline-flex items-center gap-1 underline"
+              >
+                Low values may be suppressed
+                <Info />
+              </AppLink>
+            </p>
+
+            <i>
+              {{ getLabel(selected.category, selected.measure).join(" > ") }}
+            </i>
 
             <dl>
               <!-- main values -->
@@ -507,9 +513,6 @@
                 "
               >
                 <dt>
-                  <i>
-                    {{ getLabel(selected.category, selected.measure).at(-1) }}
-                  </i>
                   {{ feature.aac ? "Rate" : "Value" }}
                 </dt>
                 <dd>
@@ -518,7 +521,7 @@
               </template>
 
               <template
-                v-else-if="
+                v-if="
                   typeof feature.aac === 'number' ||
                   typeof feature.aac === 'string'
                 "
@@ -527,16 +530,9 @@
                 <dd>{{ formatValue(feature.aac, values?.unit) }}</dd>
               </template>
 
-              <template v-else-if="feature.count">
+              <template v-if="feature.count">
                 <dt>Count</dt>
                 <dd>{{ formatValue(feature.count) }}</dd>
-              </template>
-
-              <template v-else>
-                <dt>
-                  <i>{{ selected.measure }}</i> Value
-                </dt>
-                <dd>-</dd>
               </template>
 
               <!-- extra info -->
