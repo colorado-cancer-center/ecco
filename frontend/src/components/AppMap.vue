@@ -160,7 +160,7 @@ import hatch from "@/assets/hatch.svg?no-inline";
 import { backgroundOptions } from "@/components/background";
 import { getGradient, gradientOptions } from "@/components/gradient";
 import { formatValue, normalizedApply } from "@/util/math";
-import { forceHex, getCssVar, sleep, waitFor } from "@/util/misc";
+import { forceHex, getCssVar, waitFor } from "@/util/misc";
 import { X } from "@lucide/vue";
 import { useElementSize } from "@vueuse/core";
 import { extent, pairs, range, scaleQuantile, ticks, tickStep } from "d3";
@@ -882,45 +882,17 @@ const fit = async () => {
     view.adjustZoom(-1);
 };
 
-/** auto-fit when geometry changes */
-watch(
-  () => geometry,
-  async () => {
-    /** if geometry not loaded yet or view already defined, don't fit */
-    if (!geometry || lat || long || zoom) return;
-    /** wait for render and layout shift */
-    await sleep(100);
-    fit();
-  },
-  { immediate: true, deep: true },
-);
-
-/** auto-fit when legends change */
-watch(
-  () => showLegends,
-  /** wait for legends mount/unmount */
-  () => nextTick().then(fit),
-);
-
-/** auto-fit when locations change */
-watch(
-  () => locations,
-  /** don't fit on first load */
-  (_, prevLocations) => !isEmpty(prevLocations) && fit(),
-  { deep: true },
-);
-
 onMounted(async () => {
   /** if not highlighting specific feature */
   if (highlight) return;
 
-  /** if no pan/zoom specified */
-  if (!lat || !long || !zoom) {
-    /** wait for features to be loaded, rendered/parsed */
-    await waitFor(() => geometrySource.getFeatures().length);
+  /** if no initial view provided, fit to content */
+  /** wait for features to be loaded, rendered/parsed */
+  await waitFor(() => geometrySource.getFeatures().length);
+  /** preserve existing view */
+  if (!zoom || !lat || !long)
     /** fit view to content */
     fit();
-  }
 });
 
 /** get geojson data */

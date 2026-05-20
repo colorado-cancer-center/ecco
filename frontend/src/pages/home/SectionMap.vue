@@ -753,7 +753,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ShallowRef, WatchStopHandle } from "vue";
+import type { ShallowRef } from "vue";
 import type {
   Facets,
   GeoProps,
@@ -766,7 +766,6 @@ import type { Expand, Update } from "@/util/types";
 import {
   computed,
   onMounted,
-  onUnmounted,
   ref,
   shallowRef,
   unref,
@@ -798,17 +797,11 @@ import { backgroundOptions, defaultBackground } from "@/components/background";
 import { defaultGradient, gradientOptions } from "@/components/gradient";
 import { colors } from "@/components/markers";
 import { appTitle } from "@/meta";
-import {
-  arrayParam,
-  jsonParam,
-  numberParam,
-  stringParam,
-  useQuery,
-  useUrlParam,
-} from "@/util/composables";
+import { numberParam } from "@/pages";
+import { useQuery } from "@/util/composables";
 import { downloadJson, downloadPng } from "@/util/download";
 import { formatValue, round } from "@/util/math";
-import { copy, sleep, waitFor } from "@/util/misc";
+import { copy, sleep } from "@/util/misc";
 import {
   Check,
   Copy,
@@ -825,6 +818,7 @@ import {
   X,
 } from "@lucide/vue";
 import { useFullscreen, useIntervalFn } from "@vueuse/core";
+import { useRouteQuery } from "@vueuse/router";
 import { toBlob } from "html-to-image";
 import {
   clamp,
@@ -862,16 +856,16 @@ const mapGridElement = useTemplateRef("mapGridElement");
 const mapElement = useTemplateRef("mapElement");
 
 /** select boxes state */
-const selectedLevel = useUrlParam("level", stringParam, "");
-const selectedCategory = useUrlParam("category", stringParam, "");
-const selectedMeasure = useUrlParam("measure", stringParam, "");
+const selectedLevel = useRouteQuery<string>("level", "");
+const selectedCategory = useRouteQuery<string>("category", "");
+const selectedMeasure = useRouteQuery<string>("measure", "");
 const selectedFactors = shallowRef<Record<string, ShallowRef<string>>>({});
-const selectedLocations = useUrlParam("locations", arrayParam(stringParam), []);
+const selectedLocations = ref<string[]>([]);
 
 /** map zoom state */
-const zoom = useUrlParam("zoom", numberParam, 0);
-const lat = useUrlParam("lat", numberParam, 0);
-const long = useUrlParam("long", numberParam, 0);
+const zoom = useRouteQuery("zoom", "0", { transform: numberParam });
+const lat = useRouteQuery("lat", "0", { transform: numberParam });
+const long = useRouteQuery("long", "0", { transform: numberParam });
 
 /** map style state */
 const showLegends = ref(true);
@@ -891,7 +885,7 @@ const mapWidth = ref(0);
 const mapHeight = ref(0);
 
 /** compare state */
-const compare = useUrlParam("compare", jsonParam<Map[]>(), []);
+const compare = ref<Map[]>([]);
 const showPreview = ref(true);
 
 /** page title */
@@ -975,64 +969,6 @@ const factors = computed(
     facets[selectedLevel.value]?.categories[selectedCategory.value]?.measures[
       selectedMeasure.value
     ]?.factors || {},
-);
-
-/** keep track of dynamically created factor watchers */
-let stoppers: WatchStopHandle[] = [];
-
-/** clear all factor watchers */
-const clearFactorWatchers = () => {
-  stoppers.forEach((stopper) => stopper());
-  stoppers = [];
-};
-
-/** cleanup factor watchers */
-onUnmounted(clearFactorWatchers);
-
-/** update selected factors when full set of factor options changes */
-watch(
-  factors,
-  () => {
-    /** reset selected factors */
-    selectedFactors.value = {};
-
-    /** all previous watchers irrelevant now */
-    clearFactorWatchers();
-
-    /** for each factor */
-    for (const [key, value] of Object.entries(factors.value)) {
-      /** default fallback option */
-      const fallback =
-        value.default in value.values
-          ? /** explicitly defined default */
-            value.default
-          : /** first option */
-            Object.entries(value.values || {})[0]?.[0] || "";
-
-      /** ref 2-way synced with url */
-      const factor = useUrlParam(key, stringParam, fallback);
-      /** hook up url reactive with selected factor */
-      selectedFactors.value[key] = factor;
-
-      /** dynamically create watcher for factor */
-      stoppers.push(
-        /** when factor value changes */
-        watch(
-          factor,
-          () => {
-            /** get non-stale factor options */
-            const newValue = factors.value[key];
-            /** if value isn't valid anymore */
-            if (!(factor.value in (newValue?.values || {})))
-              /** fall back */
-              factor.value = fallback;
-          },
-          { immediate: true },
-        ),
-      );
-    }
-  },
-  { immediate: true, deep: true },
 );
 
 /** full selected map */
@@ -1342,15 +1278,6 @@ watchEffect(() => {
 
 /** fit all maps */
 const fit = () => mapElement.value?.forEach((map) => map?.fit());
-
-/** re-fit when col number changes */
-watch(mapCols, async () => {
-  /** wait for map data to be done loading */
-  await waitFor(() => mapDataStatus.value === "success");
-  /** wait for map component to render */
-  await sleep(10);
-  fit();
-});
 
 /** auto-adjust right panel/map height */
 const autoRightPanelHeight = ref(0);
