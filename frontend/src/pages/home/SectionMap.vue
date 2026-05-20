@@ -817,7 +817,12 @@ import {
   RefreshCw,
   X,
 } from "@lucide/vue";
-import { useFullscreen, useIntervalFn } from "@vueuse/core";
+import {
+  useElementBounding,
+  useFullscreen,
+  useResizeObserver,
+  useWindowSize,
+} from "@vueuse/core";
 import { useRouteQuery } from "@vueuse/router";
 import { toBlob } from "html-to-image";
 import {
@@ -1281,16 +1286,19 @@ const fit = () => mapElement.value?.forEach((map) => map?.fit());
 
 /** auto-adjust right panel/map height */
 const autoRightPanelHeight = ref(0);
-useIntervalFn(() => {
-  const { top } = rightPanelElement.value?.getBoundingClientRect() ?? {};
-  if (window.innerHeight < 400) return;
-  if (!top) return;
+const { top: rightPanelTop, update: updateRightPanelHeight } =
+  useElementBounding(rightPanelElement);
+useResizeObserver(document.body, updateRightPanelHeight);
+const { height: windowHeight } = useWindowSize();
+watchEffect(() => {
+  if (windowHeight.value < 400) return;
+  if (!rightPanelTop.value) return;
   if (mapWidth.value || mapHeight.value) return;
-  const max = window.innerHeight - 20;
-  const height = clamp(max - top, 400, max);
+  const max = windowHeight.value - 20;
+  const height = clamp(max - rightPanelTop.value, 400, max);
   if (Math.abs(height - autoRightPanelHeight.value) > 1)
     autoRightPanelHeight.value = height;
-}, 100);
+});
 
 /** download maps as pngs */
 const downloadMapImage = async () => {
