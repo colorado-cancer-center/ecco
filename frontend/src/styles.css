@@ -81,6 +81,10 @@
     }
   }
 
+  h1 a,
+  h2 a,
+  h3 a,
+  h4 a,
   p a,
   td a {
     @apply text-yellow-800 underline hover:text-current;

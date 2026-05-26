@@ -1,27 +1,28 @@
 import { createRouter, createWebHistory } from "vue-router";
 import PageContact from "@/pages/contact/PageContact.vue";
-import PageCounty from "@/pages/county/PageCounty.vue";
+// import PageCounty from "@/pages/county/PageCounty.vue";
 import PageSources from "@/pages/sources/PageSources.vue";
 import { sleep, waitFor } from "@/util/misc";
 import { debounce, round } from "lodash";
 import PageAbout from "./about/PageAbout.vue";
-import PageHome from "./home/PageHome.vue";
+
+// import PageHome from "./home/PageHome.vue";
 
 export const routes = [
-  {
-    name: "Home",
-    path: "/",
-    component: PageHome,
-    beforeEnter: () => {
-      const url = window.sessionStorage.redirect as string;
-      if (url) {
-        console.debug("Redirecting to:", url);
-        window.sessionStorage.removeItem("redirect");
-        return url;
-      }
-    },
-    meta: { header: true },
-  },
+  // {
+  //   name: "Home",
+  //   path: "/",
+  //   component: PageHome,
+  //   beforeEnter: () => {
+  //     const url = window.sessionStorage.redirect as string;
+  //     if (url) {
+  //       console.debug("Redirecting to:", url);
+  //       window.sessionStorage.removeItem("redirect");
+  //       return url;
+  //     }
+  //   },
+  //   meta: { header: true },
+  // },
   {
     name: "Sources",
     path: "/sources",
@@ -40,11 +41,11 @@ export const routes = [
     component: PageContact,
     meta: { header: true },
   },
-  {
-    name: "County",
-    path: "/county/:id",
-    component: PageCounty,
-  },
+  // {
+  //   name: "County",
+  //   path: "/county/:id",
+  //   component: PageCounty,
+  // },
 ];
 
 export const history = createWebHistory();

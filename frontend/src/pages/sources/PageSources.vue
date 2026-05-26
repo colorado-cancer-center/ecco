@@ -27,10 +27,7 @@
   <section>
     <AppHeading level="2">Summary</AppHeading>
 
-    <AppStatus v-if="sourcesStatus == 'error'" status="error" />
-    <AppStatus v-else-if="sourcesStatus == 'loading'" status="loading" />
-
-    <table v-else-if="sources">
+    <table>
       <thead>
         <tr>
           <th>Source</th>
@@ -41,10 +38,10 @@
       </thead>
 
       <tbody>
-        <tr v-for="(source, index) in sources" :key="index">
+        <tr v-for="(source, id, index) in sources" :key="index">
           <td>
-            <AppLink :to="`#${kebabCase(source.id)}`">
-              {{ source.name }}
+            <AppLink :to="`#${kebabCase(id)}`">
+              {{ source.label }}
             </AppLink>
           </td>
           <td>{{ source.data_description }}</td>
@@ -77,15 +74,13 @@
     </p>
   </section>
 
-  <section v-for="(source, index) in sources" :key="index">
-    <AppHeading :id="source.id" level="2">
-      {{ source.name }} ({{ source.id }})
-    </AppHeading>
+  <section v-for="(source, id, index) in sources" :key="index">
+    <AppHeading :id="id" level="2"> {{ source.label }} ({{ id }}) </AppHeading>
 
     <div
-      v-if="descriptions[source.id]"
+      v-if="descriptions[id]"
       style="display: contents"
-      v-html="descriptions[source.id]"
+      v-html="descriptions[id]"
     />
     <p v-else class="text-center">
       <i>Description coming soon</i>
@@ -144,13 +139,12 @@
 
 <script setup lang="ts">
 import { onMounted, onUpdated } from "vue";
-import { getDownloadAll, getSourceCitation, getSources } from "@/api";
+import { getDownloadAll, getSourceCitation } from "@/api";
+import sources from "@/api/data/source-details.json";
 import AppButton from "@/components/AppButton.vue";
 import AppHeading from "@/components/AppHeading.vue";
 import AppLink from "@/components/AppLink.vue";
-import AppStatus from "@/components/AppStatus.vue";
 import { appTitle } from "@/meta";
-import { useQuery } from "@/util/composables";
 import { copy } from "@/util/misc";
 import { Download, Feather } from "@lucide/vue";
 import { kebabCase } from "lodash";
@@ -159,15 +153,6 @@ import { gfmTable, gfmTableHtml } from "micromark-extension-gfm-table";
 
 /** page title */
 onMounted(() => (appTitle.value = ["Sources"]));
-
-/** load sources metadata */
-const {
-  query: loadSources,
-  data: sources,
-  status: sourcesStatus,
-} = useQuery(getSources, undefined);
-
-onMounted(loadSources);
 
 /** load source description markdown files */
 const descriptions = Object.fromEntries(

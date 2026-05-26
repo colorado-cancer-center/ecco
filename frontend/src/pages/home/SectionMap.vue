@@ -754,13 +754,6 @@
 
 <script setup lang="ts">
 import type { ShallowRef } from "vue";
-import type {
-  Facets,
-  GeoProps,
-  LocationList,
-  LocationProps,
-  Values,
-} from "@/api";
 import type { Entry, Option } from "@/components/AppSelect.vue";
 import type { Expand, Update } from "@/util/types";
 import {
@@ -774,16 +767,6 @@ import {
   watchEffect,
 } from "vue";
 import { event } from "vue-gtag";
-import {
-  extraLocationList,
-  getDownload,
-  getGeo,
-  getLocation,
-  getSourceCitation,
-  getValues,
-  outreachLocationKey,
-} from "@/api";
-import measureMap from "@/api/data/measure-map.json";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
 import AppCollapsible from "@/components/AppCollapsible.vue";

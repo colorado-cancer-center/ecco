@@ -1,8 +1,14 @@
-import type { Feature } from "@/api/feature";
-import type { Geographies, Geography } from "@/api/geography";
-import type { Statistic, Statistics } from "@/api/statistic";
-import type { Geometry } from "geojson";
-import type { Point } from "./";
+import type { FeatureCollection, Geometry } from "geojson";
+import type {
+  Feature,
+  Geographies,
+  Geography,
+  Location,
+  Locations,
+  Point,
+  Statistic,
+  Statistics,
+} from "./";
 import { http, HttpResponse, passthrough } from "msw";
 import { setupWorker } from "msw/browser";
 import { api } from "./";
@@ -31,31 +37,19 @@ const handlers = [
 
     const actual: _Level = await (await fetch(url)).json();
 
-    const desired: Geography = Object.fromEntries(
-      actual.map((feature) => {
+    const desired: Geography = {
+      type: "FeatureCollection",
+      features: actual.map((feature) => {
         const id =
           feature.us_fips ?? feature.fips ?? String(feature.hs_region) ?? "";
         const center = [feature.cent_lat, feature.cent_long] as Point;
-        return [
-          id,
-          {
-            geometry: JSON.parse(feature.wkb_geometry ?? "{}") as Geometry,
-            center,
-            description: feature.counties,
-          },
-        ];
+        return {
+          type: "Feature",
+          geometry: JSON.parse(feature.wkb_geometry ?? "{}") as Geometry,
+          properties: { id, center, description: feature.counties },
+        };
       }),
-    );
-
-    return HttpResponse.json(desired);
-  }),
-
-  http.get("/feature/:feature", async ({ params }) => {
-    const url = new URL(`${api}/stats/by-county/${params.feature as string}`);
-
-    const actual: _StatsByCounty = await (await fetch(url)).json();
-
-    const desired: Feature = actual;
+    };
 
     return HttpResponse.json(desired);
   }),
@@ -104,6 +98,36 @@ const handlers = [
     return HttpResponse.json(desired);
   }),
 
+  http.get("/location", async () => {
+    const url = new URL(`${api}/locations`);
+
+    const actual: _Locations = await (await fetch(url)).json();
+
+    const desired: Locations = actual;
+
+    return HttpResponse.json(desired);
+  }),
+
+  http.get("/location/:location", async ({ params }) => {
+    const url = new URL(`${api}/locations/${params.location as string}`);
+
+    const actual: _Location = await (await fetch(url)).json();
+
+    const desired: Location = actual.geometry_json;
+
+    return HttpResponse.json(desired);
+  }),
+
+  http.get("/feature/:feature", async ({ params }) => {
+    const url = new URL(`${api}/stats/by-county/${params.feature as string}`);
+
+    const actual: _StatsByCounty = await (await fetch(url)).json();
+
+    const desired: Feature = actual;
+
+    return HttpResponse.json(desired);
+  }),
+
   /** leave all other requests untouched */
   http.get("*", passthrough),
   http.post("*", passthrough),
@@ -112,7 +136,6 @@ const handlers = [
 /** start mocking */
 export const mock = () => setupWorker(...handlers);
 
-/** /stats/measures */
 type _StatsMeasures = {
   [key: string]: {
     label: string;
@@ -136,7 +159,6 @@ type _StatsMeasures = {
   };
 };
 
-/** /${level} */
 type _Level = {
   /** counties */
   wkb_geometry?: string;
@@ -165,7 +187,6 @@ type _Level = {
   // objectid?: number;
 }[];
 
-/** /stats/by-county/${county} */
 type _StatsByCounty = {
   FIPS: string;
   name: string;
@@ -187,7 +208,6 @@ type _StatsByCounty = {
   };
 };
 
-/** value type/format */
 type Unit =
   | "count"
   | "percent"
@@ -198,25 +218,50 @@ type Unit =
   | "ordinal"
   | null;
 
-/** /stats/${level}/${category}/fips-value */
 type _StatsFipsValue = {
-  /** range of values for specified measure */
   max: number | string;
   min: number | string;
-  /** "global" value */
   state?: number | string;
   state_source?: string;
-  /** map of feature id to measure value */
   values: {
     [key: string]: {
       value?: number | string | null;
       aac?: number | string | null;
     };
   };
-  /** unit info */
   unit: Unit;
   order?: string[];
-  /** where data came from */
   source?: string;
   source_url?: string;
+};
+
+type _Locations = {
+  [key: string]: { [key: string]: string };
+};
+
+type _Location = {
+  id: string;
+  name: string;
+  category_id: string;
+  geometry_json: FeatureCollection<
+    Geometry,
+    {
+      type?: string;
+      name?: string;
+      org?: string;
+      link?: string;
+      address?: string;
+      phone?: string;
+      notes?: string;
+      email?: string;
+      district?: number;
+      zip_code?: string;
+      area_type?: string;
+      representative?: string;
+      party?: string;
+      fips?: string;
+      zip?: string;
+      count?: number;
+    }
+  >;
 };

@@ -1,20 +1,17 @@
 import type { FeatureCollection, Geometry } from "geojson";
 import type { ValueOf } from "type-fest";
-import { find, findKey } from "lodash";
-import outreachCounty1 from "./data/outreach-county-1.json";
-import outreachCounty2 from "./data/outreach-county-2.json";
-import outreachCounty3 from "./data/outreach-county-3.json";
-import outreachCounty4 from "./data/outreach-county-4.json";
-import outreachEvents from "./data/outreach-events.json";
-import outreachFitKits from "./data/outreach-fit-kits.json";
-import outreachNewspapers from "./data/outreach-newspapers.json";
-import outreachRadonKits from "./data/outreach-radon-kits.json";
-import sources from "./data/sources.json";
-import zipCodeLookup from "./data/zip-code-lookup.json";
-
-export type ID = string;
-
-export type Point = [number, number];
+import { mapValues } from "lodash";
+import featureLabels from "./data/feature-labels.json";
+import levelLabels from "./data/level-labels.json";
+import locationLabels from "./data/location-labels.json";
+import events from "./data/outreach-events.json";
+import fitKits from "./data/outreach-fit-kits.json";
+import newspapers from "./data/outreach-newspapers.json";
+import radonKits from "./data/outreach-radon-kits.json";
+import outreach from "./data/outreach.json";
+import sourceDetails from "./data/source-details.json";
+import statisticLabels from "./data/statistic-labels.json";
+import zipCodes from "./data/zip-codes.json";
 
 /** api root (no trailing slash) */
 export const api = import.meta.env.VITE_API;
@@ -25,17 +22,9 @@ console.debug("API:", api);
 const cache = new Map<string, Response>();
 
 /** general request */
-export const request = async <Response>(
-  url: string | URL,
-  params: Record<string, string | string[]> = {},
-) => {
-  /** make url object */
-  url = new URL(url);
-  /** construct params */
-  for (const [key, value] of Object.entries(params))
-    for (const param of [value].flat()) url.searchParams.append(key, param);
+export const request = async <Response>(url: URL, options?: RequestInit) => {
   /** construct request */
-  const request = new Request(url);
+  const request = new Request(url, options);
   /** unique request id for caching */
   const id = JSON.stringify(request, ["url", "method", "headers"]);
   /** get response from cache */
@@ -55,168 +44,9 @@ export const request = async <Response>(
   return parsed as Response;
 };
 
-/** response from facets api endpoint */
-type _Facets = {
-  [key: string]: {
-    label: string;
-    categories: {
-      [key: string]: {
-        label: string;
-        measures: {
-          [key: string]: {
-            label: string;
-            factors?: {
-              [key: string]: {
-                label: string;
-                default: string;
-                values: { [key: string]: string };
-              };
-            };
-          };
-        };
-      };
-    };
-  };
-};
+export type ID = string;
 
-/** specific "level" of data */
-export type Facet = {
-  [key: string]: {
-    id: string;
-    label: string;
-    children?: Facet;
-    factors?: {
-      [key: string]: {
-        label: string;
-        default: string;
-        values: { [key: string]: string };
-      };
-    };
-  };
-};
-
-/** get hierarchical list of geographic levels, measure categories, and measures */
-export const getFacets = () => request<_Facets>(`${api}/stats/measures`);
-
-export type Facets = Awaited<ReturnType<typeof getFacets>>;
-
-/** response from location list api endpoint */
-type _LocationList = {
-  [key: string]: { [key: string]: string };
-};
-
-/** extra hard-coded location list entries */
-/** TEMPORARY: should eventually come from backend */
-export const extraLocationList = {
-  "Office of COE: Outreach Sites and Interventions": {
-    "Events Attended": "outreach-events",
-    "Local Newspapers": "outreach-newspapers",
-    "FIT Kits Distributed": "outreach-fit-kits",
-    "Radon Kits Distributed": "outreach-radon-kits",
-    "Tobacco Cessation App Users": "outreach-2morrow-county",
-  },
-} as const;
-
-export const outreachLocationKey =
-  "Office of COE: Outreach Sites and Interventions";
-
-/** get listing/metadata of locations */
-export const getLocationList = async () => {
-  const data = await request<_LocationList>(`${api}/locations`);
-  return { ...extraLocationList, ...data };
-};
-
-export type LocationList = Awaited<ReturnType<typeof getLocationList>>;
-
-/** response from counties/tract api endpoints */
-type _Geo = {
-  [key: string]: string | number | undefined;
-
-  full?: string;
-  name?: string;
-  fips?: string;
-  us_fips?: string;
-  objectid?: number;
-  ogc_fid?: number;
-  wkb_geometry: string;
-  cent_lat?: number;
-  cent_long?: number;
-}[];
-
-/** data geojson properties fields */
-export type GeoProps = {
-  /** base */
-  id?: string | number;
-  name?: string;
-  label?: string;
-  fips?: string;
-  us_fips?: string;
-  objectid?: number;
-  ogc_fid?: number;
-  cent_lat?: number;
-  cent_long?: number;
-
-  /* health statistics region (HSR) */
-  counties?: string;
-  hs_region?: string;
-
-  /** outreach */
-  fit_kits?: number;
-  radon_kits?: number;
-  total_kits?: number;
-  community_events?: number;
-  health_fairs?: number;
-  educational_talks?: number;
-  radio_talks?: number;
-  school_church_events?: number;
-  total_events?: number;
-  womens_wellness_centers?: number;
-  "2morrow_signups"?: number;
-  has_fit_kits?: boolean;
-  has_radon_kits?: boolean;
-  has_both_kits?: boolean;
-  has_any_activity?: boolean;
-  has_2morrow?: boolean;
-  has_womens_wellness_center?: boolean;
-  has_all?: boolean;
-};
-
-/** get geojson from geography data */
-export const getGeo = async (
-  type: "counties" | "tracts" | "healthregions",
-  idField: string,
-): Promise<FeatureCollection<Geometry, GeoProps>> => {
-  const data = await request<_Geo>(`${api}/${type}`);
-
-  /** transform data into desired format */
-  return {
-    type: "FeatureCollection",
-    features: data.map(({ wkb_geometry, full, ...d }) => {
-      const geometry = JSON.parse(wkb_geometry) as Geometry;
-      const name = full || d.name || "";
-
-      return {
-        type: "Feature",
-        geometry,
-        properties: {
-          ...d,
-          id: d[idField],
-          name,
-          label: name.replace(/county/i, ""),
-
-          /** include extra per-county data */
-          /** TEMPORARY: should eventually come from backend */
-          ...(find(outreachCounty1, ["county", name]) ?? {}),
-          ...(find(outreachCounty2, ["county", name]) ?? {}),
-          ...(find(outreachCounty3, ["county", name]) ?? {}),
-          ...(find(outreachCounty4, ["county", name]) ?? {}),
-        },
-      };
-    }),
-  };
-};
-
-export type Geo = Awaited<ReturnType<typeof getGeo>>;
+export type Point = [number, number];
 
 /** value type/format */
 export type Unit =
@@ -229,191 +59,207 @@ export type Unit =
   | "ordinal"
   | null;
 
-/** response from values api endpoint */
-type _Values = {
-  /** range of values for specified measure */
-  max: number | string;
-  min: number | string;
-  /** "global" value */
-  state?: number | string;
-  state_source?: string;
-  /** map of feature id to measure value */
-  values: {
-    [key: string]: {
-      value?: number | string | null;
-      aac?: number | string | null;
-    };
-  };
-  /** unit info */
-  unit: Unit;
-  order?: string[];
-  /** where data came from */
-  source?: string;
-  source_url?: string;
+export type Geographies = Record<ID, object>;
+
+/** get high-level listing of all possible geographic levels */
+export const getGeographies = async () => {
+  /** build request */
+  const url = new URL(`${api}/geography`);
+  /** send request */
+  const data = await request<Geographies>(url);
+
+  return mapValues(data, (value, id) => ({
+    /** add label */
+    label: levelLabels[id as keyof typeof levelLabels] ?? id,
+  }));
 };
 
-/** get values data */
-export const getValues = async (
-  level: string,
-  category: string,
-  measure: string,
-  filters: { [key: string]: string },
-) => {
-  const filtersString = Object.entries(filters || {})
-    .map((entry) => entry.join(":"))
-    .join(";");
+export type Geography = FeatureCollection<
+  Geometry,
+  { id: string; center: Point; description?: string }
+>;
 
-  const data = await request<_Values>(
-    `${api}/stats/${level}/${category}/fips-value?`,
-    { measure, ...(filtersString && { filters: filtersString }) },
-  );
+/** get full details of geographic level */
+export const getGeography = async (level: string) => {
+  /** build request */
+  const url = new URL(`${api}/geography/${level}`);
+
+  /** send request */
+  const data = await request<Geography>(url);
 
   return {
     ...data,
-    source: {
-      id: "",
-      name: data.source || "",
-      data_description: "",
-      date: "",
-      date_description: "",
-      link: data.source_url || "",
-    },
+    /** all features of geographic level */
+    features: data.features.map((feature) => {
+      const id = feature.properties.id;
+      return {
+        ...feature,
+        properties: {
+          ...feature.properties,
+          /** add label */
+          label: (featureLabels as Record<string, string>)[id] ?? id,
+          /** add outreach properties */
+          ...((outreach as Record<string, object>)[id] ?? {}),
+        },
+      };
+    }),
   };
 };
 
-export type Values = Awaited<ReturnType<typeof getValues>>;
-
-/** response from locations api endpoint */
-type _Location = {
-  id: string;
-  name: string;
-  category_id: string;
-  geometry_json: FeatureCollection<Geometry, LocationProps>;
-};
-
-/** extra hard-coded location data */
-/** TEMPORARY: should eventually come from backend */
-const extraLocationData = {
-  "outreach-events": outreachEvents,
-  "outreach-newspapers": outreachNewspapers,
-  "outreach-fit-kits": outreachFitKits,
-  "outreach-radon-kits": outreachRadonKits,
-} satisfies Partial<
-  Record<
-    ValueOf<(typeof extraLocationList)[typeof outreachLocationKey]>,
-    unknown
-  >
+export type Statistics = Record<
+  ID,
+  { levels: ID[]; factors: Record<string, string[]> }
 >;
 
-/** get locations (markers, highlighted areas, etc) */
-export const getLocation = async (
-  id: string,
-): Promise<FeatureCollection<Geometry, LocationProps>> => {
-  /** include extra location data */
-  /** TEMPORARY: should eventually come from backend */
-  if (id in extraLocationData) {
-    /** get label version of id */
-    const type =
-      findKey(
-        extraLocationList["Office of COE: Outreach Sites and Interventions"],
-        id,
-      ) ?? "";
+/** get high-level listing of all possible statistics */
+export const getStatistics = async () => {
+  /** build request */
+  const url = new URL(`${api}/statistics`);
 
-    return {
+  /** send request */
+  const data = await request<Statistics>(url);
+
+  return mapValues(data, (value, id) => ({
+    ...value,
+    /** add label */
+    label: (statisticLabels as Record<string, string>)[id] ?? id,
+  }));
+};
+
+export type Statistic = {
+  values: Record<
+    ID,
+    { value?: number | string | null; aac?: number | string | null }
+  >;
+  max?: number | string;
+  min?: number | string;
+  unit: Unit;
+  order?: string[];
+  state?: number | string;
+  source?: ID;
+  state_source?: ID;
+};
+
+/** get specific statistic values for features of geographic level */
+export const getStatistic = async (
+  statistic: string,
+  level: string,
+  factors: Record<string, string>,
+) => {
+  /** build request */
+  const url = new URL(`${api}/statistic/${statistic}`);
+  const factorsString = Object.entries(factors || {})
+    .map((entry) => entry.join(":"))
+    .join(";");
+  url.searchParams.set("level", level);
+  url.searchParams.set("factors", factorsString);
+
+  /** send request */
+  const data = await request<Statistic>(url);
+
+  return {
+    ...data,
+    /** add label */
+    label: (statisticLabels as Record<string, string>)[statistic] ?? statistic,
+    /** add source details */
+    source:
+      (sourceDetails as Record<string, object>)[data.source ?? ""] ?? undefined,
+  };
+};
+
+export type Locations = Record<ID, object>;
+
+/** extra locations stored in frontend */
+const extraLocations: Record<string, Record<string, number>> = {
+  events: events,
+  "fit-kits": fitKits,
+  "radon-kits": radonKits,
+  newspapers: newspapers,
+};
+
+/** get high-level listing of all possible locations */
+export const getLocations = async () => {
+  /** build request */
+  const url = new URL(`${api}/location`);
+  /** send request */
+  const data = await request<Locations>(url);
+
+  /** add extra locations */
+  for (const location of Object.keys(extraLocations)) data[location] = {};
+
+  return mapValues(data, (value, id) => ({
+    ...value,
+    /** add label */
+    label: (locationLabels as Record<string, string>)[id] ?? id,
+  }));
+};
+
+export type Location = FeatureCollection<
+  Geometry,
+  {
+    type?: string;
+    name?: string;
+    org?: string;
+    link?: string;
+    address?: string;
+    phone?: string;
+    notes?: string;
+    email?: string;
+    district?: number;
+    zip_code?: string;
+    area_type?: string;
+    representative?: string;
+    party?: string;
+    fips?: string;
+    zip?: string;
+    count?: number;
+  }
+>;
+
+/** get full details of specific location */
+export const getLocation = async (location: ID) => {
+  /** build request */
+  const url = new URL(`${api}/location/${location}`);
+  let data: Location;
+
+  /** intercept extra locations */
+  if (location in extraLocations) {
+    data = {
       type: "FeatureCollection",
-      features: extraLocationData[id as keyof typeof extraLocationData].map(
-        ({ zip, count }) => {
-          const { lat = 99999, lng = 99999 } =
-            zipCodeLookup[zip as keyof typeof zipCodeLookup];
+      features: Object.entries(extraLocations[location] ?? {}).map(
+        ([zip, count]) => {
+          const [lat = 99999, long = 99999] =
+            zipCodes[zip as keyof typeof zipCodes] ?? [];
           return {
             type: "Feature",
-            geometry: { type: "Point", coordinates: [lng, lat] },
-            properties: { type, zip, count },
+            geometry: { type: "Point", coordinates: [long, lat] },
+            properties: { type: location, zip, count },
           };
         },
       ),
     };
-  }
+  } else
+    /** send request */
+    data = await request<Location>(url);
 
-  const data = await request<_Location>(`${api}/locations/${id}`);
-
-  /** add type of location, i.e. label version of id */
-  const type = data.name;
-  data.geometry_json.features.forEach(
-    (feature) => (feature.properties.type = type),
-  );
-
-  return data.geometry_json;
+  return data;
 };
 
-export type Location = Awaited<ReturnType<typeof getLocation>>;
+export type Feature = object;
 
-/** get data download link */
-export const getDownload = (
-  level: string,
-  category: string,
-  measure?: string,
-) => {
-  const url = new URL(`${api}/stats/${level}/${category}/as-csv`);
-  if (measure) url.searchParams.set(measure, measure);
-  window.open(url, "_blank");
+/** get full details of all statistics for feature of geographic level */
+export const getFeature = async (feature: string, level = "county") => {
+  /** build request */
+  const url = new URL(`${api}/stats/by-${level}/${feature}`);
+  /** send request */
+  const data = await request<Feature>(url);
+
+  return data;
 };
 
 /** get download all link */
 export const getDownloadAll = () => `${api}/stats/download-all`;
 
-/** location geojson properties fields */
-export type LocationProps = {
-  type?: string;
-  name?: string;
-  org?: string;
-  link?: string;
-  address?: string;
-  phone?: string;
-  notes?: string;
-  email?: string;
-  district?: number;
-  zip_code?: string;
-  area_type?: string;
-  representative?: string;
-  party?: string;
-  fips?: string;
-  zip?: string;
-  count?: number;
-};
-
-/** response from county data api endpoint */
-type _CountyData = {
-  FIPS: string;
-  name: string;
-  categories: {
-    [key: string]: {
-      label: string;
-      measures: {
-        [key: string]: {
-          label: string;
-          value: number | string;
-          state_value?: number | string;
-          aac?: number | string;
-          state_aac?: number | string;
-          unit: Unit;
-          order?: string[];
-        };
-      };
-    };
-  };
-};
-
-/** get all data for particular county */
-export const getCountyData = (id: string) =>
-  request<_CountyData>(`${api}/stats/by-county/${id}`);
-
-/** get source metadata */
-export const getSources = async () => sources;
-// request<_Sources>(`${api}/sources`);
-
-export type Sources = Awaited<ReturnType<typeof getSources>>;
-
 /** get source citation */
-export const getSourceCitation = (source: Sources[number]) =>
-  [source.name, source.link].filter(Boolean).join("\n");
+export const getSourceCitation = (source: ValueOf<typeof sourceDetails>) =>
+  [source.label, source.link].filter(Boolean).join("\n");

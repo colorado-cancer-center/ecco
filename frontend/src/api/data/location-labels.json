@@ -41,7 +41,11 @@
   "transportation-29-jul-21": "Transportation Services",
   "superfund-site": "Superfund Site",
   "toxic-release-inventory-facility": "Toxic Release Inventory Facility",
-  "senate-districts": "CO Senate Districts",
-  "house-districts": "CO House Districts",
-  "congressional-districts": "US Congressional Districts"
+  "senate-districts": "State Senate Districts",
+  "house-districts": "State House Districts",
+  "congressional-districts": "US Congressional Districts",
+  "events": "Events Attended",
+  "newspapers": "Local Newspapers",
+  "fit-kits": "Fit Kits Distributed",
+  "radon-kits": "Radon Kits Distributed"
 }
