@@ -57,17 +57,16 @@ export type Unit =
   | "dollar_amount"
   | "rank"
   | "least_most"
-  | "ordinal"
-  | null;
+  | "ordinal";
 
-export type Geographies = Record<ID, object>;
+export type Levels = Record<ID, object>;
 
 /** get high-level listing of all possible geographic levels */
-export const getGeographies = async () => {
+export const getLevels = async () => {
   /** build request */
-  const url = new URL(`${api}/geography`);
+  const url = new URL(`${api}/level`);
   /** send request */
-  const data = await request<Geographies>(url);
+  const data = await request<Levels>(url);
 
   return mapValues(data, (value, id) => ({
     /** add label */
@@ -75,35 +74,35 @@ export const getGeographies = async () => {
   }));
 };
 
-export type Geography = FeatureCollection<
+export type Level = FeatureCollection<
   Geometry,
   { center: Point; description?: string }
 >;
 
 /** get full details of geographic level */
-export const getGeography = async (level: string) => {
+export const getLevel = async (level: string) => {
   /** build request */
-  const url = new URL(`${api}/geography/${level}`);
+  const url = new URL(`${api}/level/${level}`);
 
   /** send request */
-  const data = await request<Geography>(url);
+  const data = await request<Level>(url);
 
   return {
     ...data,
     /** all features of geographic level */
-    features: data.features.map((feature) => {
-      const id = feature.id;
-      return {
-        ...feature,
-        properties: {
-          ...feature.properties,
-          /** add label */
-          label: getValue(featureLabels, id) ?? id,
-          /** add outreach properties */
-          ...(getValue(outreach, id) ?? {}),
-        },
-      };
-    }),
+    features: data.features.map((feature) => ({
+      ...feature,
+      properties: {
+        ...feature.properties,
+        /** add label */
+        label: [
+          getValue(featureLabels, feature.id) ?? feature.id,
+          getValue(levelLabels, level) ?? level,
+        ].join(" "),
+        /** add outreach properties */
+        ...(getValue(outreach, feature.id) ?? {}),
+      },
+    })),
   };
 };
 
@@ -128,13 +127,10 @@ export const getStatistics = async () => {
 };
 
 export type Statistic = {
-  values: Record<
-    ID,
-    { value?: number | string | null; aac?: number | string | null }
-  >;
+  values: Record<ID, { value?: number | string; aac?: number | string }>;
   max?: number | string;
   min?: number | string;
-  unit: Unit;
+  unit?: Unit;
   order?: string[];
   state?: number | string;
   source?: ID;
@@ -197,8 +193,6 @@ export const getLocations = async () => {
 export type Location = FeatureCollection<
   Geometry,
   {
-    type?: string;
-    name?: string;
     org?: string;
     link?: string;
     address?: string;
@@ -232,7 +226,7 @@ export const getLocation = async (location: ID) => {
           return {
             type: "Feature",
             geometry: { type: "Point", coordinates: [long, lat] },
-            properties: { type: location, zip, count },
+            properties: { zip, count },
           };
         },
       ),
@@ -241,7 +235,18 @@ export const getLocation = async (location: ID) => {
     /** send request */
     data = await request<Location>(url);
 
-  return data;
+  return {
+    ...data,
+    /** add label */
+    features: data.features.map((feature) => ({
+      ...feature,
+      properties: {
+        ...feature.properties,
+        /** add label */
+        label: getValue(locationLabels, location) ?? location,
+      },
+    })),
+  };
 };
 
 export type Feature = object;

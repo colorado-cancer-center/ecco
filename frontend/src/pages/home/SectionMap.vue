@@ -5,6 +5,16 @@
   >
     <!-- left panel -->
     <div class="flex flex-col gap-8 text-left" role="group">
+      <!-- geographic level -->
+      <AppSelect
+        v-model="selectedMaps[0]!.level"
+        :options="
+          Object.entries(levels).map(([id, { label }]) => ({ id, label }))
+        "
+        label="Geographic level"
+        :class="[levelsStatus === 'loading' && 'animate-pulse']"
+      />
+
       <AppCollapsible label="Customization">
         <!-- legend -->
         <AppCheckbox
@@ -270,20 +280,12 @@
           <template #popup="{ feature }">
             <!-- main name/identifier -->
 
-            <strong v-if="feature.name">{{ feature.name }}</strong>
-
-            <span v-if="feature.type">{{ feature.type }}</span>
-
-            <strong v-if="feature.fips">
-              Census Tract<br />{{ feature.fips }}
+            <strong v-if="feature.label">
+              {{ feature.label }}
             </strong>
 
             <strong v-if="feature.district">
               District {{ feature.district }}
-            </strong>
-
-            <strong v-if="feature.hs_region">
-              Health Statistic Region {{ feature.hs_region }}
             </strong>
 
             <dl>
@@ -320,17 +322,10 @@
 
               <!-- extra info -->
 
-              <template v-if="feature.counties">
-                <dt>Counties</dt>
+              <template v-if="feature.description">
+                <dt>Description</dt>
                 <dd>
-                  <template
-                    v-for="(county, countyIndex) in feature.counties.split(
-                      ', ',
-                    )"
-                    :key="countyIndex"
-                  >
-                    {{ county }}<br />
-                  </template>
+                  {{ feature.description }}
                 </dd>
               </template>
 
@@ -548,7 +543,13 @@ import {
   watchEffect,
 } from "vue";
 import { event } from "vue-gtag";
-import { getGeography, getSourceCitation, getStatistic } from "@/api";
+import {
+  getLevel,
+  getLevels,
+  getLocation,
+  getSourceCitation,
+  getStatistic,
+} from "@/api";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
 import AppCollapsible from "@/components/AppCollapsible.vue";
@@ -637,50 +638,56 @@ const manualMax = ref(1);
 const mapWidth = ref(0);
 const mapHeight = ref(0);
 
+/** load geographic levels data */
+const {
+  query: loadLevels,
+  data: levels,
+  status: levelsStatus,
+} = useQuery(() => getLevels(), {});
+onMounted(loadLevels);
+
 /** load maps data */
 const {
   query: loadMapData,
   data: mapData,
   status: mapDataStatus,
-} = useQuery(
-  () => {
-    /** query all maps in parallel */
-    return Promise.all(
-      selectedMaps.value.map(async (selected) => {
-        /** load geography */
-        const geography = await getGeography(selected.level);
-        /** load statistic */
-        const statistic = await getStatistic(
-          selected.statistic,
-          selected.level,
-          {},
-        );
-        /** load locations */
-        const locations = {};
+} = useQuery(() => {
+  /** query all maps in parallel */
+  return Promise.all(
+    selectedMaps.value.map(async (selected) => {
+      /** load geography */
+      const geography = await getLevel(selected.level);
+      /** load statistic */
+      const statistic = await getStatistic(
+        selected.statistic,
+        selected.level,
+        {},
+      );
+      /** load locations */
+      const locations = await Promise.all(selected.locations.map(getLocation));
 
-        /** add extra properties to geography */
-        const geographyExtras = {
-          ...geography,
-          features: geography.features.map((feature) => {
-            const value = getValue(statistic.values, feature.id);
-            return {
-              ...feature,
-              properties: {
-                ...feature.properties,
-                value: value?.value,
-                aac: value?.aac,
-              },
-            };
-          }),
-        };
+      /** add extra properties to geography */
+      const geographyExtras = {
+        ...geography,
+        features: geography.features.map((feature) => {
+          const value = getValue(statistic.values, feature.id);
+          return {
+            ...feature,
+            properties: {
+              ...feature.properties,
+              id: feature.id,
+              selected,
+              value: value?.value,
+              aac: value?.aac,
+            },
+          };
+        }),
+      };
 
-        return { selected, geography: geographyExtras, statistic, locations };
-      }),
-    );
-  },
-  [],
-  true,
-);
+      return { selected, geography: geographyExtras, statistic, locations };
+    }),
+  );
+}, []);
 
 /** re-load data when selected maps change */
 watch(selectedMaps, loadMapData, { immediate: true, deep: true });

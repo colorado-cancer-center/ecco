@@ -1,3 +1,4 @@
+import type { GeoJsonTypes } from "geojson";
 import { max, sum } from "lodash";
 import {
   Circle,
@@ -59,10 +60,12 @@ type Dash = (typeof dashes)[number];
 /** total dash length of line symbol in legend */
 const dashSymbolLength = String(max(dashes.map((dash) => sum(dash)))!);
 
-type Type = GeoJSON.GeoJsonTypes | "";
+export type MarkerType = GeoJsonTypes | "";
 
 /** map enumerated values to markers */
-export const getMarkers = <Value extends string>(values: [Value, Type][]) => {
+export const getMarkers = <Value extends string>(
+  values: [Value, MarkerType][],
+) => {
   /** marker sequence */
   let iconIndex = 0;
   let colorIndex = 0;
@@ -85,7 +88,7 @@ export const getMarkers = <Value extends string>(values: [Value, Type][]) => {
 };
 
 const getMarker = (
-  type: Type,
+  type: MarkerType,
   icon: Icon,
   color: Color,
   dash: Dash,

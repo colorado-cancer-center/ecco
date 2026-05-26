@@ -97,7 +97,10 @@
       class="flex flex-col items-center gap-1 rounded-md text-center text-[calc(var(--zoom)*2px)] text-white select-none text-stroke-1.5 text-stroke-black *:not-first:flex *:not-first:flex-wrap *:not-first:items-center *:not-first:justify-center *:not-first:gap-1 [:has(>&)]:pointer-events-none"
     >
       <div>{{ feature.get("label") }}</div>
-      <slot name="geography-label" :feature="feature.getProperties()" />
+      <slot
+        name="geography-label"
+        :feature="feature.getProperties() as FeatureProperties"
+      />
     </div>
 
     <!-- feature popup -->
@@ -107,7 +110,10 @@
       v-stop
       class="relative z-100! flex max-h-full w-100 max-w-max translate-y-[calc(--spacing(2)*-1.414)] flex-col gap-2 rounded-md bg-white p-4 shadow-md after:absolute after:top-full after:left-1/2 after:size-2 after:-translate-1/2 after:rotate-45 after:bg-white after:shadow-md after:content-[''] after:[clip-path:polygon(200%_-100%,200%_200%,-100%_200%)] *:first:pr-6"
     >
-      <slot name="popup" :feature="selectedFeature.getProperties()" />
+      <slot
+        name="popup"
+        :feature="selectedFeature.getProperties() as FeatureProperties"
+      />
       <button
         class="absolute top-0 right-0 min-h-8 min-w-8 text-stone-300 hover:text-black"
         aria-label="Close popup"
@@ -125,8 +131,6 @@
 </template>
 
 <script lang="ts">
-type FeatureInfo = Record<string, unknown>;
-
 /** "no data" color */
 const noDataColor = "#a0a0a0";
 
@@ -137,13 +141,25 @@ export const noDataEntry = {
   color: noDataColor,
   tooltip: "No data or suppressed value",
 } as const;
+
+type Properties = {
+  [key: PropertyKey]: unknown;
+};
 </script>
 
-<script setup lang="ts">
+<script
+  setup
+  lang="ts"
+  generic="
+    GeographyProperties extends Properties & { value?: number | string },
+    LocationProperties extends Properties & { label?: string }
+  "
+>
 import type { Ref } from "vue";
 import type { FeatureCollection, Geometry } from "geojson";
 import type { FeatureLike } from "ol/Feature";
 import type { Geometry as OLGeometry } from "ol/geom";
+import type { MarkerType } from "./markers";
 import {
   computed,
   nextTick,
@@ -164,7 +180,7 @@ import { forceHex, getCssVar, waitFor } from "@/util/misc";
 import { X } from "@lucide/vue";
 import { useElementSize } from "@vueuse/core";
 import { extent, pairs, range, scaleQuantile, ticks, tickStep } from "d3";
-import { debounce, isEmpty, mapValues, upperFirst } from "lodash";
+import { debounce, isEmpty, upperFirst } from "lodash";
 import { Feature, Map, Overlay, View } from "ol";
 import { pointerMove } from "ol/events/condition";
 import GeoJSON from "ol/format/GeoJSON";
@@ -191,11 +207,8 @@ const theme = forceHex(getCssVar("--color-theme"));
 
 type Props = {
   /** features */
-  geography?: FeatureCollection<
-    Geometry,
-    { value?: number | string | null; [key: string]: unknown }
-  >;
-  locations?: Record<string, FeatureCollection>;
+  geography?: FeatureCollection<Geometry, GeographyProperties>;
+  locations?: FeatureCollection<Geometry, LocationProperties>[];
   /** value domain */
   min?: number | string;
   max?: number | string;
@@ -227,7 +240,7 @@ type Props = {
 
 const {
   geography = { type: "FeatureCollection", features: [] },
-  locations = {},
+  locations = [],
   min,
   max,
   unit,
@@ -258,21 +271,23 @@ type Emits = {
 
 const emit = defineEmits<Emits>();
 
+type FeatureProperties = LocationProperties & GeographyProperties;
+
 type Slots = {
   "top-left-upper"?: () => unknown;
   "top-left-lower"?: () => unknown;
   "top-right"?: () => unknown;
   "bottom-right"?: () => unknown;
   "bottom-left"?: () => unknown;
-  "geography-label"?: ({ feature }: { feature: FeatureInfo }) => unknown;
-  popup?: ({ feature }: { feature: FeatureInfo }) => unknown;
+  "geography-label"?: ({ feature }: { feature: FeatureProperties }) => unknown;
+  popup?: ({ feature }: { feature: FeatureProperties }) => unknown;
 };
 
 defineSlots<Slots>();
 
 /** whether map has any "no data" values */
 const noData = computed(() =>
-  geography.features.some((feature) => feature.properties.value),
+  geography.features.some((feature) => feature.properties?.value),
 );
 
 /** scale object */
@@ -407,15 +422,15 @@ const xy = "EPSG:3857";
 const latlong = "EPSG:4326";
 
 /** transform point coordinates */
-const xyToLatlong = (x = 0, y = 0) => {
+const xyToLongLat = (x = 0, y = 0) => {
   const [long = 0, lat = 0] = new Point([x, y])
     .transform(xy, latlong)
     .getCoordinates();
-  return [lat, long];
+  return [long, lat];
 };
 
 /** transform point coordinates */
-const latlongToXy = (lat = 0, long = 0) => {
+const longLatToXy = (long = 0, lat = 0) => {
   const [x = 0, y = 0] = new Point([long, lat])
     .transform(latlong, xy)
     .getCoordinates();
@@ -437,7 +452,7 @@ map.addInteraction(mouseZoom);
 watchEffect(() => map.setView(view));
 
 /** update view center */
-watchEffect(() => view.setCenter(latlongToXy(lat, long)));
+watchEffect(() => view.setCenter(longLatToXy(long, lat)));
 /** update view zoom */
 watchEffect(() => view.setZoom(zoom));
 
@@ -445,9 +460,9 @@ watchEffect(() => view.setZoom(zoom));
 view.on("change:center", () => {
   const center = view.getCenter();
   if (!center) return;
-  const [lat, long] = xyToLatlong(center[0], center[1]);
-  emit("update:lat", lat);
+  const [long, lat] = xyToLongLat(center[0], center[1]);
   emit("update:long", long);
+  emit("update:lat", lat);
 });
 
 /** on view zoom */
@@ -554,21 +569,27 @@ watchEffect(() => geographyLayer.setOpacity(geographyOpacity));
 /** symbols (icon + label) associated with each location */
 const symbols = computed(() =>
   getMarkers(
-    Object.entries(locations).map(([label, location]) => [
-      label,
-      location.features[0]?.geometry.type ?? "",
-    ]),
+    locations
+      .map((location, index) => {
+        const feature = location.features[0];
+        if (!feature) return;
+        const label = feature.properties.label;
+        if (typeof label !== "string") return;
+        return [label, feature.geometry.type] as [string, MarkerType];
+      })
+      .filter((entry) => !!entry),
   ),
 );
 
 /** parse location features */
 const locationFeatures = computed(() =>
-  mapValues(locations, (value, location) => {
+  locations.map((location) => {
     /** parse geojson */
-    const features = geojson.readFeatures(value);
+    const features = geojson.readFeatures(location);
 
     for (const feature of features) {
-      const symbol = symbols.value[location];
+      const label = feature.get("label");
+      const symbol = symbols.value[label];
       if (!symbol) continue;
 
       /** add extra props */
@@ -597,7 +618,8 @@ const locationsLayer = new VectorLayer({ source: locationsSource });
 /** update locations layer source */
 watchEffect(() => {
   locationsSource.clear();
-  locationsSource.addFeatures(Object.values(locationFeatures.value).flat());
+  for (const features of locationFeatures.value)
+    locationsSource.addFeatures(features);
 });
 
 /** update location styles */
@@ -666,13 +688,13 @@ watchEffect(async (onCleanup) => {
     /** feature associated with element */
     const feature = features[index];
     if (!feature) continue;
-    const { cent_lat, cent_long } = feature.getProperties() ?? {};
+    const [long, lat] = feature.get("center") ?? [];
     /** don't create overlay if cent position not defined */
-    if (!cent_lat || !cent_long) continue;
+    if (!long || !lat) continue;
     /** overlay object */
     const overlay = new Overlay({
       element,
-      position: latlongToXy(cent_lat, cent_long),
+      position: longLatToXy(long, lat),
       positioning: "center-center",
       className: "pointer-events-none!",
     });

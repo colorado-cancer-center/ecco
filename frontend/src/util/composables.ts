@@ -44,7 +44,7 @@ export const useQuery = <Data, Args extends unknown[]>(
   /** default value used for data before done loading and on error. */
   defaultValue: Data,
   /** whether we should keep previous data while loading new data */
-  keep = false,
+  keep = true,
 ) => {
   /** query state */
   const status = ref<"" | "loading" | "error" | "success">("");

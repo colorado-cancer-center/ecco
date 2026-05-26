@@ -1,14 +1,15 @@
 import type { FeatureCollection, Geometry } from "geojson";
 import type {
   Feature,
-  Geographies,
-  Geography,
+  Level,
+  Levels,
   Location,
   Locations,
   Point,
   Statistic,
   Statistics,
 } from "./";
+import { mapValues } from "lodash";
 import { http, HttpResponse, passthrough } from "msw";
 import { setupWorker } from "msw/browser";
 import { api } from "./";
@@ -16,28 +17,29 @@ import { api } from "./";
 /** temporary interface between real api structure and desired api structure */
 
 const handlers = [
-  http.get("*/geography", async () => {
+  http.get("*/level", async () => {
     const url = new URL(`${api}/stats/measures`);
 
     const actual: _StatsMeasures = await (await fetch(url)).json();
 
-    const desired: Geographies = Object.fromEntries(
+    const desired: Levels = Object.fromEntries(
       Object.keys(actual).map((key) => [key, {}]),
     );
 
     return HttpResponse.json(desired);
   }),
 
-  http.get("*/geography/:level", async ({ params }) => {
+  http.get("*/level/:level", async ({ params }) => {
+    const level = params.level as string;
     const path =
       { county: "counties", tract: "tracts", healthregion: "healthregions" }[
-        params.level as string
+        level
       ] ?? "";
     const url = new URL(`${api}/${path}`);
 
     const actual: _Level = await (await fetch(url)).json();
 
-    const desired: Geography = {
+    const desired: Level = {
       type: "FeatureCollection",
       features: actual.map((feature) => {
         const id =
@@ -84,8 +86,8 @@ const handlers = [
   }),
 
   http.get("*/statistic/:statistic", async ({ request, params }) => {
-    const [category = "", measure = ""] =
-      (params.statistic as string).split(";") ?? [];
+    const statistic = params.statistic as string;
+    const [category = "", measure = ""] = statistic.split(";") ?? [];
     const level = new URL(request.url).searchParams.get("level") ?? "";
     const factors = new URL(request.url).searchParams.get("factors") ?? "";
     const url = new URL(`${api}/stats/${level}/${category}/fips-value?`);
@@ -94,7 +96,14 @@ const handlers = [
 
     const actual: _StatsFipsValue = await (await fetch(url)).json();
 
-    const desired: Statistic = actual;
+    const desired: Statistic = {
+      ...actual,
+      values: mapValues(actual.values, ({ value, aac }) => ({
+        value: value ?? undefined,
+        aac: aac ?? undefined,
+      })),
+      unit: actual.unit ?? undefined,
+    };
 
     return HttpResponse.json(desired);
   }),
@@ -110,7 +119,8 @@ const handlers = [
   }),
 
   http.get("*/location/:location", async ({ params }) => {
-    const url = new URL(`${api}/locations/${params.location as string}`);
+    const location = params.location as string;
+    const url = new URL(`${api}/locations/${location}`);
 
     const actual: _Location = await (await fetch(url)).json();
 
@@ -120,7 +130,8 @@ const handlers = [
   }),
 
   http.get("*/feature/:feature", async ({ params }) => {
-    const url = new URL(`${api}/stats/by-county/${params.feature as string}`);
+    const feature = params.feature as string;
+    const url = new URL(`${api}/stats/by-county/${feature}`);
 
     const actual: _StatsByCounty = await (await fetch(url)).json();
 
