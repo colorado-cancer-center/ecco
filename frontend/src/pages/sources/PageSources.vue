@@ -16,6 +16,7 @@
       <AppButton
         v-tooltip="'Download all sources data in CSV format'"
         :to="getDownloadAll()"
+        :new-tab="true"
         :accent="true"
       >
         Download All Data

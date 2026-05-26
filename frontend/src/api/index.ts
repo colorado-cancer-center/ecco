@@ -266,6 +266,14 @@ export const getFeature = async (feature: string, level = "county") => {
   return data;
 };
 
+/** get data download link */
+export const getDownload = (level: string, statistic: string) => {
+  const [category = "", measure = ""] = statistic.split(";");
+  const url = new URL(`${api}/stats/${level}/${category}/as-csv`);
+  url.searchParams.set(measure, measure);
+  return url.toString();
+};
+
 /** get download all link */
 export const getDownloadAll = () => `${api}/stats/download-all`;
 

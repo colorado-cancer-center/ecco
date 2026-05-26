@@ -15,6 +15,20 @@
         :class="[levelsStatus === 'loading' && 'animate-pulse']"
       />
 
+      <!-- statistics -->
+      <AppTree v-model="treeValue" :tree="treeTree">
+        <template #default="{ child }">
+          <AppButton
+            v-if="child.id"
+            v-tooltip="'Download statistic data'"
+            :to="onTreeDownload(child.id)"
+            class="size-8 min-h-0! min-w-0! rounded-md bg-transparent text-stone-300 hover:text-black"
+          >
+            <Download />
+          </AppButton>
+        </template>
+      </AppTree>
+
       <!-- locations -->
       <AppSelect
         v-model="selectedMap.locations"
@@ -463,7 +477,6 @@
             </dl>
 
             <!-- actions -->
-
             <AppButton
               v-if="selected.level === 'county'"
               :to="`/county/${feature.id}`"
@@ -538,21 +551,16 @@
 </template>
 
 <script setup lang="ts">
-import type { ShallowRef } from "vue";
-import type { Entry, Option } from "@/components/AppSelect.vue";
-import type { Expand, Update } from "@/util/types";
 import {
   computed,
   onMounted,
   ref,
-  shallowRef,
-  unref,
   useTemplateRef,
   watch,
   watchEffect,
 } from "vue";
-import { event } from "vue-gtag";
 import {
+  getDownload,
   getLevel,
   getLevels,
   getLocation,
@@ -568,30 +576,26 @@ import AppMap from "@/components/AppMap.vue";
 import AppNumber from "@/components/AppNumber.vue";
 import AppSelect from "@/components/AppSelect.vue";
 import AppSlider from "@/components/AppSlider.vue";
+import AppTree from "@/components/AppTree.vue";
 import { backgroundOptions, defaultBackground } from "@/components/background";
 import { defaultGradient, gradientOptions } from "@/components/gradient";
-import { colors } from "@/components/markers";
-import { appTitle } from "@/meta";
-import { numberParam, stringParam } from "@/pages";
+import { numberParam } from "@/pages";
 import { useQuery } from "@/util/composables";
 import { downloadJson, downloadPng } from "@/util/download";
 import { formatValue } from "@/util/math";
-import { copy, sleep } from "@/util/misc";
+import { copy } from "@/util/misc";
 import { getValue } from "@/util/types";
 import {
-  Check,
   Copy,
   Crop,
   Download,
   Feather,
   Fullscreen,
-  Info,
   MessageCircle,
   Minus,
   Plus,
   Pointer,
   RefreshCw,
-  X,
 } from "@lucide/vue";
 import {
   useElementBounding,
@@ -601,16 +605,33 @@ import {
 } from "@vueuse/core";
 import { useRouteQuery } from "@vueuse/router";
 import { toBlob } from "html-to-image";
-import {
-  clamp,
-  isEmpty,
-  isEqual,
-  mapValues,
-  orderBy,
-  pick,
-  uniqWith,
-  upperFirst,
-} from "lodash";
+import { clamp } from "lodash";
+
+const treeValue = ref("ralph");
+const treeTree = [
+  {
+    id: "animals",
+    label: "Animals",
+    children: [
+      {
+        id: "cats",
+        label: "Cats",
+        children: [
+          { id: "ralph", label: "Ralph" },
+          { id: "felicia", label: "Felicia" },
+        ],
+      },
+      {
+        id: "dogs",
+        label: "Dogs",
+        children: [
+          { id: "spot", label: "Spot" },
+          { id: "rover", label: "Rover" },
+        ],
+      },
+    ],
+  },
+];
 
 /** element refs */
 const rightPanelElement = useTemplateRef("rightPanelElement");
@@ -739,6 +760,10 @@ const mapCols = computed(() => {
   }
   return 3;
 });
+
+/** download statistic from tree click */
+const onTreeDownload = (statistic = "") =>
+  getDownload(selectedMap.value.level, statistic);
 
 /** reset customizations and map to defaults */
 const reset = async () => {
