@@ -113,7 +113,11 @@ const handlers = [
 
     const actual: _Locations = await (await fetch(url)).json();
 
-    const desired: Locations = actual;
+    const desired: Locations = Object.fromEntries(
+      Object.values(actual)
+        .flatMap((group) => Object.values(group))
+        .map((id) => [id, {}]),
+    );
 
     return HttpResponse.json(desired);
   }),

@@ -151,7 +151,10 @@ type Properties = {
   setup
   lang="ts"
   generic="
-    GeographyProperties extends Properties & { value?: number | string },
+    GeographyProperties extends Properties & {
+      value?: number | string;
+      center?: [number, number];
+    },
     LocationProperties extends Properties & { label?: string }
   "
 >
@@ -330,7 +333,7 @@ const scale = computed(() => {
     );
 
     /** explicit color */
-    const getColor = (value?: number | string | null) =>
+    const getColor = (value?: number | string) =>
       forceHex(
         steps.find((step) =>
           "value" in step ? step.value === value : undefined,
@@ -398,7 +401,7 @@ const scale = computed(() => {
     if (noData.value) steps.unshift(noDataEntry);
 
     /** scale interpolator */
-    const getColor = (value?: number | string | null) =>
+    const getColor = (value?: number | string) =>
       typeof value === "number"
         ? forceHex(scaleQuantile<string>().domain(bands).range(colors)(value))
         : noDataColor;

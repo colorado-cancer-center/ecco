@@ -4,6 +4,7 @@ import { getValue } from "@/util/types";
 import { mapValues } from "lodash";
 import featureLabels from "./data/feature-labels.json";
 import levelLabels from "./data/level-labels.json";
+import locationGroups from "./data/location-groups.json";
 import locationLabels from "./data/location-labels.json";
 import events from "./data/outreach-events.json";
 import fitKits from "./data/outreach-fit-kits.json";
@@ -183,11 +184,15 @@ export const getLocations = async () => {
   /** add extra locations */
   for (const location of Object.keys(extraLocations)) data[location] = {};
 
-  return mapValues(data, (value, id) => ({
-    ...value,
-    /** add label */
-    label: getValue(locationLabels, id) ?? id,
-  }));
+  /** flat list */
+  return Object.entries(locationGroups).flatMap(([group, locations]) => [
+    { group },
+    ...locations.map((location) => ({
+      id: location,
+      /** add label */
+      label: getValue(locationLabels, location) ?? location,
+    })),
+  ]);
 };
 
 export type Location = FeatureCollection<

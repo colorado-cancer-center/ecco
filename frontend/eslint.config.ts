@@ -27,6 +27,7 @@ export default defineConfigWithVueTs(
       "prefer-const": ["error", { destructuring: "all" }],
       "vue/require-default-prop": "off",
       "vue/no-v-html": "off",
+      "vue/no-template-shadow": "off",
     },
   },
 

@@ -7,12 +7,21 @@
     <div class="flex flex-col gap-8 text-left" role="group">
       <!-- geographic level -->
       <AppSelect
-        v-model="selectedMaps[0]!.level"
+        v-model="selectedMap.level"
         :options="
           Object.entries(levels).map(([id, { label }]) => ({ id, label }))
         "
         label="Geographic level"
         :class="[levelsStatus === 'loading' && 'animate-pulse']"
+      />
+
+      <!-- locations -->
+      <AppSelect
+        v-model="selectedMap.locations"
+        multi
+        :options="locations"
+        label="Resources & Other Locations"
+        :class="[locationsStatus === 'loading' && 'animate-pulse']"
       />
 
       <AppCollapsible label="Customization">
@@ -547,6 +556,7 @@ import {
   getLevel,
   getLevels,
   getLocation,
+  getLocations,
   getSourceCitation,
   getStatistic,
 } from "@/api";
@@ -615,6 +625,12 @@ const selectedMaps = ref([
     locations: ["lung-cancer-screening"],
   },
 ]);
+const selectedMapIndex = ref(0);
+const selectedMap = computed(() => {
+  const selected = selectedMaps.value[selectedMapIndex.value];
+  if (!selected) throw Error("Selected map index out of bounds");
+  return selected;
+});
 
 /** map zoom state */
 const zoom = useRouteQuery("zoom", "0", { transform: numberParam });
@@ -643,8 +659,16 @@ const {
   query: loadLevels,
   data: levels,
   status: levelsStatus,
-} = useQuery(() => getLevels(), {});
+} = useQuery(getLevels, {});
 onMounted(loadLevels);
+
+/** load locations data */
+const {
+  query: loadLocations,
+  data: locations,
+  status: locationsStatus,
+} = useQuery(getLocations, []);
+onMounted(loadLocations);
 
 /** load maps data */
 const {
