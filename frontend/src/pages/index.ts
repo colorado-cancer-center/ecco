@@ -5,24 +5,23 @@ import PageSources from "@/pages/sources/PageSources.vue";
 import { sleep, waitFor } from "@/util/misc";
 import { debounce, round } from "lodash";
 import PageAbout from "./about/PageAbout.vue";
-
-// import PageHome from "./home/PageHome.vue";
+import PageHome from "./home/PageHome.vue";
 
 export const routes = [
-  // {
-  //   name: "Home",
-  //   path: "/",
-  //   component: PageHome,
-  //   beforeEnter: () => {
-  //     const url = window.sessionStorage.redirect as string;
-  //     if (url) {
-  //       console.debug("Redirecting to:", url);
-  //       window.sessionStorage.removeItem("redirect");
-  //       return url;
-  //     }
-  //   },
-  //   meta: { header: true },
-  // },
+  {
+    name: "Home",
+    path: "/",
+    component: PageHome,
+    beforeEnter: () => {
+      const url = window.sessionStorage.redirect as string;
+      if (url) {
+        console.debug("Redirecting to:", url);
+        window.sessionStorage.removeItem("redirect");
+        return url;
+      }
+    },
+    meta: { header: true },
+  },
   {
     name: "Sources",
     path: "/sources",

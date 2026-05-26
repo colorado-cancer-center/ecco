@@ -148,10 +148,6 @@
   @apply overflow-x-auto;
 }
 
-@utility preview {
-  filter: contrast(0.5) saturate(0) brightness(1.25);
-}
-
 @utility text-stroke-* {
   -webkit-text-stroke-width: calc(--value(number) * 2px);
   -webkit-text-stroke-color: --value(--color-*);

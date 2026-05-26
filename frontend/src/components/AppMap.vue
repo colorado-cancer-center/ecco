@@ -141,9 +141,9 @@ export const noDataEntry = {
 
 <script setup lang="ts">
 import type { Ref } from "vue";
-import type { FeatureCollection } from "geojson";
+import type { FeatureCollection, Geometry } from "geojson";
 import type { FeatureLike } from "ol/Feature";
-import type { Geometry } from "ol/geom";
+import type { Geometry as OLGeometry } from "ol/geom";
 import {
   computed,
   nextTick,
@@ -191,13 +191,11 @@ const theme = forceHex(getCssVar("--color-theme"));
 
 type Props = {
   /** features */
-  geography?: FeatureCollection;
-  locations?: Record<string, FeatureCollection>;
-  /** map of geography id to value */
-  values?: Record<
-    string,
+  geography?: FeatureCollection<
+    Geometry,
     { value?: number | string | null; [key: string]: unknown }
   >;
+  locations?: Record<string, FeatureCollection>;
   /** value domain */
   min?: number | string;
   max?: number | string;
@@ -230,7 +228,6 @@ type Props = {
 const {
   geography = { type: "FeatureCollection", features: [] },
   locations = {},
-  values = {},
   min,
   max,
   unit,
@@ -273,21 +270,10 @@ type Slots = {
 
 defineSlots<Slots>();
 
-/** whether map has any "no data" geography regions */
-const noData = computed(
-  () =>
-    /** whether all features have entry in values object */
-    !geography.features.every(
-      (feature) => (feature.properties?.id ?? "") in values,
-    ) ||
-    /** whether any value is nullish */
-    Object.values(values).some(
-      ({ value }) => value === null || value === undefined,
-    ),
+/** whether map has any "no data" values */
+const noData = computed(() =>
+  geography.features.some((feature) => feature.properties.value),
 );
-
-/** tell parent about "no data" */
-watch(noData, () => emit("update:no-data", noData.value), { immediate: true });
 
 /** scale object */
 const scale = computed(() => {
@@ -340,7 +326,6 @@ const scale = computed(() => {
   } else if (
     /** map continuous values to discrete colors */
     /** (if we have needed and valid values) */
-    !isEmpty(values) &&
     typeof min === "number" &&
     typeof max === "number" &&
     min !== max
@@ -527,7 +512,6 @@ watchEffect(() => {
 watchEffect((onCleanup) => {
   /** get reactive values in root of watch so they can be auto-tracked */
   const getColor = scale.value.getColor;
-  const _values = values;
   const _highlight = highlight;
 
   /** generate styles per feature */
@@ -537,7 +521,7 @@ watchEffect((onCleanup) => {
       const color =
         feature.get("id") === _highlight
           ? theme
-          : getColor(_values[feature.get("id")]?.value);
+          : getColor(feature.get("value"));
       return new Style({
         stroke: new Stroke({ color: "black", width: hover ? 4 : 1 }),
         fill: new Fill({
@@ -701,11 +685,11 @@ watchEffect(async (onCleanup) => {
 });
 
 /** current selected feature */
-const selectedFeature = ref<Feature<Geometry>>();
+const selectedFeature = ref<Feature<OLGeometry>>();
 
 /** reset selected feature when data changes to avoid showing wrong popup info */
 watch(
-  [() => values, () => geography, () => locations],
+  [() => geography, () => locations],
   () => (selectedFeature.value = undefined),
   { deep: true },
 );
@@ -728,13 +712,6 @@ map.on("click", ({ pixel }) => {
     ) {
       /** set selected */
       selectedFeature.value = feature;
-
-      /** include data values in properties */
-      const id = feature.get("id");
-      for (const [key, value] of Object.entries(
-        values[typeof id === "string" ? id : ""] ?? {},
-      ))
-        selectedFeature.value.set(key, value);
     }
   });
 });

@@ -16,7 +16,7 @@ import { api } from "./";
 /** temporary interface between real api structure and desired api structure */
 
 const handlers = [
-  http.get("/geography", async () => {
+  http.get("*/geography", async () => {
     const url = new URL(`${api}/stats/measures`);
 
     const actual: _StatsMeasures = await (await fetch(url)).json();
@@ -28,7 +28,7 @@ const handlers = [
     return HttpResponse.json(desired);
   }),
 
-  http.get("/geography/:level", async ({ params }) => {
+  http.get("*/geography/:level", async ({ params }) => {
     const path =
       { county: "counties", tract: "tracts", healthregion: "healthregions" }[
         params.level as string
@@ -44,9 +44,10 @@ const handlers = [
           feature.us_fips ?? feature.fips ?? String(feature.hs_region) ?? "";
         const center = [feature.cent_lat, feature.cent_long] as Point;
         return {
+          id,
           type: "Feature",
           geometry: JSON.parse(feature.wkb_geometry ?? "{}") as Geometry,
-          properties: { id, center, description: feature.counties },
+          properties: { center, description: feature.counties },
         };
       }),
     };
@@ -54,7 +55,7 @@ const handlers = [
     return HttpResponse.json(desired);
   }),
 
-  http.get("/statistic", async () => {
+  http.get("*/statistic", async () => {
     const url = new URL(`${api}/stats/measures`);
 
     const actual: _StatsMeasures = await (await fetch(url)).json();
@@ -82,7 +83,7 @@ const handlers = [
     return HttpResponse.json(desired);
   }),
 
-  http.get("/statistic/:statistic", async ({ request, params }) => {
+  http.get("*/statistic/:statistic", async ({ request, params }) => {
     const [category = "", measure = ""] =
       (params.statistic as string).split(";") ?? [];
     const level = new URL(request.url).searchParams.get("level") ?? "";
@@ -98,7 +99,7 @@ const handlers = [
     return HttpResponse.json(desired);
   }),
 
-  http.get("/location", async () => {
+  http.get("*/location", async () => {
     const url = new URL(`${api}/locations`);
 
     const actual: _Locations = await (await fetch(url)).json();
@@ -108,7 +109,7 @@ const handlers = [
     return HttpResponse.json(desired);
   }),
 
-  http.get("/location/:location", async ({ params }) => {
+  http.get("*/location/:location", async ({ params }) => {
     const url = new URL(`${api}/locations/${params.location as string}`);
 
     const actual: _Location = await (await fetch(url)).json();
@@ -118,7 +119,7 @@ const handlers = [
     return HttpResponse.json(desired);
   }),
 
-  http.get("/feature/:feature", async ({ params }) => {
+  http.get("*/feature/:feature", async ({ params }) => {
     const url = new URL(`${api}/stats/by-county/${params.feature as string}`);
 
     const actual: _StatsByCounty = await (await fetch(url)).json();
@@ -129,12 +130,12 @@ const handlers = [
   }),
 
   /** leave all other requests untouched */
-  http.get("*", passthrough),
+  http.get("**", passthrough),
   http.post("*", passthrough),
 ];
 
 /** start mocking */
-export const mock = () => setupWorker(...handlers);
+export const mock = () => setupWorker(...handlers).start();
 
 type _StatsMeasures = {
   [key: string]: {

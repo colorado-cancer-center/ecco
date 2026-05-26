@@ -5,146 +5,6 @@
   >
     <!-- left panel -->
     <div class="flex flex-col gap-8 text-left" role="group">
-      <!-- level selection -->
-      <AppSelect
-        v-model="selectedLevel"
-        label="Geographic level"
-        :options="levelOptions"
-      />
-
-      <!-- category/measure selection -->
-      <div class="flex flex-col gap-1">
-        Statistics
-        <AppTree
-          :children="measureMap"
-          :model-value="treeValue"
-          @update:model-value="onTreeChange"
-        >
-          <template #default="{ parents }">
-            <button
-              v-if="parents.at(-1)?.id"
-              v-tooltip="'Download measure data'"
-              class="size-8 rounded-md text-stone-300 hover:text-black"
-              @click="onTreeDownload(parents.at(-1)?.id)"
-            >
-              <Download />
-            </button>
-          </template>
-        </AppTree>
-      </div>
-
-      <!-- factors -->
-      <template v-if="!isEmpty(factors)">
-        <div class="grid grid-cols-[min-content_1fr] items-center gap-2">
-          <template v-for="(factor, index) in factors" :key="index">
-            <AppSelect
-              v-if="selectedFactors[index]"
-              class="contents!"
-              :model-value="selectedFactors[index]?.value || ''"
-              :label="factor.label"
-              :options="
-                Object.entries(factor.values).map(([key, value]) => ({
-                  id: key,
-                  label: value,
-                }))
-              "
-              @update:model-value="
-                (value) =>
-                  (selectedFactors[index]!.value = [value].flat()[0] || '')
-              "
-            />
-          </template>
-        </div>
-      </template>
-
-      <!-- locations -->
-      <AppSelect
-        v-model="selectedLocations"
-        label="Resources & Other Locations"
-        :options="locationOptions"
-        :multi="true"
-        tooltip="Resources and other locations to show on map, e.g. screening centers, clinics, specialists"
-      />
-
-      <!-- multi-map compare -->
-      <AppCollapsible label="Compare">
-        <div class="grid grid-cols-3 gap-2">
-          <AppButton
-            v-if="inCompare()"
-            v-tooltip="'Remove selected map from comparison'"
-            v-bind="highlightListeners(findInCompare())"
-            @click="toggleCompare()"
-          >
-            <Minus />
-            Remove
-          </AppButton>
-          <AppButton
-            v-else
-            v-tooltip="'Add selected map to comparison'"
-            v-bind="highlightListeners(thumbnails.length - 1)"
-            :disabled="compare.length >= maxCompare"
-            @click="toggleCompare()"
-          >
-            <Plus />
-            Add
-          </AppButton>
-          <AppButton
-            v-if="compare.length"
-            v-tooltip="'Remove all maps from comparison and reset'"
-            @click="compare = []"
-          >
-            <X />
-            Clear
-          </AppButton>
-          <AppButton
-            v-if="showPreview && compare.length && !inCompare()"
-            v-tooltip="'Hide preview of selected map'"
-            v-bind="highlightListeners(thumbnails.length - 1)"
-            @click="showPreview = false"
-          >
-            Hide Preview
-          </AppButton>
-        </div>
-
-        <template v-if="compare.length">
-          <div class="flex flex-wrap items-center justify-center gap-2">
-            Comparing {{ compare.length }} map(s):
-          </div>
-
-          <div class="grid grid-cols-3 place-items-center gap-2">
-            <template v-for="(map, index) in compare" :key="index">
-              <AppButton
-                v-if="index < compare.length"
-                v-tooltip="'Remove map from comparison'"
-                v-bind="highlightListeners(index)"
-                class="group relative aspect-2/1 w-full"
-                @click="toggleCompare(map)"
-              >
-                <Minus />
-                <img
-                  v-if="thumbnails[index]"
-                  :src="thumbnails[index]"
-                  alt=""
-                  class="absolute size-full object-contain object-center group-hover:opacity-0"
-                />
-              </AppButton>
-            </template>
-
-            <div
-              v-for="(_, index) in Array(
-                Math.min(round(compare.length + 1, 3, 'ceil'), maxCompare) -
-                  compare.length,
-              )"
-              :key="index"
-              v-tooltip="
-                'Select new measure/locations/etc. to compare another map'
-              "
-              class="aspect-2/1 w-full rounded-md border border-stone-300"
-            />
-          </div>
-        </template>
-      </AppCollapsible>
-
       <AppCollapsible label="Customization">
         <!-- legend -->
         <AppCheckbox
@@ -289,9 +149,9 @@
           label="Background transparency"
         />
         <AppSlider
-          v-model="geometryOpacity"
-          v-tooltip="'Transparency of geometry layer'"
-          label="Geometry transparency"
+          v-model="geographyOpacity"
+          v-tooltip="'Transparency of geography layer'"
+          label="Geography transparency"
         />
         <AppSlider
           v-model="locationOpacity"
@@ -346,11 +206,10 @@
     >
       <!-- map -->
       <div
-        v-if="renderMap"
         ref="mapGridElement"
         class="grid h-(--height) w-(--width) grid-cols-[repeat(var(--cols),1fr)] gap-1 bg-stone-600 shadow-md transition max-md:h-[90dvh]"
         :class="[
-          mapDataStatus === 'loading' && 'preview',
+          mapDataStatus === 'loading' && 'animate-pulse',
           mapHeight ? 'shrink-0' : 'grow',
         ]"
         :style="{
@@ -359,28 +218,22 @@
         }"
       >
         <AppMap
-          v-for="({ selected, geometry, locations, values }, index) in mapData"
+          v-for="(
+            { selected, geography, statistic, locations }, index
+          ) in mapData"
           :key="index"
           ref="mapElement"
           v-model:zoom="zoom"
           v-model:lat="lat"
           v-model:long="long"
-          v-model:no-data="noData"
-          :class="[
-            showPreview && compare.length && !inCompare(selected) && 'preview',
-            index === highlightedThumbnail
-              ? 'z-10 outline-8 outline-theme'
-              : 'outline-8 outline-transparent',
-          ]"
-          :geometry="geometry"
+          :geography="geography"
           :locations="locations"
-          :values="values?.values"
-          :min="manualMinMax ? manualMin : values?.min"
-          :max="manualMinMax ? manualMax : values?.max"
-          :unit="values?.unit"
+          :min="manualMinMax ? manualMin : statistic.min"
+          :max="manualMinMax ? manualMax : statistic.max"
+          :unit="statistic.unit"
           :show-legends="showLegends"
           :background-opacity="backgroundOpacity"
-          :geometry-opacity="geometryOpacity"
+          :geography-opacity="geographyOpacity"
           :location-opacity="locationOpacity"
           :background="selectedBackground"
           :gradient="selectedGradient"
@@ -388,87 +241,33 @@
           :scale-steps="scaleSteps"
           :nice-steps="niceSteps"
           :scale-power="scalePower"
-          :scale-values="values?.order"
-          @update:thumbnail="(thumb) => (thumbnails[index] = thumb)"
+          :scale-values="statistic.order"
         >
           <!-- main legend -->
-          <template #top-left-upper>
-            <strong>
-              {{ getLabel(selected.category, selected.measure).at(-1) }}
-            </strong>
-            <div class="text-sm">{{ upperFirst(selected.level) }}</div>
-            <div>
-              {{
-                Object.values(selected.factors)
-                  .filter((factor) => !factor.match(/(^|\s)all($|\s)/i))
-                  .join(", ")
-              }}
-            </div>
-          </template>
+          <template #top-left-upper> </template>
 
           <template #top-left-lower>
-            <div v-if="values?.source" class="flex items-center gap-2">
-              <AppLink :to="values.source.link ?? ''">
-                {{ values.source.name ?? "source" }}
+            <div v-if="statistic.source" class="flex items-center gap-2">
+              <AppLink :to="statistic.source.link">
+                {{ statistic.source.label }}
               </AppLink>
               <AppButton
                 v-tooltip="'Copy citation text to clipboard'"
                 class="min-h-0! min-w-0! p-1!"
                 data-save-hide
-                @click="copy(getSourceCitation(values.source))"
+                @click="copy(getSourceCitation(statistic.source))"
               >
                 <Copy />
               </AppButton>
             </div>
 
-            <div v-if="values?.state">
-              State-wide: {{ formatValue(values.state, values.unit) }}
-            </div>
-          </template>
-
-          <template v-if="countyWide.length" #top-right>
-            <b>Outreach</b>
-            <div class="grid grid-cols-[auto_auto] items-center gap-4">
-              <template
-                v-for="(field, countyIndex) of countyWide"
-                :key="countyIndex"
-              >
-                <div
-                  class="flex size-4 items-center justify-center border border-black text-white"
-                  :style="{ backgroundColor: field.color }"
-                >
-                  <Check />
-                </div>
-                <span>{{ field.label }}</span>
-              </template>
-            </div>
-          </template>
-
-          <!-- geometry feature label -->
-          <template
-            v-if="countyWide.length"
-            #geometry-label="{ feature }: { feature: FeatureInfo }"
-          >
-            <div class="grid grid-cols-[auto_auto] items-center gap-4">
-              <template
-                v-for="(field, countyIndex) of countyWide"
-                :key="countyIndex"
-              >
-                <div v-if="field.checkKey && feature[field.checkKey]">
-                  <span
-                    v-if="field.countKey && feature[field.countKey]"
-                    class="flex size-4 items-center justify-center border border-black text-white"
-                    :style="{ backgroundColor: field.color }"
-                  >
-                    {{ feature[field.countKey] }}
-                  </span>
-                </div>
-              </template>
+            <div v-if="statistic.state">
+              State-wide: {{ formatValue(statistic.state, statistic.unit) }}
             </div>
           </template>
 
           <!-- feature popup -->
-          <template #popup="{ feature }: { feature: FeatureInfo }">
+          <template #popup="{ feature }">
             <!-- main name/identifier -->
 
             <strong v-if="feature.name">{{ feature.name }}</strong>
@@ -487,22 +286,6 @@
               Health Statistic Region {{ feature.hs_region }}
             </strong>
 
-            <p>
-              <AppLink
-                v-if="selectedLevel === 'tract' || noData"
-                to="/sources#suppressed-values"
-                :new-tab="true"
-                class="inline-flex items-center gap-1 underline"
-              >
-                Low values may be suppressed
-                <Info />
-              </AppLink>
-            </p>
-
-            <i>
-              {{ getLabel(selected.category, selected.measure).join(" > ") }}
-            </i>
-
             <dl>
               <!-- main values -->
 
@@ -516,7 +299,7 @@
                   {{ feature.aac ? "Rate" : "Value" }}
                 </dt>
                 <dd>
-                  {{ formatValue(feature.value, values?.unit) }}
+                  {{ formatValue(feature.value, statistic.unit) }}
                 </dd>
               </template>
 
@@ -527,7 +310,7 @@
                 "
               >
                 <dt>Avg. Annual Count</dt>
-                <dd>{{ formatValue(feature.aac, values?.unit) }}</dd>
+                <dd>{{ formatValue(feature.aac, statistic.unit) }}</dd>
               </template>
 
               <template v-if="feature.count">
@@ -607,80 +390,78 @@
 
               <!-- outreach -->
 
-              <template v-if="outreachSelected.length">
-                <template v-if="feature.fit_kits">
-                  <dt>
-                    <AppLink
-                      to="https://medlineplus.gov/ency/patientinstructions/000704.htm"
-                    >
-                      FIT Kits
-                    </AppLink>
-                  </dt>
-                  <dd>{{ formatValue(feature.fit_kits) }}</dd>
-                </template>
+              <template v-if="feature.fit_kits">
+                <dt>
+                  <AppLink
+                    to="https://medlineplus.gov/ency/patientinstructions/000704.htm"
+                  >
+                    FIT Kits
+                  </AppLink>
+                </dt>
+                <dd>{{ formatValue(feature.fit_kits) }}</dd>
+              </template>
 
-                <template v-if="feature.radon_kits">
-                  <dt>
-                    <AppLink
-                      to="https://cdphe.colorado.gov/hm/testing-your-home-radon"
-                    >
-                      Radon Kits
-                    </AppLink>
-                  </dt>
-                  <dd>{{ formatValue(feature.radon_kits) }}</dd>
-                </template>
+              <template v-if="feature.radon_kits">
+                <dt>
+                  <AppLink
+                    to="https://cdphe.colorado.gov/hm/testing-your-home-radon"
+                  >
+                    Radon Kits
+                  </AppLink>
+                </dt>
+                <dd>{{ formatValue(feature.radon_kits) }}</dd>
+              </template>
 
-                <template v-if="feature.community_events">
-                  <dt>Community Events</dt>
-                  <dd>{{ formatValue(feature.community_events) }}</dd>
-                </template>
+              <template v-if="feature.community_events">
+                <dt>Community Events</dt>
+                <dd>{{ formatValue(feature.community_events) }}</dd>
+              </template>
 
-                <template v-if="feature.health_fairs">
-                  <dt>Health Fairs</dt>
-                  <dd>{{ formatValue(feature.health_fairs) }}</dd>
-                </template>
+              <template v-if="feature.health_fairs">
+                <dt>Health Fairs</dt>
+                <dd>{{ formatValue(feature.health_fairs) }}</dd>
+              </template>
 
-                <template v-if="feature.educational_talks">
-                  <dt>Educational Talks</dt>
-                  <dd>{{ formatValue(feature.educational_talks) }}</dd>
-                </template>
+              <template v-if="feature.educational_talks">
+                <dt>Educational Talks</dt>
+                <dd>{{ formatValue(feature.educational_talks) }}</dd>
+              </template>
 
-                <template v-if="feature.radio_talks">
-                  <dt>Radio Talks</dt>
-                  <dd>{{ formatValue(feature.radio_talks) }}</dd>
-                </template>
+              <template v-if="feature.radio_talks">
+                <dt>Radio Talks</dt>
+                <dd>{{ formatValue(feature.radio_talks) }}</dd>
+              </template>
 
-                <template v-if="feature.school_church_events">
-                  <dt>School/Church Events</dt>
-                  <dd>{{ formatValue(feature.school_church_events) }}</dd>
-                </template>
+              <template v-if="feature.school_church_events">
+                <dt>School/Church Events</dt>
+                <dd>{{ formatValue(feature.school_church_events) }}</dd>
+              </template>
 
-                <template v-if="feature.womens_wellness_centers">
-                  <dt>
-                    <AppLink to="https://cdphe.colorado.gov/wwc">
-                      Women's Wellness Centers
-                    </AppLink>
-                  </dt>
-                  <dd>{{ formatValue(feature.womens_wellness_centers) }}</dd>
-                </template>
+              <template v-if="feature.womens_wellness_centers">
+                <dt>
+                  <AppLink to="https://cdphe.colorado.gov/wwc">
+                    Women's Wellness Centers
+                  </AppLink>
+                </dt>
+                <dd>{{ formatValue(feature.womens_wellness_centers) }}</dd>
+              </template>
 
-                <template v-if="feature['2morrow_signups']">
-                  <dt>
-                    <AppLink
-                      to="https://medschool.cuanschutz.edu/colorado-cancer-center/community/CommunityOutreachEngagement/projects-and-activities/2morrow-health-app"
-                    >
-                      2morrow Signups
-                    </AppLink>
-                  </dt>
-                  <dd>{{ formatValue(feature["2morrow_signups"]) }}</dd>
-                </template>
+              <template v-if="feature['2morrow_signups']">
+                <dt>
+                  <AppLink
+                    to="https://medschool.cuanschutz.edu/colorado-cancer-center/community/CommunityOutreachEngagement/projects-and-activities/2morrow-health-app"
+                  >
+                    2morrow Signups
+                  </AppLink>
+                </dt>
+                <dd>{{ formatValue(feature["2morrow_signups"]) }}</dd>
               </template>
             </dl>
 
             <!-- actions -->
 
             <AppButton
-              v-if="selected.level === 'county' && 'county' in feature"
+              v-if="selected.level === 'county'"
               :to="`/county/${feature.id}`"
               :new-tab="true"
             >
@@ -767,6 +548,7 @@ import {
   watchEffect,
 } from "vue";
 import { event } from "vue-gtag";
+import { getGeography, getSourceCitation, getStatistic } from "@/api";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
 import AppCollapsible from "@/components/AppCollapsible.vue";
@@ -775,7 +557,6 @@ import AppMap from "@/components/AppMap.vue";
 import AppNumber from "@/components/AppNumber.vue";
 import AppSelect from "@/components/AppSelect.vue";
 import AppSlider from "@/components/AppSlider.vue";
-import AppTree from "@/components/AppTree.vue";
 import { backgroundOptions, defaultBackground } from "@/components/background";
 import { defaultGradient, gradientOptions } from "@/components/gradient";
 import { colors } from "@/components/markers";
@@ -783,8 +564,9 @@ import { appTitle } from "@/meta";
 import { numberParam, stringParam } from "@/pages";
 import { useQuery } from "@/util/composables";
 import { downloadJson, downloadPng } from "@/util/download";
-import { formatValue, round } from "@/util/math";
+import { formatValue } from "@/util/math";
 import { copy, sleep } from "@/util/misc";
+import { getValue } from "@/util/types";
 import {
   Check,
   Copy,
@@ -819,40 +601,19 @@ import {
   upperFirst,
 } from "lodash";
 
-type Value = NonNullable<Values>["values"][string];
-
-type FeatureInfo = Expand<
-  Partial<
-    GeoProps &
-      LocationProps &
-      /** "value" can also be string because of explicit scale */
-      Update<Value, "value", string>
-  >
->;
-
-type Props = {
-  /** level/category/measure */
-  facets: Facets;
-  locationList: LocationList;
-};
-
-const { facets, locationList } = defineProps<Props>();
-
 /** element refs */
 const rightPanelElement = useTemplateRef("rightPanelElement");
 const mapGridElement = useTemplateRef("mapGridElement");
 const mapElement = useTemplateRef("mapElement");
 
-/** select boxes state */
-const selectedLevel = useRouteQuery("level", "", { transform: stringParam });
-const selectedCategory = useRouteQuery("category", "", {
-  transform: stringParam,
-});
-const selectedMeasure = useRouteQuery("measure", "", {
-  transform: stringParam,
-});
-const selectedFactors = shallowRef<Record<string, ShallowRef<string>>>({});
-const selectedLocations = ref<string[]>([]);
+/** selected state */
+const selectedMaps = ref([
+  {
+    level: "county",
+    statistic: "sociodemographics;Total",
+    locations: ["lung-cancer-screening"],
+  },
+]);
 
 /** map zoom state */
 const zoom = useRouteQuery("zoom", "0", { transform: numberParam });
@@ -864,7 +625,7 @@ const showLegends = ref(true);
 const selectedBackground = ref(defaultBackground);
 const selectedGradient = ref(defaultGradient);
 const backgroundOpacity = ref(1);
-const geometryOpacity = ref(0.75);
+const geographyOpacity = ref(0.75);
 const locationOpacity = ref(1);
 const flipGradient = ref(false);
 const scaleSteps = ref(5);
@@ -876,188 +637,6 @@ const manualMax = ref(1);
 const mapWidth = ref(0);
 const mapHeight = ref(0);
 
-/** compare state */
-const compare = ref<Map[]>([]);
-const showPreview = ref(true);
-
-/** page title */
-watchEffect(() => {
-  const locations = selectedLocations.value.length;
-  appTitle.value = [
-    selectedMeasure.value,
-    locations ? `${locations} locations` : "",
-  ].filter(Boolean);
-});
-
-/** push selected facet values to tree value */
-const treeValue = computed(() => [
-  `${selectedCategory.value};${selectedMeasure.value}`,
-]);
-
-/** pull tree value from selected facet values */
-const onTreeChange = (value: string[]) => {
-  [selectedCategory.value = "", selectedMeasure.value = ""] =
-    value.at(-1)?.split(";") ?? [];
-};
-
-/** download measure from tree click */
-const onTreeDownload = (value = "") => {
-  if (!value) return;
-  const [category = "", measure = ""] = value.split(";");
-  if (!category || !measure) return;
-  getDownload(selectedLevel.value, category, measure);
-  event("downloadMeasure", {
-    _value: { level: selectedLevel.value, category, measure },
-  });
-};
-
-/** geographic level options */
-const levelOptions = computed<Option[]>(() =>
-  Object.entries(facets)
-    .filter(
-      ([, { categories }]) =>
-        categories[selectedCategory.value]?.measures[selectedMeasure.value],
-    )
-    .map(([level, { label }]) => ({ id: level, label })),
-);
-
-/** get label parts from selected */
-const getLabel = (category = "", measure = "") => {
-  type Leaf = { id?: string; label?: string; children?: Leaf[] };
-  const selected = `${category};${measure}`;
-  const getPath = (children: Leaf[], path: Leaf[] = []): Leaf[] =>
-    children.flatMap(({ children = [], ...leaf }) =>
-      leaf.id === selected
-        ? [...path, leaf]
-        : getPath(children, [...path, leaf]),
-    );
-  return getPath(measureMap)
-    .map((part) => part.label || "")
-    .filter(Boolean);
-};
-
-/** auto-select facets */
-onMounted(() => {
-  if (
-    !selectedLevel.value &&
-    !selectedCategory.value &&
-    !selectedMeasure.value
-  ) {
-    selectedLevel.value = "county";
-    selectedCategory.value = "sociodemographics";
-    selectedMeasure.value = "Total";
-  }
-});
-
-/** auto-select level */
-watchEffect(() => {
-  if (!levelOptions.value.find((option) => option.id === selectedLevel.value))
-    selectedLevel.value = levelOptions.value[0]?.id || "";
-});
-
-/** stratification factors (e.g. race/ethnicity, sex, etc) */
-const factors = computed(
-  () =>
-    facets[selectedLevel.value]?.categories[selectedCategory.value]?.measures[
-      selectedMeasure.value
-    ]?.factors || {},
-);
-
-/** full selected map */
-const selectedMap = computed(() => ({
-  level: selectedLevel.value,
-  category: selectedCategory.value,
-  measure: selectedMeasure.value,
-  /** unwrap nested refs */
-  factors: mapValues(selectedFactors.value, (factor) => factor.value),
-  locations: selectedLocations.value,
-}));
-
-type Map = typeof selectedMap.value;
-
-/** reenable preview state on any change to comparison */
-watch(compare, () => (showPreview.value = true), { deep: true });
-
-/** map thumbnail blob urls */
-const thumbnails = ref<string[]>([]);
-
-/** highlighted thumbnail */
-const highlightedThumbnail = ref<number | null>(null);
-
-/** event listeners to handle map highlighting */
-const highlightListeners = (index: number) => ({
-  onfocus: () => (highlightedThumbnail.value = index),
-  onblur: () => (highlightedThumbnail.value = null),
-  onmouseenter: () => (highlightedThumbnail.value = index),
-  onmouseleave: () => (highlightedThumbnail.value = null),
-});
-
-/** are two map selections equal */
-const mapsEqual = (a: Map, b: Map) =>
-  a.level === b.level &&
-  a.category === b.category &&
-  a.measure === b.measure &&
-  Object.entries(a.factors).every(
-    ([key, value]) => unref(b.factors[key]) === unref(value),
-  ) &&
-  isEqual(a.locations, b.locations);
-
-/** find (selected) map in compare group */
-const findInCompare = (map?: Map) => {
-  map ??= selectedMap.value;
-  return compare.value.findIndex((entry) => mapsEqual(map, entry));
-};
-
-/** is (selected) map already in compare group */
-const inCompare = (map?: Map) => findInCompare(map) !== -1;
-
-/** max # of maps that can be compared */
-const maxCompare = 9;
-
-/** add/remove selected map from compare group */
-const toggleCompare = (map?: Map) => {
-  map ??= selectedMap.value;
-  if (inCompare(map))
-    /** remove */
-    compare.value = compare.value.filter((entry) => !mapsEqual(entry, map));
-  else if (compare.value.length < maxCompare)
-    /** add */
-    compare.value.push(map);
-};
-
-/** selected map and/or maps in compare group */
-const selectedMaps = computed(() =>
-  uniqWith(
-    [
-      /** comparison maps */
-      ...compare.value,
-      /** selected map */
-      ...(showPreview.value || !compare.value.length
-        ? [selectedMap.value]
-        : []),
-    ],
-    mapsEqual,
-  ),
-);
-
-/** analytics, capture individual state changes */
-watchEffect(() => event("selectLevel", { _value: selectedLevel.value }));
-watchEffect(() => event("selectCategory", { _value: selectedCategory.value }));
-watchEffect(() => event("selectMeasure", { _value: selectedMeasure.value }));
-watchEffect(() =>
-  event("selectFactors", {
-    _value: mapValues(selectedFactors.value, (factor) => factor.value),
-  }),
-);
-watchEffect(() =>
-  event("selectLocations", { _value: selectedLocations.value }),
-);
-/** (watchEffect's auto-dependency-detection doesn't work here for some reason) */
-watch(compare, () => event("compare", { _value: compare.value }), {
-  deep: true,
-  immediate: true,
-});
-
 /** load maps data */
 const {
   query: loadMapData,
@@ -1065,53 +644,38 @@ const {
   status: mapDataStatus,
 } = useQuery(
   () => {
-    /** analytics, capture full user selection state in same object */
-    event("loadMapData", { _value: selectedMaps.value });
-
     /** query all maps in parallel */
     return Promise.all(
-      selectedMaps.value.map(async (selected) => ({
-        /** keep input selection */
-        selected,
+      selectedMaps.value.map(async (selected) => {
+        /** load geography */
+        const geography = await getGeography(selected.level);
+        /** load statistic */
+        const statistic = await getStatistic(
+          selected.statistic,
+          selected.level,
+          {},
+        );
+        /** load locations */
+        const locations = {};
 
-        /** load map geometry data */
-        geometry:
-          selected.level === "tract"
-            ? await getGeo("tracts", "fips")
-            : selected.level == "county"
-              ? await getGeo("counties", "us_fips")
-              : await getGeo("healthregions", "hs_region"),
+        /** add extra properties to geography */
+        const geographyExtras = {
+          ...geography,
+          features: geography.features.map((feature) => {
+            const value = getValue(statistic.values, feature.id);
+            return {
+              ...feature,
+              properties: {
+                ...feature.properties,
+                value: value?.value,
+                aac: value?.aac,
+              },
+            };
+          }),
+        };
 
-        /** load map values data */
-        values:
-          selected.level && selected.category && selected.measure
-            ? await getValues(
-                selected.level,
-                selected.category,
-                selected.measure,
-                selected.factors,
-              )
-            : null,
-
-        /** load location data */
-        locations: Object.fromEntries(
-          /** query for locations in parallel */
-          await Promise.all(
-            selected.locations
-              /** skip locations that shouldn't actually be queried for */
-              .filter((entry) => !fakeLocations.value.includes(entry))
-              .map(
-                async (location) =>
-                  [
-                    /** location id */
-                    locationLabels.value[location] ?? "",
-                    /** location geo data */
-                    await getLocation(location),
-                  ] as const,
-              ),
-          ),
-        ),
-      })),
+        return { selected, geography: geographyExtras, statistic, locations };
+      }),
     );
   },
   [],
@@ -1145,12 +709,6 @@ const mapCols = computed(() => {
   return 3;
 });
 
-/** whether map has any "no data" regions */
-const noData = ref(false);
-
-/** flag to force rerender of map */
-const renderMap = ref(true);
-
 /** reset customizations and map to defaults */
 const reset = async () => {
   zoom.value = 0;
@@ -1160,7 +718,7 @@ const reset = async () => {
   selectedBackground.value = defaultBackground;
   selectedGradient.value = defaultGradient;
   backgroundOpacity.value = 1;
-  geometryOpacity.value = 0.75;
+  geographyOpacity.value = 0.75;
   locationOpacity.value = 1;
   flipGradient.value = false;
   scaleSteps.value = 6;
@@ -1169,104 +727,7 @@ const reset = async () => {
   manualMinMax.value = false;
   mapWidth.value = 0;
   mapHeight.value = 0;
-
-  /**
-   * force full re-render of map. don't do this via key method to make sure
-   * entire dom completely unmounted and recreated from scratch (no diffing by
-   * vue)
-   */
-  renderMap.value = false;
-  await sleep(100);
-  renderMap.value = true;
 };
-
-/** map of location id to human-readable label */
-const locationLabels = computed(() =>
-  Object.fromEntries(
-    Object.values(locationList)
-      .map((value) => Object.entries(value))
-      .flat()
-      .map(([label, id]) => [id, label] as const),
-  ),
-);
-
-/** location dropdown options */
-const locationOptions = computed(() => {
-  const entries: Entry[] = [];
-  for (const [group, options] of Object.entries(locationList)) {
-    entries.push({ group });
-    for (const [label, id] of Object.entries(options))
-      entries.push({ id, label });
-  }
-
-  return entries;
-});
-
-/**
- * locations that are in location dropdown, but aren't real "locations" in
- * backend and shouldn't be queried for
- */
-const fakeLocations = computed<string[]>(() => [
-  ...countyWide.value.map(({ id }) => id),
-]);
-
-/** are outreach locations selected */
-const outreachSelected = computed(() =>
-  selectedLocations.value.filter((location) =>
-    (
-      Object.values(extraLocationList[outreachLocationKey]) as string[]
-    ).includes(location),
-  ),
-);
-
-/** county overview outreach data */
-const countyWide = computed(() => {
-  /** get selected overview fields */
-  let selected = Object.entries(
-    pick(extraLocationList[outreachLocationKey], [
-      "Tobacco Cessation App Users",
-    ]),
-  )
-    .filter(([, id]) => selectedLocations.value.includes(id))
-    .map(([label, id]) => ({ id, label }));
-
-  /** preserve selected order */
-  selected = orderBy(selected, ({ id }) => selectedLocations.value.indexOf(id));
-
-  /** set field props */
-  const fields = selected.map(({ label, id }, index) => ({
-    /** actual location "id" (for url, getLocation, etc) */
-    id,
-    /** key to access on feature to determine if checked or not */
-    checkKey: (
-      {
-        "outreach-2morrow-county": "has_2morrow",
-      } satisfies Partial<Record<typeof id, keyof GeoProps>>
-    )[id as string],
-    /** key to access on feature to determine count */
-    countKey: (
-      {
-        "outreach-2morrow-county": "2morrow_signups",
-      } satisfies Partial<Record<typeof id, keyof GeoProps>>
-    )[id as string],
-    /** human-readable label */
-    label,
-    /** icon color */
-    color: colors[index] ?? "",
-  }));
-
-  return fields;
-});
-
-watchEffect(() => {
-  /** if manual min/max off */
-  if (!manualMinMax.value) {
-    /** keep in sync with actual min/max (nicer UX when turning manual on) */
-    const { min, max } = mapData.value[0]?.values || {};
-    if (typeof min === "number") manualMin.value = min;
-    if (typeof max === "number") manualMax.value = max;
-  }
-});
 
 /** fit all maps */
 const fit = () => mapElement.value?.forEach((map) => map?.fit());

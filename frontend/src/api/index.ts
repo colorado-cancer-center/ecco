@@ -1,5 +1,6 @@
 import type { FeatureCollection, Geometry } from "geojson";
 import type { ValueOf } from "type-fest";
+import { getValue } from "@/util/types";
 import { mapValues } from "lodash";
 import featureLabels from "./data/feature-labels.json";
 import levelLabels from "./data/level-labels.json";
@@ -70,13 +71,13 @@ export const getGeographies = async () => {
 
   return mapValues(data, (value, id) => ({
     /** add label */
-    label: levelLabels[id as keyof typeof levelLabels] ?? id,
+    label: getValue(levelLabels, id) ?? id,
   }));
 };
 
 export type Geography = FeatureCollection<
   Geometry,
-  { id: string; center: Point; description?: string }
+  { center: Point; description?: string }
 >;
 
 /** get full details of geographic level */
@@ -91,15 +92,15 @@ export const getGeography = async (level: string) => {
     ...data,
     /** all features of geographic level */
     features: data.features.map((feature) => {
-      const id = feature.properties.id;
+      const id = feature.id;
       return {
         ...feature,
         properties: {
           ...feature.properties,
           /** add label */
-          label: (featureLabels as Record<string, string>)[id] ?? id,
+          label: getValue(featureLabels, id) ?? id,
           /** add outreach properties */
-          ...((outreach as Record<string, object>)[id] ?? {}),
+          ...(getValue(outreach, id) ?? {}),
         },
       };
     }),
@@ -122,7 +123,7 @@ export const getStatistics = async () => {
   return mapValues(data, (value, id) => ({
     ...value,
     /** add label */
-    label: (statisticLabels as Record<string, string>)[id] ?? id,
+    label: getValue(statisticLabels, id) ?? id,
   }));
 };
 
@@ -160,10 +161,9 @@ export const getStatistic = async (
   return {
     ...data,
     /** add label */
-    label: (statisticLabels as Record<string, string>)[statistic] ?? statistic,
+    label: getValue(statisticLabels, statistic) ?? statistic,
     /** add source details */
-    source:
-      (sourceDetails as Record<string, object>)[data.source ?? ""] ?? undefined,
+    source: getValue(sourceDetails, data.source),
   };
 };
 
@@ -190,7 +190,7 @@ export const getLocations = async () => {
   return mapValues(data, (value, id) => ({
     ...value,
     /** add label */
-    label: (locationLabels as Record<string, string>)[id] ?? id,
+    label: getValue(locationLabels, id) ?? id,
   }));
 };
 
@@ -228,8 +228,7 @@ export const getLocation = async (location: ID) => {
       type: "FeatureCollection",
       features: Object.entries(extraLocations[location] ?? {}).map(
         ([zip, count]) => {
-          const [lat = 99999, long = 99999] =
-            zipCodes[zip as keyof typeof zipCodes] ?? [];
+          const [lat = 99999, long = 99999] = getValue(zipCodes, zip) ?? [];
           return {
             type: "Feature",
             geometry: { type: "Point", coordinates: [long, lat] },

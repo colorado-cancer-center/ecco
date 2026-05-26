@@ -12,7 +12,7 @@ import App from "./App.vue";
 
 console.debug(import.meta, import.meta.env);
 
-mock();
+await mock();
 
 const app = createApp(App);
 
