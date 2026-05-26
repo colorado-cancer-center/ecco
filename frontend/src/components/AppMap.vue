@@ -4,7 +4,7 @@
     class="relative transition-all"
     :style="{
       '--zoom': immediateZoom,
-      '--label-opacity': geometryOpacity,
+      '--label-opacity': geographyOpacity,
     }"
   >
     <div ref="mapElement" v-bind="$attrs" class="size-full" />
@@ -89,15 +89,15 @@
       </div>
     </template>
 
-    <!-- geometry labels -->
+    <!-- geography labels -->
     <div
-      v-for="(feature, index) of geometryFeaturesWLabels"
+      v-for="(feature, index) of geographyFeaturesWLabels"
       :key="index"
-      ref="geometryLabelElements"
+      ref="geographyLabelElements"
       class="flex flex-col items-center gap-1 rounded-md text-center text-[calc(var(--zoom)*2px)] text-white select-none text-stroke-1.5 text-stroke-black *:not-first:flex *:not-first:flex-wrap *:not-first:items-center *:not-first:justify-center *:not-first:gap-1 [:has(>&)]:pointer-events-none"
     >
       <div>{{ feature.get("label") }}</div>
-      <slot name="geometry-label" :feature="feature.getProperties()" />
+      <slot name="geography-label" :feature="feature.getProperties()" />
     </div>
 
     <!-- feature popup -->
@@ -181,7 +181,7 @@ import { getMarkers } from "./markers";
 const frameElement = useTemplateRef("frameElement");
 const mapElement = useTemplateRef("mapElement");
 const popupElement = useTemplateRef("popupElement");
-const geometryLabelElements = useTemplateRef("geometryLabelElements");
+const geographyLabelElements = useTemplateRef("geographyLabelElements");
 const topLeftLegend = useTemplateRef("topLeftLegend");
 const topRightLegend = useTemplateRef("topRightLegend");
 const bottomRightLegend = useTemplateRef("bottomRightLegend");
@@ -191,9 +191,9 @@ const theme = forceHex(getCssVar("--color-theme"));
 
 type Props = {
   /** features */
-  geometry?: FeatureCollection;
+  geography?: FeatureCollection;
   locations?: Record<string, FeatureCollection>;
-  /** map of geometry id to value */
+  /** map of geography id to value */
   values?: Record<
     string,
     { value?: number | string | null; [key: string]: unknown }
@@ -210,7 +210,7 @@ type Props = {
   showLegends?: boolean;
   /** layer opacities */
   backgroundOpacity?: number;
-  geometryOpacity?: number;
+  geographyOpacity?: number;
   locationOpacity?: number;
   /** tile provider */
   background?: string;
@@ -228,7 +228,7 @@ type Props = {
 };
 
 const {
-  geometry = { type: "FeatureCollection", features: [] },
+  geography = { type: "FeatureCollection", features: [] },
   locations = {},
   values = {},
   min,
@@ -239,7 +239,7 @@ const {
   zoom = 0,
   showLegends = true,
   backgroundOpacity = 1,
-  geometryOpacity = 0.75,
+  geographyOpacity = 0.75,
   locationOpacity = 1,
   background = backgroundOptions[0]!.id,
   gradient = gradientOptions[3]!.id,
@@ -267,17 +267,17 @@ type Slots = {
   "top-right"?: () => unknown;
   "bottom-right"?: () => unknown;
   "bottom-left"?: () => unknown;
-  "geometry-label"?: ({ feature }: { feature: FeatureInfo }) => unknown;
+  "geography-label"?: ({ feature }: { feature: FeatureInfo }) => unknown;
   popup?: ({ feature }: { feature: FeatureInfo }) => unknown;
 };
 
 defineSlots<Slots>();
 
-/** whether map has any "no data" geometry regions */
+/** whether map has any "no data" geography regions */
 const noData = computed(
   () =>
     /** whether all features have entry in values object */
-    !geometry.features.every(
+    !geography.features.every(
       (feature) => (feature.properties?.id ?? "") in values,
     ) ||
     /** whether any value is nullish */
@@ -501,10 +501,10 @@ watchEffect(() => {
 /** update background layer opacity */
 watchEffect(() => backgroundLayer.setOpacity(backgroundOpacity));
 
-/** geometry source object */
-const geometrySource = new VectorSource();
-/** geometry layer object */
-const geometryLayer = new VectorLayer({ source: geometrySource });
+/** geography source object */
+const geographySource = new VectorSource();
+/** geography layer object */
+const geographyLayer = new VectorLayer({ source: geographySource });
 
 /** geojson parser */
 const geojson = new GeoJSON({
@@ -514,16 +514,16 @@ const geojson = new GeoJSON({
   featureProjection: xy,
 });
 
-/** parse geometry features */
-const geometryFeatures = computed(() => geojson.readFeatures(geometry));
+/** parse geography features */
+const geographyFeatures = computed(() => geojson.readFeatures(geography));
 
-/** update geometry layer source */
+/** update geography layer source */
 watchEffect(() => {
-  geometrySource.clear();
-  geometrySource.addFeatures(geometryFeatures.value);
+  geographySource.clear();
+  geographySource.addFeatures(geographyFeatures.value);
 });
 
-/** update geometry styles */
+/** update geography styles */
 watchEffect((onCleanup) => {
   /** get reactive values in root of watch so they can be auto-tracked */
   const getColor = scale.value.getColor;
@@ -548,14 +548,14 @@ watchEffect((onCleanup) => {
     };
 
   /** base styles */
-  geometryLayer.setStyle(style());
+  geographyLayer.setStyle(style());
 
   /** hover styles */
   const hover = new Select({
     condition: pointerMove,
     style: style(true),
     /** don't count other layers, e.g. labels, in hover */
-    layers: [geometryLayer],
+    layers: [geographyLayer],
   });
 
   /** add interaction to map */
@@ -564,8 +564,8 @@ watchEffect((onCleanup) => {
   onCleanup(() => map.removeInteraction(hover));
 });
 
-/** update geometry layer opacity */
-watchEffect(() => geometryLayer.setOpacity(geometryOpacity));
+/** update geography layer opacity */
+watchEffect(() => geographyLayer.setOpacity(geographyOpacity));
 
 /** symbols (icon + label) associated with each location */
 const symbols = computed(() =>
@@ -658,19 +658,19 @@ watchEffect((onCleanup) => {
 /** update locations layer opacity */
 watchEffect(() => locationsLayer.setOpacity(locationOpacity));
 
-/** geometry features that have a position for a label */
-const geometryFeaturesWLabels = computed(() =>
-  geometryFeatures.value.filter(
+/** geography features that have a position for a label */
+const geographyFeaturesWLabels = computed(() =>
+  geographyFeatures.value.filter(
     (feature) => feature.get("cent_lat") && feature.get("cent_long"),
   ),
 );
 
-/** update geometry feature labels */
+/** update geography feature labels */
 watchEffect(async (onCleanup) => {
   /** get reactive values before async so they can be auto-tracked */
   /** https://github.com/vuejs/core/issues/2093 */
-  const elements = geometryLabelElements.value ?? [];
-  const features = geometryFeaturesWLabels.value;
+  const elements = geographyLabelElements.value ?? [];
+  const features = geographyFeaturesWLabels.value;
 
   /** https://stackoverflow.com/questions/79031309/usetemplateref-is-not-reactive-for-arrays */
   await nextTick();
@@ -705,7 +705,7 @@ const selectedFeature = ref<Feature<Geometry>>();
 
 /** reset selected feature when data changes to avoid showing wrong popup info */
 watch(
-  [() => values, () => geometry, () => locations],
+  [() => values, () => geography, () => locations],
   () => (selectedFeature.value = undefined),
   { deep: true },
 );
@@ -723,8 +723,8 @@ map.on("click", ({ pixel }) => {
       /** select first */
       !selectedFeature.value &&
       feature instanceof Feature &&
-      /** don't allow selection of e.g. geometry labels */
-      (layer === geometryLayer || layer === locationsLayer)
+      /** don't allow selection of e.g. geography labels */
+      (layer === geographyLayer || layer === locationsLayer)
     ) {
       /** set selected */
       selectedFeature.value = feature;
@@ -786,7 +786,7 @@ map.on("pointermove", ({ pixel }) => {
 
 /** add layers to map */
 watchEffect(() =>
-  map.setLayers([backgroundLayer, geometryLayer, locationsLayer]),
+  map.setLayers([backgroundLayer, geographyLayer, locationsLayer]),
 );
 
 /** preview image of canvas */
@@ -824,7 +824,7 @@ const zoomOut = () => view.setZoom((view.getZoom() ?? 2) - 1);
 /** map client size */
 const { width: mapWidth, height: mapHeight } = useElementSize(frameElement);
 
-/** fit view to geometry layer content or highlighted feature */
+/** fit view to geography layer content or highlighted feature */
 const fit = async () => {
   /** wait for view to be attached to map */
   await waitFor(() => !!map.getView());
@@ -832,13 +832,13 @@ const fit = async () => {
   /** get bounding box */
   const extent = highlight
     ? /** highlighted feature */
-      geometryFeatures.value
+      geographyFeatures.value
         /** lookup feature by id */
         .find((feature) => feature.get("id") === highlight)
         ?.getGeometry()
         ?.getExtent()
-    : /** geometry layer */
-      geometrySource.getExtent();
+    : /** geography layer */
+      geographySource.getExtent();
 
   /** check if valid extent (can be infinities if no features) */
   if (!extent || extent.some((value) => !Number.isFinite(value))) return;
@@ -888,7 +888,7 @@ onMounted(async () => {
 
   /** if no initial view provided, fit to content */
   /** wait for features to be loaded, rendered/parsed */
-  await waitFor(() => geometrySource.getFeatures().length);
+  await waitFor(() => geographySource.getFeatures().length);
   /** preserve existing view */
   if (!zoom || !lat || !long)
     /** fit view to content */
@@ -899,7 +899,7 @@ onMounted(async () => {
 const getGeo = (): FeatureCollection => ({
   type: "FeatureCollection",
   features: [
-    ...geojson.writeFeaturesObject(geometrySource.getFeatures()).features,
+    ...geojson.writeFeaturesObject(geographySource.getFeatures()).features,
     ...geojson.writeFeaturesObject(locationsSource.getFeatures()).features,
   ],
 });
@@ -913,8 +913,8 @@ onUnmounted(() => {
   view.dispose();
   backgroundLayer.dispose();
   backgroundSource.dispose();
-  geometryLayer.dispose();
-  geometrySource.dispose();
+  geographyLayer.dispose();
+  geographySource.dispose();
   locationsLayer.dispose();
   locationsSource.dispose();
   popup.dispose();
