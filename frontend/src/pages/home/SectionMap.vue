@@ -783,7 +783,7 @@ import {
   getValues,
   outreachLocationKey,
 } from "@/api";
-import measureMap from "@/api/measure-map.json";
+import measureMap from "@/api/data/measure-map.json";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
 import AppCollapsible from "@/components/AppCollapsible.vue";
@@ -797,7 +797,7 @@ import { backgroundOptions, defaultBackground } from "@/components/background";
 import { defaultGradient, gradientOptions } from "@/components/gradient";
 import { colors } from "@/components/markers";
 import { appTitle } from "@/meta";
-import { numberParam } from "@/pages";
+import { numberParam, stringParam } from "@/pages";
 import { useQuery } from "@/util/composables";
 import { downloadJson, downloadPng } from "@/util/download";
 import { formatValue, round } from "@/util/math";
@@ -861,9 +861,13 @@ const mapGridElement = useTemplateRef("mapGridElement");
 const mapElement = useTemplateRef("mapElement");
 
 /** select boxes state */
-const selectedLevel = useRouteQuery<string>("level", "");
-const selectedCategory = useRouteQuery<string>("category", "");
-const selectedMeasure = useRouteQuery<string>("measure", "");
+const selectedLevel = useRouteQuery("level", "", { transform: stringParam });
+const selectedCategory = useRouteQuery("category", "", {
+  transform: stringParam,
+});
+const selectedMeasure = useRouteQuery("measure", "", {
+  transform: stringParam,
+});
 const selectedFactors = shallowRef<Record<string, ShallowRef<string>>>({});
 const selectedLocations = ref<string[]>([]);
 

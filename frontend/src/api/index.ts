@@ -1,19 +1,23 @@
 import type { FeatureCollection, Geometry } from "geojson";
 import type { ValueOf } from "type-fest";
 import { find, findKey } from "lodash";
-import outreachCounty1 from "./temp/outreach-county-1.json";
-import outreachCounty2 from "./temp/outreach-county-2.json";
-import outreachCounty3 from "./temp/outreach-county-3.json";
-import outreachCounty4 from "./temp/outreach-county-4.json";
-import outreachEvents from "./temp/outreach-events.json";
-import outreachFitKits from "./temp/outreach-fit-kits.json";
-import outreachNewspapers from "./temp/outreach-newspapers.json";
-import outreachRadonKits from "./temp/outreach-radon-kits.json";
-import sources from "./temp/sources.json";
-import zipCodeLookup from "./temp/zip-code-lookup.json";
+import outreachCounty1 from "./data/outreach-county-1.json";
+import outreachCounty2 from "./data/outreach-county-2.json";
+import outreachCounty3 from "./data/outreach-county-3.json";
+import outreachCounty4 from "./data/outreach-county-4.json";
+import outreachEvents from "./data/outreach-events.json";
+import outreachFitKits from "./data/outreach-fit-kits.json";
+import outreachNewspapers from "./data/outreach-newspapers.json";
+import outreachRadonKits from "./data/outreach-radon-kits.json";
+import sources from "./data/sources.json";
+import zipCodeLookup from "./data/zip-code-lookup.json";
+
+export type ID = string;
+
+export type Point = [number, number];
 
 /** api root (no trailing slash) */
-const api = import.meta.env.VITE_API;
+export const api = import.meta.env.VITE_API;
 
 console.debug("API:", api);
 
@@ -21,7 +25,7 @@ console.debug("API:", api);
 const cache = new Map<string, Response>();
 
 /** general request */
-export const request = async <T>(
+export const request = async <Response>(
   url: string | URL,
   params: Record<string, string | string[]> = {},
 ) => {
@@ -48,7 +52,7 @@ export const request = async <T>(
   console.debug(`📣 Response ${log}`, { response, parsed });
   /** set cache for next time */
   if (request.method === "GET") cache.set(id, response);
-  return parsed as T;
+  return parsed as Response;
 };
 
 /** response from facets api endpoint */
