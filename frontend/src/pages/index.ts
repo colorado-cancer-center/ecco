@@ -1,11 +1,19 @@
+import { ref, watch } from "vue";
 import { createRouter, createWebHistory } from "vue-router";
 import PageContact from "@/pages/contact/PageContact.vue";
 // import PageCounty from "@/pages/county/PageCounty.vue";
 import PageSources from "@/pages/sources/PageSources.vue";
 import { sleep, waitFor } from "@/util/misc";
+import { useRouteQuery } from "@vueuse/router";
 import { debounce, round } from "lodash";
 import PageAbout from "./about/PageAbout.vue";
 import PageHome from "./home/PageHome.vue";
+
+/** load redirect storage item */
+const redirect = window.sessionStorage.redirect || "";
+
+/** clear redirect storage item right after consuming */
+window.sessionStorage.removeItem("redirect");
 
 export const routes = [
   {
@@ -13,11 +21,9 @@ export const routes = [
     path: "/",
     component: PageHome,
     beforeEnter: () => {
-      const url = window.sessionStorage.redirect as string;
-      if (url) {
-        console.debug("Redirecting to:", url);
-        window.sessionStorage.removeItem("redirect");
-        return url;
+      if (redirect) {
+        console.debug("Redirecting to:", redirect);
+        return redirect;
       }
     },
     meta: { header: true },
@@ -58,18 +64,22 @@ export const router = createRouter({
   },
 });
 
-/** flag to prevent infinite loop */
-let justPushed = false;
 /** "commit" tab history entry */
 const push = debounce((path: string) => {
-  router.push(path);
+  const to = router.resolve(path);
+  router.push({ ...to, force: true });
   justPushed = true;
 }, 1000);
+
+/** on route change */
 router.afterEach((to, from) => {
   if (to.fullPath === from.fullPath) return;
   if (justPushed) return (justPushed = false);
   push(to.fullPath);
 });
+
+/** flag to prevent infinite loop */
+let justPushed = false;
 
 router.afterEach(async (to) => {
   /** scroll to hash target */
@@ -118,8 +128,40 @@ export const arrayParam = <T>(param: Param<T>): Param<T[]> => ({
   set: (value) => value.map(param.set).join(","),
 });
 
-/** param treated as json */
-export const jsonParam = <T>(): Param<T> => ({
-  get: (value) => (value ? JSON.parse(value) : null),
-  set: (value) => JSON.stringify(value),
-});
+/**
+ * work-around for useRouteQuery not support deep reactivity
+ * https://github.com/vueuse/vueuse/issues/5200
+ */
+export const useDeepRouteQuery = <Type>(key: string, initial: Type) => {
+  const raw = useRouteQuery(key, JSON.stringify(initial));
+  const state = ref(initial);
+
+  let fromRoute = false;
+
+  watch(
+    raw,
+    (value) => {
+      fromRoute = true;
+      try {
+        state.value = value ? JSON.parse(value) : initial;
+      } catch {
+        state.value = initial;
+      } finally {
+        fromRoute = false;
+      }
+    },
+    { immediate: true },
+  );
+
+  watch(
+    state,
+    (value) => {
+      if (fromRoute) return;
+      const next = JSON.stringify(value);
+      if (raw.value !== next) raw.value = next;
+    },
+    { deep: true },
+  );
+
+  return state;
+};

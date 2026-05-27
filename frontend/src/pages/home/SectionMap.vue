@@ -7,7 +7,7 @@
     <div class="flex flex-col gap-8 text-left" role="group">
       <!-- geographic level -->
       <AppSelect
-        v-model="selectedMap.level"
+        v-model="selectedMap().level"
         :options="levelOptions"
         label="Geographic level"
         :class="[levelStatus === 'loading' && 'animate-pulse']"
@@ -15,7 +15,7 @@
 
       <!-- statistics -->
       <AppTree
-        v-model="selectedMap.statistic"
+        v-model="selectedMap().statistic"
         :tree="statisticOptions"
         :class="[statisticStatus === 'loading' && 'animate-pulse']"
       >
@@ -33,7 +33,7 @@
 
       <!-- locations -->
       <AppSelect
-        v-model="selectedMap.locations"
+        v-model="selectedMap().locations"
         multi
         :options="locationOptions"
         label="Resources & Other Locations"
@@ -585,7 +585,8 @@ import AppSlider from "@/components/AppSlider.vue";
 import AppTree from "@/components/AppTree.vue";
 import { backgroundOptions, defaultBackground } from "@/components/background";
 import { defaultGradient, gradientOptions } from "@/components/gradient";
-import { numberParam } from "@/pages";
+import { appTitle } from "@/meta";
+import { numberParam, useDeepRouteQuery } from "@/pages";
 import { useQuery } from "@/util/composables";
 import { downloadJson, downloadPng } from "@/util/download";
 import { formatValue } from "@/util/math";
@@ -618,20 +619,31 @@ const rightPanelElement = useTemplateRef("rightPanelElement");
 const mapGridElement = useTemplateRef("mapGridElement");
 const mapElement = useTemplateRef("mapElement");
 
-/** selected state */
-const selectedMaps = ref([
+/** default selected maps */
+const defaultSelected = [
   {
     level: "county",
     statistic: "sociodemographics;Total",
     locations: [],
   },
-]);
-const selectedMapIndex = ref(0);
-const selectedMap = computed(() => {
-  const selected = selectedMaps.value[selectedMapIndex.value];
+];
+
+type SelectedMap = {
+  level: string;
+  statistic: string;
+  locations: string[];
+};
+
+/** selected state */
+const selectedMaps = useDeepRouteQuery<SelectedMap[]>("map", defaultSelected);
+/** selected map index */
+const selectedIndex = ref(0);
+/** get selected map object */
+const selectedMap = () => {
+  const selected = selectedMaps.value[selectedIndex.value];
   if (!selected) throw Error("Selected map index out of bounds");
   return selected;
-});
+};
 
 /** map zoom state */
 const zoom = useRouteQuery("zoom", "0", { transform: numberParam });
@@ -665,7 +677,10 @@ onMounted(loadLevels);
 
 /** geographic levels, as select options */
 const levelOptions = computed(() =>
-  Object.entries(levels).map(([level, { label }]) => ({ id: level, label })),
+  Object.entries(levels.value).map(([level, { label }]) => ({
+    id: level,
+    label,
+  })),
 );
 
 /** load statistic data */
@@ -756,6 +771,18 @@ const {
 /** re-load data when selected maps change */
 watch(selectedMaps, loadMapData, { immediate: true, deep: true });
 
+/** page title */
+watchEffect(() => {
+  const maps = selectedMaps.value.length;
+  const statistic = statistics.value[selectedMap().statistic]?.label;
+  const locations = selectedMap().locations.length;
+  appTitle.value = [
+    maps > 1 ? `${maps.toLocaleString()} maps` : "",
+    statistic ? statistic : "",
+    locations ? `${locations.toLocaleString()} locations` : "",
+  ].filter(Boolean);
+});
+
 /** how many cols to arrange compare maps in */
 const mapCols = computed(() => {
   switch (mapData.value.length) {
@@ -782,7 +809,7 @@ const mapCols = computed(() => {
 
 /** download statistic from tree click */
 const onTreeDownload = (statistic = "") =>
-  getDownload(selectedMap.value.level, statistic);
+  getDownload(selectedMap().level, statistic);
 
 /** reset customizations and map to defaults */
 const reset = async () => {
