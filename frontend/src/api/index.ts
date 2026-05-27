@@ -4,7 +4,6 @@ import { getValue } from "@/util/types";
 import { mapValues } from "lodash";
 import featureLabels from "./data/feature-labels.json";
 import levelLabels from "./data/level-labels.json";
-import locationGroups from "./data/location-groups.json";
 import locationLabels from "./data/location-labels.json";
 import events from "./data/outreach-events.json";
 import fitKits from "./data/outreach-fit-kits.json";
@@ -69,9 +68,10 @@ export const getLevels = async () => {
   /** send request */
   const data = await request<Levels>(url);
 
-  return mapValues(data, (value, id) => ({
+  return mapValues(data, (value, level) => ({
+    ...value,
     /** add label */
-    label: getValue(levelLabels, id) ?? id,
+    label: getValue(levelLabels, level) ?? level,
   }));
 };
 
@@ -115,15 +115,15 @@ export type Statistics = Record<
 /** get high-level listing of all possible statistics */
 export const getStatistics = async () => {
   /** build request */
-  const url = new URL(`${api}/statistics`);
+  const url = new URL(`${api}/statistic`);
 
   /** send request */
   const data = await request<Statistics>(url);
 
-  return mapValues(data, (value, id) => ({
+  return mapValues(data, (value, statistic) => ({
     ...value,
     /** add label */
-    label: getValue(statisticLabels, id) ?? id,
+    label: getValue(statisticLabels, statistic) ?? statistic,
   }));
 };
 
@@ -185,14 +185,11 @@ export const getLocations = async () => {
   for (const location of Object.keys(extraLocations)) data[location] = {};
 
   /** flat list */
-  return Object.entries(locationGroups).flatMap(([group, locations]) => [
-    { group },
-    ...locations.map((location) => ({
-      id: location,
-      /** add label */
-      label: getValue(locationLabels, location) ?? location,
-    })),
-  ]);
+  return mapValues(data, (value, location) => ({
+    ...value,
+    /** add label */
+    label: getValue(locationLabels, location) ?? location,
+  }));
 };
 
 export type Location = FeatureCollection<

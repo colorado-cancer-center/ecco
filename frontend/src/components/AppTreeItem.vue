@@ -77,7 +77,7 @@
 
 <script setup lang="ts">
 import type { VNode } from "vue";
-import type { ID, Tree } from "@/components/AppTree.vue";
+import type { _Tree, ID } from "@/components/AppTree.vue";
 import { findClosest } from "@/util/dom";
 import { Check, ChevronDown, ChevronRight } from "@lucide/vue";
 
@@ -85,9 +85,9 @@ type Props = {
   /** path to selected item */
   modelValue?: ID;
   /** function to update model value */
-  updateModelValue: (value: Tree) => void;
+  updateModelValue: (value: _Tree) => void;
   /** nested tree structure */
-  children: Tree[];
+  children: _Tree[];
   /** depth of children item */
   level: number;
   /** has search string */
@@ -97,13 +97,13 @@ type Props = {
 const { modelValue, level } = defineProps<Props>();
 
 type Slots = {
-  default(props: { child: Tree }): VNode;
+  default(props: { child: _Tree }): VNode;
 };
 
 defineSlots<Slots>();
 
 /** handle button key press */
-const onKey = (event: KeyboardEvent, child: Tree) => {
+const onKey = (event: KeyboardEvent, child: _Tree) => {
   const target = event.target as HTMLElement;
 
   const prevent = () => event.preventDefault();

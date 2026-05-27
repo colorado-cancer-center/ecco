@@ -21,7 +21,7 @@
     <AppTreeItem
       :model-value="modelValue"
       :update-model-value="updateModelValue"
-      :children="tree"
+      :children="_tree"
       :level="1"
       :search="!!search"
     >
@@ -36,19 +36,19 @@
 export type ID = string;
 
 /** nested tree structure */
-export type _Tree = {
+export type Tree = {
   id: ID;
   label: string;
-  children?: _Tree[];
+  children: Tree[];
 };
 
-/** nested tree structure, with extra state */
-export type Tree = {
+/** internal tree, with extra state */
+export type _Tree = {
   id: ID;
   label: string;
   open: boolean;
   match: boolean;
-  children: Tree[];
+  children: _Tree[];
 };
 </script>
 
@@ -69,10 +69,10 @@ type Props = {
   /** path to selected item */
   modelValue?: ID;
   /** tree structure */
-  tree: _Tree[];
+  tree: Tree[];
 };
 
-const { tree: _tree, modelValue = "" } = defineProps<Props>();
+const { tree, modelValue = "" } = defineProps<Props>();
 
 type Emits = {
   "update:modelValue": [ID];
@@ -81,7 +81,7 @@ type Emits = {
 const emit = defineEmits<Emits>();
 
 type Slots = {
-  default(props: { child: Tree }): VNode;
+  default(props: { child: _Tree }): VNode;
 };
 
 defineSlots<Slots>();
@@ -90,13 +90,13 @@ defineSlots<Slots>();
 const search = ref("");
 
 /** internal tree, with extra state */
-const tree = ref<Tree[]>([]);
+const _tree = ref<_Tree[]>([]);
 
 /** sync internal tree with input tree */
 watch(
-  () => _tree,
+  () => tree,
   () => {
-    const getTree = (children: _Tree[] = _tree): Tree[] =>
+    const getTree = (children = tree): _Tree[] =>
       children.map((child) => ({
         ...child,
         open: false,
@@ -104,20 +104,20 @@ watch(
         children: child.children ? getTree(child.children) : [],
       }));
 
-    tree.value = getTree();
+    _tree.value = getTree();
   },
   { immediate: true, deep: true },
 );
 
-const matches = (child: Tree, search: string) =>
+const matches = (child: _Tree, search: string) =>
   !search.trim() ||
   !![child.id, child.label].join(" ").match(new RegExp(search, "i"));
 
 /** filter sub-trees by search string */
 watch(
-  [tree, search],
+  [() => _tree.value, search],
   () => {
-    const filterTree = (children: Tree[] = tree.value): boolean => {
+    const filterTree = (children = _tree.value): boolean => {
       let match = false;
       for (const child of children) {
         child.match =
@@ -132,7 +132,7 @@ watch(
 );
 
 /** close all tree levels */
-const closeAll = (children: Tree[] = tree.value) => {
+const closeAll = (children: _Tree[] = _tree.value) => {
   for (const child of children) {
     child.open = false;
     closeAll(child.children);
@@ -140,7 +140,7 @@ const closeAll = (children: Tree[] = tree.value) => {
 };
 
 /** open all tree levels */
-const openAll = (children: Tree[] = tree.value) => {
+const openAll = (children: _Tree[] = _tree.value) => {
   for (const child of children) {
     child.open = true;
     openAll(child.children);
@@ -148,7 +148,7 @@ const openAll = (children: Tree[] = tree.value) => {
 };
 
 /** expand tree to show selected item */
-const onSeeSelected = (children: Tree[] = tree.value) => {
+const onSeeSelected = (children: _Tree[] = _tree.value) => {
   closeAll();
   for (const child of children)
     if (
@@ -160,5 +160,5 @@ const onSeeSelected = (children: Tree[] = tree.value) => {
 };
 
 /** function to update model value */
-const updateModelValue = (child: Tree) => emit("update:modelValue", child.id);
+const updateModelValue = (child: _Tree) => emit("update:modelValue", child.id);
 </script>

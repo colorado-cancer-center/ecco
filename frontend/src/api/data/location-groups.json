@@ -1,63 +1,63 @@
 {
-  "Office of COE: Outreach & Interventions": [
-    "events",
-    "newspapers",
-    "fit-kits",
-    "radon-kits"
-  ],
-  "Cancer Care": [
-    "lung-cancer-screening",
-    "mammography",
-    "colon-rectal-surgeon",
-    "all-treatment-15-jun-2021",
-    "med-onc-15-jun-2021",
-    "surg-onc-15-jun-2021",
-    "rad-onc-15-jun-2021",
-    "ped-onc-15-jun-2021",
-    "trials-15-jun-2021",
-    "ccsp-15-jun-2021",
-    "support-grp-15-jun-2021",
-    "survivorship-15-jun-2021",
-    "palliative-15-jun-2021",
-    "hospice-15-jun-2021",
-    "cancer-ed-29-jul-221",
-    "radiology",
-    "wwc-15-jun-2021",
-    "gastroenterology",
-    "genetic-coun-15-jun-2021"
-  ],
-  "Primary Care": [
-    "hpsa-correctional-facility",
-    "hpsa-federally-qualified-health-center-look-a-like",
-    "hpsa-indian-health-service-tribal-health-and-urban-indian-health-organizations",
-    "hpsa-other-facility",
-    "hpsa-rural-health-clinic",
-    "obstetrics-gynecology",
-    "title-x-15-jun-2021",
-    "chc-15-jun-2021",
-    "rhc-15-jun-2021",
-    "ihs-15-jun-2021",
-    "fqhc"
-  ],
-  "Specialty Resources": [
-    "all-support-services-15-jun-2021",
-    "pt-rehab-15-jun-2021",
-    "nutrition-15-jun-2021",
-    "lodging-15-jun-2021",
-    "financial-coun-15-jun-2021",
-    "accessories-aids-29-jul-21",
-    "programs-events-29-jul-21",
-    "fitness-29-jul-21",
-    "home-family-care-29-jul-21",
-    "transportation-29-jul-21"
-  ],
-  "Environmental Exposures": [
-    "superfund-site",
-    "toxic-release-inventory-facility"
-  ],
-  "Legislative": [
-    "senate-districts",
-    "house-districts",
-    "congressional-districts"
-  ]
+  "Office of COE: Outreach & Interventions": {
+    "events": null,
+    "newspapers": null,
+    "fit-kits": null,
+    "radon-kits": null
+  },
+  "Cancer Care": {
+    "lung-cancer-screening": null,
+    "mammography": null,
+    "colon-rectal-surgeon": null,
+    "all-treatment-15-jun-2021": null,
+    "med-onc-15-jun-2021": null,
+    "surg-onc-15-jun-2021": null,
+    "rad-onc-15-jun-2021": null,
+    "ped-onc-15-jun-2021": null,
+    "trials-15-jun-2021": null,
+    "ccsp-15-jun-2021": null,
+    "support-grp-15-jun-2021": null,
+    "survivorship-15-jun-2021": null,
+    "palliative-15-jun-2021": null,
+    "hospice-15-jun-2021": null,
+    "cancer-ed-29-jul-221": null,
+    "radiology": null,
+    "wwc-15-jun-2021": null,
+    "gastroenterology": null,
+    "genetic-coun-15-jun-2021": null
+  },
+  "Primary Care": {
+    "hpsa-correctional-facility": null,
+    "hpsa-federally-qualified-health-center-look-a-like": null,
+    "hpsa-indian-health-service-tribal-health-and-urban-indian-health-organizations": null,
+    "hpsa-other-facility": null,
+    "hpsa-rural-health-clinic": null,
+    "obstetrics-gynecology": null,
+    "title-x-15-jun-2021": null,
+    "chc-15-jun-2021": null,
+    "rhc-15-jun-2021": null,
+    "ihs-15-jun-2021": null,
+    "fqhc": null
+  },
+  "Specialty Resources": {
+    "all-support-services-15-jun-2021": null,
+    "pt-rehab-15-jun-2021": null,
+    "nutrition-15-jun-2021": null,
+    "lodging-15-jun-2021": null,
+    "financial-coun-15-jun-2021": null,
+    "accessories-aids-29-jul-21": null,
+    "programs-events-29-jul-21": null,
+    "fitness-29-jul-21": null,
+    "home-family-care-29-jul-21": null,
+    "transportation-29-jul-21": null
+  },
+  "Environmental Exposures": {
+    "superfund-site": null,
+    "toxic-release-inventory-facility": null
+  },
+  "Legislative": {
+    "senate-districts": null,
+    "house-districts": null,
+    "congressional-districts": null
+  }
 }

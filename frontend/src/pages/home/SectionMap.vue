@@ -8,15 +8,17 @@
       <!-- geographic level -->
       <AppSelect
         v-model="selectedMap.level"
-        :options="
-          Object.entries(levels).map(([id, { label }]) => ({ id, label }))
-        "
+        :options="levelOptions"
         label="Geographic level"
-        :class="[levelsStatus === 'loading' && 'animate-pulse']"
+        :class="[levelStatus === 'loading' && 'animate-pulse']"
       />
 
       <!-- statistics -->
-      <AppTree v-model="treeValue" :tree="treeTree">
+      <AppTree
+        v-model="selectedMap.statistic"
+        :tree="statisticOptions"
+        :class="[statisticStatus === 'loading' && 'animate-pulse']"
+      >
         <template #default="{ child }">
           <AppButton
             v-if="child.id"
@@ -33,7 +35,7 @@
       <AppSelect
         v-model="selectedMap.locations"
         multi
-        :options="locations"
+        :options="locationOptions"
         label="Resources & Other Locations"
         :class="[locationsStatus === 'loading' && 'animate-pulse']"
       />
@@ -551,6 +553,7 @@
 </template>
 
 <script setup lang="ts">
+import type { Tree } from "@/components/AppTree.vue";
 import {
   computed,
   onMounted,
@@ -567,7 +570,10 @@ import {
   getLocations,
   getSourceCitation,
   getStatistic,
+  getStatistics,
 } from "@/api";
+import locationGroups from "@/api/data/location-groups.json";
+import statisticGroups from "@/api/data/statistic-groups.json";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
 import AppCollapsible from "@/components/AppCollapsible.vue";
@@ -607,32 +613,6 @@ import { useRouteQuery } from "@vueuse/router";
 import { toBlob } from "html-to-image";
 import { clamp } from "lodash";
 
-const treeValue = ref("ralph");
-const treeTree = [
-  {
-    id: "animals",
-    label: "Animals",
-    children: [
-      {
-        id: "cats",
-        label: "Cats",
-        children: [
-          { id: "ralph", label: "Ralph" },
-          { id: "felicia", label: "Felicia" },
-        ],
-      },
-      {
-        id: "dogs",
-        label: "Dogs",
-        children: [
-          { id: "spot", label: "Spot" },
-          { id: "rover", label: "Rover" },
-        ],
-      },
-    ],
-  },
-];
-
 /** element refs */
 const rightPanelElement = useTemplateRef("rightPanelElement");
 const mapGridElement = useTemplateRef("mapGridElement");
@@ -643,7 +623,7 @@ const selectedMaps = ref([
   {
     level: "county",
     statistic: "sociodemographics;Total",
-    locations: ["lung-cancer-screening"],
+    locations: [],
   },
 ]);
 const selectedMapIndex = ref(0);
@@ -675,21 +655,60 @@ const manualMax = ref(1);
 const mapWidth = ref(0);
 const mapHeight = ref(0);
 
-/** load geographic levels data */
+/** load geographic level data */
 const {
   query: loadLevels,
   data: levels,
-  status: levelsStatus,
+  status: levelStatus,
 } = useQuery(getLevels, {});
 onMounted(loadLevels);
 
-/** load locations data */
+/** geographic levels, as select options */
+const levelOptions = computed(() =>
+  Object.entries(levels).map(([level, { label }]) => ({ id: level, label })),
+);
+
+/** load statistic data */
+const {
+  query: loadStatistics,
+  data: statistics,
+  status: statisticStatus,
+} = useQuery(getStatistics, {});
+onMounted(loadStatistics);
+
+type Groups = {
+  [group: string]: Groups | null;
+};
+
+/** statistics, as tree options */
+const statisticOptions = computed(() => {
+  const getTree = (group: Groups = statisticGroups): Tree[] =>
+    Object.entries(group).map(([statistic, value]) => ({
+      id: statistic,
+      label: statistics.value?.[statistic]?.label ?? statistic,
+      children: value ? getTree(value) : [],
+    }));
+  return getTree();
+});
+
+/** load location data */
 const {
   query: loadLocations,
   data: locations,
   status: locationsStatus,
-} = useQuery(getLocations, []);
+} = useQuery(getLocations, {});
 onMounted(loadLocations);
+
+/** locations, as select options */
+const locationOptions = computed(() =>
+  Object.entries(locationGroups).flatMap(([group, list]) => [
+    { group },
+    ...Object.keys(list).map((location) => ({
+      id: location,
+      label: locations.value[location]?.label ?? "",
+    })),
+  ]),
+);
 
 /** load maps data */
 const {
