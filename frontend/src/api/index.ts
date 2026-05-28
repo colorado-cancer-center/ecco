@@ -176,7 +176,7 @@ export const getStatistic = async (
 export type Locations = Record<ID, object>;
 
 /** extra locations stored in frontend */
-const extraLocations: Record<string, Record<string, number>> = {
+export const extraLocations: Record<string, Record<string, number>> = {
   events: outreachEvents,
   "fit-kits": outreachFitKits,
   "radon-kits": outreachRadonKits,
@@ -205,6 +205,8 @@ export const getLocations = async () => {
 export type Location = FeatureCollection<
   Geometry,
   {
+    zip?: string;
+    county?: string;
     name?: string;
     org?: string;
     link?: string;
@@ -218,8 +220,6 @@ export type Location = FeatureCollection<
     representative?: string;
     party?: string;
     fips?: string;
-    zip?: string;
-    count?: number;
   }
 >;
 
@@ -234,15 +234,24 @@ export const getLocation = async (location: ID) => {
     data = {
       type: "FeatureCollection",
       features: Object.entries(extraLocations[location] ?? {}).map(
-        ([zip, value]) => ({
-          type: "Feature",
-          geometry: {
-            type: "Point",
-            coordinates: getValue(zipCenters, zip) ??
-              getValue(countyCenters, zip) ?? [0, 0],
-          },
-          properties: { zip, label: value, value },
-        }),
+        ([id, value]) => {
+          const byZip = getValue(zipCenters, id);
+          const byCounty = getValue(countyCenters, id);
+          return {
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              coordinates: byZip ?? byCounty ?? [0, 0],
+            },
+            properties: {
+              ...(byZip && { zip: id }),
+              ...(byCounty && { county: id }),
+              label: value,
+              value,
+              ...(byCounty && { translate: [0, 1] }),
+            },
+          };
+        },
       ),
     };
   } else

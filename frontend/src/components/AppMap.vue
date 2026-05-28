@@ -97,10 +97,7 @@
       class="flex flex-col items-center gap-1 rounded-md text-center text-[calc(var(--zoom)*2px)] text-white select-none text-stroke-1.5 text-stroke-black *:not-first:flex *:not-first:flex-wrap *:not-first:items-center *:not-first:justify-center *:not-first:gap-1 [:has(>&)]:pointer-events-none"
     >
       <div>{{ feature.get("label") }}</div>
-      <slot
-        name="geography-label"
-        :feature="feature.getProperties() as FeatureProperties"
-      />
+      <slot name="geography-label" :feature="feature.getProperties()" />
     </div>
 
     <!-- feature popup -->
@@ -155,7 +152,10 @@ type Properties = {
       value?: number | string;
       center?: [number, number];
     },
-    LocationProperties extends Properties & { symbol?: string }
+    LocationProperties extends Properties & {
+      symbol?: string;
+      translate?: [number, number];
+    }
   "
 >
 import type { Ref } from "vue";
@@ -282,7 +282,11 @@ type Slots = {
   "top-right"?: () => unknown;
   "bottom-right"?: () => unknown;
   "bottom-left"?: () => unknown;
-  "geography-label"?: ({ feature }: { feature: FeatureProperties }) => unknown;
+  "geography-label"?: ({
+    feature,
+  }: {
+    feature: GeographyProperties;
+  }) => unknown;
   popup?: ({ feature }: { feature: FeatureProperties }) => unknown;
 };
 
@@ -518,7 +522,13 @@ const geojson = new GeoJSON({
 });
 
 /** parse geography features */
-const geographyFeatures = computed(() => geojson.readFeatures(geography));
+const geographyFeatures = computed(
+  () =>
+    geojson.readFeatures(geography) as Feature<
+      OLGeometry,
+      GeographyProperties
+    >[],
+);
 
 /** update geography layer source */
 watchEffect(() => {
@@ -588,7 +598,10 @@ const symbols = computed(() =>
 const locationFeatures = computed(() =>
   locations.map((location) => {
     /** parse geojson */
-    const features = geojson.readFeatures(location);
+    const features = geojson.readFeatures(location) as Feature<
+      OLGeometry,
+      LocationProperties
+    >[];
 
     for (const feature of features) {
       const symbol = symbols.value[feature.get("symbol")];

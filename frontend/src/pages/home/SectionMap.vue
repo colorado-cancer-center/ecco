@@ -335,6 +335,16 @@
                 <dd>{{ feature.level }}</dd>
               </template>
 
+              <template v-if="feature.county">
+                <dt>County</dt>
+                <dd>{{ feature.county }}</dd>
+              </template>
+
+              <template v-if="feature.zip">
+                <dt>Zip</dt>
+                <dd>{{ feature.zip }}</dd>
+              </template>
+
               <template
                 v-if="
                   typeof feature.value === 'number' ||
@@ -424,71 +434,79 @@
 
               <!-- outreach -->
 
-              <template v-if="feature.fit_kits">
-                <dt>
-                  <AppLink
-                    to="https://medlineplus.gov/ency/patientinstructions/000704.htm"
-                  >
-                    FIT Kits
-                  </AppLink>
-                </dt>
-                <dd>{{ formatValue(feature.fit_kits) }}</dd>
-              </template>
+              <template
+                v-if="
+                  selected.locations.some(
+                    (location) => location in extraLocations,
+                  )
+                "
+              >
+                <template v-if="feature.fit_kits">
+                  <dt>
+                    <AppLink
+                      to="https://medlineplus.gov/ency/patientinstructions/000704.htm"
+                    >
+                      FIT Kits
+                    </AppLink>
+                  </dt>
+                  <dd>{{ formatValue(feature.fit_kits) }}</dd>
+                </template>
 
-              <template v-if="feature.radon_kits">
-                <dt>
-                  <AppLink
-                    to="https://cdphe.colorado.gov/hm/testing-your-home-radon"
-                  >
-                    Radon Kits
-                  </AppLink>
-                </dt>
-                <dd>{{ formatValue(feature.radon_kits) }}</dd>
-              </template>
+                <template v-if="feature.radon_kits">
+                  <dt>
+                    <AppLink
+                      to="https://cdphe.colorado.gov/hm/testing-your-home-radon"
+                    >
+                      Radon Kits
+                    </AppLink>
+                  </dt>
+                  <dd>{{ formatValue(feature.radon_kits) }}</dd>
+                </template>
 
-              <template v-if="feature.community_events">
-                <dt>Community Events</dt>
-                <dd>{{ formatValue(feature.community_events) }}</dd>
-              </template>
+                <template v-if="feature.community_events">
+                  <dt>Community Events</dt>
+                  <dd>{{ formatValue(feature.community_events) }}</dd>
+                </template>
 
-              <template v-if="feature.health_fairs">
-                <dt>Health Fairs</dt>
-                <dd>{{ formatValue(feature.health_fairs) }}</dd>
-              </template>
+                <template v-if="feature.health_fairs">
+                  <dt>Health Fairs</dt>
+                  <dd>{{ formatValue(feature.health_fairs) }}</dd>
+                </template>
 
-              <template v-if="feature.educational_talks">
-                <dt>Educational Talks</dt>
-                <dd>{{ formatValue(feature.educational_talks) }}</dd>
-              </template>
+                <template v-if="feature.educational_talks">
+                  <dt>Educational Talks</dt>
+                  <dd>{{ formatValue(feature.educational_talks) }}</dd>
+                </template>
 
-              <template v-if="feature.radio_talks">
-                <dt>Radio Talks</dt>
-                <dd>{{ formatValue(feature.radio_talks) }}</dd>
-              </template>
+                <template v-if="feature.radio_talks">
+                  <dt>Radio Talks</dt>
+                  <dd>{{ formatValue(feature.radio_talks) }}</dd>
+                </template>
 
-              <template v-if="feature.school_church_events">
-                <dt>School/Church Events</dt>
-                <dd>{{ formatValue(feature.school_church_events) }}</dd>
-              </template>
+                <template v-if="feature.school_church_events">
+                  <dt>School/Church Events</dt>
+                  <dd>{{ formatValue(feature.school_church_events) }}</dd>
+                </template>
 
-              <template v-if="feature.womens_wellness_centers">
-                <dt>
-                  <AppLink to="https://cdphe.colorado.gov/wwc">
-                    Women's Wellness Centers
-                  </AppLink>
-                </dt>
-                <dd>{{ formatValue(feature.womens_wellness_centers) }}</dd>
-              </template>
+                <template v-if="feature.womens_wellness_centers">
+                  <dt>
+                    <AppLink to="https://cdphe.colorado.gov/wwc">
+                      Women's Wellness Centers
+                    </AppLink>
+                  </dt>
+                  <dd>{{ formatValue(feature.womens_wellness_centers) }}</dd>
+                </template>
 
-              <template v-if="feature['2morrow_signups']">
-                <dt>
-                  <AppLink
-                    to="https://medschool.cuanschutz.edu/colorado-cancer-center/community/CommunityOutreachEngagement/projects-and-activities/2morrow-health-app"
-                  >
-                    Tobacco Cessation App Users
-                  </AppLink>
-                </dt>
-                <dd>{{ formatValue(feature["2morrow_signups"]) }}</dd>
+                <template v-if="feature['2morrow_signups']">
+                  <dt>
+                    <AppLink
+                      to="https://medschool.cuanschutz.edu/colorado-cancer-center/community/CommunityOutreachEngagement/projects-and-activities/2morrow-health-app"
+                    >
+                      Tobacco Cessation App Users
+                    </AppLink>
+                  </dt>
+                  <dd>{{ formatValue(feature["2morrow_signups"]) }}</dd>
+                </template>
               </template>
             </dl>
 
@@ -577,6 +595,7 @@ import {
   watchEffect,
 } from "vue";
 import {
+  extraLocations,
   getDownload,
   getLevel,
   getLevels,
