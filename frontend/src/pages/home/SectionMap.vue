@@ -279,7 +279,19 @@
           :scale-values="statistic.order"
         >
           <!-- main legend -->
-          <template #top-left-upper> </template>
+          <template #top-left-upper>
+            <strong>
+              {{ statistics[selected.statistic]?.label }}
+            </strong>
+            <div class="text-sm">{{ levels[selected.level]?.label }}</div>
+            <div>
+              {{
+                Object.values(selected.factors)
+                  .filter((factor) => !factor.match(/(^|\s)all($|\s)/i))
+                  .join(", ")
+              }}
+            </div>
+          </template>
 
           <template #top-left-lower>
             <div v-if="statistic.source" class="flex items-center gap-2">
@@ -297,7 +309,7 @@
             </div>
 
             <div v-if="statistic.state">
-              State-wide: {{ formatValue(statistic.state, statistic.unit) }}
+              State: {{ formatValue(statistic.state, statistic.unit) }}
             </div>
           </template>
 
@@ -308,14 +320,19 @@
             <dl>
               <!-- main values -->
 
+              <template v-if="feature.type">
+                <dt>Type</dt>
+                <dd>{{ feature.type }}</dd>
+              </template>
+
+              <template v-if="feature.name">
+                <dt>Name</dt>
+                <dd>{{ feature.name }}</dd>
+              </template>
+
               <template v-if="feature.level">
                 <dt>Level</dt>
                 <dd>{{ feature.level }}</dd>
-              </template>
-
-              <template v-if="feature.label">
-                <dt>Name</dt>
-                <dd>{{ feature.label }}</dd>
               </template>
 
               <template
@@ -340,11 +357,6 @@
               >
                 <dt>Avg. Annual Count</dt>
                 <dd>{{ formatValue(feature.aac, statistic.unit) }}</dd>
-              </template>
-
-              <template v-if="feature.count">
-                <dt>Count</dt>
-                <dd>{{ formatValue(feature.count) }}</dd>
               </template>
 
               <!-- extra info -->
@@ -473,7 +485,7 @@
                   <AppLink
                     to="https://medschool.cuanschutz.edu/colorado-cancer-center/community/CommunityOutreachEngagement/projects-and-activities/2morrow-health-app"
                   >
-                    2morrow Signups
+                    Tobacco Cessation App Users
                   </AppLink>
                 </dt>
                 <dd>{{ formatValue(feature["2morrow_signups"]) }}</dd>
@@ -625,6 +637,7 @@ const defaultSelected = [
   {
     level: "county",
     statistic: "sociodemographics;Total",
+    factors: {},
     locations: [],
   },
 ];
@@ -632,6 +645,7 @@ const defaultSelected = [
 type SelectedMap = {
   level: string;
   statistic: string;
+  factors: Record<string, string>;
   locations: string[];
 };
 
@@ -707,9 +721,9 @@ type Groups = {
 /** statistics, as tree options */
 const statisticOptions = computed(() => {
   const getTree = (group: Groups = statisticGroups): Tree[] =>
-    Object.entries(group).map(([statistic, value]) => ({
-      id: statistic,
-      label: statistics.value?.[statistic]?.label ?? statistic,
+    Object.entries(group).map(([statisticOrGroup, value]) => ({
+      id: statisticOrGroup,
+      label: statistics.value?.[statisticOrGroup]?.label ?? statisticOrGroup,
       children: value ? getTree(value) : [],
     }));
   return getTree();

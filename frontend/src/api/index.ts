@@ -97,6 +97,8 @@ export const getLevel = async (level: string) => {
         ...feature.properties,
         /** add level */
         level: getValue(levelLabels, level) ?? level,
+        /** add name */
+        name: getValue(featureLabels, feature.id) ?? feature.id,
         /** add label */
         label: getValue(featureLabels, feature.id) ?? feature.id,
         /** add outreach properties */
@@ -159,7 +161,13 @@ export const getStatistic = async (
     /** add label */
     label: getValue(statisticLabels, statistic) ?? statistic,
     /** add source details */
-    source: getValue(sourceDetails, data.source),
+    source: getValue(sourceDetails, data.source) ?? {
+      label: data.source ?? "",
+      data_description: "",
+      date: "",
+      date_description: "",
+      link: "",
+    },
   };
 };
 
@@ -194,6 +202,7 @@ export const getLocations = async () => {
 export type Location = FeatureCollection<
   Geometry,
   {
+    name?: string;
     org?: string;
     link?: string;
     address?: string;
@@ -222,14 +231,14 @@ export const getLocation = async (location: ID) => {
     data = {
       type: "FeatureCollection",
       features: Object.entries(extraLocations[location] ?? {}).map(
-        ([zip, count]) => {
-          const [long = 0, lat = 0] = getValue(zipCodes, zip) ?? [];
-          return {
-            type: "Feature",
-            geometry: { type: "Point", coordinates: [long, lat] },
-            properties: { zip, count },
-          };
-        },
+        ([zip, count]) => ({
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: getValue(zipCodes, zip) ?? [0, 0],
+          },
+          properties: { zip, label: count, value: count },
+        }),
       ),
     };
   } else
@@ -243,8 +252,10 @@ export const getLocation = async (location: ID) => {
       ...feature,
       properties: {
         ...feature.properties,
-        /** add label */
-        label: getValue(locationLabels, location) ?? location,
+        /** add location type */
+        type: getValue(locationLabels, location) ?? location,
+        /** add symbol key */
+        symbol: getValue(locationLabels, location) ?? location,
       },
     })),
   };

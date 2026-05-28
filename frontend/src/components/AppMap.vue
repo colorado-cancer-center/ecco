@@ -124,7 +124,7 @@
     </div>
 
     <div
-      class="absolute bottom-0 left-0 max-w-1/2 bg-white/50 p-0.5 text-xs text-balance"
+      class="absolute bottom-0 left-0 bg-white/75 p-0.5 text-xs text-balance"
       v-html="attribution"
     />
   </div>
@@ -155,7 +155,7 @@ type Properties = {
       value?: number | string;
       center?: [number, number];
     },
-    LocationProperties extends Properties & { label?: string }
+    LocationProperties extends Properties & { symbol?: string }
   "
 >
 import type { Ref } from "vue";
@@ -576,9 +576,9 @@ const symbols = computed(() =>
       .map((location, index) => {
         const feature = location.features[0];
         if (!feature) return;
-        const label = feature.properties.label;
-        if (typeof label !== "string") return;
-        return [label, feature.geometry.type] as [string, MarkerType];
+        const symbol = feature.properties.symbol;
+        if (typeof symbol !== "string") return;
+        return [symbol, feature.geometry.type] as [string, MarkerType];
       })
       .filter((entry) => !!entry),
   ),
@@ -591,8 +591,7 @@ const locationFeatures = computed(() =>
     const features = geojson.readFeatures(location);
 
     for (const feature of features) {
-      const label = feature.get("label");
-      const symbol = symbols.value[label];
+      const symbol = symbols.value[feature.get("symbol")];
       if (!symbol) continue;
 
       /** add extra props */
@@ -631,10 +630,10 @@ watchEffect((onCleanup) => {
   const style =
     (hover = false) =>
     (feature: FeatureLike) => {
-      const { color, icon, iconHover, count, dash } = feature.getProperties();
+      const { color, icon, iconHover, label, dash } = feature.getProperties();
       return new Style({
         text: new Text({
-          text: count,
+          text: label,
           font: "12px Roboto",
           fill: new Fill({ color: "white" }),
           stroke: new Stroke({ color: "black", width: 2 }),

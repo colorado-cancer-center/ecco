@@ -138,8 +138,11 @@ const handlers = [
         ...feature,
         properties: {
           ...feature.properties,
-          /** add label */
-          label: feature.properties.name ?? feature.properties.district ?? "",
+          /** add name */
+          name:
+            feature.properties.name ??
+            String(feature.properties.district) ??
+            "",
         },
       })),
     };
@@ -276,7 +279,6 @@ type _Location = {
   geometry_json: FeatureCollection<
     Geometry,
     {
-      type?: string;
       name?: string;
       org?: string;
       link?: string;
