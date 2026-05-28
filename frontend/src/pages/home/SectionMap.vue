@@ -634,10 +634,10 @@ type SelectedMap = {
 };
 
 /** selected state */
-const selectedMaps = useParam<SelectedMap[]>(
+const selectedMaps = useParam(
   "maps",
   defaultSelected,
-  jsonParam(),
+  jsonParam<SelectedMap[]>([]),
 );
 /** selected map index */
 const selectedIndex = ref(0);

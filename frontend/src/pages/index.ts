@@ -110,8 +110,8 @@ export const arrayParam = <Type>(param: Param<Type>): Param<Type[]> => ({
 });
 
 /** param treated as json */
-export const jsonParam = <Type>(): Param<Type> => ({
-  get: (value) => (value ? JSON.parse(value) : null),
+export const jsonParam = <Type>(defaultValue: Type): Param<Type> => ({
+  get: (value) => (value ? JSON.parse(value) : defaultValue),
   set: (value) => JSON.stringify(value),
 });
 
@@ -122,16 +122,20 @@ export const useParam = <Type>(
   { get, set }: Param<Type>,
 ) => {
   /** reactive variable */
-  const value = ref(initialValue);
+  const value = ref<Type>(
+    key in params && params[key] !== undefined
+      ? get(params[key])
+      : initialValue,
+  );
 
   /** when variable changes */
   watch(
     value,
     () => {
-      console.log("a");
       /** update params */
       const newValue = set(value.value);
-      if (params[key] !== newValue) params[key] = newValue;
+      if (params[key] === newValue) return;
+      params[key] = newValue;
     },
     { deep: true },
   );
@@ -140,10 +144,11 @@ export const useParam = <Type>(
   watch(
     () => params[key],
     () => {
-      console.log("b");
       /** update variable */
-      const newValue = get(params[key] || "");
-      if (value.value !== newValue) value.value = newValue;
+      if (!(key in params) || params[key] === undefined) return;
+      const newValue = get(params[key]);
+      if (value.value === newValue) return;
+      value.value = newValue;
     },
     { immediate: true },
   );
