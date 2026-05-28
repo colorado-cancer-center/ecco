@@ -303,18 +303,20 @@
 
           <!-- feature popup -->
           <template #popup="{ feature }">
-            <!-- main name/identifier -->
-
-            <strong v-if="feature.label">
-              {{ feature.label }}
-            </strong>
-
-            <strong v-if="feature.district">
-              District {{ feature.district }}
-            </strong>
+            {{ console.debug(feature) }}
 
             <dl>
               <!-- main values -->
+
+              <template v-if="feature.level">
+                <dt>Level</dt>
+                <dd>{{ feature.level }}</dd>
+              </template>
+
+              <template v-if="feature.label">
+                <dt>Name</dt>
+                <dd>{{ feature.label }}</dd>
+              </template>
 
               <template
                 v-if="
@@ -682,7 +684,11 @@ onMounted(loadLevels);
 const levelOptions = computed(() =>
   Object.entries(levels.value).map(([level, { label }]) => ({
     id: level,
-    label,
+    label:
+      label +
+      (statistics.value[selectedMap().statistic]?.levels.includes(level)
+        ? ""
+        : " (ND)"),
   })),
 );
 

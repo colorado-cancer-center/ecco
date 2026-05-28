@@ -77,7 +77,7 @@ export const getLevels = async () => {
 
 export type Level = FeatureCollection<
   Geometry,
-  { center: Point; description?: string }
+  { center?: Point; description?: string }
 >;
 
 /** get full details of geographic level */
@@ -95,13 +95,12 @@ export const getLevel = async (level: string) => {
       ...feature,
       properties: {
         ...feature.properties,
+        /** add level */
+        level: getValue(levelLabels, level) ?? level,
         /** add label */
-        label: [
-          getValue(featureLabels, feature.id) ?? feature.id,
-          getValue(levelLabels, level) ?? level,
-        ].join(" "),
+        label: getValue(featureLabels, feature.id) ?? feature.id,
         /** add outreach properties */
-        ...(getValue(outreach, feature.id) ?? {}),
+        ...(getValue(outreach, getValue(featureLabels, feature.id)) ?? {}),
       },
     })),
   };
@@ -224,7 +223,7 @@ export const getLocation = async (location: ID) => {
       type: "FeatureCollection",
       features: Object.entries(extraLocations[location] ?? {}).map(
         ([zip, count]) => {
-          const [lat = 99999, long = 99999] = getValue(zipCodes, zip) ?? [];
+          const [long = 0, lat = 0] = getValue(zipCodes, zip) ?? [];
           return {
             type: "Feature",
             geometry: { type: "Point", coordinates: [long, lat] },

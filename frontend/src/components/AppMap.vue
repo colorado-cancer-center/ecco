@@ -422,20 +422,20 @@ watchEffect(() => map.setTarget(mapElement.value ?? undefined));
 /** mercator https://epsg.io/3857 */
 const xy = "EPSG:3857";
 /** world geodetic system https://epsg.io/4326 */
-const latlong = "EPSG:4326";
+const longLat = "EPSG:4326";
 
 /** transform point coordinates */
 const xyToLongLat = (x = 0, y = 0) => {
-  const [lat = 0, long = 0] = new Point([x, y])
-    .transform(xy, latlong)
+  const [long = 0, lat = 0] = new Point([x, y])
+    .transform(xy, longLat)
     .getCoordinates();
   return [long, lat];
 };
 
 /** transform point coordinates */
 const longLatToXy = (long = 0, lat = 0) => {
-  const [x = 0, y = 0] = new Point([lat, long])
-    .transform(latlong, xy)
+  const [x = 0, y = 0] = new Point([long, lat])
+    .transform(longLat, xy)
     .getCoordinates();
   return [x, y];
 };
@@ -512,7 +512,7 @@ const geographyLayer = new VectorLayer({ source: geographySource });
 /** geojson parser */
 const geojson = new GeoJSON({
   /** source projection */
-  dataProjection: latlong,
+  dataProjection: longLat,
   /** target projection */
   featureProjection: xy,
 });

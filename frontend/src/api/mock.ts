@@ -42,14 +42,18 @@ const handlers = [
     const desired: Level = {
       type: "FeatureCollection",
       features: actual.map((feature) => {
-        const id =
-          feature.us_fips ?? feature.fips ?? String(feature.hs_region) ?? "";
-        const center = [feature.cent_lat, feature.cent_long] as Point;
         return {
-          id,
+          id:
+            feature.us_fips ?? feature.fips ?? String(feature.hs_region) ?? "",
           type: "Feature",
           geometry: JSON.parse(feature.wkb_geometry ?? "{}") as Geometry,
-          properties: { center, description: feature.counties },
+          properties: {
+            center:
+              feature.cent_lat !== undefined && feature.cent_long !== undefined
+                ? ([feature.cent_long, feature.cent_lat] as Point)
+                : undefined,
+            description: feature.counties,
+          },
         };
       }),
     };
@@ -128,7 +132,17 @@ const handlers = [
 
     const actual: _Location = await (await fetch(url)).json();
 
-    const desired: Location = actual.geometry_json;
+    const desired: Location = {
+      type: "FeatureCollection",
+      features: actual.geometry_json.features.map((feature) => ({
+        ...feature,
+        properties: {
+          ...feature.properties,
+          /** add label */
+          label: feature.properties.name ?? feature.properties.district ?? "",
+        },
+      })),
+    };
 
     return HttpResponse.json(desired);
   }),
