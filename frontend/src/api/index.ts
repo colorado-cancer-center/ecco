@@ -248,7 +248,8 @@ export const getLocation = async (location: ID) => {
               ...(byCounty && { county: id }),
               label: value,
               value,
-              ...(byCounty && { translate: [0, 1] }),
+              /** nudge down to avoid overlap with county label */
+              ...(byCounty && { displacement: [0, -16] }),
             },
           };
         },

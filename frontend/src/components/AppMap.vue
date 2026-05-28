@@ -94,10 +94,9 @@
       v-for="(feature, index) of geographyFeaturesWLabels"
       :key="index"
       ref="geographyLabelElements"
-      class="flex flex-col items-center gap-1 rounded-md text-center text-[calc(var(--zoom)*2px)] text-white select-none text-stroke-1.5 text-stroke-black *:not-first:flex *:not-first:flex-wrap *:not-first:items-center *:not-first:justify-center *:not-first:gap-1 [:has(>&)]:pointer-events-none"
+      class="flex flex-col items-center gap-1 rounded-md text-center text-[calc(var(--zoom)*2px)] text-white select-none text-stroke-1.5 text-stroke-black [:has(>&)]:pointer-events-none"
     >
-      <div>{{ feature.get("label") }}</div>
-      <slot name="geography-label" :feature="feature.getProperties()" />
+      {{ feature.get("label") }}
     </div>
 
     <!-- feature popup -->
@@ -282,11 +281,6 @@ type Slots = {
   "top-right"?: () => unknown;
   "bottom-right"?: () => unknown;
   "bottom-left"?: () => unknown;
-  "geography-label"?: ({
-    feature,
-  }: {
-    feature: GeographyProperties;
-  }) => unknown;
   popup?: ({ feature }: { feature: FeatureProperties }) => unknown;
 };
 
@@ -643,15 +637,27 @@ watchEffect((onCleanup) => {
   const style =
     (hover = false) =>
     (feature: FeatureLike) => {
-      const { color, icon, iconHover, label, dash } = feature.getProperties();
+      const { color, icon, iconHover, label, dash, displacement } =
+        feature.getProperties();
+
+      const text = new Text({
+        text: String(label),
+        font: "12px Roboto",
+        fill: new Fill({ color: "white" }),
+        stroke: new Stroke({ color: "black", width: 2 }),
+        offsetY: 1,
+      });
+
+      /** adjust icon/text/etc offset */
+      if (displacement) {
+        icon.setDisplacement(displacement);
+        iconHover.setDisplacement(displacement);
+        text.setOffsetX(displacement[0]);
+        text.setOffsetY(-displacement[1] + 1);
+      }
+
       return new Style({
-        text: new Text({
-          text: label,
-          font: "12px Roboto",
-          fill: new Fill({ color: "white" }),
-          stroke: new Stroke({ color: "black", width: 2 }),
-          offsetY: 1,
-        }),
+        text,
         fill: new Fill({ color: hover ? color + "20" : "transparent" }),
         stroke: new Stroke({ color, width: hover ? 6 : 2, lineDash: dash }),
         image: hover ? iconHover : icon,
