@@ -1,31 +1,22 @@
 <template>
   <section style="--content: 300">
     <AppHeading level="1" class="self-center">
-      {{ data?.name || route.params.id }}
+      {{ title }}
     </AppHeading>
 
     <div class="grid grid-cols-3 place-items-center gap-8 max-md:grid-cols-1">
-      <template v-if="geometryStatus == 'error'">
-        <AppStatus status="error" class="size-full" />
-      </template>
-      <template v-else-if="geometryStatus == 'loading'">
-        <AppStatus status="loading" class="size-full" />
-      </template>
       <AppMap
-        v-else
         ref="map"
         class="aspect-video w-100 max-w-full"
-        :geometry="geometry"
+        :class="geographyStatus === 'loading' && 'animate-loading'"
+        :geography="geography"
         :highlight="id"
       />
 
-      <template v-if="dataStatus == 'error'">
-        <AppStatus status="error" />
-      </template>
-      <template v-else-if="dataStatus == 'loading'">
-        <AppStatus status="loading" />
-      </template>
-      <div class="flex flex-col items-start gap-8">
+      <div
+        class="flex flex-col items-start gap-8"
+        :class="featureStatus === 'loading' && 'animate-loading'"
+      >
         <AppSelect
           v-model="filter"
           class="w-30"
@@ -34,7 +25,7 @@
         />
 
         <p class="text-center">
-          <span class="rounded-md bg-lime-500/25 p-1">{{ data?.name }}</span>
+          <span class="rounded-md bg-lime-500/25 p-1">{{ feature.label }}</span>
           vs.
           <span class="rounded-md bg-sky-500/25 p-1">Colorado</span>
         </p>
@@ -44,8 +35,7 @@
           <span class="rounded-md bg-lime-500/25 p-1">
             {{
               formatValue(
-                data?.categories.sociodemographics?.measures.Total?.value ??
-                  "-",
+                feature.statistics["sociodemographics;Total"]?.value ?? "-",
               )
             }}
           </span>
@@ -53,8 +43,10 @@
           <span class="rounded-md bg-sky-500/25 p-1">
             {{
               formatValue(
-                data?.categories.sociodemographics?.measures.Total
-                  ?.state_value ?? "-",
+                formatValue(
+                  feature.statistics["sociodemographics;Total"]?.state_value ??
+                    "-",
+                ),
               )
             }}
           </span>
@@ -63,88 +55,18 @@
     </div>
   </section>
 
-  <section v-if="dataStatus === 'success'">
+  <section :class="featureStatus === 'loading' && 'animate-loading'">
     <template v-if="filter === 'basic'">
       <div
         class="grid grid-cols-[repeat(auto-fit,minmax(min(--spacing(100),100%),1fr))] place-content-center place-items-center gap-16"
       >
-        <AppBarChart
-          v-for="(chart, index) in chartData"
-          :key="index"
-          :title="chart.title"
-          :data="chart.data"
-          :unit="chart.unit"
-          :order="chart.order"
-        />
       </div>
     </template>
 
     <div
-      v-else-if="data && filter === 'all'"
+      v-else-if="filter === 'all'"
       class="grid grid-cols-[repeat(auto-fit,minmax(min(--spacing(100),100%),1fr))] items-start gap-16"
     >
-      <template
-        v-for="(category, categoryKey) in data.categories"
-        :key="categoryKey"
-      >
-        <div
-          class="grid grid-cols-[1fr_max-content_10px_max-content] items-center gap-x-4 gap-y-2 *:first:col-span-full"
-        >
-          <div class="col-span-full flex items-center gap-2 font-bold">
-            {{ category.label }}
-          </div>
-
-          <template
-            v-for="(measure, measureKey) in category.measures"
-            :key="measureKey"
-          >
-            <dt>{{ measure.label }}</dt>
-            <dd
-              v-tooltip="formatValue(measure.value, measure.unit)"
-              class="relative z-0 rounded-md bg-lime-500/25 p-1 text-center"
-            >
-              {{ formatValue(measure.value, measure.unit, true) }}
-            </dd>
-
-            <template
-              v-if="
-                measure.state_value !== undefined &&
-                measure.state_value !== null
-              "
-            >
-              <span
-                v-if="measure.value > measure.state_value"
-                class="text-stone-300"
-                >{{ ">" }}</span
-              >
-              <span
-                v-else-if="measure.value < measure.state_value"
-                class="text-stone-300"
-                >{{ "<" }}</span
-              >
-              <span
-                v-else-if="measure.value === measure.state_value"
-                class="text-stone-300"
-                >{{ "=" }}</span
-              >
-            </template>
-
-            <span v-else></span>
-            <span
-              v-if="
-                measure.state_value !== undefined &&
-                measure.state_value !== null
-              "
-              v-tooltip="formatValue(measure.state_value, measure.unit)"
-              class="relative z-0 rounded-md bg-sky-500/25 p-1 text-center"
-              aria-label="State value"
-            >
-              {{ formatValue(measure.state_value, measure.unit, true) }}
-            </span>
-            <span v-else></span>
-          </template>
-        </div>
-      </template>
     </div>
   </section>
 </template>
@@ -152,12 +74,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch, watchEffect } from "vue";
 import { useRoute } from "vue-router";
-import { getCountyData, getGeo } from "@/api";
+import { getFeature, getLevel } from "@/api";
 import AppBarChart from "@/components/AppBarChart.vue";
 import AppHeading from "@/components/AppHeading.vue";
 import AppMap from "@/components/AppMap.vue";
 import AppSelect from "@/components/AppSelect.vue";
-import AppStatus from "@/components/AppStatus.vue";
 import { appTitle } from "@/meta";
 import { useQuery } from "@/util/composables";
 import { formatValue } from "@/util/math";
@@ -178,69 +99,43 @@ const filterOptions = [
 /** selected measure filter */
 const filter = ref<(typeof filterOptions)[number]["id"]>(filterOptions[0]!.id);
 
-/** load geometry data to display on map */
+/** load geography data */
 const {
-  query: loadGeometry,
-  data: geometry,
-  status: geometryStatus,
-} = useQuery(() => getGeo("counties", "us_fips"), undefined);
+  query: loadGeography,
+  data: geography,
+  status: geographyStatus,
+} = useQuery(() => getLevel("county"), {
+  type: "FeatureCollection",
+  features: [],
+});
+onMounted(loadGeography);
 
-onMounted(loadGeometry);
-
-/** get data for selected county */
+/** get all data for feature */
 const {
-  query: loadData,
-  data,
-  status: dataStatus,
+  query: loadFeature,
+  data: feature,
+  status: featureStatus,
 } = useQuery(
   async () => {
-    if (!id.value) return;
-    const results = await getCountyData(id.value);
+    const results = await getFeature(id.value);
 
     /** sort by number of entries for more balanced look */
-    results.categories = fromPairs(
-      orderBy(
-        toPairs(results.categories),
-        ([, category]) => Object.keys(category.measures).length,
-        ["desc"],
-      ),
-    );
+    // results.categories = fromPairs(
+    //   orderBy(
+    //     toPairs(results.categories),
+    //     ([, category]) => Object.keys(category.measures).length,
+    //     ["desc"],
+    //   ),
+    // );
 
     return results;
   },
-  { FIPS: "", name: "", categories: {} },
+  { label: "", statistics: {} },
 );
+watch(() => route.params.id, loadFeature, { immediate: true });
+
+const title = computed(() => feature.value?.label || id.value || "County");
 
 /** page title */
-watchEffect(() => (appTitle.value = [data.value?.name ?? ""]));
-
-watch(() => route.params.id, loadData, { immediate: true });
-
-/** get select chart data from county data */
-const chartData = computed(() =>
-  data.value
-    ? basicMeasures.map(({ title, showStateLevel, measures }) => {
-        /** full value info for each measure */
-        const measureValues = Object.fromEntries(
-          measures.map(([category, measure]) => [
-            startCase(measure),
-            data.value?.categories[category ?? ""]?.measures[measure ?? ""],
-          ]),
-        );
-
-        return {
-          title,
-          unit: Object.values(measureValues).find((value) => value?.unit)?.unit,
-          order: Object.values(measureValues).find((value) => value?.order)
-            ?.order,
-          data: {
-            County: mapValues(measureValues, (value) => value?.value),
-            ...(showStateLevel && {
-              State: mapValues(measureValues, (value) => value?.state_value),
-            }),
-          },
-        };
-      })
-    : [],
-);
+watchEffect(() => (appTitle.value = [title.value]));
 </script>

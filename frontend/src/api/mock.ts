@@ -102,15 +102,23 @@ const handlers = [
     const actual: _StatsFipsValue = await (await fetch(url)).json();
 
     const desired: Statistic = {
-      ...actual,
       values: mapValues(actual.values, ({ value, aac }) => ({
-        value: value ?? undefined,
-        aac: aac ?? undefined,
+        value: value ?? 0,
+        aac: aac ?? 0,
       })),
-      unit: actual.unit ?? undefined,
-      source: Object.keys(sourceDetails).find(
-        (key) => !!actual.source?.match(new RegExp(key, "i")),
-      ),
+      min: actual.min ?? undefined,
+      max: actual.max ?? undefined,
+      unit: actual.unit ?? "count",
+      order: actual.order ?? undefined,
+      source:
+        Object.keys(sourceDetails).find(
+          (key) => !!actual.source?.match(new RegExp(key, "i")),
+        ) ?? undefined,
+      state: actual.state ?? undefined,
+      state_source:
+        Object.keys(sourceDetails).find(
+          (key) => !!actual.source?.match(new RegExp(key, "i")),
+        ) ?? undefined,
     };
 
     return HttpResponse.json(desired);
@@ -160,7 +168,21 @@ const handlers = [
 
     const actual: _StatsByCounty = await (await fetch(url)).json();
 
-    const desired: Feature = actual;
+    const desired: Feature = Object.fromEntries(
+      Object.entries(actual.categories).flatMap(([category, { measures }]) =>
+        Object.entries(measures).map(([measure, value]) => [
+          `${category};${measure}`,
+          {
+            value: value.value ?? 0,
+            aac: value.aac ?? 0,
+            unit: value.unit ?? "count",
+            state_value: value.state_value ?? 0,
+            state_aac: value.state_aac ?? 0,
+            order: value.order ?? [],
+          },
+        ]),
+      ),
+    );
 
     return HttpResponse.json(desired);
   }),
@@ -182,7 +204,7 @@ type _StatsMeasures = {
         measures: {
           [key: string]: {
             label: string;
-            factors?: {
+            factors: {
               [key: string]: {
                 label: string;
                 default: string;
@@ -196,33 +218,33 @@ type _StatsMeasures = {
   };
 };
 
-type _Level = {
+type _Level = Partial<{
   /** counties */
-  wkb_geometry?: string;
-  us_fips?: string;
-  cnty_fips?: string;
-  num_fips?: number;
-  county?: string;
-  full?: string;
-  label?: string;
-  cent_lat?: number;
-  cent_long?: number;
-  ogc_fid?: number;
-  objectid?: number;
+  wkb_geometry: string;
+  us_fips: string;
+  cnty_fips: string;
+  num_fips: number;
+  county: string;
+  full: string;
+  label: string;
+  cent_lat: number;
+  cent_long: number;
+  ogc_fid: number;
+  objectid: number;
 
   /** tracts */
-  // wkb_geometry?: string;
-  fips?: string;
-  // ogc_fid?: number;
-  // objectid?: number;
+  // wkb_geometry: string;
+  fips: string;
+  // ogc_fid: number;
+  // objectid: number;
 
   /** healthregions */
-  // wkb_geometry?: string;
-  hs_region?: string;
-  counties?: string;
-  // ogc_fid?: number;
-  // objectid?: number;
-}[];
+  // wkb_geometry: string;
+  hs_region: string;
+  counties: string;
+  // ogc_fid: number;
+  // objectid: number;
+}>[];
 
 type _StatsByCounty = {
   FIPS: string;
@@ -231,15 +253,15 @@ type _StatsByCounty = {
     [key: string]: {
       label: string;
       measures: {
-        [key: string]: {
+        [key: string]: Partial<{
           label: string;
-          value: number | string;
-          state_value?: number | string;
-          aac?: number | string;
-          state_aac?: number | string;
+          value: Value;
+          aac: Value;
           unit: Unit;
-          order?: string[];
-        };
+          state_value: Value;
+          state_aac: Value;
+          order: string[];
+        }>;
       };
     };
   };
@@ -252,25 +274,26 @@ type Unit =
   | "dollar_amount"
   | "rank"
   | "least_most"
-  | "ordinal"
-  | null;
+  | "ordinal";
 
-type _StatsFipsValue = {
-  max: number | string;
-  min: number | string;
-  state?: number | string;
-  state_source?: string;
+type Value = number | string | null | undefined;
+
+type _StatsFipsValue = Partial<{
   values: {
-    [key: string]: {
-      value?: number | string | null;
-      aac?: number | string | null;
-    };
+    [key: string]: Partial<{
+      value: Value;
+      aac: Value;
+    }>;
   };
+  min: Value;
+  max: Value;
   unit: Unit;
-  order?: string[];
-  source?: string;
-  source_url?: string;
-};
+  order: string[];
+  source: string;
+  source_url: string;
+  state: Value;
+  state_source: string;
+}>;
 
 type _Locations = {
   [key: string]: { [key: string]: string };
@@ -282,22 +305,22 @@ type _Location = {
   category_id: string;
   geometry_json: FeatureCollection<
     Geometry,
-    {
-      name?: string;
-      org?: string;
-      link?: string;
-      address?: string;
-      phone?: string;
-      notes?: string;
-      email?: string;
-      district?: number;
-      zip_code?: string;
-      area_type?: string;
-      representative?: string;
-      party?: string;
-      fips?: string;
-      zip?: string;
-      count?: number;
-    }
+    Partial<{
+      name: string;
+      org: string;
+      link: string;
+      address: string;
+      phone: string;
+      notes: string;
+      email: string;
+      district: number;
+      zip_code: string;
+      area_type: string;
+      representative: string;
+      party: string;
+      fips: string;
+      zip: string;
+      count: number;
+    }>
   >;
 };

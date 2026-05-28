@@ -1,7 +1,7 @@
 import { reactive, ref, watch } from "vue";
 import { createRouter, createWebHistory } from "vue-router";
 import PageContact from "@/pages/contact/PageContact.vue";
-// import PageCounty from "@/pages/county/PageCounty.vue";
+import PageCounty from "@/pages/county/PageCounty.vue";
 import PageSources from "@/pages/sources/PageSources.vue";
 import { sleep, waitFor } from "@/util/misc";
 import { debounce, round } from "lodash";
@@ -44,11 +44,11 @@ export const routes = [
     component: PageContact,
     meta: { header: true },
   },
-  // {
-  //   name: "County",
-  //   path: "/county/:id",
-  //   component: PageCounty,
-  // },
+  {
+    name: "County",
+    path: "/county/:id",
+    component: PageCounty,
+  },
 ];
 
 export const history = createWebHistory();

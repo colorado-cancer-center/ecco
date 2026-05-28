@@ -131,13 +131,13 @@ export const getStatistics = async () => {
 };
 
 export type Statistic = {
-  values: Record<ID, { value?: number | string; aac?: number | string }>;
-  max?: number | string;
+  values: Record<ID, { value: number | string; aac?: number | string }>;
   min?: number | string;
-  unit?: Unit;
+  max?: number | string;
+  unit: Unit;
   order?: string[];
-  state?: number | string;
   source?: ID;
+  state?: number | string;
   state_source?: ID;
 };
 
@@ -159,7 +159,7 @@ export const getStatistic = async (
   const data = await request<Statistic>(url);
 
   /** get source details */
-  const source = getValue(sourceDetails, data.source) ?? {
+  const source = getValue(sourceDetails, data.source ?? "") ?? {
     label: "",
     data_description: "",
     date: "",
@@ -209,23 +209,23 @@ export const getLocations = async () => {
 
 export type Location = FeatureCollection<
   Geometry,
-  {
-    zip?: string;
-    county?: string;
-    name?: string;
-    org?: string;
-    link?: string;
-    address?: string;
-    phone?: string;
-    notes?: string;
-    email?: string;
-    district?: number;
-    zip_code?: string;
-    area_type?: string;
-    representative?: string;
-    party?: string;
-    fips?: string;
-  }
+  Partial<{
+    zip: string;
+    county: string;
+    name: string;
+    org: string;
+    link: string;
+    address: string;
+    phone: string;
+    notes: string;
+    email: string;
+    district: number;
+    zip_code: string;
+    area_type: string;
+    representative: string;
+    party: string;
+    fips: string;
+  }>
 >;
 
 /** get full details of specific location */
@@ -284,16 +284,31 @@ export const getLocation = async (location: ID) => {
   };
 };
 
-export type Feature = object;
+export type Feature = Record<
+  ID,
+  {
+    value: string | number;
+    aac: string | number;
+    unit: Unit;
+    order: string[];
+    state_value: string | number;
+    state_aac: string | number;
+  }
+>;
 
 /** get full details of all statistics for feature of geographic level */
 export const getFeature = async (feature: string, level = "county") => {
   /** build request */
-  const url = new URL(`${api}/stats/by-${level}/${feature}`);
+  const url = new URL(`${api}/feature/${feature}`);
+  url.searchParams.set("level", level);
   /** send request */
   const data = await request<Feature>(url);
 
-  return data;
+  return {
+    /** add label */
+    label: getValue(featureLabels, feature) ?? feature,
+    statistics: data,
+  };
 };
 
 /** get data download link */

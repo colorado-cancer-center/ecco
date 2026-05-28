@@ -260,7 +260,7 @@ const {
   scaleSteps = 5,
   niceSteps = false,
   scalePower = 1,
-  scaleValues,
+  scaleValues = [],
   highlight = "",
 } = defineProps<Props>();
 
@@ -311,7 +311,7 @@ const scale = computed(() => {
   ) & { label: string; color: string; tooltip: string })[] = [];
 
   /** map specific values to specific colors */
-  if (scaleValues) {
+  if (scaleValues.length) {
     /** add "no data" entry */
     if (noData.value) steps.push(noDataEntry);
 

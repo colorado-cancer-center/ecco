@@ -10,14 +10,14 @@
         v-model="selectedMap().level"
         :options="levelOptions"
         label="Geographic level"
-        :class="[levelStatus === 'loading' && 'animate-pulse']"
+        :class="[levelStatus === 'loading' && 'animate-loading']"
       />
 
       <!-- statistics -->
       <AppTree
         v-model="selectedMap().statistic"
         :tree="statisticOptions"
-        :class="[statisticStatus === 'loading' && 'animate-pulse']"
+        :class="[statisticStatus === 'loading' && 'animate-loading']"
       >
         <template #default="{ child }">
           <AppButton
@@ -37,7 +37,7 @@
         multi
         :options="locationOptions"
         label="Resources & Other Locations"
-        :class="[locationsStatus === 'loading' && 'animate-pulse']"
+        :class="[locationsStatus === 'loading' && 'animate-loading']"
       />
 
       <AppCollapsible label="Customization">
@@ -244,7 +244,7 @@
         ref="mapGridElement"
         class="grid h-(--height) w-(--width) grid-cols-[repeat(var(--cols),1fr)] gap-1 bg-stone-600 shadow-md transition max-md:h-[90dvh]"
         :class="[
-          mapDataStatus === 'loading' && 'animate-pulse',
+          mapDataStatus === 'loading' && 'animate-loading',
           mapHeight ? 'shrink-0' : 'grow',
         ]"
         :style="{
@@ -743,7 +743,7 @@ const statisticOptions = computed(() => {
   const getTree = (group: Groups = statisticGroups): Tree[] =>
     Object.entries(group).map(([statisticOrGroup, value]) => ({
       id: statisticOrGroup,
-      label: statistics.value?.[statisticOrGroup]?.label ?? statisticOrGroup,
+      label: statistics.value[statisticOrGroup]?.label ?? statisticOrGroup,
       children: value ? getTree(value) : [],
     }));
   return getTree();
