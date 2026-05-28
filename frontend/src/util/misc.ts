@@ -1,4 +1,4 @@
-import { color } from "d3";
+import { formatHex } from "culori";
 
 /** wait ms */
 export const sleep = (ms = 0) =>
@@ -22,15 +22,12 @@ export const waitFor = async <Result>(
   }
 };
 
-/** get defined css variable value */
-export const getCssVar = (
-  name: `--${string}`,
-  element = document.documentElement,
-) => getComputedStyle(element).getPropertyValue(name);
-
-/** force color to hex format */
-export const forceHex = (string: string) =>
-  color(string)?.formatHex() || "#000000";
+/** get css variable */
+export const getCssVar = (name: string) => {
+  let value = getComputedStyle(document.body).getPropertyValue(name);
+  if (value.includes("oklch")) value = formatHex(value) ?? value;
+  return value;
+};
 
 /** convert [0,1] value to two hex digits */
 export const toHex = (value = 0) =>

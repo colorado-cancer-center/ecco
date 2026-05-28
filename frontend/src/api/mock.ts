@@ -9,6 +9,7 @@ import type {
   Statistic,
   Statistics,
 } from "./";
+import sourceDetails from "@/api/data/source-details.json";
 import { mapValues } from "lodash";
 import { http, HttpResponse, passthrough } from "msw";
 import { setupWorker } from "msw/browser";
@@ -107,6 +108,9 @@ const handlers = [
         aac: aac ?? undefined,
       })),
       unit: actual.unit ?? undefined,
+      source: Object.keys(sourceDetails).find(
+        (key) => !!actual.source?.match(new RegExp(key, "i")),
+      ),
     };
 
     return HttpResponse.json(desired);

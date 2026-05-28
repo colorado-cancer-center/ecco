@@ -158,18 +158,23 @@ export const getStatistic = async (
   /** send request */
   const data = await request<Statistic>(url);
 
+  /** get source details */
+  const source = getValue(sourceDetails, data.source) ?? {
+    label: "",
+    data_description: "",
+    date: "",
+    date_description: "",
+    link: "",
+  };
+
+  source.label = `${source.label} (${data.source})`;
+
   return {
     ...data,
     /** add label */
     label: getValue(statisticLabels, statistic) ?? statistic,
     /** add source details */
-    source: getValue(sourceDetails, data.source) ?? {
-      label: data.source ?? "",
-      data_description: "",
-      date: "",
-      date_description: "",
-      link: "",
-    },
+    source,
   };
 };
 
@@ -266,6 +271,10 @@ export const getLocation = async (location: ID) => {
       ...feature,
       properties: {
         ...feature.properties,
+        /** add label */
+        ...(feature.properties.district && {
+          label: `District ${feature.properties.district}`,
+        }),
         /** add location type */
         type: getValue(locationLabels, location) ?? location,
         /** add symbol key */
@@ -300,4 +309,4 @@ export const getDownloadAll = () => `${api}/stats/download-all`;
 
 /** get source citation */
 export const getSourceCitation = (source: ValueOf<typeof sourceDetails>) =>
-  [source.label, source.link].filter(Boolean).join("\n");
+  [source.label, source.date, source.link].filter(Boolean).join("\n");

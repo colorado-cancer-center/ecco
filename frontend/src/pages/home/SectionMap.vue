@@ -280,10 +280,10 @@
         >
           <!-- main legend -->
           <template #top-left-upper>
+            <div class="text-sm">{{ levels[selected.level]?.label }}</div>
             <strong>
               {{ statistics[selected.statistic]?.label }}
             </strong>
-            <div class="text-sm">{{ levels[selected.level]?.label }}</div>
             <div>
               {{
                 Object.values(selected.factors)
@@ -295,8 +295,9 @@
 
           <template #top-left-lower>
             <div v-if="statistic.source" class="flex items-center gap-2">
-              <AppLink :to="statistic.source.link">
+              <AppLink :to="statistic.source.link" class="text-sm">
                 {{ statistic.source.label }}
+                {{ statistic.source.date }}
               </AppLink>
               <AppButton
                 v-tooltip="'Copy citation text to clipboard'"

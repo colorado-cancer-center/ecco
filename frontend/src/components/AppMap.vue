@@ -95,6 +95,7 @@
       :key="index"
       ref="geographyLabelElements"
       class="flex flex-col items-center gap-1 rounded-md text-center text-[calc(var(--zoom)*2px)] text-white select-none text-stroke-1.5 text-stroke-black [:has(>&)]:pointer-events-none"
+      :style="{ opacity: geographyOpacity }"
     >
       {{ feature.get("label") }}
     </div>
@@ -178,7 +179,7 @@ import hatch from "@/assets/hatch.svg?no-inline";
 import { backgroundOptions } from "@/components/background";
 import { getGradient, gradientOptions } from "@/components/gradient";
 import { formatValue, normalizedApply } from "@/util/math";
-import { forceHex, getCssVar, waitFor } from "@/util/misc";
+import { getCssVar, waitFor } from "@/util/misc";
 import { X } from "@lucide/vue";
 import { useElementSize } from "@vueuse/core";
 import { extent, pairs, range, scaleQuantile, ticks, tickStep } from "d3";
@@ -205,7 +206,7 @@ const topRightLegend = useTemplateRef("topRightLegend");
 const bottomRightLegend = useTemplateRef("bottomRightLegend");
 const bottomLeftLegend = useTemplateRef("bottomLeftLegend");
 
-const theme = forceHex(getCssVar("--color-theme"));
+const theme = getCssVar("--color-theme");
 
 type Props = {
   /** features */
@@ -332,11 +333,8 @@ const scale = computed(() => {
 
     /** explicit color */
     const getColor = (value?: number | string) =>
-      forceHex(
-        steps.find((step) =>
-          "value" in step ? step.value === value : undefined,
-        )?.color ?? noDataColor,
-      );
+      steps.find((step) => ("value" in step ? step.value === value : undefined))
+        ?.color ?? noDataColor;
 
     return { steps, getColor };
   } else if (
@@ -401,7 +399,7 @@ const scale = computed(() => {
     /** scale interpolator */
     const getColor = (value?: number | string) =>
       typeof value === "number"
-        ? forceHex(scaleQuantile<string>().domain(bands).range(colors)(value))
+        ? scaleQuantile<string>().domain(bands).range(colors)(value)
         : noDataColor;
 
     return { steps, getColor };
@@ -641,7 +639,7 @@ watchEffect((onCleanup) => {
         feature.getProperties();
 
       const text = new Text({
-        text: String(label),
+        text: label === undefined || label === null ? undefined : String(label),
         font: "12px Roboto",
         fill: new Fill({ color: "white" }),
         stroke: new Stroke({ color: "black", width: 2 }),
@@ -658,7 +656,7 @@ watchEffect((onCleanup) => {
 
       return new Style({
         text,
-        fill: new Fill({ color: hover ? color + "20" : "transparent" }),
+        fill: new Fill({ color: hover ? color + "80" : color + "20" }),
         stroke: new Stroke({ color, width: hover ? 6 : 2, lineDash: dash }),
         image: hover ? iconHover : icon,
         zIndex: hover ? 2 : 1,

@@ -1,4 +1,5 @@
 import type { GeoJsonTypes } from "geojson";
+import { formatHex } from "culori";
 import { max, sum } from "lodash";
 import {
   Circle,
@@ -43,7 +44,9 @@ export const colors = [
   palette.cyan["600"],
   palette.green["600"],
   palette.amber["600"],
-] as const;
+]
+  .map(formatHex)
+  .filter((color) => color !== undefined);
 
 type Color = (typeof colors)[number];
 
