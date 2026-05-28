@@ -2,17 +2,19 @@ import type { FeatureCollection, Geometry } from "geojson";
 import type { ValueOf } from "type-fest";
 import { getValue } from "@/util/types";
 import { mapValues } from "lodash";
+import countyCenters from "./data/county-centers.json";
 import featureLabels from "./data/feature-labels.json";
 import levelLabels from "./data/level-labels.json";
 import locationLabels from "./data/location-labels.json";
-import events from "./data/outreach-events.json";
-import fitKits from "./data/outreach-fit-kits.json";
-import newspapers from "./data/outreach-newspapers.json";
-import radonKits from "./data/outreach-radon-kits.json";
+import outreach2Morrow from "./data/outreach-2morrow.json";
+import outreachEvents from "./data/outreach-events.json";
+import outreachFitKits from "./data/outreach-fit-kits.json";
+import outreachNewspapers from "./data/outreach-newspapers.json";
+import outreachRadonKits from "./data/outreach-radon-kits.json";
 import outreach from "./data/outreach.json";
 import sourceDetails from "./data/source-details.json";
 import statisticLabels from "./data/statistic-labels.json";
-import zipCodes from "./data/zip-codes.json";
+import zipCenters from "./data/zip-centers.json";
 
 /** api root (no trailing slash) */
 export const api = import.meta.env.VITE_API;
@@ -175,10 +177,11 @@ export type Locations = Record<ID, object>;
 
 /** extra locations stored in frontend */
 const extraLocations: Record<string, Record<string, number>> = {
-  events: events,
-  "fit-kits": fitKits,
-  "radon-kits": radonKits,
-  newspapers: newspapers,
+  events: outreachEvents,
+  "fit-kits": outreachFitKits,
+  "radon-kits": outreachRadonKits,
+  newspapers: outreachNewspapers,
+  "2morrow-signups": outreach2Morrow,
 };
 
 /** get high-level listing of all possible locations */
@@ -231,13 +234,14 @@ export const getLocation = async (location: ID) => {
     data = {
       type: "FeatureCollection",
       features: Object.entries(extraLocations[location] ?? {}).map(
-        ([zip, count]) => ({
+        ([zip, value]) => ({
           type: "Feature",
           geometry: {
             type: "Point",
-            coordinates: getValue(zipCodes, zip) ?? [0, 0],
+            coordinates: getValue(zipCenters, zip) ??
+              getValue(countyCenters, zip) ?? [0, 0],
           },
-          properties: { zip, label: count, value: count },
+          properties: { zip, label: value, value },
         }),
       ),
     };

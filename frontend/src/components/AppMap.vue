@@ -573,7 +573,7 @@ watchEffect(() => geographyLayer.setOpacity(geographyOpacity));
 const symbols = computed(() =>
   getMarkers(
     locations
-      .map((location, index) => {
+      .map((location) => {
         const feature = location.features[0];
         if (!feature) return;
         const symbol = feature.properties.symbol;
