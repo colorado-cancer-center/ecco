@@ -586,7 +586,7 @@ import AppTree from "@/components/AppTree.vue";
 import { backgroundOptions, defaultBackground } from "@/components/background";
 import { defaultGradient, gradientOptions } from "@/components/gradient";
 import { appTitle } from "@/meta";
-import { numberParam, useDeepRouteQuery } from "@/pages";
+import { jsonParam, numberParam, useParam } from "@/pages";
 import { useQuery } from "@/util/composables";
 import { downloadJson, downloadPng } from "@/util/download";
 import { formatValue } from "@/util/math";
@@ -610,7 +610,6 @@ import {
   useResizeObserver,
   useWindowSize,
 } from "@vueuse/core";
-import { useRouteQuery } from "@vueuse/router";
 import { toBlob } from "html-to-image";
 import { clamp } from "lodash";
 
@@ -635,7 +634,11 @@ type SelectedMap = {
 };
 
 /** selected state */
-const selectedMaps = useDeepRouteQuery<SelectedMap[]>("map", defaultSelected);
+const selectedMaps = useParam<SelectedMap[]>(
+  "maps",
+  defaultSelected,
+  jsonParam(),
+);
 /** selected map index */
 const selectedIndex = ref(0);
 /** get selected map object */
@@ -646,9 +649,9 @@ const selectedMap = () => {
 };
 
 /** map zoom state */
-const zoom = useRouteQuery("zoom", "0", { transform: numberParam });
-const lat = useRouteQuery("lat", "0", { transform: numberParam });
-const long = useRouteQuery("long", "0", { transform: numberParam });
+const zoom = useParam("zoom", 0, numberParam);
+const lat = useParam("lat", 0, numberParam);
+const long = useParam("long", 0, numberParam);
 
 /** map style state */
 const showLegends = ref(true);
