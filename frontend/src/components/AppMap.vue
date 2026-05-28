@@ -426,7 +426,7 @@ const latlong = "EPSG:4326";
 
 /** transform point coordinates */
 const xyToLongLat = (x = 0, y = 0) => {
-  const [long = 0, lat = 0] = new Point([x, y])
+  const [lat = 0, long = 0] = new Point([x, y])
     .transform(xy, latlong)
     .getCoordinates();
   return [long, lat];
@@ -434,7 +434,7 @@ const xyToLongLat = (x = 0, y = 0) => {
 
 /** transform point coordinates */
 const longLatToXy = (long = 0, lat = 0) => {
-  const [x = 0, y = 0] = new Point([long, lat])
+  const [x = 0, y = 0] = new Point([lat, long])
     .transform(latlong, xy)
     .getCoordinates();
   return [x, y];
@@ -669,9 +669,7 @@ watchEffect(() => locationsLayer.setOpacity(locationOpacity));
 
 /** geography features that have a position for a label */
 const geographyFeaturesWLabels = computed(() =>
-  geographyFeatures.value.filter(
-    (feature) => feature.get("cent_lat") && feature.get("cent_long"),
-  ),
+  geographyFeatures.value.filter((feature) => feature.get("center")),
 );
 
 /** update geography feature labels */

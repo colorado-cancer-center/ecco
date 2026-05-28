@@ -758,7 +758,6 @@ const {
             properties: {
               ...feature.properties,
               id: feature.id,
-              selected,
               value: value?.value,
               aac: value?.aac,
             },
