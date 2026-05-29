@@ -158,6 +158,10 @@
   .lucide {
     @apply h-[1.25em] shrink-0;
   }
+
+  [disabled] {
+    @apply cursor-not-allowed opacity-50 grayscale;
+  }
 }
 
 @utility table-wrapper {

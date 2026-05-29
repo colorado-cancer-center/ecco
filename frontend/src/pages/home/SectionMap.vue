@@ -63,6 +63,57 @@
         :class="[locationsStatus === 'loading' && 'animate-loading']"
       />
 
+      <!-- multi-map compare -->
+      <AppCollapsible label="Compare">
+        <div class="grid grid-cols-3 gap-4">
+          <div
+            v-for="(selected, index) in selectedMaps"
+            :key="index"
+            class="relative aspect-4/3"
+          >
+            <button
+              class="size-full overflow-hidden border-2 bg-stone-100"
+              :class="
+                selectedIndex === index
+                  ? 'border-theme'
+                  : 'border-stone-100 hover:border-theme'
+              "
+              @click="selectedIndex = index"
+            >
+              <img
+                v-if="mapElements?.[index]?.thumbnail"
+                :src="mapElements?.[index]?.thumbnail"
+                alt=""
+                class="size-full object-contain"
+              />
+            </button>
+
+            <button
+              class="absolute top-0.5 right-0.5 z-10 size-6 bg-stone-100 hover:text-theme"
+              @click="
+                () => {
+                  selectedMaps.splice(index, 1);
+                  if (selectedIndex < selectedMaps.length - 1) selectedIndex++;
+                  else if (selectedIndex > 0) selectedIndex--;
+                }
+              "
+            >
+              <X />
+            </button>
+          </div>
+        </div>
+        <AppButton
+          :disabled="selectedMaps.length >= maxMaps"
+          @click="
+            selectedMaps.push(defaultMap());
+            selectedIndex++;
+          "
+        >
+          Add
+          <Plus />
+        </AppButton>
+      </AppCollapsible>
+
       <AppCollapsible label="Customization">
         <!-- legend -->
         <AppCheckbox
@@ -280,7 +331,7 @@
             { selected, geography, statistic, locations }, index
           ) in mapData"
           :key="index"
-          ref="mapElement"
+          ref="mapElements"
           v-model:zoom="zoom"
           v-model:lat="lat"
           v-model:long="long"
@@ -328,12 +379,15 @@
             <div v-if="statistic.source" class="flex items-center gap-2">
               <AppLink :to="statistic.source.link" class="text-sm">
                 {{ statistic.source.label }}
+                <template v-if="statistic.source.id">
+                  ({{ statistic.source.id }})
+                </template>
                 {{ statistic.source.date }}
               </AppLink>
               <AppButton
                 v-if="getSourceCitation(statistic.source)"
                 v-tooltip="'Copy citation text to clipboard'"
-                class="min-h-0! min-w-0! p-1!"
+                class="size-8 min-h-0! min-w-0! shrink-0 p-0!"
                 data-save-hide
                 @click="copy(getSourceCitation(statistic.source))"
               >
@@ -577,13 +631,13 @@
           </AppButton>
           <AppButton
             v-tooltip="'Zoom out'"
-            @click="mapElement?.forEach((map) => map?.zoomOut())"
+            @click="mapElements?.forEach((map) => map?.zoomOut())"
           >
             <Minus />
           </AppButton>
           <AppButton
             v-tooltip="'Zoom in'"
-            @click="mapElement?.forEach((map) => map?.zoomIn())"
+            @click="mapElements?.forEach((map) => map?.zoomIn())"
           >
             <Plus />
           </AppButton>
@@ -674,6 +728,7 @@ import {
   Plus,
   Pointer,
   RefreshCw,
+  X,
 } from "@lucide/vue";
 import {
   useElementBounding,
@@ -687,17 +742,15 @@ import { clamp } from "lodash";
 /** element refs */
 const rightPanelElement = useTemplateRef("rightPanelElement");
 const mapGridElement = useTemplateRef("mapGridElement");
-const mapElement = useTemplateRef("mapElement");
+const mapElements = useTemplateRef("mapElements");
 
 /** default selected maps */
-const defaultSelected = [
-  {
-    level: "county",
-    statistic: "sociodemographics;Total",
-    factors: {},
-    locations: [],
-  },
-];
+const defaultMap = () => ({
+  level: "county",
+  statistic: "sociodemographics;Total",
+  factors: {},
+  locations: [],
+});
 
 type SelectedMap = {
   level: string;
@@ -706,12 +759,16 @@ type SelectedMap = {
   locations: string[];
 };
 
-/** selected state */
+/** selected maps state */
 const selectedMaps = useParam(
   "maps",
-  defaultSelected,
+  [defaultMap()],
   jsonParam<SelectedMap[]>([]),
 );
+
+/** maximum maps to be compared */
+const maxMaps = 4;
+
 /** selected map index */
 const selectedIndex = ref(0);
 
@@ -913,6 +970,24 @@ const factors = computed(() => {
   return factors;
 });
 
+/** auto-select default factors */
+watchEffect(() => {
+  /** factors available for selected statistic */
+  const available = Object.keys(
+    statistics.value[selectedMap().statistic]?.factors ?? {},
+  );
+
+  for (const factor of available) {
+    /** if already selected, ignore */
+    if (factor in selectedMap().factors) continue;
+    /** first value is default */
+    const _default = Object.keys(factors.value[factor]?.values ?? {}).at(0);
+    if (!_default) continue;
+    /** set default */
+    selectedMap().factors[factor] = _default;
+  }
+});
+
 /** how many cols to arrange compare maps in */
 const mapCols = computed(() => {
   switch (mapData.value.length) {
@@ -962,7 +1037,7 @@ const reset = async () => {
 };
 
 /** fit all maps */
-const fit = () => mapElement.value?.forEach((map) => map?.fit());
+const fit = () => mapElements.value?.forEach((map) => map?.fit());
 
 /** auto-adjust right panel/map height */
 const autoRightPanelHeight = ref(0);
@@ -1000,10 +1075,10 @@ const downloadMapImage = async () => {
 
 /** download maps as geo data */
 const downloadMapGeo = async () => {
-  if (!mapElement.value?.length) return;
+  if (!mapElements.value?.length) return;
 
   /** download json files */
-  for (const map of mapElement.value) {
+  for (const map of mapElements.value) {
     const geo = map?.getGeo();
     if (!geo) continue;
     downloadJson(geo, "map-geo");

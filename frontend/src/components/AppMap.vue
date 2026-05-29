@@ -172,7 +172,7 @@ import hatch from "@/assets/hatch.svg?no-inline";
 import { backgroundOptions } from "@/components/background";
 import { getGradient, gradientOptions } from "@/components/gradient";
 import { formatValue, normalizedApply } from "@/util/math";
-import { getCssVar, waitFor } from "@/util/misc";
+import { getCssVar, sleep, waitFor } from "@/util/misc";
 import { useElementSize } from "@vueuse/core";
 import { extent, pairs, range, scaleQuantile, ticks, tickStep } from "d3";
 import { debounce, isEmpty, upperFirst } from "lodash";
@@ -260,8 +260,6 @@ type Emits = {
   "update:zoom": [Props["zoom"]];
   "update:lat": [Props["lat"]];
   "update:long": [Props["long"]];
-  "update:no-data": [boolean];
-  "update:thumbnail": [string];
 };
 
 const emit = defineEmits<Emits>();
@@ -796,30 +794,29 @@ watchEffect(() =>
 );
 
 /** preview image of canvas */
-const thumbnail = ref<Blob | null>(null);
+const thumbnail = ref("");
 
 /** make thumbnail blob from canvas */
 const generateThumbnail = debounce(async () => {
+  console.log("generate");
+  URL.revokeObjectURL(thumbnail.value);
   const canvas = mapElement.value?.querySelector("canvas");
   if (!canvas) return;
-  canvas.toBlob((blob) => (thumbnail.value = blob), "image/jpeg", 0.1);
+  const blob = await new Promise<Blob | null>((resolve) => {
+    canvas.toBlob(resolve, "image/jpeg", 0.1);
+  });
+  if (!blob) return (thumbnail.value = "");
+  const src = URL.createObjectURL(blob);
+  thumbnail.value = src;
 }, 500);
 
 /** generate thumbnail on any map update */
+onMounted(generateThumbnail);
 onUpdated(generateThumbnail);
 /** cancel any pending debounce */
 onUnmounted(generateThumbnail.cancel);
-
-watchEffect((cleanup) => {
-  /** object url, for img src */
-  const src = thumbnail.value ? URL.createObjectURL(thumbnail.value) : "";
-  emit("update:thumbnail", src);
-  cleanup(() => {
-    /** clean up object url */
-    URL.revokeObjectURL(src);
-    emit("update:thumbnail", "");
-  });
-});
+/** clean up thumbnail object url */
+onUnmounted(() => URL.revokeObjectURL(thumbnail.value));
 
 /** programmatic zoom in */
 const zoomIn = () => view.setZoom((view.getZoom() ?? 0) + 1);
@@ -834,6 +831,8 @@ const { width: mapWidth, height: mapHeight } = useElementSize(frameElement);
 const fit = async () => {
   /** wait for view to be attached to map */
   await waitFor(() => !!map.getView());
+  /** wait for legends to render */
+  await sleep();
 
   /** get bounding box */
   const extent = highlight
@@ -908,7 +907,7 @@ const getGeo = (): FeatureCollection => ({
 });
 
 /** allow control from parent */
-defineExpose({ zoomIn, zoomOut, fit, getGeo });
+defineExpose({ zoomIn, zoomOut, fit, getGeo, thumbnail });
 
 /** clean up objects */
 onUnmounted(() => {

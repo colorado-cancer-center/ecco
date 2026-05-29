@@ -97,7 +97,7 @@ const handlers = [
     const factors = new URL(request.url).searchParams.get("factors") ?? "";
     const url = new URL(`${api}/stats/${level}/${category}/fips-value?`);
     url.searchParams.set("measure", measure);
-    url.searchParams.set("filters", factors);
+    if (factors) url.searchParams.set("filters", factors);
 
     const actual: _StatsFipsValue = await (await fetch(url)).json();
 

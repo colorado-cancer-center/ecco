@@ -44,7 +44,7 @@ export const request = async <Response>(url: URL, options?: RequestInit) => {
   const parsed = await response.clone().json();
   console.debug(`📣 Response ${log}`, { response, parsed });
   /** set cache for next time */
-  if (request.method === "GET") cache.set(id, response);
+  cache.set(id, response.clone());
   return parsed as Response;
 };
 
@@ -172,15 +172,16 @@ export const getStatistic = async (
   const data = await request<Statistic>(url);
 
   /** get source details */
-  const source = getValue(sourceDetails, data.source) ?? {
-    label: "",
-    data_description: "",
-    date: "",
-    date_description: "",
-    link: "",
+  const source = {
+    id: data.source ?? "",
+    ...(getValue(sourceDetails, data.source) ?? {
+      label: "",
+      data_description: "",
+      date: "",
+      date_description: "",
+      link: "",
+    }),
   };
-
-  if (data.source) source.label += ` (${data.source})`;
 
   return {
     ...data,
