@@ -3,6 +3,7 @@ import type { ValueOf } from "type-fest";
 import { getValue } from "@/util/types";
 import { mapValues } from "lodash";
 import countyCenters from "./data/county-centers.json";
+import factorLabels from "./data/factor-labels.json";
 import featureLabels from "./data/feature-labels.json";
 import levelLabels from "./data/level-labels.json";
 import locationLabels from "./data/location-labels.json";
@@ -125,6 +126,16 @@ export const getStatistics = async () => {
 
   return mapValues(data, (value, statistic) => ({
     ...value,
+
+    factors: mapValues(value.factors, (values, factor) => ({
+      label: getValue(factorLabels, factor) ?? factor,
+      values: Object.fromEntries(
+        values.map((value) => [
+          value,
+          { label: getValue(factorLabels, value) ?? value },
+        ]),
+      ),
+    })),
     /** add label */
     label: getValue(statisticLabels, statistic) ?? statistic,
   }));
@@ -133,7 +144,7 @@ export const getStatistics = async () => {
 export type Value = number | string;
 
 export type Statistic = {
-  values: Record<ID, { value: Value; aac?: Value }>;
+  values: Record<ID, { value?: Value; aac?: Value }>;
   min?: Value;
   max?: Value;
   unit: Unit;
@@ -278,7 +289,7 @@ export const getLocation = async (location: ID) => {
           label: `District ${feature.properties.district}`,
         }),
         /** add location type */
-        type: getValue(locationLabels, location) ?? location,
+        location: getValue(locationLabels, location) ?? location,
         /** add symbol key */
         symbol: getValue(locationLabels, location) ?? location,
       },
@@ -289,7 +300,7 @@ export const getLocation = async (location: ID) => {
 export type Feature = Record<
   ID,
   {
-    value: Value;
+    value?: Value;
     aac?: Value;
     unit: Unit;
     order?: string[];

@@ -9,3 +9,9 @@ export const getValue = <Value>(
     return object[key] as Value;
   /** otherwise, return undefined */
 };
+
+/** type-safe get index from array */
+export const getIndex = <Value>(array: Value[], index: number): Value => {
+  if (index in array && array[index] !== undefined) return array[index];
+  throw Error("index out of bounds");
+};

@@ -105,19 +105,12 @@
       v-if="$slots['popup'] && selectedFeature"
       ref="popupElement"
       v-stop
-      class="relative z-100! flex max-h-full w-100 max-w-max translate-y-[calc(--spacing(2)*-1.414)] flex-col gap-2 rounded-md bg-white p-4 shadow-md after:absolute after:top-full after:left-1/2 after:size-2 after:-translate-1/2 after:rotate-45 after:bg-white after:shadow-md after:content-[''] after:[clip-path:polygon(200%_-100%,200%_200%,-100%_200%)] *:first:pr-6"
+      class="relative z-100! flex max-h-full w-100 max-w-max translate-y-[calc(--spacing(2)*-1.414)] flex-col gap-2 rounded-md bg-white p-4 shadow-md after:absolute after:top-full after:left-1/2 after:size-2 after:-translate-1/2 after:rotate-45 after:bg-white after:shadow-md after:content-[''] after:[clip-path:polygon(200%_-100%,200%_200%,-100%_200%)]"
     >
       <slot
         name="popup"
         :feature="selectedFeature.getProperties() as FeatureProperties"
       />
-      <button
-        class="absolute top-0 right-0 min-h-8 min-w-8 text-stone-300 hover:text-black"
-        aria-label="Close popup"
-        @click="selectedFeature = undefined"
-      >
-        <X />
-      </button>
     </div>
 
     <div
@@ -180,7 +173,6 @@ import { backgroundOptions } from "@/components/background";
 import { getGradient, gradientOptions } from "@/components/gradient";
 import { formatValue, normalizedApply } from "@/util/math";
 import { getCssVar, waitFor } from "@/util/misc";
-import { X } from "@lucide/vue";
 import { useElementSize } from "@vueuse/core";
 import { extent, pairs, range, scaleQuantile, ticks, tickStep } from "d3";
 import { debounce, isEmpty, upperFirst } from "lodash";

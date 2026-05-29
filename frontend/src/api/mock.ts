@@ -97,14 +97,14 @@ const handlers = [
     const factors = new URL(request.url).searchParams.get("factors") ?? "";
     const url = new URL(`${api}/stats/${level}/${category}/fips-value?`);
     url.searchParams.set("measure", measure);
-    url.searchParams.set("factors", factors);
+    url.searchParams.set("filters", factors);
 
     const actual: _StatsFipsValue = await (await fetch(url)).json();
 
     const desired: Statistic = {
       values: mapValues(actual.values, ({ value, aac }) => ({
-        value: value ?? 0,
-        aac: aac ?? 0,
+        value: value ?? undefined,
+        aac: aac ?? undefined,
       })),
       min: actual.min ?? undefined,
       max: actual.max ?? undefined,
@@ -173,7 +173,7 @@ const handlers = [
         Object.entries(measures).map(([measure, value]) => [
           `${category};${measure}`,
           {
-            value: value.value ?? 0,
+            value: value.value ?? undefined,
             aac: value.aac ?? undefined,
             unit: value.unit ?? "count",
             state_value: value.state_value ?? undefined,
@@ -193,7 +193,10 @@ const handlers = [
 ];
 
 /** start mocking */
-export const mock = () => setupWorker(...handlers).start();
+export const mock = async () => {
+  const worker = setupWorker(...handlers);
+  await worker.start();
+};
 
 type _StatsMeasures = {
   [key: string]: {

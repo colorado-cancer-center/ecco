@@ -31,6 +31,29 @@
         </template>
       </AppTree>
 
+      <!-- factors -->
+      <div
+        class="grid grid-cols-[min-content_1fr] items-center gap-2 empty:hidden"
+      >
+        <template
+          v-for="({ label, values }, factor, index) in factors"
+          :key="index"
+        >
+          <AppSelect
+            v-if="
+              /** if factor available for statistic */
+              factor in (statistics[selectedMap().statistic]?.factors ?? {})
+            "
+            v-model="selectedMap().factors[factor]!"
+            :options="
+              Object.entries(values).map(([id, { label }]) => ({ id, label }))
+            "
+            class="contents!"
+            :label="label"
+          />
+        </template>
+      </div>
+
       <!-- locations -->
       <AppSelect
         v-model="selectedMap().locations"
@@ -280,10 +303,18 @@
         >
           <!-- main legend -->
           <template #top-left-upper>
-            <div class="text-sm">{{ levels[selected.level]?.label }}</div>
-            <strong>
-              {{ statistics[selected.statistic]?.label }}
-            </strong>
+            <div class="flex flex-col gap-1">
+              <div
+                v-for="(part, index) in [
+                  levels[selected.level]?.label,
+                  ...(statisticPaths[selected.statistic] ?? []),
+                ]"
+                :key="index"
+                class="not-last:text-sm last:font-bold"
+              >
+                {{ part }}
+              </div>
+            </div>
             <div>
               {{
                 Object.values(selected.factors)
@@ -300,6 +331,7 @@
                 {{ statistic.source.date }}
               </AppLink>
               <AppButton
+                v-if="getSourceCitation(statistic.source)"
                 v-tooltip="'Copy citation text to clipboard'"
                 class="min-h-0! min-w-0! p-1!"
                 data-save-hide
@@ -316,31 +348,10 @@
 
           <!-- feature popup -->
           <template #popup="{ feature }">
-            {{ console.debug(feature) }}
-
-            <em v-if="statisticPaths[selected.statistic]">
-              {{ statisticPaths[selected.statistic]?.join(" → ") }}
-            </em>
-
-            <p>
-              <AppLink
-                v-if="feature.value === undefined"
-                to="/sources#suppressed-values"
-                :new-tab="true"
-                class="inline-flex items-center gap-1 underline"
-              >
-                Low values may be suppressed
-                <Info />
-              </AppLink>
-            </p>
+            {{ console.debug("feature", feature) }}
 
             <dl>
               <!-- overview -->
-
-              <template v-if="feature.type">
-                <dt>Type</dt>
-                <dd>{{ feature.type }}</dd>
-              </template>
 
               <template v-if="feature.name">
                 <dt>Name</dt>
@@ -364,6 +375,16 @@
 
               <!-- values -->
 
+              <template v-if="feature.statistic">
+                <dt>Statistic</dt>
+                <dd>{{ feature.statistic }}</dd>
+              </template>
+
+              <template v-if="feature.location">
+                <dt>Info</dt>
+                <dd>{{ feature.location }}</dd>
+              </template>
+
               <template v-if="feature.value !== undefined">
                 <dt>{{ feature.aac ? "Rate" : "Value" }}</dt>
                 <dd>{{ formatValue(feature.value, statistic.unit) }}</dd>
@@ -373,6 +394,17 @@
                 <dt>Avg. Annual Count</dt>
                 <dd>{{ formatValue(feature.aac, statistic.unit) }}</dd>
               </template>
+
+              <div v-if="feature.value === undefined" class="col-span-full">
+                <AppLink
+                  to="/sources#suppressed-values"
+                  :new-tab="true"
+                  class="inline-flex items-center gap-1 underline"
+                >
+                  Low values may be suppressed
+                  <Info />
+                </AppLink>
+              </div>
 
               <!-- extra info -->
 
@@ -589,10 +621,12 @@
 
 <script setup lang="ts">
 import type { Tree } from "@/components/AppTree.vue";
+import type { ValueOf } from "type-fest";
 import {
   computed,
   onMounted,
   ref,
+  toRaw,
   useTemplateRef,
   watch,
   watchEffect,
@@ -610,7 +644,6 @@ import {
 } from "@/api";
 import locationGroups from "@/api/data/location-groups.json";
 import statisticGroups from "@/api/data/statistic-groups.json";
-import statisticLabels from "@/api/data/statistic-labels.json";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
 import AppCollapsible from "@/components/AppCollapsible.vue";
@@ -628,7 +661,7 @@ import { useQuery } from "@/util/composables";
 import { downloadJson, downloadPng } from "@/util/download";
 import { formatValue } from "@/util/math";
 import { copy } from "@/util/misc";
-import { getValue } from "@/util/types";
+import { getIndex, getValue } from "@/util/types";
 import {
   Copy,
   Crop,
@@ -681,12 +714,9 @@ const selectedMaps = useParam(
 );
 /** selected map index */
 const selectedIndex = ref(0);
+
 /** get selected map object */
-const selectedMap = () => {
-  const selected = selectedMaps.value[selectedIndex.value];
-  if (!selected) throw Error("Selected map index out of bounds");
-  return selected;
-};
+const selectedMap = () => getIndex(selectedMaps.value, selectedIndex.value);
 
 /** map zoom state */
 const zoom = useParam("zoom", 0, numberParam);
@@ -716,7 +746,11 @@ const {
   data: levels,
   status: levelStatus,
 } = useQuery(getLevels, {});
-onMounted(loadLevels);
+
+onMounted(async () => {
+  await loadLevels();
+  console.debug("levels", toRaw(levels.value));
+});
 
 /** geographic levels, as select options */
 const levelOptions = computed(() =>
@@ -736,7 +770,11 @@ const {
   data: statistics,
   status: statisticStatus,
 } = useQuery(getStatistics, {});
-onMounted(loadStatistics);
+
+onMounted(async () => {
+  await loadStatistics();
+  console.debug("statistics", toRaw(statistics.value));
+});
 
 export type Groups = {
   [group: string]: Groups | null;
@@ -754,7 +792,7 @@ const statisticOptions = computed(() => {
 });
 
 /** statistics, as grouping paths */
-const statisticPaths = (() => {
+const statisticPaths = computed(() => {
   const flatten = (groups: Groups, path: string[] = []): string[][] =>
     Object.entries(groups).flatMap(([key, value]) =>
       value === null ? [[...path, key]] : flatten(value, [...path, key]),
@@ -764,11 +802,11 @@ const statisticPaths = (() => {
     paths.map((path) => {
       const id = path.at(-1) ?? "";
       const parents = path.slice(0, -1);
-      const statistic = getValue(statisticLabels, id) ?? id;
+      const statistic = statistics.value[id]?.label ?? id;
       return [id, parents.concat(statistic)];
     }),
   );
-})();
+});
 
 /** load location data */
 const {
@@ -776,7 +814,11 @@ const {
   data: locations,
   status: locationsStatus,
 } = useQuery(getLocations, {});
-onMounted(loadLocations);
+
+onMounted(async () => {
+  await loadLocations();
+  console.debug("locations", toRaw(locations.value));
+});
 
 /** locations, as select options */
 const locationOptions = computed(() =>
@@ -794,17 +836,17 @@ const {
   query: loadMapData,
   data: mapData,
   status: mapDataStatus,
-} = useQuery(() => {
+} = useQuery(async () => {
   /** query all maps in parallel */
-  return Promise.all(
-    selectedMaps.value.map(async (selected) => {
+  const maps = await Promise.all(
+    toRaw(selectedMaps.value).map(async (selected) => {
       /** load geography */
       const geography = await getLevel(selected.level);
       /** load statistic */
       const statistic = await getStatistic(
         selected.statistic,
         selected.level,
-        {},
+        selected.factors,
       );
       /** load locations */
       const locations = await Promise.all(selected.locations.map(getLocation));
@@ -819,6 +861,9 @@ const {
             properties: {
               ...feature.properties,
               id: feature.id,
+              statistic:
+                statistics.value[selected.statistic]?.label ??
+                selected.statistic,
               value: value?.value,
               aac: value?.aac,
             },
@@ -829,6 +874,10 @@ const {
       return { selected, geography: geographyExtras, statistic, locations };
     }),
   );
+
+  console.debug("maps", maps);
+
+  return maps;
 }, []);
 
 /** re-load data when selected maps change */
@@ -844,6 +893,24 @@ watchEffect(() => {
     statistic ? statistic : "",
     locations ? `${locations.toLocaleString()} locations` : "",
   ].filter(Boolean);
+});
+
+/** all possible factors for any statistic */
+const factors = computed(() => {
+  const factors: ValueOf<typeof statistics.value>["factors"] = {};
+  for (const statistic of Object.values(statistics.value))
+    for (const [factor, { label, values }] of Object.entries(
+      statistic.factors,
+    )) {
+      factors[factor] ??= { label, values: {} };
+      for (const [value, { label }] of Object.entries(values))
+        if (!(value in factors[factor].values))
+          factors[factor].values[value] = { label };
+    }
+
+  console.debug("factors", toRaw(factors));
+
+  return factors;
 });
 
 /** how many cols to arrange compare maps in */
