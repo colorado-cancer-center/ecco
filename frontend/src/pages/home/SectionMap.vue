@@ -318,8 +318,24 @@
           <template #popup="{ feature }">
             {{ console.debug(feature) }}
 
+            <em v-if="statisticPaths[selected.statistic]">
+              {{ statisticPaths[selected.statistic]?.join(" → ") }}
+            </em>
+
+            <p>
+              <AppLink
+                v-if="feature.value === undefined"
+                to="/sources#suppressed-values"
+                :new-tab="true"
+                class="inline-flex items-center gap-1 underline"
+              >
+                Low values may be suppressed
+                <Info />
+              </AppLink>
+            </p>
+
             <dl>
-              <!-- main values -->
+              <!-- overview -->
 
               <template v-if="feature.type">
                 <dt>Type</dt>
@@ -346,26 +362,14 @@
                 <dd>{{ feature.zip }}</dd>
               </template>
 
-              <template
-                v-if="
-                  typeof feature.value === 'number' ||
-                  typeof feature.value === 'string'
-                "
-              >
-                <dt>
-                  {{ feature.aac ? "Rate" : "Value" }}
-                </dt>
-                <dd>
-                  {{ formatValue(feature.value, statistic.unit) }}
-                </dd>
+              <!-- values -->
+
+              <template v-if="feature.value !== undefined">
+                <dt>{{ feature.aac ? "Rate" : "Value" }}</dt>
+                <dd>{{ formatValue(feature.value, statistic.unit) }}</dd>
               </template>
 
-              <template
-                v-if="
-                  typeof feature.aac === 'number' ||
-                  typeof feature.aac === 'string'
-                "
-              >
+              <template v-if="feature.aac !== undefined">
                 <dt>Avg. Annual Count</dt>
                 <dd>{{ formatValue(feature.aac, statistic.unit) }}</dd>
               </template>
@@ -374,9 +378,7 @@
 
               <template v-if="feature.description">
                 <dt>Description</dt>
-                <dd>
-                  {{ feature.description }}
-                </dd>
+                <dd>{{ feature.description }}</dd>
               </template>
 
               <template v-if="feature.org">
@@ -597,7 +599,7 @@ import {
 } from "vue";
 import {
   extraLocations,
-  getDownload,
+  getDownloadStatistic,
   getLevel,
   getLevels,
   getLocation,
@@ -608,6 +610,7 @@ import {
 } from "@/api";
 import locationGroups from "@/api/data/location-groups.json";
 import statisticGroups from "@/api/data/statistic-groups.json";
+import statisticLabels from "@/api/data/statistic-labels.json";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
 import AppCollapsible from "@/components/AppCollapsible.vue";
@@ -632,6 +635,7 @@ import {
   Download,
   Feather,
   Fullscreen,
+  Info,
   MessageCircle,
   Minus,
   Plus,
@@ -734,20 +738,37 @@ const {
 } = useQuery(getStatistics, {});
 onMounted(loadStatistics);
 
-type Groups = {
+export type Groups = {
   [group: string]: Groups | null;
 };
 
 /** statistics, as tree options */
 const statisticOptions = computed(() => {
-  const getTree = (group: Groups = statisticGroups): Tree[] =>
-    Object.entries(group).map(([statisticOrGroup, value]) => ({
+  const getTree = (groups: Groups = statisticGroups): Tree[] =>
+    Object.entries(groups).map(([statisticOrGroup, value]) => ({
       id: statisticOrGroup,
       label: statistics.value[statisticOrGroup]?.label ?? statisticOrGroup,
       children: value ? getTree(value) : [],
     }));
   return getTree();
 });
+
+/** statistics, as grouping paths */
+const statisticPaths = (() => {
+  const flatten = (groups: Groups, path: string[] = []): string[][] =>
+    Object.entries(groups).flatMap(([key, value]) =>
+      value === null ? [[...path, key]] : flatten(value, [...path, key]),
+    );
+  const paths = flatten(statisticGroups);
+  return Object.fromEntries(
+    paths.map((path) => {
+      const id = path.at(-1) ?? "";
+      const parents = path.slice(0, -1);
+      const statistic = getValue(statisticLabels, id) ?? id;
+      return [id, parents.concat(statistic)];
+    }),
+  );
+})();
 
 /** load location data */
 const {
@@ -851,7 +872,7 @@ const mapCols = computed(() => {
 
 /** download statistic from tree click */
 const onTreeDownload = (statistic = "") =>
-  getDownload(selectedMap().level, statistic);
+  getDownloadStatistic(selectedMap().level, statistic);
 
 /** reset customizations and map to defaults */
 const reset = async () => {

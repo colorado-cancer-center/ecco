@@ -130,14 +130,16 @@ export const getStatistics = async () => {
   }));
 };
 
+export type Value = number | string;
+
 export type Statistic = {
-  values: Record<ID, { value: number | string; aac?: number | string }>;
-  min?: number | string;
-  max?: number | string;
+  values: Record<ID, { value: Value; aac?: Value }>;
+  min?: Value;
+  max?: Value;
   unit: Unit;
   order?: string[];
   source?: ID;
-  state?: number | string;
+  state?: Value;
   state_source?: ID;
 };
 
@@ -159,7 +161,7 @@ export const getStatistic = async (
   const data = await request<Statistic>(url);
 
   /** get source details */
-  const source = getValue(sourceDetails, data.source ?? "") ?? {
+  const source = getValue(sourceDetails, data.source) ?? {
     label: "",
     data_description: "",
     date: "",
@@ -167,7 +169,7 @@ export const getStatistic = async (
     link: "",
   };
 
-  source.label = `${source.label} (${data.source})`;
+  if (data.source) source.label += ` (${data.source})`;
 
   return {
     ...data,
@@ -287,12 +289,12 @@ export const getLocation = async (location: ID) => {
 export type Feature = Record<
   ID,
   {
-    value: string | number;
-    aac: string | number;
+    value: Value;
+    aac?: Value;
     unit: Unit;
-    order: string[];
-    state_value: string | number;
-    state_aac: string | number;
+    order?: string[];
+    state_value?: Value;
+    state_aac?: Value;
   }
 >;
 
@@ -311,16 +313,16 @@ export const getFeature = async (feature: string, level = "county") => {
   };
 };
 
-/** get data download link */
-export const getDownload = (level: string, statistic: string) => {
+/** get statistic download link */
+export const getDownloadStatistic = (level: string, statistic: string) => {
   const [category = "", measure = ""] = statistic.split(";");
   const url = new URL(`${api}/stats/${level}/${category}/as-csv`);
   url.searchParams.set(measure, measure);
   return url.toString();
 };
 
-/** get download all link */
-export const getDownloadAll = () => `${api}/stats/download-all`;
+/** get all statistics download link */
+export const getDownloadStatistics = () => `${api}/stats/download-all`;
 
 /** get source citation */
 export const getSourceCitation = (source: ValueOf<typeof sourceDetails>) =>

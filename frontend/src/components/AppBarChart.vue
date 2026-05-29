@@ -48,7 +48,7 @@ type Props = {
   order?: (string | number)[];
 };
 
-const { title, data, unit, order } = defineProps<Props>();
+const { title, data, unit = "count", order = [] } = defineProps<Props>();
 
 const chart = ref<ComponentInstance<typeof VChart>>();
 const { width } = useElementSize(() => chart.value?.root);
@@ -82,7 +82,7 @@ const option = computed(() => {
   ).map((value) => value ?? noDataEntry.label);
 
   /** put y axis in particular order */
-  if (order) {
+  if (order.length) {
     const _order = [noDataEntry.label, ...order];
     yValues.sort((a, b) => _order.indexOf(a) - _order.indexOf(b));
   }
@@ -116,11 +116,11 @@ const option = computed(() => {
     fontSize: 16,
   };
 
-  options.yAxis = order
+  options.yAxis = order.length
     ? { type: "category", data: yValues }
     : { type: "value" };
   options.yAxis.axisLabel = {
-    interval: order ? 0 : undefined,
+    interval: order.length ? 0 : undefined,
     color: "black",
     fontSize: 16,
     formatter: (value: NonNullable<Value>) => formatValue(value, unit, true),
@@ -130,13 +130,13 @@ const option = computed(() => {
 
   options.series = Object.entries(data).map(([name, data], index, entries) => ({
     name,
-    type: order ? "pictorialBar" : "bar",
+    type: order.length ? "pictorialBar" : "bar",
     data: Object.values(data).map((value) => ({
-      value: value ?? (order ? noDataEntry.label : 0),
+      value: value ?? (order.length ? noDataEntry.label : 0),
       itemStyle: value ? undefined : { color: noDataEntry.color },
     })),
     color: [colorA, colorB][index],
-    barMinHeight: order ? 0 : 5,
+    barMinHeight: order.length ? 0 : 5,
     symbol: "diamond",
     symbolPosition: "end",
     symbolSize: [symbolSize, symbolSize],

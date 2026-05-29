@@ -35,9 +35,9 @@
     <p>
       Create your own map to visualize your data and region of interest. First
       select the geographic level you want to see data split by, e.g. county or
-      tract (census). Then select what type of data measure you want to see,
+      tract (census). Then select what type of data statistic you want to see,
       e.g. % college graduates, household income, high rent burden. Note that
-      some measures are only available for certain geographic levels. You can
+      some statistics are only available for certain geographic levels. You can
       select locations to overlay on the map, e.g. screening centers, clinics,
       specialists.
     </p>

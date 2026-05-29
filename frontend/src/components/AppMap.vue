@@ -289,7 +289,7 @@ defineSlots<Slots>();
 
 /** whether map has any "no data" values */
 const noData = computed(() =>
-  geography.features.some((feature) => feature.properties?.value),
+  geography.features.some((feature) => feature.properties.value === undefined),
 );
 
 /** scale object */
@@ -539,9 +539,7 @@ watchEffect((onCleanup) => {
     (hover = false) =>
     (feature: FeatureLike) => {
       const color =
-        feature.get("id") === _highlight
-          ? theme
-          : getColor(feature.get("value"));
+        feature.getId() === _highlight ? theme : getColor(feature.get("value"));
       return new Style({
         stroke: new Stroke({ color: "black", width: hover ? 4 : 1 }),
         fill: new Fill({
@@ -850,7 +848,7 @@ const fit = async () => {
     ? /** highlighted feature */
       geographyFeatures.value
         /** lookup feature by id */
-        .find((feature) => feature.get("id") === highlight)
+        .find((feature) => feature.getId() === highlight)
         ?.getGeometry()
         ?.getExtent()
     : /** geography layer */
@@ -899,9 +897,6 @@ const fit = async () => {
 };
 
 onMounted(async () => {
-  /** if not highlighting specific feature */
-  if (highlight) return;
-
   /** if no initial view provided, fit to content */
   /** wait for features to be loaded, rendered/parsed */
   await waitFor(() => geographySource.getFeatures().length);

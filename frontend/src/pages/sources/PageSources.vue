@@ -15,7 +15,7 @@
     <div class="text-center">
       <AppButton
         v-tooltip="'Download all sources data in CSV format'"
-        :to="getDownloadAll()"
+        :to="getDownloadStatistics()"
         :new-tab="true"
         :accent="true"
       >
@@ -84,7 +84,7 @@
       v-html="descriptions[id]"
     />
     <p v-else class="text-center">
-      <i>Description coming soon</i>
+      <em>Description coming soon</em>
     </p>
   </section>
 
@@ -140,7 +140,7 @@
 
 <script setup lang="ts">
 import { onMounted, onUpdated } from "vue";
-import { getDownloadAll, getSourceCitation } from "@/api";
+import { getDownloadStatistics, getSourceCitation } from "@/api";
 import sources from "@/api/data/source-details.json";
 import AppButton from "@/components/AppButton.vue";
 import AppHeading from "@/components/AppHeading.vue";
