@@ -1,20 +1,20 @@
 <template>
-  <section style="--content: 300">
+  <section class="[--content:200]">
     <AppHeading level="1" class="self-center">
       {{ title }}
     </AppHeading>
 
-    <div class="grid grid-cols-3 place-items-center gap-8 max-md:grid-cols-1">
+    <div class="grid grid-cols-2 gap-8 max-sm:grid-cols-1">
       <AppMap
         ref="map"
-        class="aspect-video w-100 max-w-full"
+        class="aspect-4/3 h-full"
         :class="geographyStatus === 'loading' && 'animate-loading'"
         :geography="geography"
         :highlight="id"
       />
 
       <div
-        class="flex flex-col items-start gap-8"
+        class="flex flex-col items-start gap-8 self-center"
         :class="featureStatus === 'loading' && 'animate-loading'"
       >
         <AppSelect
@@ -56,60 +56,79 @@
   </section>
 
   <section
-    class="[--content:9999]"
+    v-if="filter === 'basic'"
     :class="featureStatus === 'loading' && 'animate-loading'"
   >
-    <template v-if="filter === 'basic'">
-      <div
-        class="grid grid-cols-[repeat(auto-fit,minmax(min(--spacing(100),100%),1fr))] place-content-center place-items-center gap-16"
-      >
-        <AppBarChart
-          v-for="(chart, index) in chartData"
-          :key="index"
-          :title="chart.title"
-          :data="chart.data"
-          :unit="chart.unit"
-          :order="chart.order"
-        />
-      </div>
-    </template>
-
     <div
-      v-else-if="filter === 'all'"
-      class="columns-4 gap-20 max-lg:columns-3 max-md:columns-2 max-sm:columns-1"
+      class="grid grid-cols-[repeat(auto-fit,minmax(min(--spacing(100),100%),1fr))] place-content-center place-items-center gap-16"
     >
-      <div
-        class="grid grid-cols-[1fr_max-content_max-content_max-content] items-center gap-1 text-center *:rounded-md *:p-1"
-      >
-        <template
-          v-for="({ label, value, compare, state, unit }, index) in flatGroups"
-          :key="index"
-        >
-          <template v-if="value === undefined && state === undefined">
-            <strong class="col-span-full text-left">{{ label }}</strong>
-          </template>
-          <template v-else>
-            <span class="text-left">{{ label }}</span>
-            <span
-              v-if="value !== undefined && unit !== undefined"
-              v-tooltip="formatValue(value, unit)"
-              class="bg-lime-500/25"
-            >
-              {{ formatValue(value, unit, true) }}
-            </span>
-            <span v-else />
-            <span>{{ compare }}</span>
-            <span
-              v-if="state !== undefined && unit !== undefined"
-              v-tooltip="formatValue(state, unit)"
-              class="bg-sky-500/25"
-            >
-              {{ formatValue(state, unit, true) }}
-            </span>
-            <span v-else />
-          </template>
+      <AppBarChart
+        v-for="(chart, index) in chartData"
+        :key="index"
+        :title="chart.title"
+        :data="chart.data"
+        :unit="chart.unit"
+        :order="chart.order"
+      />
+    </div>
+  </section>
+
+  <section
+    v-else-if="filter === 'all'"
+    class="[--content:200]"
+    :class="featureStatus === 'loading' && 'animate-loading'"
+  >
+    <div
+      class="grid grid-cols-[1fr_max-content_max-content_max-content] items-center gap-1 text-center *:rounded-md *:p-1"
+    >
+      <template v-for="(statisticOrGroup, index) in flatGroups" :key="index">
+        <template v-if="'group' in statisticOrGroup">
+          <component
+            :is="`h${statisticOrGroup.depth + 2}`"
+            class="col-span-full text-left"
+            :class="[
+              statisticOrGroup.depth === 0 && 'not-first:mt-12 not-last:mb-4',
+              statisticOrGroup.depth === 1 && 'not-first:mt-8 not-last:mb-2',
+            ]"
+          >
+            {{ statisticOrGroup.group }}
+          </component>
         </template>
-      </div>
+        <template v-else>
+          <span class="text-left">{{ statisticOrGroup.label }}</span>
+          <span
+            v-if="
+              statisticOrGroup.value !== undefined &&
+              statisticOrGroup.unit !== undefined
+            "
+            v-tooltip="
+              formatValue(statisticOrGroup.value, statisticOrGroup.unit)
+            "
+            class="bg-lime-500/25"
+          >
+            {{
+              formatValue(statisticOrGroup.value, statisticOrGroup.unit, true)
+            }}
+          </span>
+          <span v-else />
+          <span>{{ statisticOrGroup.compare }}</span>
+          <span
+            v-if="
+              statisticOrGroup.state !== undefined &&
+              statisticOrGroup.unit !== undefined
+            "
+            v-tooltip="
+              formatValue(statisticOrGroup.state, statisticOrGroup.unit)
+            "
+            class="bg-sky-500/25"
+          >
+            {{
+              formatValue(statisticOrGroup.state, statisticOrGroup.unit, true)
+            }}
+          </span>
+          <span v-else />
+        </template>
+      </template>
     </div>
   </section>
 </template>
@@ -220,18 +239,31 @@ const chartData = computed(() =>
     : [],
 );
 
+type StatisticOrGroup =
+  | { group: string; depth: number }
+  | {
+      label: string;
+      value?: Value;
+      compare?: string;
+      state?: Value;
+      unit?: Unit;
+    };
+
 /** statistic groups to flat list */
 const flatGroups = computed(() => {
   const getTree = (
     groups: Groups = statisticGroups,
-  ): {
-    label: string;
-    value?: Value;
-    compare?: string;
-    state?: Value;
-    unit?: Unit;
-  }[] =>
+    depth = 0,
+  ): StatisticOrGroup[] =>
     Object.entries(groups).flatMap(([statisticOrGroup, subgroups]) => {
+      /** group heading */
+      if (subgroups)
+        return [
+          { group: statisticOrGroup, depth },
+          ...getTree(subgroups, depth + 1),
+        ];
+
+      /** statistic details */
       const label =
         getValue(statisticLabels, statisticOrGroup) ?? statisticOrGroup;
       const value = feature.value.statistics[statisticOrGroup]?.value;
@@ -245,10 +277,8 @@ const flatGroups = computed(() => {
               : "="
           : undefined;
       const unit = feature.value.statistics[statisticOrGroup]?.unit;
-      return [
-        { label, value, compare, state, unit },
-        ...(subgroups ? getTree(subgroups) : []),
-      ];
+
+      return [{ label, value, compare, state, unit }];
     });
 
   return getTree();
