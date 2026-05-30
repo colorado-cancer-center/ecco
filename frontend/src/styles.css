@@ -80,12 +80,12 @@
   }
 
   a {
-    @apply transition;
+    @apply text-yellow-800 underline transition hover:text-current;
   }
 
   header a,
   footer a {
-    @apply relative p-1;
+    @apply relative p-1 text-black no-underline;
 
     &::after {
       @apply absolute right-0 bottom-0 left-0 h-0.5 scale-x-0 bg-current transition content-[''];
@@ -95,15 +95,6 @@
     &[data-active="true"]::after {
       @apply scale-x-100;
     }
-  }
-
-  h1 a,
-  h2 a,
-  h3 a,
-  h4 a,
-  p a,
-  td a {
-    @apply text-yellow-800 underline hover:text-current;
   }
 
   p {

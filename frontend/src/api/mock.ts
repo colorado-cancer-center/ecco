@@ -11,14 +11,33 @@ import type {
 } from "./";
 import sourceDetails from "@/api/data/source-details.json";
 import { mapValues } from "lodash";
-import { http, HttpResponse, passthrough } from "msw";
-import { setupWorker } from "msw/browser";
 import { api } from "./";
 
 /** temporary interface between real api structure and desired api structure */
 
-const handlers = [
-  http.get("*/level", async () => {
+export const _fetch = async (request: Request) => {
+  const url = new URL(request.url);
+  for (const [pattern, handler] of Object.entries(handlers)) {
+    const match = url.pathname.match(new RegExp(pattern));
+    if (!match) continue;
+    return await handler(
+      request,
+      ...match.slice(1).map(window.decodeURIComponent),
+    );
+  }
+  throw Error(`No mock handler for ${url}`);
+};
+
+const response = async (data: unknown) =>
+  new Response(JSON.stringify(data), {
+    headers: { "Content-Type": "application/json" },
+  });
+
+const handlers: Record<
+  string,
+  (request: Request, ...matches: string[]) => Promise<Response>
+> = {
+  "/level$": async () => {
     const url = new URL(`${api}/stats/measures`);
 
     const actual: _StatsMeasures = await (await fetch(url)).json();
@@ -27,11 +46,10 @@ const handlers = [
       Object.keys(actual).map((key) => [key, {}]),
     );
 
-    return HttpResponse.json(desired);
-  }),
+    return response(desired);
+  },
 
-  http.get("*/level/:level", async ({ params }) => {
-    const level = params.level as string;
+  "/level/(.*)$": async (request, level = "") => {
     const path =
       { county: "counties", tract: "tracts", healthregion: "healthregions" }[
         level
@@ -59,10 +77,10 @@ const handlers = [
       }),
     };
 
-    return HttpResponse.json(desired);
-  }),
+    return response(desired);
+  },
 
-  http.get("*/statistic", async () => {
+  "/statistic$": async () => {
     const url = new URL(`${api}/stats/measures`);
 
     const actual: _StatsMeasures = await (await fetch(url)).json();
@@ -87,11 +105,10 @@ const handlers = [
           }
         }
 
-    return HttpResponse.json(desired);
-  }),
+    return response(desired);
+  },
 
-  http.get("*/statistic/:statistic", async ({ request, params }) => {
-    const statistic = params.statistic as string;
+  "/statistic/(.*)$": async (request, statistic = "") => {
     const [category = "", measure = ""] = statistic.split(";") ?? [];
     const level = new URL(request.url).searchParams.get("level") ?? "";
     const factors = new URL(request.url).searchParams.get("factors") ?? "";
@@ -121,10 +138,10 @@ const handlers = [
         ) ?? undefined,
     };
 
-    return HttpResponse.json(desired);
-  }),
+    return response(desired);
+  },
 
-  http.get("*/location", async () => {
+  "/location$": async () => {
     const url = new URL(`${api}/locations`);
 
     const actual: _Locations = await (await fetch(url)).json();
@@ -135,11 +152,10 @@ const handlers = [
         .map((id) => [id, {}]),
     );
 
-    return HttpResponse.json(desired);
-  }),
+    return response(desired);
+  },
 
-  http.get("*/location/:location", async ({ params }) => {
-    const location = params.location as string;
+  "/location/(.*)$": async (request, location = "") => {
     const url = new URL(`${api}/locations/${location}`);
 
     const actual: _Location = await (await fetch(url)).json();
@@ -159,11 +175,10 @@ const handlers = [
       })),
     };
 
-    return HttpResponse.json(desired);
-  }),
+    return response(desired);
+  },
 
-  http.get("*/feature/:feature", async ({ params }) => {
-    const feature = params.feature as string;
+  "/feature/(.*)$": async (request, feature = "") => {
     const url = new URL(`${api}/stats/by-county/${feature}`);
 
     const actual: _StatsByCounty = await (await fetch(url)).json();
@@ -184,18 +199,8 @@ const handlers = [
       ),
     );
 
-    return HttpResponse.json(desired);
-  }),
-
-  /** leave all other requests untouched */
-  http.get("**", passthrough),
-  http.post("*", passthrough),
-];
-
-/** start mocking */
-export const mock = async () => {
-  const worker = setupWorker(...handlers);
-  await worker.start();
+    return response(desired);
+  },
 };
 
 type _StatsMeasures = {

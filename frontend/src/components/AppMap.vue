@@ -798,7 +798,6 @@ const thumbnail = ref("");
 
 /** make thumbnail blob from canvas */
 const generateThumbnail = debounce(async () => {
-  console.log("generate");
   URL.revokeObjectURL(thumbnail.value);
   const canvas = mapElement.value?.querySelector("canvas");
   if (!canvas) return;

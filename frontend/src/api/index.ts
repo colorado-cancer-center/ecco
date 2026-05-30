@@ -16,6 +16,7 @@ import outreach from "./data/outreach.json";
 import sourceDetails from "./data/source-details.json";
 import statisticLabels from "./data/statistic-labels.json";
 import zipCenters from "./data/zip-centers.json";
+import { _fetch } from "./mock";
 
 /** api root (no trailing slash) */
 export const api = import.meta.env.VITE_API;
@@ -37,7 +38,7 @@ export const request = async <Response>(url: URL, options?: RequestInit) => {
   const log = `(${cached ? "🗄️ cached" : "✨ new"}) ${url}`;
   console.debug(`📞 Request ${log}`, { request });
   /** make new request */
-  const response = cached ?? (await fetch(request));
+  const response = cached ?? (await _fetch(request));
   /** check status code */
   if (!response.ok) throw Error("Response not OK");
   /** parse response */

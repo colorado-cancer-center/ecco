@@ -4,15 +4,12 @@ import "@fontsource-variable/inter/wght.css";
 import { createApp } from "vue";
 import { createGtag } from "vue-gtag";
 import VueTippy from "vue-tippy";
-import { mock } from "@/api/mock";
 import { router } from "@/pages";
 import { stop } from "@/stop";
 import { tippyOptions } from "@/tooltip";
 import App from "./App.vue";
 
 console.debug(import.meta, import.meta.env);
-
-await mock();
 
 const app = createApp(App);
 

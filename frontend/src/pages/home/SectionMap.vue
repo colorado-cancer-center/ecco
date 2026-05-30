@@ -90,25 +90,13 @@
 
             <button
               class="absolute top-0.5 right-0.5 z-10 size-6 bg-stone-100 hover:text-theme"
-              @click="
-                () => {
-                  selectedMaps.splice(index, 1);
-                  if (selectedIndex < selectedMaps.length - 1) selectedIndex++;
-                  else if (selectedIndex > 0) selectedIndex--;
-                }
-              "
+              @click="deleteMap(index)"
             >
               <X />
             </button>
           </div>
         </div>
-        <AppButton
-          :disabled="selectedMaps.length >= maxMaps"
-          @click="
-            selectedMaps.push(defaultMap());
-            selectedIndex++;
-          "
-        >
+        <AppButton :disabled="selectedMaps.length >= maxMaps" @click="addMap()">
           Add
           <Plus />
         </AppButton>
@@ -715,7 +703,7 @@ import { useQuery } from "@/util/composables";
 import { downloadJson, downloadPng } from "@/util/download";
 import { formatValue } from "@/util/math";
 import { copy } from "@/util/misc";
-import { getIndex, getValue } from "@/util/types";
+import { getValue } from "@/util/types";
 import {
   Copy,
   Crop,
@@ -767,13 +755,17 @@ const selectedMaps = useParam(
 );
 
 /** maximum maps to be compared */
-const maxMaps = 4;
+const maxMaps = 12;
 
 /** selected map index */
 const selectedIndex = ref(0);
 
 /** get selected map object */
-const selectedMap = () => getIndex(selectedMaps.value, selectedIndex.value);
+const selectedMap = () => {
+  const selected = selectedMaps.value[selectedIndex.value];
+  if (!selected) throw Error("selected map out of bounds");
+  return selected;
+};
 
 /** map zoom state */
 const zoom = useParam("zoom", 0, numberParam);
@@ -940,18 +932,6 @@ const {
 /** re-load data when selected maps change */
 watch(selectedMaps, loadMapData, { immediate: true, deep: true });
 
-/** page title */
-watchEffect(() => {
-  const maps = selectedMaps.value.length;
-  const statistic = statistics.value[selectedMap().statistic]?.label;
-  const locations = selectedMap().locations.length;
-  appTitle.value = [
-    maps > 1 ? `${maps.toLocaleString()} maps` : "",
-    statistic ? statistic : "",
-    locations ? `${locations.toLocaleString()} locations` : "",
-  ].filter(Boolean);
-});
-
 /** all possible factors for any statistic */
 const factors = computed(() => {
   const factors: ValueOf<typeof statistics.value>["factors"] = {};
@@ -987,6 +967,47 @@ watchEffect(() => {
     selectedMap().factors[factor] = _default;
   }
 });
+
+/** page title */
+watchEffect(() => {
+  const maps = selectedMaps.value.length;
+  const statistic = statistics.value[selectedMap().statistic]?.label;
+  const locations = selectedMap().locations.length;
+  appTitle.value = [
+    maps > 1 ? `${maps.toLocaleString()} maps` : statistic ? statistic : "",
+    locations ? `${locations.toLocaleString()} locations` : "",
+  ].filter(Boolean);
+});
+
+/** add map to comparison */
+const addMap = () => {
+  selectedMaps.value.push(defaultMap());
+  selectedIndex.value = selectedMaps.value.length - 1;
+};
+
+/** delete map from comparison */
+const deleteMap = (index: number) => {
+  /** index in range */
+  if (index < 0 || index >= selectedMaps.value.length) return;
+
+  /** delete map */
+  selectedMaps.value.splice(index, 1);
+
+  if (selectedMaps.value.length === 0) {
+    /** no maps left */
+    addMap();
+    selectedIndex.value = 0;
+  } else if (index < selectedIndex.value) {
+    /** deleted index is before selected index */
+    selectedIndex.value--;
+  } else if (
+    index === selectedMaps.value.length &&
+    selectedIndex.value === selectedMaps.value.length
+  ) {
+    /** deleted and selected index are at end */
+    selectedIndex.value--;
+  }
+};
 
 /** how many cols to arrange compare maps in */
 const mapCols = computed(() => {
