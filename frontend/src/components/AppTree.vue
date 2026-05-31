@@ -20,19 +20,23 @@ export type _Tree = {
 
 <script setup lang="ts">
 import type { VNode } from "vue";
-import { ref, watch } from "vue";
+import { ref, useId, useTemplateRef, watch } from "vue";
 import AppButton from "@/components/AppButton.vue";
 import AppInput from "@/components/AppInput.vue";
 import AppTreeItem from "@/components/AppTreeItem.vue";
+import { useScrollable } from "@/util/composables";
+import { sleep } from "@/util/misc";
 import {
-  Crosshair,
+  ListCheck,
   ListChevronsDownUp,
   ListChevronsUpDown,
   Search,
 } from "@lucide/vue";
 
 type Props = {
-  /** path to selected item */
+  /** label */
+  label?: string;
+  /** selected item */
   modelValue?: ID;
   /** tree structure */
   tree: Tree[];
@@ -47,10 +51,14 @@ type Emits = {
 const emit = defineEmits<Emits>();
 
 type Slots = {
-  default(props: { child: _Tree }): VNode;
+  selected(props: { value: ID }): VNode;
+  action(props: { child: _Tree }): VNode;
 };
 
 defineSlots<Slots>();
+
+const scrollElement = useTemplateRef("scroll");
+useScrollable(scrollElement);
 
 /** search string */
 const search = ref("");
@@ -75,6 +83,7 @@ watch(
   { immediate: true, deep: true },
 );
 
+/** check if tree item matches search string */
 const matches = (child: _Tree, search: string) =>
   !search.trim() ||
   !![child.id, child.label].join(" ").match(new RegExp(search, "i"));
@@ -113,52 +122,89 @@ const openAll = (children: _Tree[] = _tree.value) => {
   }
 };
 
+/** are all tree levels closed */
+const allClosed = (children: _Tree[] = _tree.value) => {
+  for (const child of children)
+    if (child.open || !allClosed(child.children)) return false;
+  return true;
+};
+
 /** expand tree to show selected item */
-const onSeeSelected = (children: _Tree[] = _tree.value) => {
+const openSelected = (children: _Tree[] = _tree.value) => {
   closeAll();
   for (const child of children)
-    if (
-      child.id === modelValue ||
-      (child.children && onSeeSelected(child.children))
-    )
+    if (child.id === modelValue || openSelected(child.children))
       return (child.open = true);
+  return false;
+};
+
+/** is selected item visible */
+const isSelectedOpen = (children: _Tree[] = _tree.value): boolean => {
+  for (const child of children) {
+    if (child.id === modelValue) return true;
+    if (child.open && isSelectedOpen(child.children)) return true;
+  }
   return false;
 };
 
 /** function to update model value */
 const updateModelValue = (child: _Tree) => emit("update:modelValue", child.id);
+
+const id = useId();
 </script>
 
 <template>
-  <div role="tree" class="flex flex-col gap-2">
+  <div ref="root" class="flex max-h-max flex-col gap-1">
+    <label :id="id">{{ label }}</label>
+
     <!-- top controls -->
     <div class="flex gap-2">
       <AppInput v-model="search" :icon="Search" placeholder="Search" />
-      <AppButton v-tooltip="'Collapse all tree levels'" @click="closeAll()">
-        <ListChevronsDownUp />
-      </AppButton>
-      <AppButton v-tooltip="'Expand all tree levels'" @click="openAll()">
+      <AppButton
+        v-if="allClosed()"
+        v-tooltip="'Expand all tree levels'"
+        @click="openAll()"
+      >
         <ListChevronsUpDown />
       </AppButton>
       <AppButton
-        v-tooltip="'Expand tree to show selected'"
-        @click="onSeeSelected()"
+        v-else
+        v-tooltip="'Collapse all tree levels'"
+        @click="closeAll()"
       >
-        <Crosshair />
+        <ListChevronsDownUp />
+      </AppButton>
+      <AppButton
+        v-tooltip="'Expand tree to show selected'"
+        @click="isSelectedOpen() ? closeAll() : openSelected()"
+      >
+        <ListCheck />
       </AppButton>
     </div>
 
+    <div class="my-1 flex items-center gap-2 pl-2 text-sm text-stone-500">
+      Selected:
+      <slot name="selected" v-bind="{ value: modelValue }" />
+    </div>
+
     <!-- tree structure -->
-    <AppTreeItem
-      :model-value="modelValue"
-      :update-model-value="updateModelValue"
-      :children="_tree"
-      :level="1"
-      :search="!!search"
+    <div
+      ref="scroll"
+      role="tree"
+      :aria-labelledby="id"
+      class="scrollable overflow-y-auto"
     >
-      <template #default="slotProps">
-        <slot v-bind="slotProps" />
-      </template>
-    </AppTreeItem>
+      <AppTreeItem
+        :model-value="modelValue"
+        :update-model-value="updateModelValue"
+        :children="_tree"
+        :level="1"
+        :search="!!search"
+      >
+        <template #action="slotProps">
+          <slot name="action" v-bind="slotProps" />
+        </template>
+      </AppTreeItem>
+    </div>
   </div>
 </template>

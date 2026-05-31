@@ -165,8 +165,35 @@
   paint-order: stroke;
 }
 
+@utility scrollable {
+  @apply relative;
+
+  mask-image:
+    linear-gradient(
+      to right,
+      transparent,
+      black calc(25% * var(--scrollable-left))
+    ),
+    linear-gradient(
+      to left,
+      transparent,
+      black calc(25% * var(--scrollable-right))
+    ),
+    linear-gradient(
+      to bottom,
+      transparent,
+      black calc(25% * var(--scrollable-top))
+    ),
+    linear-gradient(
+      to top,
+      transparent,
+      black calc(25% * var(--scrollable-bottom))
+    );
+  mask-composite: intersect;
+}
+
 .tippy-box {
-  @apply rounded-md bg-stone-600 p-1 leading-relaxed! text-white shadow-md shadow-white;
+  @apply rounded-md border-2 border-white bg-stone-600 p-1 leading-relaxed! text-white;
   font: inherit;
 }
 

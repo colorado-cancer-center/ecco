@@ -34,7 +34,8 @@
     "vue-echarts": "^8.0.1",
     "vue-gtag": "^3.7.1",
     "vue-router": "^5.0.6",
-    "vue-tippy": "^6.7.1"
+    "vue-tippy": "^6.7.1",
+    "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

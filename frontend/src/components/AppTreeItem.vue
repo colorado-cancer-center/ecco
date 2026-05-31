@@ -20,7 +20,7 @@ type Props = {
 const { modelValue, level } = defineProps<Props>();
 
 type Slots = {
-  default(props: { child: _Tree }): VNode;
+  action(props: { child: _Tree }): VNode;
 };
 
 defineSlots<Slots>();
@@ -138,7 +138,7 @@ const onKey = (event: KeyboardEvent, child: _Tree) => {
         </button>
 
         <!-- action -->
-        <slot v-if="!child.children.length" :child="child" />
+        <slot v-if="!child.children.length" name="action" :child="child" />
       </div>
 
       <!-- children items -->
@@ -150,8 +150,8 @@ const onKey = (event: KeyboardEvent, child: _Tree) => {
         :children="child.children"
         :update-model-value="updateModelValue"
       >
-        <template #default="slotProps">
-          <slot name="default" v-bind="slotProps" />
+        <template #action="slotProps">
+          <slot name="action" v-bind="slotProps" />
         </template>
       </AppTreeItem>
     </div>

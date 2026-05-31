@@ -10,6 +10,7 @@ import {
   watch,
   watchEffect,
 } from "vue";
+import draggable from "vuedraggable";
 import {
   extraLocations,
   getDownloadStatistic,
@@ -125,6 +126,17 @@ const manualMin = ref(0);
 const manualMax = ref(1);
 const mapWidth = ref(0);
 const mapHeight = ref(0);
+
+/** highlighted map index */
+const highlightedIndex = ref(-1);
+
+/** event listeners to handle map highlighting */
+const highlightListeners = (index: number) => ({
+  onfocus: () => (highlightedIndex.value = index),
+  onblur: () => (highlightedIndex.value = -1),
+  onmouseenter: () => (highlightedIndex.value = index),
+  onmouseleave: () => (highlightedIndex.value = -1),
+});
 
 /** load geographic level data */
 const {
@@ -462,13 +474,18 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         :class="[levelStatus === 'loading' && 'animate-loading']"
       />
 
-      <!-- statistics -->
+      <!-- statistic -->
       <AppTree
         v-model="selectedMap().statistic"
+        label="Statistic"
         :tree="statisticOptions"
+        class="grow basis-0 overflow-y-auto"
         :class="[statisticStatus === 'loading' && 'animate-loading']"
       >
-        <template #default="{ child }">
+        <template #selected="{ value }">
+          {{ statisticPaths[value]?.join(" > ") ?? value }}
+        </template>
+        <template #action="{ child }">
           <AppButton
             v-if="child.id"
             v-tooltip="'Download statistic data'"
@@ -514,36 +531,47 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
 
       <!-- multi-map compare -->
       <AppCollapsible label="Compare">
+        <p class="text-center">
+          Comparing <strong>{{ selectedMaps.length }}</strong> map(s)
+        </p>
         <div class="grid grid-cols-3 gap-4">
-          <div
-            v-for="(selected, index) in selectedMaps"
-            :key="index"
-            class="relative aspect-4/3"
+          <draggable
+            v-model="selectedMaps"
+            :item-key="JSON.stringify"
+            class="contents"
           >
-            <button
-              class="size-full overflow-hidden border-2 bg-stone-100"
-              :class="
-                selectedIndex === index
-                  ? 'border-theme'
-                  : 'border-stone-100 hover:border-theme'
-              "
-              @click="selectedIndex = index"
-            >
-              <img
-                v-if="mapElements?.[index]?.thumbnail"
-                :src="mapElements?.[index]?.thumbnail"
-                alt=""
-                class="size-full object-contain"
-              />
-            </button>
+            <template #item="{ index }: { index: number }">
+              <div class="relative aspect-4/3">
+                <button
+                  v-tooltip="'Click to select, drag to reorder'"
+                  v-bind="highlightListeners(index)"
+                  class="size-full overflow-hidden border-2 bg-stone-100"
+                  :class="
+                    selectedIndex === index
+                      ? 'border-theme'
+                      : 'border-stone-100 hover:border-theme'
+                  "
+                  @click="selectedIndex = index"
+                >
+                  <img
+                    v-if="mapElements?.[index]?.thumbnail"
+                    :src="mapElements?.[index]?.thumbnail"
+                    alt=""
+                    class="size-full object-cover"
+                  />
+                </button>
 
-            <button
-              class="absolute top-0.5 right-0.5 z-10 size-6 bg-stone-100 hover:text-theme"
-              @click="deleteMap(index)"
-            >
-              <X />
-            </button>
-          </div>
+                <button
+                  v-tooltip="'Remove map from comparison'"
+                  v-bind="highlightListeners(index)"
+                  class="absolute top-0.5 right-0.5 z-10 size-6 bg-stone-100 hover:text-theme"
+                  @click="deleteMap(index)"
+                >
+                  <X />
+                </button>
+              </div>
+            </template>
+          </draggable>
         </div>
         <AppButton :disabled="selectedMaps.length >= maxMaps" @click="addMap()">
           Add
@@ -772,6 +800,12 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
           v-model:zoom="zoom"
           v-model:lat="lat"
           v-model:long="long"
+          :class="[
+            'outline-8',
+            index === highlightedIndex
+              ? 'z-10 outline-theme'
+              : 'outline-transparent',
+          ]"
           :geography="geography"
           :locations="locations"
           :min="manualMinMax ? manualMin : statistic.min"

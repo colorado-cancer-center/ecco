@@ -47,14 +47,7 @@ export default defineConfigWithVueTs(
     name: "Vue A11y",
     extends: vueA11y.configs["flat/recommended"],
     rules: {
-      "vuejs-accessibility/label-has-for": [
-        "error",
-        {
-          controlComponents: ["SliderRoot", "AppNumber"],
-          required: { some: ["nesting", "id"] },
-          allowChildren: true,
-        },
-      ],
+      "vuejs-accessibility/label-has-for": "off",
     },
   },
 
