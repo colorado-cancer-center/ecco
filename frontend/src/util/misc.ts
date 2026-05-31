@@ -1,4 +1,4 @@
-import { formatHex } from "culori";
+const now = () => window.performance.now();
 
 /** wait ms */
 export const sleep = (ms = 0) =>
@@ -22,18 +22,26 @@ export const waitFor = async <Result>(
   }
 };
 
-/** get css variable */
-export const getCssVar = (name: string) => {
-  let value = getComputedStyle(document.body).getPropertyValue(name);
-  if (value.includes("oklch")) value = formatHex(value) ?? value;
-  return value;
+/** wait for func to return stable value */
+export const waitForStable = async <Return>(
+  func: () => Return,
+  /** wait until func returns same value for at least this long */
+  wait = 200,
+  /** check value every this many ms */
+  interval = 10,
+  /** hard time limit */
+  max = 3000,
+): Promise<Return | undefined> => {
+  let lastChanged = now();
+  let prevResult: Return | undefined;
+  for (let tries = max / interval; tries > 0; tries--) {
+    const result = func();
+    if (result !== prevResult) lastChanged = now();
+    prevResult = result;
+    if (result !== undefined && now() - lastChanged > wait) return result;
+    await sleep(interval);
+  }
 };
-
-/** convert [0,1] value to two hex digits */
-export const toHex = (value = 0) =>
-  Math.floor(value * 255)
-    .toString(16)
-    .padStart(2, "0");
 
 /** copy text to clipboard */
 export const copy = async (text: string) => {

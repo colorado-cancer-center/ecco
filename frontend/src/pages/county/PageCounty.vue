@@ -116,7 +116,7 @@ type StatisticOrGroup =
 
 /** statistic groups to flat list */
 const flatGroups = computed(() => {
-  const getTree = (
+  const recurse = (
     groups: Groups = statisticGroups,
     depth = 0,
   ): StatisticOrGroup[] =>
@@ -125,7 +125,7 @@ const flatGroups = computed(() => {
       if (subgroups)
         return [
           { group: statisticOrGroup, depth },
-          ...getTree(subgroups, depth + 1),
+          ...recurse(subgroups, depth + 1),
         ];
 
       /** statistic details */
@@ -146,7 +146,7 @@ const flatGroups = computed(() => {
       return [{ label, value, compare, state, unit }];
     });
 
-  return getTree();
+  return recurse();
 });
 </script>
 

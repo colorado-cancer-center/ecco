@@ -180,13 +180,13 @@ export type Groups = {
 
 /** statistics, as tree options */
 const statisticOptions = computed(() => {
-  const getTree = (groups: Groups = statisticGroups): Tree[] =>
+  const get = (groups: Groups = statisticGroups): Tree[] =>
     Object.entries(groups).map(([statisticOrGroup, value]) => ({
       id: statisticOrGroup,
       label: statistics.value[statisticOrGroup]?.label ?? statisticOrGroup,
-      children: value ? getTree(value) : [],
+      children: value ? get(value) : [],
     }));
-  return getTree();
+  return get();
 });
 
 /** statistics, as grouping paths */
@@ -479,7 +479,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         v-model="selectedMap().statistic"
         label="Statistic"
         :tree="statisticOptions"
-        class="grow basis-0 overflow-y-auto"
+        class="max-h-max grow basis-0 overflow-y-auto"
         :class="[statisticStatus === 'loading' && 'animate-loading']"
       >
         <template #selected="{ value }">

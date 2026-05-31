@@ -5,8 +5,8 @@ import type { EChartsOption } from "echarts";
 import { computed, provide, ref, watchEffect } from "vue";
 import VChart, { THEME_KEY } from "vue-echarts";
 import { noDataEntry } from "@/components/AppMap.vue";
+import { getCssVar } from "@/util/dom";
 import { formatValue } from "@/util/math";
-import { getCssVar } from "@/util/misc";
 import { useElementSize } from "@vueuse/core";
 import { BarChart, PictorialBarChart } from "echarts/charts";
 import {

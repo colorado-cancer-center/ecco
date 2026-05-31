@@ -17,7 +17,7 @@ type Props = {
   search: boolean;
 };
 
-const { modelValue, level } = defineProps<Props>();
+const { modelValue, updateModelValue, level } = defineProps<Props>();
 
 type Slots = {
   action(props: { child: _Tree }): VNode;
@@ -25,7 +25,13 @@ type Slots = {
 
 defineSlots<Slots>();
 
-/** handle button key press */
+/** on button click */
+const onClick = (child: _Tree) => {
+  if (child.children.length) child.open = !child.open;
+  else updateModelValue(child);
+};
+
+/** on button key press */
 const onKey = (event: KeyboardEvent, child: _Tree) => {
   const target = event.target as HTMLElement;
 
@@ -107,12 +113,7 @@ const onKey = (event: KeyboardEvent, child: _Tree) => {
           :class="modelValue === child.id && 'bg-stone-100'"
           :data-level="level"
           :disabled="search && !!child.children.length"
-          @click="
-            () => {
-              if (child.children.length) child.open = !child.open;
-              else updateModelValue(child);
-            }
-          "
+          @click="() => onClick(child)"
           @keydown="(event) => onKey(event, child)"
         >
           <!-- expand/collapse icon -->
