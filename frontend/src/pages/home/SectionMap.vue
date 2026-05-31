@@ -64,7 +64,7 @@ import {
   useWindowSize,
 } from "@vueuse/core";
 import { toBlob } from "html-to-image";
-import { clamp, mapValues } from "lodash";
+import { clamp } from "lodash";
 
 /** element refs */
 const rightPanelElement = useTemplateRef("rightPanelElement");

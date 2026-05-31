@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppAlert from "@/components/AppAlert.vue";
-</script>Ç
+</script>
 
 <template>
   <AppAlert>
