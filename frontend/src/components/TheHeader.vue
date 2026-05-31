@@ -1,3 +1,8 @@
+<script setup lang="ts">
+import AppLink from "@/components/AppLink.vue";
+import { routes } from "@/pages";
+</script>
+
 <template>
   <header
     class="flex flex-wrap items-center justify-between gap-2 p-4 max-md:flex-col max-md:text-center"
@@ -29,8 +34,3 @@
     </nav>
   </header>
 </template>
-
-<script setup lang="ts">
-import AppLink from "@/components/AppLink.vue";
-import { routes } from "@/pages";
-</script>

@@ -1,3 +1,48 @@
+<script setup lang="ts">
+import { onMounted, onUpdated } from "vue";
+import { getDownloadStatistics, getSourceCitation } from "@/api";
+import sources from "@/api/data/source-details.json";
+import AppButton from "@/components/AppButton.vue";
+import AppHeading from "@/components/AppHeading.vue";
+import AppLink from "@/components/AppLink.vue";
+import { appTitle } from "@/meta";
+import { copy } from "@/util/misc";
+import { Download, Feather } from "@lucide/vue";
+import { kebabCase } from "lodash";
+import { micromark } from "micromark";
+import { gfmTable, gfmTableHtml } from "micromark-extension-gfm-table";
+
+/** page title */
+onMounted(() => (appTitle.value = ["Sources"]));
+
+/** load source description markdown files */
+const descriptions = Object.fromEntries(
+  Object.entries(
+    import.meta.glob<{ default: string }>("./*.md", {
+      query: "raw",
+      eager: true,
+    }),
+  ).map(([key, value]) => [
+    key.replace(/^\.\/(.*)\.md$/, "$1"),
+    micromark(value.default, {
+      extensions: [gfmTable()],
+      htmlExtensions: [gfmTableHtml()],
+    }),
+  ]),
+);
+
+onUpdated(() => {
+  /** wrap all tables in scrollable container */
+  for (const table of document.querySelectorAll("table")) {
+    if (table.parentElement?.classList.contains("table-wrapper")) continue;
+    const wrapper = document.createElement("div");
+    wrapper.classList.add("table-wrapper");
+    table.parentElement?.insertBefore(wrapper, table);
+    wrapper.append(table);
+  }
+});
+</script>
+
 <template>
   <section>
     <AppHeading level="1">Sources</AppHeading>
@@ -137,48 +182,3 @@
     </p>
   </section>
 </template>
-
-<script setup lang="ts">
-import { onMounted, onUpdated } from "vue";
-import { getDownloadStatistics, getSourceCitation } from "@/api";
-import sources from "@/api/data/source-details.json";
-import AppButton from "@/components/AppButton.vue";
-import AppHeading from "@/components/AppHeading.vue";
-import AppLink from "@/components/AppLink.vue";
-import { appTitle } from "@/meta";
-import { copy } from "@/util/misc";
-import { Download, Feather } from "@lucide/vue";
-import { kebabCase } from "lodash";
-import { micromark } from "micromark";
-import { gfmTable, gfmTableHtml } from "micromark-extension-gfm-table";
-
-/** page title */
-onMounted(() => (appTitle.value = ["Sources"]));
-
-/** load source description markdown files */
-const descriptions = Object.fromEntries(
-  Object.entries(
-    import.meta.glob<{ default: string }>("./*.md", {
-      query: "raw",
-      eager: true,
-    }),
-  ).map(([key, value]) => [
-    key.replace(/^\.\/(.*)\.md$/, "$1"),
-    micromark(value.default, {
-      extensions: [gfmTable()],
-      htmlExtensions: [gfmTableHtml()],
-    }),
-  ]),
-);
-
-onUpdated(() => {
-  /** wrap all tables in scrollable container */
-  for (const table of document.querySelectorAll("table")) {
-    if (table.parentElement?.classList.contains("table-wrapper")) continue;
-    const wrapper = document.createElement("div");
-    wrapper.classList.add("table-wrapper");
-    table.parentElement?.insertBefore(wrapper, table);
-    wrapper.append(table);
-  }
-});
-</script>

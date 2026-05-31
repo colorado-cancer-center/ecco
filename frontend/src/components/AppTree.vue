@@ -1,37 +1,3 @@
-<template>
-  <div role="tree" class="flex flex-col gap-2">
-    <!-- top controls -->
-    <div class="flex gap-2">
-      <AppInput v-model="search" :icon="Search" placeholder="Search" />
-      <AppButton v-tooltip="'Collapse all tree levels'" @click="closeAll()">
-        <ListChevronsDownUp />
-      </AppButton>
-      <AppButton v-tooltip="'Expand all tree levels'" @click="openAll()">
-        <ListChevronsUpDown />
-      </AppButton>
-      <AppButton
-        v-tooltip="'Expand tree to show selected'"
-        @click="onSeeSelected()"
-      >
-        <Crosshair />
-      </AppButton>
-    </div>
-
-    <!-- tree structure -->
-    <AppTreeItem
-      :model-value="modelValue"
-      :update-model-value="updateModelValue"
-      :children="_tree"
-      :level="1"
-      :search="!!search"
-    >
-      <template #default="slotProps">
-        <slot v-bind="slotProps" />
-      </template>
-    </AppTreeItem>
-  </div>
-</template>
-
 <script lang="ts">
 export type ID = string;
 
@@ -162,3 +128,37 @@ const onSeeSelected = (children: _Tree[] = _tree.value) => {
 /** function to update model value */
 const updateModelValue = (child: _Tree) => emit("update:modelValue", child.id);
 </script>
+
+<template>
+  <div role="tree" class="flex flex-col gap-2">
+    <!-- top controls -->
+    <div class="flex gap-2">
+      <AppInput v-model="search" :icon="Search" placeholder="Search" />
+      <AppButton v-tooltip="'Collapse all tree levels'" @click="closeAll()">
+        <ListChevronsDownUp />
+      </AppButton>
+      <AppButton v-tooltip="'Expand all tree levels'" @click="openAll()">
+        <ListChevronsUpDown />
+      </AppButton>
+      <AppButton
+        v-tooltip="'Expand tree to show selected'"
+        @click="onSeeSelected()"
+      >
+        <Crosshair />
+      </AppButton>
+    </div>
+
+    <!-- tree structure -->
+    <AppTreeItem
+      :model-value="modelValue"
+      :update-model-value="updateModelValue"
+      :children="_tree"
+      :level="1"
+      :search="!!search"
+    >
+      <template #default="slotProps">
+        <slot v-bind="slotProps" />
+      </template>
+    </AppTreeItem>
+  </div>
+</template>

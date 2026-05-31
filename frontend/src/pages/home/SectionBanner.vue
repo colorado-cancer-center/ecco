@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import AppAlert from "@/components/AppAlert.vue";
+</script>Ç
+
 <template>
   <AppAlert>
     <p>
@@ -13,7 +17,3 @@
     </p>
   </AppAlert>
 </template>
-
-<script setup lang="ts">
-import AppAlert from "@/components/AppAlert.vue";
-</script>

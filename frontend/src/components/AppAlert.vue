@@ -1,18 +1,3 @@
-<template>
-  <section
-    ref="alert"
-    class="overflow-y-clip transition-all"
-    :class="open ? '' : 'py-0'"
-    :aria-hidden="open"
-  >
-    <slot />
-    <AppButton :accent="true" class="self-center" @click="onClick">
-      Dismiss
-      <X />
-    </AppButton>
-  </section>
-</template>
-
 <script setup lang="ts">
 import { onMounted, useTemplateRef } from "vue";
 import { useAutoHeight } from "@/util/composables";
@@ -61,3 +46,18 @@ const onClick = () => {
   window.scrollBy({ top: -1 });
 };
 </script>
+
+<template>
+  <section
+    ref="alert"
+    class="overflow-y-clip transition-all"
+    :class="open ? '' : 'py-0'"
+    :aria-hidden="open"
+  >
+    <slot />
+    <AppButton :accent="true" class="self-center" @click="onClick">
+      Dismiss
+      <X />
+    </AppButton>
+  </section>
+</template>

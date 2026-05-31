@@ -1,3 +1,21 @@
+<script setup lang="ts">
+import { Switch, SwitchGroup, SwitchLabel } from "@headlessui/vue";
+import { Square, SquareCheck } from "@lucide/vue";
+
+type Props = {
+  label: string;
+  modelValue: boolean;
+};
+
+defineProps<Props>();
+
+type Emits = {
+  "update:modelValue": [Props["modelValue"]];
+};
+
+const emit = defineEmits<Emits>();
+</script>
+
 <template>
   <SwitchGroup>
     <div
@@ -23,21 +41,3 @@
     </div>
   </SwitchGroup>
 </template>
-
-<script setup lang="ts">
-import { Switch, SwitchGroup, SwitchLabel } from "@headlessui/vue";
-import { Square, SquareCheck } from "@lucide/vue";
-
-type Props = {
-  label: string;
-  modelValue: boolean;
-};
-
-defineProps<Props>();
-
-type Emits = {
-  "update:modelValue": [Props["modelValue"]];
-};
-
-const emit = defineEmits<Emits>();
-</script>

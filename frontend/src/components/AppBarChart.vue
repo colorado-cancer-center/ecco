@@ -1,11 +1,3 @@
-<template>
-  <v-chart
-    ref="chart"
-    class="aspect-video rounded-md shadow-md"
-    :option="option"
-  />
-</template>
-
 <script setup lang="ts">
 import type { ComponentInstance } from "vue";
 import type { Unit } from "@/api";
@@ -163,3 +155,11 @@ const option = computed(() => {
   return options;
 });
 </script>
+
+<template>
+  <v-chart
+    ref="chart"
+    class="aspect-video rounded-md shadow-md"
+    :option="option"
+  />
+</template>

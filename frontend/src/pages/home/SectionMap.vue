@@ -1,3 +1,452 @@
+<script setup lang="ts">
+import type { Tree } from "@/components/AppTree.vue";
+import type { ValueOf } from "type-fest";
+import {
+  computed,
+  onMounted,
+  ref,
+  toRaw,
+  useTemplateRef,
+  watch,
+  watchEffect,
+} from "vue";
+import {
+  extraLocations,
+  getDownloadStatistic,
+  getLevel,
+  getLevels,
+  getLocation,
+  getLocations,
+  getSourceCitation,
+  getStatistic,
+  getStatistics,
+} from "@/api";
+import locationGroups from "@/api/data/location-groups.json";
+import statisticGroups from "@/api/data/statistic-groups.json";
+import AppButton from "@/components/AppButton.vue";
+import AppCheckbox from "@/components/AppCheckbox.vue";
+import AppCollapsible from "@/components/AppCollapsible.vue";
+import AppLink from "@/components/AppLink.vue";
+import AppMap from "@/components/AppMap.vue";
+import AppNumber from "@/components/AppNumber.vue";
+import AppSelect from "@/components/AppSelect.vue";
+import AppSlider from "@/components/AppSlider.vue";
+import AppTree from "@/components/AppTree.vue";
+import { backgroundOptions, defaultBackground } from "@/components/background";
+import { defaultGradient, gradientOptions } from "@/components/gradient";
+import { appTitle } from "@/meta";
+import { jsonParam, numberParam, useParam } from "@/pages";
+import { useQuery } from "@/util/composables";
+import { downloadJson, downloadPng } from "@/util/download";
+import { formatValue } from "@/util/math";
+import { copy } from "@/util/misc";
+import { getValue } from "@/util/types";
+import {
+  Copy,
+  Crop,
+  Download,
+  Feather,
+  Fullscreen,
+  Info,
+  MessageCircle,
+  Minus,
+  Plus,
+  Pointer,
+  RefreshCw,
+  X,
+} from "@lucide/vue";
+import {
+  useElementBounding,
+  useFullscreen,
+  useResizeObserver,
+  useWindowSize,
+} from "@vueuse/core";
+import { toBlob } from "html-to-image";
+import { clamp } from "lodash";
+
+/** element refs */
+const rightPanelElement = useTemplateRef("rightPanelElement");
+const mapGridElement = useTemplateRef("mapGridElement");
+const mapElements = useTemplateRef("mapElements");
+
+/** default selected maps */
+const defaultMap = () => ({
+  level: "county",
+  statistic: "sociodemographics;Total",
+  factors: {},
+  locations: [],
+});
+
+type SelectedMap = {
+  level: string;
+  statistic: string;
+  factors: Record<string, string>;
+  locations: string[];
+};
+
+/** selected maps state */
+const selectedMaps = useParam(
+  "maps",
+  [defaultMap()],
+  jsonParam<SelectedMap[]>([]),
+);
+
+/** maximum maps to be compared */
+const maxMaps = 12;
+
+/** selected map index */
+const selectedIndex = ref(0);
+
+/** get selected map object */
+const selectedMap = () => {
+  const selected = selectedMaps.value[selectedIndex.value];
+  if (!selected) throw Error("selected map out of bounds");
+  return selected;
+};
+
+/** map zoom state */
+const zoom = useParam("zoom", 0, numberParam);
+const lat = useParam("lat", 0, numberParam);
+const long = useParam("long", 0, numberParam);
+
+/** map style state */
+const showLegends = ref(true);
+const selectedBackground = ref(defaultBackground);
+const selectedGradient = ref(defaultGradient);
+const backgroundOpacity = ref(1);
+const geographyOpacity = ref(0.75);
+const locationOpacity = ref(1);
+const flipGradient = ref(false);
+const scaleSteps = ref(5);
+const niceSteps = ref(false);
+const scalePower = ref(1);
+const manualMinMax = ref(false);
+const manualMin = ref(0);
+const manualMax = ref(1);
+const mapWidth = ref(0);
+const mapHeight = ref(0);
+
+/** load geographic level data */
+const {
+  query: loadLevels,
+  data: levels,
+  status: levelStatus,
+} = useQuery(getLevels, {});
+
+onMounted(async () => {
+  await loadLevels();
+  console.debug("levels", toRaw(levels.value));
+});
+
+/** geographic levels, as select options */
+const levelOptions = computed(() =>
+  Object.entries(levels.value).map(([level, { label }]) => ({
+    id: level,
+    label:
+      label +
+      (statistics.value[selectedMap().statistic]?.levels.includes(level)
+        ? ""
+        : " (ND)"),
+  })),
+);
+
+/** load statistic data */
+const {
+  query: loadStatistics,
+  data: statistics,
+  status: statisticStatus,
+} = useQuery(getStatistics, {});
+
+onMounted(async () => {
+  await loadStatistics();
+  console.debug("statistics", toRaw(statistics.value));
+});
+
+export type Groups = {
+  [group: string]: Groups | null;
+};
+
+/** statistics, as tree options */
+const statisticOptions = computed(() => {
+  const getTree = (groups: Groups = statisticGroups): Tree[] =>
+    Object.entries(groups).map(([statisticOrGroup, value]) => ({
+      id: statisticOrGroup,
+      label: statistics.value[statisticOrGroup]?.label ?? statisticOrGroup,
+      children: value ? getTree(value) : [],
+    }));
+  return getTree();
+});
+
+/** statistics, as grouping paths */
+const statisticPaths = computed(() => {
+  const flatten = (groups: Groups, path: string[] = []): string[][] =>
+    Object.entries(groups).flatMap(([key, value]) =>
+      value === null ? [[...path, key]] : flatten(value, [...path, key]),
+    );
+  const paths = flatten(statisticGroups);
+  return Object.fromEntries(
+    paths.map((path) => {
+      const id = path.at(-1) ?? "";
+      const parents = path.slice(0, -1);
+      const statistic = statistics.value[id]?.label ?? id;
+      return [id, parents.concat(statistic)];
+    }),
+  );
+});
+
+/** load location data */
+const {
+  query: loadLocations,
+  data: locations,
+  status: locationsStatus,
+} = useQuery(getLocations, {});
+
+onMounted(async () => {
+  await loadLocations();
+  console.debug("locations", toRaw(locations.value));
+});
+
+/** locations, as select options */
+const locationOptions = computed(() =>
+  Object.entries(locationGroups).flatMap(([group, list]) => [
+    { group },
+    ...Object.keys(list).map((location) => ({
+      id: location,
+      label: locations.value[location]?.label ?? "",
+    })),
+  ]),
+);
+
+/** load maps data */
+const {
+  query: loadMapData,
+  data: mapData,
+  status: mapDataStatus,
+} = useQuery(async () => {
+  /** query all maps in parallel */
+  const maps = await Promise.all(
+    toRaw(selectedMaps.value).map(async (selected) => {
+      /** load geography */
+      const geography = await getLevel(selected.level);
+      /** load statistic */
+      const statistic = await getStatistic(
+        selected.statistic,
+        selected.level,
+        selected.factors,
+      );
+      /** load locations */
+      const locations = await Promise.all(selected.locations.map(getLocation));
+
+      /** add extra properties to geography */
+      const geographyExtras = {
+        ...geography,
+        features: geography.features.map((feature) => {
+          const value = getValue(statistic.values, feature.id);
+          return {
+            ...feature,
+            properties: {
+              ...feature.properties,
+              id: feature.id,
+              statistic:
+                statistics.value[selected.statistic]?.label ??
+                selected.statistic,
+              value: value?.value,
+              aac: value?.aac,
+            },
+          };
+        }),
+      };
+
+      return { selected, geography: geographyExtras, statistic, locations };
+    }),
+  );
+
+  console.debug("maps", maps);
+
+  return maps;
+}, []);
+
+/** re-load data when selected maps change */
+watch(selectedMaps, loadMapData, { immediate: true, deep: true });
+
+/** all possible factors for any statistic */
+const factors = computed(() => {
+  const factors: ValueOf<typeof statistics.value>["factors"] = {};
+  for (const statistic of Object.values(statistics.value))
+    for (const [factor, { label, values }] of Object.entries(
+      statistic.factors,
+    )) {
+      factors[factor] ??= { label, values: {} };
+      for (const [value, { label }] of Object.entries(values))
+        if (!(value in factors[factor].values))
+          factors[factor].values[value] = { label };
+    }
+
+  console.debug("factors", toRaw(factors));
+
+  return factors;
+});
+
+/** auto-select default factors */
+watchEffect(() => {
+  /** factors available for selected statistic */
+  const available = Object.keys(
+    statistics.value[selectedMap().statistic]?.factors ?? {},
+  );
+
+  for (const factor of available) {
+    /** if already selected, ignore */
+    if (factor in selectedMap().factors) continue;
+    /** first value is default */
+    const _default = Object.keys(factors.value[factor]?.values ?? {}).at(0);
+    if (!_default) continue;
+    /** set default */
+    selectedMap().factors[factor] = _default;
+  }
+});
+
+/** page title */
+watchEffect(() => {
+  const maps = selectedMaps.value.length;
+  const statistic = statistics.value[selectedMap().statistic]?.label;
+  const locations = selectedMap().locations.length;
+  appTitle.value = [
+    maps > 1 ? `${maps.toLocaleString()} maps` : statistic ? statistic : "",
+    locations ? `${locations.toLocaleString()} locations` : "",
+  ].filter(Boolean);
+});
+
+/** add map to comparison */
+const addMap = () => {
+  selectedMaps.value.push(defaultMap());
+  selectedIndex.value = selectedMaps.value.length - 1;
+};
+
+/** delete map from comparison */
+const deleteMap = (index: number) => {
+  /** index in range */
+  if (index < 0 || index >= selectedMaps.value.length) return;
+
+  /** delete map */
+  selectedMaps.value.splice(index, 1);
+
+  if (selectedMaps.value.length === 0) {
+    /** no maps left */
+    addMap();
+    selectedIndex.value = 0;
+  } else if (index < selectedIndex.value) {
+    /** deleted index is before selected index */
+    selectedIndex.value--;
+  } else if (
+    index === selectedMaps.value.length &&
+    selectedIndex.value === selectedMaps.value.length
+  ) {
+    /** deleted and selected index are at end */
+    selectedIndex.value--;
+  }
+};
+
+/** how many cols to arrange compare maps in */
+const mapCols = computed(() => {
+  switch (mapData.value.length) {
+    case 1:
+      return 1;
+    case 2:
+    case 4:
+      return 2;
+    case 3:
+    case 5:
+    case 6:
+    case 7:
+    case 9:
+    case 11:
+      return 3;
+    case 8:
+    case 12:
+      return 4;
+    case 10:
+      return 5;
+  }
+  return 3;
+});
+
+/** download statistic from tree click */
+const onTreeDownload = (statistic = "") =>
+  getDownloadStatistic(selectedMap().level, statistic);
+
+/** reset customizations and map to defaults */
+const reset = async () => {
+  zoom.value = 0;
+  lat.value = 0;
+  long.value = 0;
+  showLegends.value = true;
+  selectedBackground.value = defaultBackground;
+  selectedGradient.value = defaultGradient;
+  backgroundOpacity.value = 1;
+  geographyOpacity.value = 0.75;
+  locationOpacity.value = 1;
+  flipGradient.value = false;
+  scaleSteps.value = 6;
+  niceSteps.value = false;
+  scalePower.value = 1;
+  manualMinMax.value = false;
+  mapWidth.value = 0;
+  mapHeight.value = 0;
+};
+
+/** fit all maps */
+const fit = () => mapElements.value?.forEach((map) => map?.fit());
+
+/** auto-adjust right panel/map height */
+const autoRightPanelHeight = ref(0);
+const { top: rightPanelTop, update: updateRightPanelHeight } =
+  useElementBounding(rightPanelElement);
+useResizeObserver(document.body, updateRightPanelHeight);
+const { height: windowHeight } = useWindowSize();
+watchEffect(() => {
+  if (windowHeight.value < 400) return;
+  if (!rightPanelTop.value) return;
+  if (mapWidth.value || mapHeight.value) return;
+  const max = windowHeight.value - 20;
+  const height = clamp(max - rightPanelTop.value, 400, max);
+  if (Math.abs(height - autoRightPanelHeight.value) > 1)
+    autoRightPanelHeight.value = height;
+});
+
+/** download maps as pngs */
+const downloadMapImage = async () => {
+  if (!mapGridElement.value) return;
+
+  /** convert to image */
+  const blob = await toBlob(mapGridElement.value, {
+    width: mapWidth.value,
+    height: mapHeight.value,
+    filter: (node) => {
+      if (node instanceof HTMLElement)
+        return !node.hasAttribute("data-save-hide");
+      return true;
+    },
+  });
+
+  if (blob) downloadPng(blob, "map");
+};
+
+/** download maps as geo data */
+const downloadMapGeo = async () => {
+  if (!mapElements.value?.length) return;
+
+  /** download json files */
+  for (const map of mapElements.value) {
+    const geo = map?.getGeo();
+    if (!geo) continue;
+    downloadJson(geo, "map-geo");
+  }
+};
+
+/** toggle fullscreen on element */
+const { toggle: fullscreen } = useFullscreen(mapGridElement);
+</script>
+
 <template>
   <div
     class="grid grid-cols-[--spacing(100)_1fr] gap-8 max-md:grid-cols-1"
@@ -660,452 +1109,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import type { Tree } from "@/components/AppTree.vue";
-import type { ValueOf } from "type-fest";
-import {
-  computed,
-  onMounted,
-  ref,
-  toRaw,
-  useTemplateRef,
-  watch,
-  watchEffect,
-} from "vue";
-import {
-  extraLocations,
-  getDownloadStatistic,
-  getLevel,
-  getLevels,
-  getLocation,
-  getLocations,
-  getSourceCitation,
-  getStatistic,
-  getStatistics,
-} from "@/api";
-import locationGroups from "@/api/data/location-groups.json";
-import statisticGroups from "@/api/data/statistic-groups.json";
-import AppButton from "@/components/AppButton.vue";
-import AppCheckbox from "@/components/AppCheckbox.vue";
-import AppCollapsible from "@/components/AppCollapsible.vue";
-import AppLink from "@/components/AppLink.vue";
-import AppMap from "@/components/AppMap.vue";
-import AppNumber from "@/components/AppNumber.vue";
-import AppSelect from "@/components/AppSelect.vue";
-import AppSlider from "@/components/AppSlider.vue";
-import AppTree from "@/components/AppTree.vue";
-import { backgroundOptions, defaultBackground } from "@/components/background";
-import { defaultGradient, gradientOptions } from "@/components/gradient";
-import { appTitle } from "@/meta";
-import { jsonParam, numberParam, useParam } from "@/pages";
-import { useQuery } from "@/util/composables";
-import { downloadJson, downloadPng } from "@/util/download";
-import { formatValue } from "@/util/math";
-import { copy } from "@/util/misc";
-import { getValue } from "@/util/types";
-import {
-  Copy,
-  Crop,
-  Download,
-  Feather,
-  Fullscreen,
-  Info,
-  MessageCircle,
-  Minus,
-  Plus,
-  Pointer,
-  RefreshCw,
-  X,
-} from "@lucide/vue";
-import {
-  useElementBounding,
-  useFullscreen,
-  useResizeObserver,
-  useWindowSize,
-} from "@vueuse/core";
-import { toBlob } from "html-to-image";
-import { clamp } from "lodash";
-
-/** element refs */
-const rightPanelElement = useTemplateRef("rightPanelElement");
-const mapGridElement = useTemplateRef("mapGridElement");
-const mapElements = useTemplateRef("mapElements");
-
-/** default selected maps */
-const defaultMap = () => ({
-  level: "county",
-  statistic: "sociodemographics;Total",
-  factors: {},
-  locations: [],
-});
-
-type SelectedMap = {
-  level: string;
-  statistic: string;
-  factors: Record<string, string>;
-  locations: string[];
-};
-
-/** selected maps state */
-const selectedMaps = useParam(
-  "maps",
-  [defaultMap()],
-  jsonParam<SelectedMap[]>([]),
-);
-
-/** maximum maps to be compared */
-const maxMaps = 12;
-
-/** selected map index */
-const selectedIndex = ref(0);
-
-/** get selected map object */
-const selectedMap = () => {
-  const selected = selectedMaps.value[selectedIndex.value];
-  if (!selected) throw Error("selected map out of bounds");
-  return selected;
-};
-
-/** map zoom state */
-const zoom = useParam("zoom", 0, numberParam);
-const lat = useParam("lat", 0, numberParam);
-const long = useParam("long", 0, numberParam);
-
-/** map style state */
-const showLegends = ref(true);
-const selectedBackground = ref(defaultBackground);
-const selectedGradient = ref(defaultGradient);
-const backgroundOpacity = ref(1);
-const geographyOpacity = ref(0.75);
-const locationOpacity = ref(1);
-const flipGradient = ref(false);
-const scaleSteps = ref(5);
-const niceSteps = ref(false);
-const scalePower = ref(1);
-const manualMinMax = ref(false);
-const manualMin = ref(0);
-const manualMax = ref(1);
-const mapWidth = ref(0);
-const mapHeight = ref(0);
-
-/** load geographic level data */
-const {
-  query: loadLevels,
-  data: levels,
-  status: levelStatus,
-} = useQuery(getLevels, {});
-
-onMounted(async () => {
-  await loadLevels();
-  console.debug("levels", toRaw(levels.value));
-});
-
-/** geographic levels, as select options */
-const levelOptions = computed(() =>
-  Object.entries(levels.value).map(([level, { label }]) => ({
-    id: level,
-    label:
-      label +
-      (statistics.value[selectedMap().statistic]?.levels.includes(level)
-        ? ""
-        : " (ND)"),
-  })),
-);
-
-/** load statistic data */
-const {
-  query: loadStatistics,
-  data: statistics,
-  status: statisticStatus,
-} = useQuery(getStatistics, {});
-
-onMounted(async () => {
-  await loadStatistics();
-  console.debug("statistics", toRaw(statistics.value));
-});
-
-export type Groups = {
-  [group: string]: Groups | null;
-};
-
-/** statistics, as tree options */
-const statisticOptions = computed(() => {
-  const getTree = (groups: Groups = statisticGroups): Tree[] =>
-    Object.entries(groups).map(([statisticOrGroup, value]) => ({
-      id: statisticOrGroup,
-      label: statistics.value[statisticOrGroup]?.label ?? statisticOrGroup,
-      children: value ? getTree(value) : [],
-    }));
-  return getTree();
-});
-
-/** statistics, as grouping paths */
-const statisticPaths = computed(() => {
-  const flatten = (groups: Groups, path: string[] = []): string[][] =>
-    Object.entries(groups).flatMap(([key, value]) =>
-      value === null ? [[...path, key]] : flatten(value, [...path, key]),
-    );
-  const paths = flatten(statisticGroups);
-  return Object.fromEntries(
-    paths.map((path) => {
-      const id = path.at(-1) ?? "";
-      const parents = path.slice(0, -1);
-      const statistic = statistics.value[id]?.label ?? id;
-      return [id, parents.concat(statistic)];
-    }),
-  );
-});
-
-/** load location data */
-const {
-  query: loadLocations,
-  data: locations,
-  status: locationsStatus,
-} = useQuery(getLocations, {});
-
-onMounted(async () => {
-  await loadLocations();
-  console.debug("locations", toRaw(locations.value));
-});
-
-/** locations, as select options */
-const locationOptions = computed(() =>
-  Object.entries(locationGroups).flatMap(([group, list]) => [
-    { group },
-    ...Object.keys(list).map((location) => ({
-      id: location,
-      label: locations.value[location]?.label ?? "",
-    })),
-  ]),
-);
-
-/** load maps data */
-const {
-  query: loadMapData,
-  data: mapData,
-  status: mapDataStatus,
-} = useQuery(async () => {
-  /** query all maps in parallel */
-  const maps = await Promise.all(
-    toRaw(selectedMaps.value).map(async (selected) => {
-      /** load geography */
-      const geography = await getLevel(selected.level);
-      /** load statistic */
-      const statistic = await getStatistic(
-        selected.statistic,
-        selected.level,
-        selected.factors,
-      );
-      /** load locations */
-      const locations = await Promise.all(selected.locations.map(getLocation));
-
-      /** add extra properties to geography */
-      const geographyExtras = {
-        ...geography,
-        features: geography.features.map((feature) => {
-          const value = getValue(statistic.values, feature.id);
-          return {
-            ...feature,
-            properties: {
-              ...feature.properties,
-              id: feature.id,
-              statistic:
-                statistics.value[selected.statistic]?.label ??
-                selected.statistic,
-              value: value?.value,
-              aac: value?.aac,
-            },
-          };
-        }),
-      };
-
-      return { selected, geography: geographyExtras, statistic, locations };
-    }),
-  );
-
-  console.debug("maps", maps);
-
-  return maps;
-}, []);
-
-/** re-load data when selected maps change */
-watch(selectedMaps, loadMapData, { immediate: true, deep: true });
-
-/** all possible factors for any statistic */
-const factors = computed(() => {
-  const factors: ValueOf<typeof statistics.value>["factors"] = {};
-  for (const statistic of Object.values(statistics.value))
-    for (const [factor, { label, values }] of Object.entries(
-      statistic.factors,
-    )) {
-      factors[factor] ??= { label, values: {} };
-      for (const [value, { label }] of Object.entries(values))
-        if (!(value in factors[factor].values))
-          factors[factor].values[value] = { label };
-    }
-
-  console.debug("factors", toRaw(factors));
-
-  return factors;
-});
-
-/** auto-select default factors */
-watchEffect(() => {
-  /** factors available for selected statistic */
-  const available = Object.keys(
-    statistics.value[selectedMap().statistic]?.factors ?? {},
-  );
-
-  for (const factor of available) {
-    /** if already selected, ignore */
-    if (factor in selectedMap().factors) continue;
-    /** first value is default */
-    const _default = Object.keys(factors.value[factor]?.values ?? {}).at(0);
-    if (!_default) continue;
-    /** set default */
-    selectedMap().factors[factor] = _default;
-  }
-});
-
-/** page title */
-watchEffect(() => {
-  const maps = selectedMaps.value.length;
-  const statistic = statistics.value[selectedMap().statistic]?.label;
-  const locations = selectedMap().locations.length;
-  appTitle.value = [
-    maps > 1 ? `${maps.toLocaleString()} maps` : statistic ? statistic : "",
-    locations ? `${locations.toLocaleString()} locations` : "",
-  ].filter(Boolean);
-});
-
-/** add map to comparison */
-const addMap = () => {
-  selectedMaps.value.push(defaultMap());
-  selectedIndex.value = selectedMaps.value.length - 1;
-};
-
-/** delete map from comparison */
-const deleteMap = (index: number) => {
-  /** index in range */
-  if (index < 0 || index >= selectedMaps.value.length) return;
-
-  /** delete map */
-  selectedMaps.value.splice(index, 1);
-
-  if (selectedMaps.value.length === 0) {
-    /** no maps left */
-    addMap();
-    selectedIndex.value = 0;
-  } else if (index < selectedIndex.value) {
-    /** deleted index is before selected index */
-    selectedIndex.value--;
-  } else if (
-    index === selectedMaps.value.length &&
-    selectedIndex.value === selectedMaps.value.length
-  ) {
-    /** deleted and selected index are at end */
-    selectedIndex.value--;
-  }
-};
-
-/** how many cols to arrange compare maps in */
-const mapCols = computed(() => {
-  switch (mapData.value.length) {
-    case 1:
-      return 1;
-    case 2:
-    case 4:
-      return 2;
-    case 3:
-    case 5:
-    case 6:
-    case 7:
-    case 9:
-    case 11:
-      return 3;
-    case 8:
-    case 12:
-      return 4;
-    case 10:
-      return 5;
-  }
-  return 3;
-});
-
-/** download statistic from tree click */
-const onTreeDownload = (statistic = "") =>
-  getDownloadStatistic(selectedMap().level, statistic);
-
-/** reset customizations and map to defaults */
-const reset = async () => {
-  zoom.value = 0;
-  lat.value = 0;
-  long.value = 0;
-  showLegends.value = true;
-  selectedBackground.value = defaultBackground;
-  selectedGradient.value = defaultGradient;
-  backgroundOpacity.value = 1;
-  geographyOpacity.value = 0.75;
-  locationOpacity.value = 1;
-  flipGradient.value = false;
-  scaleSteps.value = 6;
-  niceSteps.value = false;
-  scalePower.value = 1;
-  manualMinMax.value = false;
-  mapWidth.value = 0;
-  mapHeight.value = 0;
-};
-
-/** fit all maps */
-const fit = () => mapElements.value?.forEach((map) => map?.fit());
-
-/** auto-adjust right panel/map height */
-const autoRightPanelHeight = ref(0);
-const { top: rightPanelTop, update: updateRightPanelHeight } =
-  useElementBounding(rightPanelElement);
-useResizeObserver(document.body, updateRightPanelHeight);
-const { height: windowHeight } = useWindowSize();
-watchEffect(() => {
-  if (windowHeight.value < 400) return;
-  if (!rightPanelTop.value) return;
-  if (mapWidth.value || mapHeight.value) return;
-  const max = windowHeight.value - 20;
-  const height = clamp(max - rightPanelTop.value, 400, max);
-  if (Math.abs(height - autoRightPanelHeight.value) > 1)
-    autoRightPanelHeight.value = height;
-});
-
-/** download maps as pngs */
-const downloadMapImage = async () => {
-  if (!mapGridElement.value) return;
-
-  /** convert to image */
-  const blob = await toBlob(mapGridElement.value, {
-    width: mapWidth.value,
-    height: mapHeight.value,
-    filter: (node) => {
-      if (node instanceof HTMLElement)
-        return !node.hasAttribute("data-save-hide");
-      return true;
-    },
-  });
-
-  if (blob) downloadPng(blob, "map");
-};
-
-/** download maps as geo data */
-const downloadMapGeo = async () => {
-  if (!mapElements.value?.length) return;
-
-  /** download json files */
-  for (const map of mapElements.value) {
-    const geo = map?.getGeo();
-    if (!geo) continue;
-    downloadJson(geo, "map-geo");
-  }
-};
-
-/** toggle fullscreen on element */
-const { toggle: fullscreen } = useFullscreen(mapGridElement);
-</script>

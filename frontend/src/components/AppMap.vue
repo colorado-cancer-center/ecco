@@ -1,125 +1,3 @@
-<template>
-  <div
-    ref="frameElement"
-    class="relative transition-all"
-    :style="{
-      '--zoom': immediateZoom,
-      '--label-opacity': geographyOpacity,
-    }"
-  >
-    <div ref="mapElement" v-bind="$attrs" class="size-full" />
-
-    <!-- legends -->
-    <template v-if="showLegends">
-      <!-- top left legend -->
-      <div
-        v-if="$slots['top-left-upper'] || $slots['top-left-lower']"
-        ref="topLeftLegend"
-        class="absolute top-4 left-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
-      >
-        <slot name="top-left-upper" />
-
-        <!-- scale key -->
-        <div
-          v-if="scale.steps.length"
-          class="grid grid-cols-[repeat(var(--cols),1fr)] grid-rows-[--spacing(6)] gap-y-1"
-          :style="{ '--cols': scale.steps.length }"
-        >
-          <div
-            v-for="(step, index) of scale.steps"
-            :key="index"
-            v-tooltip="step.tooltip"
-            class="relative size-full after:absolute after:inset-0 after:[background-image:var(--image)] after:opacity-50 after:content-['']"
-            tabindex="0"
-            :style="{
-              backgroundColor: step.color,
-              '--image': step.color === noDataColor ? `url(${hatch})` : 'none',
-            }"
-          />
-          <div
-            v-for="(step, index) of scale.steps"
-            :key="index"
-            class="px-1 text-center wrap-break-word"
-          >
-            {{ step.label }}
-          </div>
-        </div>
-
-        <slot name="top-left-lower" />
-      </div>
-
-      <!-- top right legend -->
-      <div
-        v-if="$slots['top-right']"
-        ref="topRightLegend"
-        class="absolute top-4 right-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
-      >
-        <slot name="top-right" />
-      </div>
-
-      <!-- bottom right legend -->
-      <div
-        v-if="$slots['bottom-right'] || !isEmpty(symbols)"
-        ref="bottomRightLegend"
-        class="absolute right-4 bottom-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
-      >
-        <slot name="bottom-right" />
-
-        <!-- symbol key -->
-        <div
-          v-if="!isEmpty(symbols)"
-          class="grid grid-cols-[auto_auto] items-center gap-4"
-        >
-          <template v-for="(symbol, label) of symbols" :key="label">
-            <template v-if="symbol">
-              <div v-html="symbol.html" />
-              <div class="text-sm">{{ label }}</div>
-            </template>
-          </template>
-        </div>
-      </div>
-
-      <!-- bottom left legend -->
-      <div
-        v-if="$slots['bottom-left']"
-        ref="bottomLeftLegend"
-        class="absolute bottom-4 left-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
-      >
-        <slot name="bottom-left" />
-      </div>
-    </template>
-
-    <!-- geography labels -->
-    <div
-      v-for="(feature, index) of geographyFeaturesWLabels"
-      :key="index"
-      ref="geographyLabelElements"
-      class="flex flex-col items-center gap-1 rounded-md text-center text-[calc(var(--zoom)*2px)] text-white select-none text-stroke-1.5 text-stroke-black [:has(>&)]:pointer-events-none"
-      :style="{ opacity: geographyOpacity }"
-    >
-      {{ feature.get("label") }}
-    </div>
-
-    <!-- feature popup -->
-    <div
-      v-if="$slots['popup'] && selectedFeature"
-      ref="popupElement"
-      v-stop
-      class="relative z-100! flex max-h-full w-100 max-w-max translate-y-[calc(--spacing(2)*-1.414)] flex-col gap-2 rounded-md bg-white p-4 shadow-md after:absolute after:top-full after:left-1/2 after:size-2 after:-translate-1/2 after:rotate-45 after:bg-white after:shadow-md after:content-[''] after:[clip-path:polygon(200%_-100%,200%_200%,-100%_200%)]"
-    >
-      <slot
-        name="popup"
-        :feature="selectedFeature.getProperties() as FeatureProperties"
-      />
-    </div>
-
-    <div
-      class="absolute bottom-0 left-0 bg-white/75 p-0.5 text-xs text-balance"
-      v-html="attribution"
-    />
-  </div>
-</template>
-
 <script lang="ts">
 /** "no data" color */
 const noDataColor = "#a0a0a0";
@@ -921,6 +799,128 @@ onUnmounted(() => {
   popup.dispose();
 });
 </script>
+
+<template>
+  <div
+    ref="frameElement"
+    class="relative transition-all"
+    :style="{
+      '--zoom': immediateZoom,
+      '--label-opacity': geographyOpacity,
+    }"
+  >
+    <div ref="mapElement" v-bind="$attrs" class="size-full" />
+
+    <!-- legends -->
+    <template v-if="showLegends">
+      <!-- top left legend -->
+      <div
+        v-if="$slots['top-left-upper'] || $slots['top-left-lower']"
+        ref="topLeftLegend"
+        class="absolute top-4 left-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
+      >
+        <slot name="top-left-upper" />
+
+        <!-- scale key -->
+        <div
+          v-if="scale.steps.length"
+          class="grid grid-cols-[repeat(var(--cols),1fr)] grid-rows-[--spacing(6)] gap-y-1"
+          :style="{ '--cols': scale.steps.length }"
+        >
+          <div
+            v-for="(step, index) of scale.steps"
+            :key="index"
+            v-tooltip="step.tooltip"
+            class="relative size-full after:absolute after:inset-0 after:[background-image:var(--image)] after:opacity-50 after:content-['']"
+            tabindex="0"
+            :style="{
+              backgroundColor: step.color,
+              '--image': step.color === noDataColor ? `url(${hatch})` : 'none',
+            }"
+          />
+          <div
+            v-for="(step, index) of scale.steps"
+            :key="index"
+            class="px-1 text-center wrap-break-word"
+          >
+            {{ step.label }}
+          </div>
+        </div>
+
+        <slot name="top-left-lower" />
+      </div>
+
+      <!-- top right legend -->
+      <div
+        v-if="$slots['top-right']"
+        ref="topRightLegend"
+        class="absolute top-4 right-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
+      >
+        <slot name="top-right" />
+      </div>
+
+      <!-- bottom right legend -->
+      <div
+        v-if="$slots['bottom-right'] || !isEmpty(symbols)"
+        ref="bottomRightLegend"
+        class="absolute right-4 bottom-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
+      >
+        <slot name="bottom-right" />
+
+        <!-- symbol key -->
+        <div
+          v-if="!isEmpty(symbols)"
+          class="grid grid-cols-[auto_auto] items-center gap-4"
+        >
+          <template v-for="(symbol, label) of symbols" :key="label">
+            <template v-if="symbol">
+              <div v-html="symbol.html" />
+              <div class="text-sm">{{ label }}</div>
+            </template>
+          </template>
+        </div>
+      </div>
+
+      <!-- bottom left legend -->
+      <div
+        v-if="$slots['bottom-left']"
+        ref="bottomLeftLegend"
+        class="absolute bottom-4 left-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
+      >
+        <slot name="bottom-left" />
+      </div>
+    </template>
+
+    <!-- geography labels -->
+    <div
+      v-for="(feature, index) of geographyFeaturesWLabels"
+      :key="index"
+      ref="geographyLabelElements"
+      class="flex flex-col items-center gap-1 rounded-md text-center text-[calc(var(--zoom)*2px)] text-white select-none text-stroke-1.5 text-stroke-black [:has(>&)]:pointer-events-none"
+      :style="{ opacity: geographyOpacity }"
+    >
+      {{ feature.get("label") }}
+    </div>
+
+    <!-- feature popup -->
+    <div
+      v-if="$slots['popup'] && selectedFeature"
+      ref="popupElement"
+      v-stop
+      class="relative z-100! flex max-h-full w-100 max-w-max translate-y-[calc(--spacing(2)*-1.414)] flex-col gap-2 rounded-md bg-white p-4 shadow-md after:absolute after:top-full after:left-1/2 after:size-2 after:-translate-1/2 after:rotate-45 after:bg-white after:shadow-md after:content-[''] after:[clip-path:polygon(200%_-100%,200%_200%,-100%_200%)]"
+    >
+      <slot
+        name="popup"
+        :feature="selectedFeature.getProperties() as FeatureProperties"
+      />
+    </div>
+
+    <div
+      class="absolute bottom-0 left-0 bg-white/75 p-0.5 text-xs text-balance"
+      v-html="attribution"
+    />
+  </div>
+</template>
 
 <style>
 .ol-overlaycontainer {
