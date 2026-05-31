@@ -10,6 +10,7 @@ import {
   watch,
   watchEffect,
 } from "vue";
+import { event } from "vue-gtag";
 import draggable from "vuedraggable";
 import {
   extraLocations,
@@ -63,7 +64,7 @@ import {
   useWindowSize,
 } from "@vueuse/core";
 import { toBlob } from "html-to-image";
-import { clamp } from "lodash";
+import { clamp, mapValues } from "lodash";
 
 /** element refs */
 const rightPanelElement = useTemplateRef("rightPanelElement");
@@ -235,6 +236,9 @@ const {
   data: mapData,
   status: mapDataStatus,
 } = useQuery(async () => {
+  /** analytics event */
+  event("selectedMaps", { _value: selectedMaps.value });
+
   /** query all maps in parallel */
   const maps = await Promise.all(
     toRaw(selectedMaps.value).map(async (selected) => {
@@ -383,8 +387,12 @@ const mapCols = computed(() => {
 });
 
 /** download statistic from tree click */
-const onTreeDownload = (statistic = "") =>
-  getDownloadStatistic(selectedMap().level, statistic);
+const onTreeDownload = (statistic = "") => {
+  const level = selectedMap().level;
+  /** analytics event */
+  event("downloadStatistic", { _value: { level, statistic } });
+  return getDownloadStatistic(level, statistic);
+};
 
 /** reset customizations and map to defaults */
 const reset = async () => {
