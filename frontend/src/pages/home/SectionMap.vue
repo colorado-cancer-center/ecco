@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Option } from "@/components/AppSelect.vue";
 import type { Tree } from "@/components/AppTree.vue";
 import type { ValueOf } from "type-fest";
 import {
@@ -303,6 +304,33 @@ const factors = computed(() => {
   return factors;
 });
 
+/** factors to show for selected statistic */
+const factorOptions = computed(() => {
+  const options: Record<string, { label: string; options: Option[] }> = {};
+
+  /** selected statistic */
+  const statistic = statistics.value[selectedMap().statistic];
+
+  /** available factors in selected statistic */
+  const available = statistic?.factors ?? {};
+
+  for (const [factor, { label, values }] of Object.entries(factors.value)) {
+    /** if factor available for statistic */
+    if (!(factor in available)) continue;
+
+    options[factor] = {
+      label,
+      options: Object.entries(values).map(([id, { label }]) => ({
+        id,
+        /** if factor value available for statistic */
+        label: label + (available[factor]?.values[id] ? "" : " (ND)"),
+      })),
+    };
+  }
+
+  return options;
+});
+
 /** auto-select default factors */
 watchEffect(() => {
   /** factors available for selected statistic */
@@ -516,18 +544,12 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         class="grid grid-cols-[min-content_1fr] items-center gap-2 empty:hidden"
       >
         <template
-          v-for="({ label, values }, factor, index) in factors"
+          v-for="({ label, options }, factor, index) in factorOptions"
           :key="index"
         >
           <AppSelect
-            v-if="
-              /** if factor available for statistic */
-              factor in (statistics[selectedMap().statistic]?.factors ?? {})
-            "
             v-model="selectedMap().factors[factor]!"
-            :options="
-              Object.entries(values).map(([id, { label }]) => ({ id, label }))
-            "
+            :options="options"
             class="contents!"
             :label="label"
           />
