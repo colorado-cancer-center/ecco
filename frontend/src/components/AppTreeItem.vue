@@ -1,29 +1,31 @@
 <script setup lang="ts">
 import type { VNode } from "vue";
-import type { _Tree, ID } from "@/components/AppTree.vue";
+import type { _Tree } from "@/components/AppTree.vue";
+import { inject } from "vue";
+import { treeKey } from "@/components/AppTree.vue";
 import { findClosest } from "@/util/dom";
 import { Check, ChevronDown, ChevronRight } from "@lucide/vue";
 
 type Props = {
-  /** path to selected item */
-  modelValue?: ID;
-  /** function to update model value */
-  updateModelValue: (value: _Tree) => void;
   /** nested tree structure */
   children: _Tree[];
   /** depth of children item */
   level: number;
-  /** has search string */
-  search: boolean;
 };
 
-const { modelValue, updateModelValue, level } = defineProps<Props>();
+const { level } = defineProps<Props>();
 
 type Slots = {
   action(props: { child: _Tree }): VNode;
 };
 
 defineSlots<Slots>();
+
+const {
+  modelValue = "",
+  updateModelValue = () => {},
+  search = false,
+} = inject(treeKey) ?? {};
 
 /** on button click */
 const onClick = (child: _Tree) => {

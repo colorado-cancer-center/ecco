@@ -22,27 +22,6 @@ export const waitFor = async <Result>(
   }
 };
 
-/** wait for func to return stable value */
-export const waitForStable = async <Return>(
-  func: () => Return,
-  /** wait until func returns same value for at least this long */
-  wait = 200,
-  /** check value every this many ms */
-  interval = 10,
-  /** hard time limit */
-  max = 3000,
-): Promise<Return | undefined> => {
-  let lastChanged = now();
-  let prevResult: Return | undefined;
-  for (let tries = max / interval; tries > 0; tries--) {
-    const result = func();
-    if (result !== prevResult) lastChanged = now();
-    prevResult = result;
-    if (result !== undefined && now() - lastChanged > wait) return result;
-    await sleep(interval);
-  }
-};
-
 /** copy text to clipboard */
 export const copy = async (text: string) => {
   await navigator.clipboard.writeText(text);

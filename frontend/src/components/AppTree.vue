@@ -1,4 +1,6 @@
 <script lang="ts">
+import type { ComputedRef, InjectionKey } from "vue";
+
 export type ID = string;
 
 /** nested tree structure */
@@ -16,23 +18,29 @@ export type _Tree = {
   match: boolean;
   children: _Tree[];
 };
+
+/** injection key for tree context */
+export const treeKey: InjectionKey<{
+  modelValue: ComputedRef<ID>;
+  updateModelValue: (child: _Tree) => void;
+  search: ComputedRef<boolean>;
+}> = Symbol("AppTree");
 </script>
 
 <script setup lang="ts">
 import type { VNode } from "vue";
-import { onMounted, ref, useId, useTemplateRef, watch } from "vue";
+import { computed, provide, ref, useId, useTemplateRef, watch } from "vue";
 import AppButton from "@/components/AppButton.vue";
 import AppInput from "@/components/AppInput.vue";
 import AppTreeItem from "@/components/AppTreeItem.vue";
 import { useScrollable } from "@/util/composables";
-import { sleep, waitForStable } from "@/util/misc";
+import { sleep } from "@/util/misc";
 import {
   ListCheck,
   ListChevronsDownUp,
   ListChevronsUpDown,
   Search,
 } from "@lucide/vue";
-import { useElementSize } from "@vueuse/core";
 
 type Props = {
   /** label */
@@ -64,14 +72,6 @@ const rootElement = useTemplateRef("root");
 /** scrollable tree element */
 const scrollElement = useTemplateRef("scroll");
 useScrollable(scrollElement);
-
-/** set min height of root size after first render */
-const rootSize = useElementSize(rootElement);
-onMounted(async () => {
-  /** wait for height to stabilize */
-  const height = await waitForStable(() => rootSize.height.value);
-  if (rootElement.value) rootElement.value.style.minHeight = `${height}px`;
-});
 
 /** search string */
 const search = ref("");
@@ -183,14 +183,22 @@ const isSelectedOpen = () => {
 /** function to update model value */
 const updateModelValue = (child: _Tree) => emit("update:modelValue", child.id);
 
+/** unique id for tree */
 const id = useId();
+
+/** provide tree context */
+provide(treeKey, {
+  modelValue: computed(() => modelValue),
+  updateModelValue: (child: _Tree) => emit("update:modelValue", child.id),
+  search: computed(() => !!search.value),
+});
 </script>
 
 <template>
   <div ref="root" class="flex flex-col gap-1">
     <label :id="id">{{ label }}</label>
 
-    <div class="my-1 flex items-center gap-2 pl-2 text-sm text-stone-500">
+    <div class="my-1 flex items-center gap-2 text-sm text-stone-500">
       <slot name="selected" v-bind="{ value: modelValue }" />
     </div>
 

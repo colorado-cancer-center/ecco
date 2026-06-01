@@ -487,7 +487,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         v-model="selectedMap().statistic"
         label="Statistic"
         :tree="statisticOptions"
-        class="max-h-max grow basis-0 overflow-y-auto"
+        class="max-h-max min-h-82 grow basis-0 overflow-y-auto"
         :class="[statisticStatus === 'loading' && 'animate-loading']"
       >
         <template #selected="{ value }">
