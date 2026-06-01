@@ -479,7 +479,10 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         v-model="selectedMap().level"
         :options="levelOptions"
         label="Geographic level"
-        :class="[levelStatus === 'loading' && 'animate-loading']"
+        :class="[
+          levelStatus === 'loading' && 'animate-loading',
+          levelStatus === 'error' && 'animate-error',
+        ]"
       />
 
       <!-- statistic -->
@@ -488,7 +491,10 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         label="Statistic"
         :tree="statisticOptions"
         class="max-h-max min-h-82 grow basis-0 overflow-y-auto"
-        :class="[statisticStatus === 'loading' && 'animate-loading']"
+        :class="[
+          statisticStatus === 'loading' && 'animate-loading',
+          statisticStatus === 'error' && 'animate-error',
+        ]"
       >
         <template #selected="{ value }">
           {{ statisticPaths[value]?.join(" > ") ?? value }}
@@ -534,7 +540,10 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         multi
         :options="locationOptions"
         label="Resources & Other Locations"
-        :class="[locationsStatus === 'loading' && 'animate-loading']"
+        :class="[
+          locationsStatus === 'loading' && 'animate-loading',
+          locationsStatus === 'error' && 'animate-error',
+        ]"
       />
 
       <!-- multi-map compare -->
@@ -792,6 +801,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         class="grid h-(--height) w-(--width) grid-cols-[repeat(var(--cols),1fr)] gap-1 bg-stone-600 shadow-md transition max-md:h-[90dvh]"
         :class="[
           mapDataStatus === 'loading' && 'animate-loading',
+          mapDataStatus === 'error' && 'animate-error',
           mapHeight ? 'shrink-0' : 'grow',
         ]"
         :style="{

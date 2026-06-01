@@ -160,14 +160,20 @@ const flatGroups = computed(() => {
       <AppMap
         ref="map"
         class="aspect-4/3 h-full"
-        :class="geographyStatus === 'loading' && 'animate-loading'"
+        :class="[
+          geographyStatus === 'loading' && 'animate-loading',
+          geographyStatus === 'error' && 'animate-error',
+        ]"
         :geography="geography"
         :highlight="id"
       />
 
       <div
         class="flex flex-col items-start gap-8 self-center"
-        :class="featureStatus === 'loading' && 'animate-loading'"
+        :class="[
+          featureStatus === 'loading' && 'animate-loading',
+          featureStatus === 'error' && 'animate-error',
+        ]"
       >
         <AppSelect
           v-model="filter"
@@ -209,7 +215,10 @@ const flatGroups = computed(() => {
 
   <section
     v-if="filter === 'basic'"
-    :class="featureStatus === 'loading' && 'animate-loading'"
+    :class="[
+      featureStatus === 'loading' && 'animate-loading',
+      featureStatus === 'error' && 'animate-error',
+    ]"
   >
     <div
       class="grid grid-cols-[repeat(auto-fit,minmax(min(--spacing(100),100%),1fr))] place-content-center place-items-center gap-16"
@@ -228,7 +237,10 @@ const flatGroups = computed(() => {
   <section
     v-else-if="filter === 'all'"
     class="[--content:200]"
-    :class="featureStatus === 'loading' && 'animate-loading'"
+    :class="[
+      featureStatus === 'loading' && 'animate-loading',
+      featureStatus === 'error' && 'animate-error',
+    ]"
   >
     <div
       class="grid grid-cols-[1fr_max-content_max-content_max-content] items-center gap-1 text-center *:rounded-md *:p-1"

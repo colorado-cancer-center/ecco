@@ -16,6 +16,7 @@
   --font-sans: "Inter Variable", sans-serif;
 
   --animate-loading: loading 1s linear infinite;
+  --animate-error: error 0.5s linear 3 both;
 
   @keyframes loading {
     0%,
@@ -28,6 +29,18 @@
       opacity: 0.2;
       pointer-events: none;
       filter: saturate(0);
+    }
+  }
+
+  @keyframes error {
+    0%,
+    100% {
+      pointer-events: none;
+      filter: contrast(50%) sepia(100%) hue-rotate(-60deg);
+    }
+    50% {
+      pointer-events: none;
+      filter: contrast(50%) sepia(50%) hue-rotate(-60deg);
     }
   }
 }
