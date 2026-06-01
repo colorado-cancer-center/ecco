@@ -14,35 +14,6 @@
   --shadow-md: 0px 2px 10px #00000040, 0 0 4px #00000020;
 
   --font-sans: "Inter Variable", sans-serif;
-
-  --animate-loading: loading 1s linear infinite;
-  --animate-error: error 0.5s linear 3 both;
-
-  @keyframes loading {
-    0%,
-    100% {
-      opacity: 0.4;
-      pointer-events: none;
-      filter: saturate(0);
-    }
-    50% {
-      opacity: 0.2;
-      pointer-events: none;
-      filter: saturate(0);
-    }
-  }
-
-  @keyframes error {
-    0%,
-    100% {
-      pointer-events: none;
-      filter: contrast(50%) sepia(100%) hue-rotate(-60deg);
-    }
-    50% {
-      pointer-events: none;
-      filter: contrast(50%) sepia(50%) hue-rotate(-60deg);
-    }
-  }
 }
 
 @layer base {
@@ -203,6 +174,46 @@
       black calc(25% * var(--scrollable-bottom))
     );
   mask-composite: intersect;
+}
+
+@utility animate-loading {
+  @apply pointer-events-none relative grayscale;
+  animation: loading 1s linear infinite;
+
+  &::after {
+    @apply text-stroke-white text-stroke-2 absolute inset-0 grid place-items-center text-xl uppercase;
+    content: "Loading";
+  }
+}
+
+@keyframes loading {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+
+@utility animate-error {
+  @apply pointer-events-none relative;
+  animation: error 0.5s linear 3 both;
+
+  &::after {
+    @apply text-stroke-white text-stroke-2 absolute inset-0 grid place-items-center text-xl uppercase;
+    content: "Error";
+  }
+}
+
+@keyframes error {
+  0%,
+  100% {
+    filter: contrast(50%) sepia(100%) hue-rotate(-60deg);
+  }
+  50% {
+    filter: contrast(50%) sepia(50%) hue-rotate(-60deg);
+  }
 }
 
 .tippy-box {
