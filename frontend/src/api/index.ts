@@ -291,7 +291,7 @@ export const getLocation = async (location: ID) => {
           label: `District ${feature.properties.district}`,
         }),
         /** add location type */
-        location: getValue(locationLabels, location) ?? location,
+        type: getValue(locationLabels, location) ?? location,
         /** add symbol key */
         symbol: getValue(locationLabels, location) ?? location,
       },

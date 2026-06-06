@@ -198,12 +198,12 @@ provide(treeKey, {
   <div ref="root" class="flex flex-col gap-1">
     <label :id="id">{{ label }}</label>
 
-    <div class="my-1 flex items-center gap-2 text-sm text-stone-500">
+    <div class="flex items-center gap-2 text-sm text-stone-500">
       <slot name="selected" v-bind="{ value: modelValue }" />
     </div>
 
     <!-- top controls -->
-    <div class="flex gap-2">
+    <div class="my-1 flex gap-2">
       <AppInput v-model="search" :icon="Search" placeholder="Search" />
       <AppButton
         v-if="allClosed()"

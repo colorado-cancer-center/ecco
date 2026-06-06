@@ -1,5 +1,3 @@
-const now = () => window.performance.now();
-
 /** wait ms */
 export const sleep = (ms = 0) =>
   new Promise((resolve) => window.setTimeout(resolve, ms));

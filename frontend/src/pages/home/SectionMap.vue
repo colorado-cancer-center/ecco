@@ -518,7 +518,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         v-model="selectedMap().statistic"
         label="Statistic"
         :tree="statisticOptions"
-        class="max-h-max min-h-82 grow basis-0 overflow-y-auto"
+        class="max-h-max min-h-82 grow basis-0"
         :class="[
           statisticStatus === 'loading' && 'animate-loading',
           statisticStatus === 'error' && 'animate-error',
@@ -911,56 +911,41 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
             </div>
           </template>
 
-          <!-- feature popup -->
-          <template #popup="{ feature }">
-            {{ console.debug("feature", feature) }}
+          <!-- geography popup -->
+          <template #geography-popup="{ geography }">
+            {{ console.debug("geography", geography) }}
 
             <dl>
               <!-- overview -->
 
-              <template v-if="feature.name">
+              <template v-if="geography.name">
                 <dt>Name</dt>
-                <dd>{{ feature.name }}</dd>
+                <dd>{{ geography.name }}</dd>
               </template>
 
-              <template v-if="feature.level">
+              <template v-if="geography.level">
                 <dt>Level</dt>
-                <dd>{{ feature.level }}</dd>
-              </template>
-
-              <template v-if="feature.county">
-                <dt>County</dt>
-                <dd>{{ feature.county }}</dd>
-              </template>
-
-              <template v-if="feature.zip">
-                <dt>Zip</dt>
-                <dd>{{ feature.zip }}</dd>
+                <dd>{{ geography.level }}</dd>
               </template>
 
               <!-- values -->
 
-              <template v-if="feature.statistic">
+              <template v-if="geography.statistic">
                 <dt>Statistic</dt>
-                <dd>{{ feature.statistic }}</dd>
+                <dd>{{ geography.statistic }}</dd>
               </template>
 
-              <template v-if="feature.location">
-                <dt>Info</dt>
-                <dd>{{ feature.location }}</dd>
+              <template v-if="geography.value !== undefined">
+                <dt>{{ geography.aac ? "Rate" : "Value" }}</dt>
+                <dd>{{ formatValue(geography.value, statistic.unit) }}</dd>
               </template>
 
-              <template v-if="feature.value !== undefined">
-                <dt>{{ feature.aac ? "Rate" : "Value" }}</dt>
-                <dd>{{ formatValue(feature.value, statistic.unit) }}</dd>
-              </template>
-
-              <template v-if="feature.aac !== undefined">
+              <template v-if="geography.aac !== undefined">
                 <dt>Avg. Annual Count</dt>
-                <dd>{{ formatValue(feature.aac, statistic.unit) }}</dd>
+                <dd>{{ formatValue(geography.aac, statistic.unit) }}</dd>
               </template>
 
-              <div v-if="feature.value === undefined" class="col-span-full">
+              <div v-if="geography.value === undefined" class="col-span-full">
                 <AppLink
                   to="/sources#suppressed-values"
                   :new-tab="true"
@@ -973,63 +958,9 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
 
               <!-- extra info -->
 
-              <template v-if="feature.description">
+              <template v-if="geography.description">
                 <dt>Description</dt>
-                <dd>{{ feature.description }}</dd>
-              </template>
-
-              <template v-if="feature.org">
-                <dt>Org</dt>
-                <dd>{{ feature.org }}</dd>
-              </template>
-
-              <template v-if="typeof feature.link === 'string'">
-                <dt>Link</dt>
-                <dd>
-                  <AppLink :to="feature.link">
-                    {{ feature.link.replace(/(https?:\/\/)?(www\.)?/, "") }}
-                  </AppLink>
-                </dd>
-              </template>
-
-              <template v-if="feature.zip_code">
-                <dt>ZIP Code</dt>
-                <dd>{{ feature.zip_code }}</dd>
-              </template>
-
-              <template v-if="feature.area_type">
-                <dt>Area Type</dt>
-                <dd>{{ feature.area_type }}</dd>
-              </template>
-
-              <template v-if="feature.representative">
-                <dt>Representative</dt>
-                <dd>{{ feature.representative }}</dd>
-              </template>
-
-              <template v-if="feature.party">
-                <dt>Party</dt>
-                <dd>{{ feature.party }}</dd>
-              </template>
-
-              <template v-if="feature.email">
-                <dt>Email</dt>
-                <dd>{{ feature.email }}</dd>
-              </template>
-
-              <template v-if="feature.address">
-                <dt>Address</dt>
-                <dd>{{ feature.address }}</dd>
-              </template>
-
-              <template v-if="feature.phone">
-                <dt>Phone</dt>
-                <dd>{{ feature.phone }}</dd>
-              </template>
-
-              <template v-if="feature.notes">
-                <dt>Notes</dt>
-                <dd>{{ feature.notes }}</dd>
+                <dd>{{ geography.description }}</dd>
               </template>
 
               <!-- outreach -->
@@ -1041,7 +972,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
                   )
                 "
               >
-                <template v-if="feature.fit_kits">
+                <template v-if="geography.fit_kits">
                   <dt>
                     <AppLink
                       to="https://medlineplus.gov/ency/patientinstructions/000704.htm"
@@ -1049,10 +980,10 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
                       FIT Kits
                     </AppLink>
                   </dt>
-                  <dd>{{ formatValue(feature.fit_kits) }}</dd>
+                  <dd>{{ formatValue(geography.fit_kits) }}</dd>
                 </template>
 
-                <template v-if="feature.radon_kits">
+                <template v-if="geography.radon_kits">
                   <dt>
                     <AppLink
                       to="https://cdphe.colorado.gov/hm/testing-your-home-radon"
@@ -1060,44 +991,44 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
                       Radon Kits
                     </AppLink>
                   </dt>
-                  <dd>{{ formatValue(feature.radon_kits) }}</dd>
+                  <dd>{{ formatValue(geography.radon_kits) }}</dd>
                 </template>
 
-                <template v-if="feature.community_events">
+                <template v-if="geography.community_events">
                   <dt>Community Events</dt>
-                  <dd>{{ formatValue(feature.community_events) }}</dd>
+                  <dd>{{ formatValue(geography.community_events) }}</dd>
                 </template>
 
-                <template v-if="feature.health_fairs">
+                <template v-if="geography.health_fairs">
                   <dt>Health Fairs</dt>
-                  <dd>{{ formatValue(feature.health_fairs) }}</dd>
+                  <dd>{{ formatValue(geography.health_fairs) }}</dd>
                 </template>
 
-                <template v-if="feature.educational_talks">
+                <template v-if="geography.educational_talks">
                   <dt>Educational Talks</dt>
-                  <dd>{{ formatValue(feature.educational_talks) }}</dd>
+                  <dd>{{ formatValue(geography.educational_talks) }}</dd>
                 </template>
 
-                <template v-if="feature.radio_talks">
+                <template v-if="geography.radio_talks">
                   <dt>Radio Talks</dt>
-                  <dd>{{ formatValue(feature.radio_talks) }}</dd>
+                  <dd>{{ formatValue(geography.radio_talks) }}</dd>
                 </template>
 
-                <template v-if="feature.school_church_events">
+                <template v-if="geography.school_church_events">
                   <dt>School/Church Events</dt>
-                  <dd>{{ formatValue(feature.school_church_events) }}</dd>
+                  <dd>{{ formatValue(geography.school_church_events) }}</dd>
                 </template>
 
-                <template v-if="feature.womens_wellness_centers">
+                <template v-if="geography.womens_wellness_centers">
                   <dt>
                     <AppLink to="https://cdphe.colorado.gov/wwc">
                       Women's Wellness Centers
                     </AppLink>
                   </dt>
-                  <dd>{{ formatValue(feature.womens_wellness_centers) }}</dd>
+                  <dd>{{ formatValue(geography.womens_wellness_centers) }}</dd>
                 </template>
 
-                <template v-if="feature['2morrow_signups']">
+                <template v-if="geography['2morrow_signups']">
                   <dt>
                     <AppLink
                       to="https://medschool.cuanschutz.edu/colorado-cancer-center/community/CommunityOutreachEngagement/projects-and-activities/2morrow-health-app"
@@ -1105,7 +1036,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
                       Tobacco Cessation App Users
                     </AppLink>
                   </dt>
-                  <dd>{{ formatValue(feature["2morrow_signups"]) }}</dd>
+                  <dd>{{ formatValue(geography["2morrow_signups"]) }}</dd>
                 </template>
               </template>
             </dl>
@@ -1113,11 +1044,95 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
             <!-- actions -->
             <AppButton
               v-if="selected.level === 'county'"
-              :to="`/county/${feature.id}`"
+              :to="`/county/${geography.id}`"
               :new-tab="true"
             >
               All county data
             </AppButton>
+          </template>
+
+          <template #location-popup="{ location }">
+            {{ console.log("location", location) }}
+
+            <dl>
+              <!-- overview -->
+
+              <template v-if="location.county">
+                <dt>County</dt>
+                <dd>{{ location.county }}</dd>
+              </template>
+
+              <template v-if="location.zip">
+                <dt>Zip</dt>
+                <dd>{{ location.zip }}</dd>
+              </template>
+
+              <template v-if="location.type">
+                <dt>Type</dt>
+                <dd>{{ location.type }}</dd>
+              </template>
+
+              <template v-if="location.label">
+                <dt>Label</dt>
+                <dd>{{ location.label }}</dd>
+              </template>
+
+              <!-- extra info -->
+
+              <template v-if="location.org">
+                <dt>Org</dt>
+                <dd>{{ location.org }}</dd>
+              </template>
+
+              <template v-if="typeof location.link === 'string'">
+                <dt>Link</dt>
+                <dd>
+                  <AppLink :to="location.link">
+                    {{ location.link.replace(/(https?:\/\/)?(www\.)?/, "") }}
+                  </AppLink>
+                </dd>
+              </template>
+
+              <template v-if="location.zip_code">
+                <dt>ZIP Code</dt>
+                <dd>{{ location.zip_code }}</dd>
+              </template>
+
+              <template v-if="location.area_type">
+                <dt>Area Type</dt>
+                <dd>{{ location.area_type }}</dd>
+              </template>
+
+              <template v-if="location.representative">
+                <dt>Representative</dt>
+                <dd>{{ location.representative }}</dd>
+              </template>
+
+              <template v-if="location.party">
+                <dt>Party</dt>
+                <dd>{{ location.party }}</dd>
+              </template>
+
+              <template v-if="location.email">
+                <dt>Email</dt>
+                <dd>{{ location.email }}</dd>
+              </template>
+
+              <template v-if="location.address">
+                <dt>Address</dt>
+                <dd>{{ location.address }}</dd>
+              </template>
+
+              <template v-if="location.phone">
+                <dt>Phone</dt>
+                <dd>{{ location.phone }}</dd>
+              </template>
+
+              <template v-if="location.notes">
+                <dt>Notes</dt>
+                <dd>{{ location.notes }}</dd>
+              </template>
+            </dl>
           </template>
         </AppMap>
       </div>

@@ -1,11 +1,4 @@
 {
-  "Office of COE: Outreach & Interventions": {
-    "events": null,
-    "newspapers": null,
-    "fit-kits": null,
-    "radon-kits": null,
-    "2morrow-signups": null
-  },
   "Cancer Care": {
     "lung-cancer-screening": null,
     "mammography": null,
@@ -60,5 +53,12 @@
     "senate-districts": null,
     "house-districts": null,
     "congressional-districts": null
+  },
+  "Office of COE: Outreach & Interventions": {
+    "events": null,
+    "newspapers": null,
+    "fit-kits": null,
+    "radon-kits": null,
+    "2morrow-signups": null
   }
 }

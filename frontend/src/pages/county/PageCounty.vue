@@ -29,7 +29,7 @@ const filterOptions = [
 ];
 
 /** selected statistic filter */
-const filter = ref<(typeof filterOptions)[number]["id"]>(filterOptions[1]!.id);
+const filter = ref<(typeof filterOptions)[number]["id"]>(filterOptions[0]!.id);
 
 /** load geography data */
 const {

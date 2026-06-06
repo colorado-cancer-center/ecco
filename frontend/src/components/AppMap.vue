@@ -19,11 +19,11 @@ type Properties = {
   setup
   lang="ts"
   generic="
-    GeographyProperties extends Properties & {
+    GeographyProps extends Properties & {
       value?: number | string;
       center?: [number, number];
     },
-    LocationProperties extends Properties & {
+    LocationProps extends Properties & {
       symbol?: string;
       translate?: [number, number];
     }
@@ -33,6 +33,7 @@ import type { Ref } from "vue";
 import type { FeatureCollection, Geometry } from "geojson";
 import type { FeatureLike } from "ol/Feature";
 import type { Geometry as OLGeometry } from "ol/geom";
+import type Layer from "ol/layer/Layer";
 import type { MarkerType } from "./markers";
 import {
   computed,
@@ -70,7 +71,8 @@ import { getMarkers } from "./markers";
 
 const frameElement = useTemplateRef("frameElement");
 const mapElement = useTemplateRef("mapElement");
-const popupElement = useTemplateRef("popupElement");
+const geographyPopupElement = useTemplateRef("geographyPopupElement");
+const locationPopupElement = useTemplateRef("locationPopupElement");
 const geographyLabelElements = useTemplateRef("geographyLabelElements");
 const topLeftLegend = useTemplateRef("topLeftLegend");
 const topRightLegend = useTemplateRef("topRightLegend");
@@ -81,8 +83,8 @@ const theme = getCssVar("--color-theme");
 
 type Props = {
   /** features */
-  geography?: FeatureCollection<Geometry, GeographyProperties>;
-  locations?: FeatureCollection<Geometry, LocationProperties>[];
+  geography?: FeatureCollection<Geometry, GeographyProps>;
+  locations?: FeatureCollection<Geometry, LocationProps>[];
   /** value domain */
   min?: number | string;
   max?: number | string;
@@ -143,15 +145,14 @@ type Emits = {
 
 const emit = defineEmits<Emits>();
 
-type FeatureProperties = LocationProperties & GeographyProperties;
-
 type Slots = {
   "top-left-upper"?: () => unknown;
   "top-left-lower"?: () => unknown;
   "top-right"?: () => unknown;
   "bottom-right"?: () => unknown;
   "bottom-left"?: () => unknown;
-  popup?: ({ feature }: { feature: FeatureProperties }) => unknown;
+  "geography-popup"?: ({ geography }: { geography: GeographyProps }) => unknown;
+  "location-popup"?: ({ location }: { location: LocationProps }) => unknown;
 };
 
 defineSlots<Slots>();
@@ -385,10 +386,7 @@ const geojson = new GeoJSON({
 /** parse geography features */
 const geographyFeatures = computed(
   () =>
-    geojson.readFeatures(geography) as Feature<
-      OLGeometry,
-      GeographyProperties
-    >[],
+    geojson.readFeatures(geography) as Feature<OLGeometry, GeographyProps>[],
 );
 
 /** update geography layer source */
@@ -459,7 +457,7 @@ const locationFeatures = computed(() =>
     /** parse geojson */
     const features = geojson.readFeatures(location) as Feature<
       OLGeometry,
-      LocationProperties
+      LocationProps
     >[];
 
     for (const feature of features) {
@@ -590,13 +588,17 @@ watchEffect(async (onCleanup) => {
   }
 });
 
-/** current selected feature */
-const selectedFeature = ref<Feature<OLGeometry>>();
+/** current selected geography feature */
+const selectedGeography = ref<Feature<OLGeometry>>();
+const selectedLocation = ref<Feature<OLGeometry>>();
 
 /** reset selected feature when data changes to avoid showing wrong popup info */
 watch(
   [() => geography, () => locations],
-  () => (selectedFeature.value = undefined),
+  () => {
+    selectedGeography.value = undefined;
+    selectedLocation.value = undefined;
+  },
   { deep: true },
 );
 
@@ -605,54 +607,71 @@ map.on("click", ({ pixel }) => {
   /** do like this instead of select to avoid double click debounce */
 
   /** reset selected */
-  selectedFeature.value = undefined;
-
+  selectedGeography.value = undefined;
+  selectedLocation.value = undefined;
   /** https://stackoverflow.com/a/50415743/2180570 */
+  const features: [Feature, Layer][] = [];
+
   map.forEachFeatureAtPixel(pixel, (feature, layer) => {
-    if (
-      /** select first */
-      !selectedFeature.value &&
-      feature instanceof Feature &&
-      /** don't allow selection of e.g. geography labels */
-      (layer === geographyLayer || layer === locationsLayer)
-    ) {
-      /** set selected */
-      selectedFeature.value = feature;
-    }
+    if (feature instanceof Feature) features.push([feature, layer]);
   });
+  /** select feature */
+  for (const [feature, layer] of features) {
+    if (layer === geographyLayer) {
+      selectedGeography.value = feature;
+      break;
+    }
+    if (layer === locationsLayer) {
+      selectedLocation.value = feature;
+      break;
+    }
+  }
+  return;
 });
 
-/** popup object */
-const popup = new Overlay({
+/** popup objects */
+const geographyPopup = new Overlay({
+  stopEvent: false,
+  positioning: "bottom-center",
+});
+const locationPopup = new Overlay({
   stopEvent: false,
   positioning: "bottom-center",
 });
 
-/** add popup to map */
-map.addOverlay(popup);
+/** add popups to map */
+map.addOverlay(geographyPopup);
+map.addOverlay(locationPopup);
 
-/** update popup element */
+/** update popup elements */
 watchEffect(() => {
-  if (popupElement.value) popup.setElement(popupElement.value);
+  if (geographyPopupElement.value)
+    geographyPopup.setElement(geographyPopupElement.value);
+  if (locationPopupElement.value)
+    locationPopup.setElement(locationPopupElement.value);
 });
 
-/** update popup position */
+/** update popup positions */
 watchEffect(async () => {
-  if (!selectedFeature.value) return;
-
-  /** get bounds of feature */
-  const extent = selectedFeature.value.getGeometry()?.getExtent();
-  if (!extent) return;
-
-  /** position popup */
-  const [left = 0, bottom = 0, right = 0, top = 0] = extent;
-  popup.setPosition([left + (right - left) * 0.5, top + (bottom - top) * 0.25]);
-
-  /** wait for popup to render */
-  await nextTick();
-
-  /** move view if needed */
-  popup.panIntoView({ animation: { duration: 0 } });
+  for (const [selected, popup] of [
+    [selectedGeography.value, geographyPopup],
+    [selectedLocation.value, locationPopup],
+  ] as const) {
+    if (!selected) continue;
+    /** get bounds of feature */
+    const extent = selected.getGeometry()?.getExtent();
+    if (!extent) continue;
+    /** position popup */
+    const [left = 0, bottom = 0, right = 0, top = 0] = extent;
+    popup.setPosition([
+      left + (right - left) * 0.5,
+      top + (bottom - top) * 0.25,
+    ]);
+    /** wait for popup to render */
+    await nextTick();
+    /** move view if needed */
+    popup.panIntoView({ animation: { duration: 0 } });
+  }
 });
 
 /** change cursor to indicate click-ability */
@@ -797,7 +816,8 @@ onUnmounted(() => {
   geographySource.dispose();
   locationsLayer.dispose();
   locationsSource.dispose();
-  popup.dispose();
+  geographyPopup.dispose();
+  locationPopup.dispose();
 });
 </script>
 
@@ -903,16 +923,29 @@ onUnmounted(() => {
       {{ feature.get("label") }}
     </div>
 
-    <!-- feature popup -->
+    <!-- geography popup -->
     <div
-      v-if="$slots['popup'] && selectedFeature"
-      ref="popupElement"
+      v-if="$slots['geography-popup'] && selectedGeography"
+      ref="geographyPopupElement"
       v-stop
       class="relative z-100! flex max-h-full w-100 max-w-max translate-y-[calc(--spacing(2)*-1.414)] flex-col gap-2 rounded-md bg-white p-4 shadow-md after:absolute after:top-full after:left-1/2 after:size-2 after:-translate-1/2 after:rotate-45 after:bg-white after:shadow-md after:content-[''] after:[clip-path:polygon(200%_-100%,200%_200%,-100%_200%)]"
     >
       <slot
-        name="popup"
-        :feature="selectedFeature.getProperties() as FeatureProperties"
+        name="geography-popup"
+        :geography="selectedGeography.getProperties() as GeographyProps"
+      />
+    </div>
+
+    <!-- location popup -->
+    <div
+      v-if="$slots['location-popup'] && selectedLocation"
+      ref="locationPopupElement"
+      v-stop
+      class="relative z-100! flex max-h-full w-100 max-w-max translate-y-[calc(--spacing(2)*-1.414)] flex-col gap-2 rounded-md bg-white p-4 shadow-md after:absolute after:top-full after:left-1/2 after:size-2 after:-translate-1/2 after:rotate-45 after:bg-white after:shadow-md after:content-[''] after:[clip-path:polygon(200%_-100%,200%_200%,-100%_200%)]"
+    >
+      <slot
+        name="location-popup"
+        :location="selectedLocation.getProperties() as LocationProps"
       />
     </div>
 
