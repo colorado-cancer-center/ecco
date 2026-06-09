@@ -88,6 +88,10 @@ STAGING_TIMESTAMP = datetime.now().strftime("%Y-%m-%d")
 # this is the root folder where new release data is staged
 TARGET_DIR = os.path.join(DATA_ROOT, "staging", STAGING_TIMESTAMP)
 
+# create a 'logs' folder under the target directory
+LOGS_DIR = os.path.join(TARGET_DIR, "logs")
+os.makedirs(LOGS_DIR, exist_ok=True)
+
 # geometry doesn't change much, so unless the user explicitly requests it
 # by setting INCLUDE_GEOMETRY=1, we don't download it again.
 INCLUDE_GEOMETRY = int(os.getenv("INCLUDE_GEOMETRY", 0))
@@ -127,25 +131,35 @@ rule all:
                 f"{TARGET_DIR}/geom/Colorado_Census_Tract_Boundaries.geojson"
             ] if INCLUDE_GEOMETRY else []
         )
+    log:
+        f"{LOGS_DIR}/all.log"
 
 # get the CiF codebook; this is mostly for manual reference, e.g. if we need to
 # check what's changed between releases
 rule download_cif_codebook:
     output:
         f"{TARGET_DIR}/cif/cif_variable_codebook.xlsx",
+    log:
+        f"{LOGS_DIR}/download_cif_codebook.log"
     shell:
         """
+        (
         mkdir -p {TARGET_DIR}/cif
-        curl -L -o {TARGET_DIR}/cif/cif_variable_codebook.xlsx '{CIF_CODEBOOK_URL}'
+        curl --silent --show-error --fail -L -o {TARGET_DIR}/cif/cif_variable_codebook.xlsx '{CIF_CODEBOOK_URL}'
+        ) > {log} 2>&1
         """
 
 rule download_cif_archive:
     output:
         f"{TARGET_DIR}/cif/us.zip",
+    log:
+        f"{LOGS_DIR}/download_cif_archive.log"
     shell:
         """
+        (
         mkdir -p {TARGET_DIR}/cif
-        curl -L -o {TARGET_DIR}/cif/us.zip '{CIF_STATS_URL}'
+        curl --silent --show-error --fail -L -o {TARGET_DIR}/cif/us.zip '{CIF_STATS_URL}'
+        ) > {log} 2>&1
         """
 
 # given the CiF stats archive, extract the files and rename them to
@@ -158,8 +172,11 @@ rule extract_cif_stats:
         f"{TARGET_DIR}/cif/stats/RELEASE.txt",
         [ f"{TARGET_DIR}/cif/stats/{sheet}_long_DATE.csv" for sheet in CIF_EXPECTED_SHEETS ],
         f"{TARGET_DIR}/cif/stats/us_facilities_and_providers_DATE.csv",
+    log:
+        f"{LOGS_DIR}/extract_cif_stats.log"
     shell:
         """
+        (
         mkdir -p {TARGET_DIR}/cif/stats
         cd {TARGET_DIR}/cif/stats
         unzip -o {TARGET_DIR}/cif/us.zip
@@ -180,6 +197,7 @@ rule extract_cif_stats:
 
         # remove the version suffix from the measure dictionary, too
         # mv measure_dictionary_*.csv measure_dictionary_.csv
+        ) > {log} 2>&1
         """
 
 # given the CiF stats files and the measure dictionary distributed with them,
@@ -193,35 +211,45 @@ rule extract_cif_metadata:
         f"{TARGET_DIR}/cif/stats/measure_dictionary_v5-3.csv",
     output:
         f"{TARGET_DIR}/cif/cif_meta.json"
+    log:
+        f"{LOGS_DIR}/extract_cif_metadata.log"
     shell:
-        "python3 {PIPELINE_DIR}/scripts/cif/extract_cif_metadata.py {TARGET_DIR}/cif/stats/ -o {output}"
+        "python3 {PIPELINE_DIR}/scripts/cif/extract_cif_metadata.py {TARGET_DIR}/cif/stats/ -o {output} > {log} 2>&1"
 
 # download the latest release of the State Cancer Profiles (SCP) data
 rule download_scp:
     output:
         f"{TARGET_DIR}/scp/state_cancer_profiles_incidence.csv",
         f"{TARGET_DIR}/scp/state_cancer_profiles_mortality.csv"
+    log:
+        f"{LOGS_DIR}/download_scp.log"
     shell:
         """
+        (
         mkdir -p {TARGET_DIR}/scp
         cd {TARGET_DIR}/scp
         RELEASE_TAG=$(curl -s https://api.github.com/repos/seandavi/state-cancer-profile-scraper/releases/latest | jq -r '.tag_name')
         # mkdir -p ${{RELEASE_TAG}}
         # cd ${{RELEASE_TAG}}
         echo "SCP files for release tag ${{RELEASE_TAG}}" > RELEASE.txt
-        curl -LO https://github.com/seandavi/state-cancer-profile-scraper/releases/download/${{RELEASE_TAG}}/state_cancer_profiles_incidence.csv.gz
-        curl -LO https://github.com/seandavi/state-cancer-profile-scraper/releases/download/${{RELEASE_TAG}}/state_cancer_profiles_mortality.csv.gz
+        curl --silent --show-error --fail -LO https://github.com/seandavi/state-cancer-profile-scraper/releases/download/${{RELEASE_TAG}}/state_cancer_profiles_incidence.csv.gz
+        curl --silent --show-error --fail -LO https://github.com/seandavi/state-cancer-profile-scraper/releases/download/${{RELEASE_TAG}}/state_cancer_profiles_mortality.csv.gz
         gunzip *.gz
+        ) > {log} 2>&1
         """
 
 # download the Colorado Cancer Resource Map (CCRM) locations
 rule download_ccrm:
     output:
         f"{TARGET_DIR}/locations/ccrm/ccrm_locations.json"
+    log:
+        f"{LOGS_DIR}/download_ccrm.log"
     shell:
         """
+        (
         mkdir -p {TARGET_DIR}/locations/ccrm
-        curl -L -o {TARGET_DIR}/locations/ccrm/ccrm_locations.json '{CCRM_URL}'
+        curl --silent --show-error --fail -L -o {TARGET_DIR}/locations/ccrm/ccrm_locations.json '{CCRM_URL}'
+        ) > {log} 2>&1
         """
 
 # download the house and senate members Excel sheets for merging into
@@ -229,19 +257,23 @@ rule download_ccrm:
 rule download_house_senate_members:
     output:
         f"{TARGET_DIR}/locations/legislative/member_directory.xlsx",
+    log:
+        f"{LOGS_DIR}/download_house_senate_members.log"
     shell:
         r"""
+        (
         mkdir -p {TARGET_DIR}/locations/legislative
 
         # use curl and sed to identify the URL for the members spreadsheet
         HOUSE_SENATE_MEMBERS_XLSX_URL=$(
-            curl -L -s '{HOUSE_SENATE_MEMBERS_LIST_PAGE}' | \
+            curl --silent --show-error --fail -L -s '{HOUSE_SENATE_MEMBERS_LIST_PAGE}' | \
                 grep '.xlsx' | \
                 sed -n 's/.*href="\([^"]*\)".*/\1/p'
         )
 
-        curl -L -o {TARGET_DIR}/locations/legislative/member_directory.xlsx\
+        curl --silent --show-error --fail -L -o {TARGET_DIR}/locations/legislative/member_directory.xlsx\
             "${{HOUSE_SENATE_MEMBERS_XLSX_URL}}"
+        ) > {log} 2>&1
         """
 
 # scrape the members of each congressional district and format the result
@@ -249,13 +281,17 @@ rule download_house_senate_members:
 rule download_congress_district_members:
     output:
         f"{TARGET_DIR}/locations/legislative/co_congress_members.csv",
+    log:
+        f"{LOGS_DIR}/download_congress_district_members.log"
     shell:
         """
+        (
         mkdir -p {TARGET_DIR}/locations/legislative
         
         curl -L '{CONGRESS_MEMBERS_URL}' \
             | {PIPELINE_DIR}/scripts/locations/parse_congress_districts.sh \
             > {TARGET_DIR}/locations/legislative/co_congress_members.csv
+        ) > {log} 2>&1
         """
 
 # acquire the house, senate, and congressional district geometries and convert
@@ -263,6 +299,8 @@ rule download_congress_district_members:
 rule download_legislative_maps:
     output:
         [ f"{TARGET_DIR}/locations/legislative/{map_name}/{map_name}.geojson" for map_name in LEG_MAPS_TO_URL ]
+    log:
+        f"{LOGS_DIR}/download_legislative_maps.log"
     run:
         shell("mkdir -p {TARGET_DIR}/locations/legislative")
 
@@ -271,13 +309,15 @@ rule download_legislative_maps:
             cur_map_friendly = LEG_MAPS_TO_URL[map_name]["friendly_name"]
 
             shell("""
-                curl -L -o {TARGET_DIR}/locations/legislative/{map_name}.zip '{cur_map_url}'
+                (
+                curl --silent --show-error --fail -L -o {TARGET_DIR}/locations/legislative/{map_name}.zip '{cur_map_url}'
                 unzip -o {TARGET_DIR}/locations/legislative/{map_name}.zip -d {TARGET_DIR}/locations/legislative
                 SHP_FILE=$(find {TARGET_DIR}/locations/legislative/{map_name}/ -type f -name '*.shp')
                 PRJ_FILE=$(find {TARGET_DIR}/locations/legislative/{map_name}/ -type f -name '*.prj')
                 ogr2ogr -f GeoJSON \
                     -s_srs $PRJ_FILE -t_srs EPSG:4326 \
                     {TARGET_DIR}/locations/legislative/{map_name}/{map_name}.geojson $SHP_FILE
+                ) >> {log} 2>&1
             """)
 
 # use jq to reformat the legislative district maps' GeoJSON to be human readable
@@ -288,6 +328,8 @@ rule format_friendly_legislative_maps:
         [ f"{TARGET_DIR}/locations/legislative/{map_name}/{map_name}.geojson" for map_name in LEG_MAPS_TO_URL ],
     output:
         [ f"{TARGET_DIR}/locations/legislative/{entry['friendly_name']}.geojson" for entry in LEG_MAPS_TO_URL.values() ]
+    log:
+        f"{LOGS_DIR}/format_friendly_legislative_maps.log"
     run:
         for map_name in LEG_MAPS_TO_URL:
             cur_map_friendly = LEG_MAPS_TO_URL[map_name]["friendly_name"]
@@ -295,7 +337,7 @@ rule format_friendly_legislative_maps:
             shell("""
             # reformat the geojson to be nicer
             jq '.' {TARGET_DIR}/locations/legislative/{map_name}/{map_name}.geojson \
-                > {TARGET_DIR}/locations/legislative/{cur_map_friendly}.geojson
+                > {TARGET_DIR}/locations/legislative/{cur_map_friendly}.geojson 2>> {log}
             """
             )
 
@@ -316,8 +358,11 @@ rule create_locations_json:
         f"{TARGET_DIR}/locations/legislative/co_congress_members.csv"
     output:
         f"{TARGET_DIR}/locations/locations-data.json"
+    log:
+        f"{LOGS_DIR}/create_locations_json.log"
     shell:
         """
+        (
         python3 {PIPELINE_DIR}/scripts/locations/sources_to_locdata.py \
             {DATA_ROOT}/reference/locations/locations.json \
             {TARGET_DIR}/locations/ccrm/ccrm_locations.json \
@@ -328,6 +373,7 @@ rule create_locations_json:
             {TARGET_DIR}/locations/legislative/member_directory.xlsx \
             {TARGET_DIR}/locations/legislative/co_congress_members.csv \
             --output {output}
+        ) > {log} 2>&1
         """
 
 # acquires Colorado county and tract geomety
@@ -342,13 +388,17 @@ rule download_co_geometry:
     output:
         f"{TARGET_DIR}/geom/Colorado_County_Boundaries.json",
         f"{TARGET_DIR}/geom/Colorado_Census_Tract_Boundaries.geojson"
+    log:
+        f"{LOGS_DIR}/download_co_geometry.log"
     shell:
         """
+        (
         mkdir -p {TARGET_DIR}/geom
-        curl -L -o {TARGET_DIR}/geom/Colorado_County_Boundaries.json \
+        curl --silent --show-error --fail -L -o {TARGET_DIR}/geom/Colorado_County_Boundaries.json \
             '{COUNTY_BOUNDARIES_GEOJSON_URL}'
-        curl -L -o {TARGET_DIR}/geom/Colorado_Census_Tract_Boundaries.geojson \
+        curl --silent --show-error --fail -L -o {TARGET_DIR}/geom/Colorado_Census_Tract_Boundaries.geojson \
             '{TRACT_BOUNDARIES_GEOJSON_URL}'
+        ) > {log} 2>&1
         """
 
 # acquires econonomic development districts (EDDs) for Colorado
@@ -356,14 +406,17 @@ rule download_co_geometry:
 rule download_co_edds:
     output:
         f"{TARGET_DIR}/geom/Colorado_2023_Economic_Development_Regions.geojson"
+    log:
+        f"{LOGS_DIR}/download_co_edds.log"
     shell:
         """
+        (
         mkdir -p {TARGET_DIR}/geom
         cd {TARGET_DIR}/geom
 
         echo "* Downloading economic development districts (EDDs), Jan-2023 version, from statsamerica.org..."
 
-        curl -L -o 'edds.xlsx' \
+        curl --silent --show-error --fail -L -o 'edds.xlsx' \
             'https://www.statsamerica.org/geography/Economic-Development-Districts-Jan-2023.xlsx'
 
         echo "* Generating EDD geometry..."
@@ -371,4 +424,5 @@ rule download_co_edds:
         ogr2ogr -f GeoJSON -t_srs EPSG:4326 \
             {TARGET_DIR}/geom/Colorado_2023_Economic_Development_Regions.geojson \
             edds.xlsx -nln edds -nlt MultiPolygon
+        ) > {log} 2>&1
         """
