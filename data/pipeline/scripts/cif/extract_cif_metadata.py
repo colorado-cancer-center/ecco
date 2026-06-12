@@ -24,6 +24,11 @@ SKIP_CANCER_MEASURE_CATEGORIES = True
 # them, but for now we'll ignore them
 SKIP_SVI_MEASURE_CATEGORIES = True
 
+# whether to skip "Urbanicity"(?) measure categories
+# (these were added recently to CiF but aren't documented in the codebook;
+# i presume they're some kind of measure of the urbanicity of each county/tract)
+SKIP_URBAN_MEASURE_CATEGORIES = True
+
 # canonical ordering of categories, to be retained in output:
 # (we dynamically add in the cancer categories if they're present)
 CANONICAL_CATEGORY_ORDER = [
@@ -110,6 +115,17 @@ def extract_cif_metadata(input, output):
         "source": "ACS 5-Year, 2019 - 2023"
     }
 
+    # patch in PrimaryRUCA if it's missing
+    codebook["PrimaryRUCA"] = {
+        "measure": "PrimaryRUCA",
+        "def": "Primary RUCA",  # Adjust definition as appropriate
+        "fmt": "int",
+        "source": "USDA ERS"  # Adjust source as appropriate
+    }
+
+    # alias 'Stroke' to what we have for 'Had Stroke'
+    codebook["Stroke"] = codebook["Had Stroke"]
+
     # for each csv file in the input folder with a filename
     # of the form us_*_long_*.csv, open the file and read it
     # via csv.DictReader
@@ -127,6 +143,11 @@ def extract_cif_metadata(input, output):
         if SKIP_SVI_MEASURE_CATEGORIES:
             # skip cancer, since we get it from SCP
             if '_svi_' in entry:
+                continue
+
+        if SKIP_URBAN_MEASURE_CATEGORIES:
+            # skip cancer, since we get it from SCP
+            if '_urb_' in entry:
                 continue
 
         # use a regex to extract the name of the measure category
@@ -222,7 +243,10 @@ def extract_cif_metadata(input, output):
                 # in the codebook, so we need to add that prefix here
                 codebook_entry = codebook[f"{category.replace('cancer_', '').capitalize()} {measure}"]
             else:
-                raise Exception(f"Measure '{measure}' not found in codebook")
+                # raise Exception(f"Measure '{measure}' not found in codebook")
+                # log and continue
+                print(f"{ERROR}WARNING:{ENDC} Measure '{measure}' not found in codebook, skipping")
+                continue
 
             candidate = {
                 "label": codebook_entry['def'],

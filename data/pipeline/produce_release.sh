@@ -89,10 +89,10 @@ if [[ "${ACQUIRE_RELEASE}" = "1" ]]; then
 
     # execute snakemake from /data/pipeline, which will write a new staging
     # release into /data/staging/<YYYY-MM-DD>
-    docker compose exec -T backend /bin/bash -s <<-EOF
+    docker compose exec backend /bin/bash -lc '
         cd /data/pipeline
-        snakemake --cores all
-EOF
+        snakemake --cores all --show-failed-logs
+	'
 fi
 
 

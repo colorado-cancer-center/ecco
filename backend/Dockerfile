@@ -1,7 +1,21 @@
 FROM python:3.10
 
 # install a few system packages
-RUN apt-get update && apt-get install -y gdal-bin jq
+RUN apt-get update && apt-get install -y gdal-bin jq && \
+    rm -rf /var/lib/apt/lists/*
+
+# install curl, certs, openssl
+# patch in an intermediate cert that cancerinfocus is missing for some reason
+RUN apt-get update && apt-get install -y --no-install-recommends \
+   ca-certificates curl openssl && \
+    curl -fsSL http://crt.sectigo.com/InCommonRSAServerCA2.crt \
+      -o /tmp/InCommonRSAServerCA2.der && \
+    openssl x509 -inform DER \
+      -in /tmp/InCommonRSAServerCA2.der \
+      -out /usr/local/share/ca-certificates/InCommonRSAServerCA2.crt && \
+    update-ca-certificates && \
+    rm -f /tmp/InCommonRSAServerCA2.der && \
+    rm -rf /var/lib/apt/lists/*
 
 COPY ./requirements.txt /tmp/requirements.txt
 RUN --mount=type=cache,target=/root/.cache/pip \

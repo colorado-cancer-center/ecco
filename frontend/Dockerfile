@@ -1,4 +1,4 @@
-FROM node:21
+FROM node:22
 RUN npm install -g bun@1.0.35
 
 WORKDIR /app
