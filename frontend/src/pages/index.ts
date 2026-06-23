@@ -20,9 +20,7 @@ export const routes = [
     path: "/",
     component: PageHome,
     beforeEnter: () => {
-      if (redirect) {
-        return redirect;
-      }
+      if (redirect) return redirect;
     },
     meta: { header: true },
   },
