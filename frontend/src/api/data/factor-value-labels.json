@@ -1,0 +1,33 @@
+{
+  "sex": {
+    "All": "All Sexes",
+    "Female": "Female",
+    "Male": "Male"
+  },
+  "stage": {
+    "All Stages": "All Stages",
+    "Late Stage (Regional & Distant)": "Late Stage"
+  },
+  "race": {
+    "All Races (includes Hispanic)": "All Races",
+    "Amer. Indian / AK Native (Non-Hispanic)": "American Indian / AK Native",
+    "Asian / Pacific Islander (Non-Hispanic)": "Asian / Pacific Islander",
+    "Black (Non-Hispanic)": "Black",
+    "Hispanic (any race)": "Hispanic",
+    "White (Non-Hispanic)": "White"
+  },
+  "age": {
+    "All Ages": "All Ages",
+    "<50": "< 50 Years",
+    "50+": "50+ Years",
+    "<65": "< 65 Years",
+    "65+": "65+ Years",
+    "Age < 20": "< 20 Years",
+    "Age < 15": "< 15 Years"
+  },
+  "urbanicity": {
+    "All": "All Urbanicities",
+    "Rural": "Rural",
+    "Urban": "Urban"
+  }
+}

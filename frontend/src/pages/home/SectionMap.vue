@@ -48,6 +48,7 @@ import {
   Copy,
   Crop,
   Download,
+  EyeDashed,
   Feather,
   Fullscreen,
   Info,
@@ -65,7 +66,7 @@ import {
   useWindowSize,
 } from "@vueuse/core";
 import { toBlob } from "html-to-image";
-import { clamp } from "lodash";
+import { clamp, isEqual } from "lodash";
 
 /** element refs */
 const rightPanelElement = useTemplateRef("rightPanelElement");
@@ -93,6 +94,9 @@ const selectedMaps = useParam(
   [defaultMap()],
   jsonParam<SelectedMap[]>([]),
 );
+
+/** reset selected map to default */
+const resetMap = () => (selectedMaps.value[selectedIndex.value] = defaultMap());
 
 /** maximum maps to be compared */
 const maxMaps = 12;
@@ -160,7 +164,7 @@ const levelOptions = computed(() =>
       label +
       (statistics.value[selectedMap().statistic]?.levels.includes(level)
         ? ""
-        : " (ND)"),
+        : " (no data)"),
   })),
 );
 
@@ -323,7 +327,7 @@ const factorOptions = computed(() => {
       options: Object.entries(values).map(([id, { label }]) => ({
         id,
         /** if factor value available for statistic */
-        label: label + (available[factor]?.values[id] ? "" : " (ND)"),
+        label: label + (available[factor]?.values[id] ? "" : " (no data)"),
       })),
     };
   }
@@ -423,7 +427,7 @@ const onTreeDownload = (statistic = "") => {
 };
 
 /** reset customizations and map to defaults */
-const reset = async () => {
+const resetCustomizations = async () => {
   zoom.value = 0;
   lat.value = 0;
   long.value = 0;
@@ -502,6 +506,16 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
   >
     <!-- left panel -->
     <div class="flex flex-col gap-8 text-left" role="group">
+      <!-- reset map -->
+      <AppButton
+        v-if="!isEqual(selectedMap(), defaultMap())"
+        v-tooltip="'Reset current map selections to defaults'"
+        :accent="true"
+        @click="resetMap"
+      >
+        Reset<RefreshCw />
+      </AppButton>
+
       <!-- geographic level -->
       <AppSelect
         v-model="selectedMap().level"
@@ -803,7 +817,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         <AppButton
           v-tooltip="'Reset customizations to defaults'"
           :accent="true"
-          @click="reset"
+          @click="resetCustomizations"
         >
           <RefreshCw />
           Reset
@@ -877,17 +891,22 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
                 {{ part }}
               </div>
             </div>
-            <div>
+            <div class="text-sm">
               {{
-                Object.values(selected.factors)
-                  .filter((factor) => !factor.match(/(^|\s)all($|\s)/i))
+                Object.entries(selected.factors)
+                  .map(
+                    ([factor, value]) =>
+                      statistics[selected.statistic]?.factors[factor]?.values[
+                        value
+                      ]?.label ?? value,
+                  )
                   .join(", ")
               }}
             </div>
           </template>
 
           <template #top-left-lower>
-            <div v-if="statistic.source" class="flex items-center gap-2">
+            <div class="flex items-center gap-2">
               <AppLink :to="statistic.source.link" class="text-sm">
                 {{ statistic.source.label }}
                 <template v-if="statistic.source.id">
@@ -904,6 +923,19 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
               >
                 <Copy />
               </AppButton>
+            </div>
+
+            <div
+              v-if="
+                geography.features.every(
+                  (feature) => feature.properties.value === undefined,
+                )
+              "
+              class="flex items-center gap-1 text-sm text-stone-500"
+            >
+              <EyeDashed />
+              No data for this combo of level/statistic/factors, try changing
+              one of them.
             </div>
 
             <div v-if="statistic.state">
@@ -1070,6 +1102,11 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
               <template v-if="location.type">
                 <dt>Type</dt>
                 <dd>{{ location.type }}</dd>
+              </template>
+
+              <template v-if="location.name">
+                <dt>Name</dt>
+                <dd>{{ location.name }}</dd>
               </template>
 
               <template v-if="location.label">

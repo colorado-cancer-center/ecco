@@ -1,12 +1,9 @@
 <script lang="ts">
-/** "no data" color */
-const noDataColor = "#a0a0a0";
-
 /** "no data scale entry */
 export const noDataEntry = {
   value: "",
   label: "ND",
-  color: noDataColor,
+  color: "#a0a0a0",
   tooltip: "No data or suppressed value",
 } as const;
 
@@ -204,7 +201,7 @@ const scale = computed(() => {
     /** explicit color */
     const getColor = (value?: number | string) =>
       steps.find((step) => ("value" in step ? step.value === value : undefined))
-        ?.color ?? noDataColor;
+        ?.color ?? noDataEntry.color;
 
     return { steps, getColor };
   } else if (
@@ -270,12 +267,12 @@ const scale = computed(() => {
     const getColor = (value?: number | string) =>
       typeof value === "number"
         ? scaleQuantile<string>().domain(bands).range(colors)(value)
-        : noDataColor;
+        : noDataEntry.color;
 
     return { steps, getColor };
   } else {
     /** last resort fallback */
-    return { steps: [noDataEntry], getColor: () => noDataColor };
+    return { steps: [noDataEntry], getColor: () => noDataEntry.color };
   }
 });
 
@@ -410,7 +407,7 @@ watchEffect((onCleanup) => {
       return new Style({
         stroke: new Stroke({ color: "black", width: hover ? 4 : 1 }),
         fill: new Fill({
-          color: color === noDataColor ? { color, src: hatch } : color,
+          color: color === noDataEntry.color ? { color, src: hatch } : color,
         }),
         zIndex: hover ? 1 : 0,
       });
@@ -856,7 +853,8 @@ onUnmounted(() => {
             tabindex="0"
             :style="{
               backgroundColor: step.color,
-              '--image': step.color === noDataColor ? `url(${hatch})` : 'none',
+              '--image':
+                step.color === noDataEntry.color ? `url(${hatch})` : 'none',
             }"
           />
           <div

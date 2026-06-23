@@ -4,6 +4,7 @@ import { getValue } from "@/util/types";
 import { mapValues } from "lodash";
 import countyCenters from "./data/county-centers.json";
 import factorLabels from "./data/factor-labels.json";
+import factorValueLabels from "./data/factor-value-labels.json";
 import featureLabels from "./data/feature-labels.json";
 import levelLabels from "./data/level-labels.json";
 import locationLabels from "./data/location-labels.json";
@@ -133,7 +134,13 @@ export const getStatistics = async () => {
       values: Object.fromEntries(
         values.map((value) => [
           value,
-          { label: getValue(factorLabels, value) ?? value },
+          {
+            label:
+              getValue(
+                factorValueLabels[factor as keyof typeof factorValueLabels],
+                value,
+              ) ?? value,
+          },
         ]),
       ),
     })),
