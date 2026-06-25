@@ -1,3 +1,28 @@
+<script setup lang="ts">
+import { ref, useTemplateRef } from "vue";
+import AppButton from "@/components/AppButton.vue";
+import { useAutoHeight } from "@/util/composables";
+import { Disclosure, DisclosureButton, DisclosurePanel } from "@headlessui/vue";
+import { ChevronDown, ChevronUp } from "@lucide/vue";
+
+type Props = {
+  label: string;
+};
+
+defineProps<Props>();
+
+type Slots = {
+  default: () => unknown;
+};
+
+defineSlots<Slots>();
+
+const panel = useTemplateRef("panel");
+const open = ref(false);
+
+useAutoHeight(panel, open);
+</script>
+
 <template>
   <Disclosure>
     <div
@@ -23,28 +48,3 @@
     </div>
   </Disclosure>
 </template>
-
-<script setup lang="ts">
-import { ref, useTemplateRef } from "vue";
-import AppButton from "@/components/AppButton.vue";
-import { useAutoHeight } from "@/util/composables";
-import { Disclosure, DisclosureButton, DisclosurePanel } from "@headlessui/vue";
-import { ChevronDown, ChevronUp } from "@lucide/vue";
-
-type Props = {
-  label: string;
-};
-
-defineProps<Props>();
-
-type Slots = {
-  default: () => unknown;
-};
-
-defineSlots<Slots>();
-
-const panel = useTemplateRef("panel");
-const open = ref(false);
-
-useAutoHeight(panel, open);
-</script>

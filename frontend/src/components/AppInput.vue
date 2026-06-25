@@ -1,3 +1,29 @@
+<script setup lang="ts">
+import type { Component } from "vue";
+import { useTemplateRef } from "vue";
+import { X } from "@lucide/vue";
+import { useElementSize } from "@vueuse/core";
+import { omit } from "lodash";
+
+defineOptions({ inheritAttrs: false });
+
+type Props = {
+  modelValue: string;
+  icon?: Component;
+};
+
+defineProps<Props>();
+
+type Emits = {
+  "update:modelValue": [Props["modelValue"]];
+};
+
+defineEmits<Emits>();
+
+const sideElement = useTemplateRef("side");
+const sideSize = useElementSize(sideElement, undefined, { box: "border-box" });
+</script>
+
 <template>
   <div
     class="relative flex grow rounded-md bg-stone-200 transition hover:bg-stone-100"
@@ -30,29 +56,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import type { Component } from "vue";
-import { useTemplateRef } from "vue";
-import { X } from "@lucide/vue";
-import { useElementSize } from "@vueuse/core";
-import { omit } from "lodash";
-
-defineOptions({ inheritAttrs: false });
-
-type Props = {
-  modelValue: string;
-  icon?: Component;
-};
-
-defineProps<Props>();
-
-type Emits = {
-  "update:modelValue": [Props["modelValue"]];
-};
-
-defineEmits<Emits>();
-
-const sideElement = useTemplateRef("side");
-const sideSize = useElementSize(sideElement, undefined, { box: "border-box" });
-</script>

@@ -1,0 +1,253 @@
+{
+  "Sociodemographics": {
+    "sociodemographics;Total": null,
+    "Age": {
+      "sociodemographics;Under 18": null,
+      "sociodemographics;18 to 64": null,
+      "sociodemographics;Over 64": null
+    },
+    "Education": {
+      "sociodemographics;Below 9th grade": null,
+      "sociodemographics;High School": null,
+      "sociodemographics;College": null,
+      "sociodemographics;Advanced Degree": null
+    },
+    "Race/Ethnicity": {
+      "sociodemographics;AIAN": null,
+      "sociodemographics;Asian": null,
+      "sociodemographics;Black": null,
+      "sociodemographics;Hispanic": null,
+      "sociodemographics;NHOPI": null,
+      "sociodemographics;Other_Races": null,
+      "sociodemographics;White": null
+    }
+  },
+
+  "Cancer": {
+    "Incidence": {
+      "scpincidence;All Cancer Sites": null,
+      "scpincidence;Childhood (Ages <15, All Sites)": null,
+      "scpincidence;Childhood (Ages <20, All Sites)": null,
+      "scpincidence;Bladder": null,
+      "scpincidence;Brain & ONS": null,
+      "scpincidence;Breast (Female)": null,
+      "scpincidence;Breast (Female in situ)": null,
+      "scpincidence;Cervix": null,
+      "scpincidence;Colon & Rectum": null,
+      "scpincidence;Esophagus": null,
+      "scpincidence;Kidney & Renal Pelvis": null,
+      "scpincidence;Leukemia": null,
+      "scpincidence;Liver & Bile Duct": null,
+      "scpincidence;Lung & Bronchus": null,
+      "scpincidence;Melanoma of the Skin": null,
+      "scpincidence;Non-Hodgkin Lymphoma": null,
+      "scpincidence;Oral Cavity & Pharynx": null,
+      "scpincidence;Ovary": null,
+      "scpincidence;Pancreas": null,
+      "scpincidence;Prostate": null,
+      "scpincidence;Stomach": null,
+      "scpincidence;Thyroid": null,
+      "scpincidence;Uterus (Corpus & Uterus, NOS)": null
+    },
+    "Mortality": {
+      "scpdeaths;All Cancer Sites": null,
+      "scpdeaths;Bladder": null,
+      "scpdeaths;Brain & ONS": null,
+      "scpdeaths;Breast (Female)": null,
+      "scpdeaths;Cervix": null,
+      "scpdeaths;Childhood (Ages <20, All Sites)": null,
+      "scpdeaths;Colon & Rectum": null,
+      "scpdeaths;Esophagus": null,
+      "scpdeaths;Kidney & Renal Pelvis": null,
+      "scpdeaths;Leukemia": null,
+      "scpdeaths;Liver & Bile Duct": null,
+      "scpdeaths;Lung & Bronchus": null,
+      "scpdeaths;Melanoma of the Skin": null,
+      "scpdeaths;Non-Hodgkin Lymphoma": null,
+      "scpdeaths;Oral Cavity & Pharynx": null,
+      "scpdeaths;Ovary": null,
+      "scpdeaths;Pancreas": null,
+      "scpdeaths;Prostate": null,
+      "scpdeaths;Stomach": null,
+      "scpdeaths;Thyroid": null,
+      "scpdeaths;Uterus (Corpus & Uterus, NOS)": null
+    },
+    "Incidence Trends": {
+      "scpincidencetrend;All Cancer Sites": null,
+      "scpincidencetrend;Childhood (Ages <15, All Sites)": null,
+      "scpincidencetrend;Childhood (Ages <20, All Sites)": null,
+      "scpincidencetrend;Bladder": null,
+      "scpincidencetrend;Brain & ONS": null,
+      "scpincidencetrend;Breast (Female)": null,
+      "scpincidencetrend;Breast (Female in situ)": null,
+      "scpincidencetrend;Cervix": null,
+      "scpincidencetrend;Colon & Rectum": null,
+      "scpincidencetrend;Esophagus": null,
+      "scpincidencetrend;Kidney & Renal Pelvis": null,
+      "scpincidencetrend;Leukemia": null,
+      "scpincidencetrend;Liver & Bile Duct": null,
+      "scpincidencetrend;Lung & Bronchus": null,
+      "scpincidencetrend;Melanoma of the Skin": null,
+      "scpincidencetrend;Non-Hodgkin Lymphoma": null,
+      "scpincidencetrend;Oral Cavity & Pharynx": null,
+      "scpincidencetrend;Ovary": null,
+      "scpincidencetrend;Pancreas": null,
+      "scpincidencetrend;Prostate": null,
+      "scpincidencetrend;Stomach": null,
+      "scpincidencetrend;Thyroid": null,
+      "scpincidencetrend;Uterus (Corpus & Uterus, NOS)": null
+    },
+    "Mortality Trends": {
+      "scpdeathstrend;All Cancer Sites": null,
+      "scpdeathstrend;Childhood (Ages <20, All Sites)": null,
+      "scpdeathstrend;Bladder": null,
+      "scpdeathstrend;Brain & ONS": null,
+      "scpdeathstrend;Breast (Female)": null,
+      "scpdeathstrend;Cervix": null,
+      "scpdeathstrend;Colon & Rectum": null,
+      "scpdeathstrend;Esophagus": null,
+      "scpdeathstrend;Kidney & Renal Pelvis": null,
+      "scpdeathstrend;Leukemia": null,
+      "scpdeathstrend;Liver & Bile Duct": null,
+      "scpdeathstrend;Lung & Bronchus": null,
+      "scpdeathstrend;Melanoma of the Skin": null,
+      "scpdeathstrend;Non-Hodgkin Lymphoma": null,
+      "scpdeathstrend;Oral Cavity & Pharynx": null,
+      "scpdeathstrend;Ovary": null,
+      "scpdeathstrend;Pancreas": null,
+      "scpdeathstrend;Prostate": null,
+      "scpdeathstrend;Stomach": null,
+      "scpdeathstrend;Thyroid": null,
+      "scpdeathstrend;Uterus (Corpus & Uterus, NOS)": null
+    },
+    "Disparity Index": {
+      "cancerdisparitiesindex;Breast Cancer Index": null,
+      "cancerdisparitiesindex;Colorectal Cancer Index": null,
+      "cancerdisparitiesindex;Head and Neck Cancer Index": null,
+      "cancerdisparitiesindex;Lung Cancer Index": null
+    }
+  },
+
+  "Cancer Risk Factors": {
+    "rfandscreening;Cancer_Prevalence": null,
+    "rfandscreening;Currently_Smoke": null,
+    "rfandscreening;Binge_Drinking": null,
+    "rfandscreening;BMI_Obese": null,
+    "rfandscreening;Physically_Inactive": null,
+    "uvexposure;UV_Wh_m2": null,
+    "Vaping": {
+      "vaping;adult_vaping_ever": null,
+      "vaping;adult_vaping_now": null,
+      "vaping;youth_vaping_ever": null,
+      "vaping;youth_vaping_now": null
+    },
+    "Radon": {
+      "radon;NTests": null,
+      "radon;NTestsover4": null,
+      "radon;PctOver4": null
+    }
+  },
+
+  "Cancer Screening & Prevention": {
+    "rfandscreening;Met_Breast_Screen": null,
+    "rfandscreening;Met_Colon_Screen": null,
+    "hpv;Up-To-Date Percent": null
+  },
+
+  "Other Health Conditions & Behaviors": {
+    "Diagnosed With": {
+      "rfandscreening;Asthma": null,
+      "rfandscreening;Cognitive_Disability": null,
+      "rfandscreening;COPD": null,
+      "rfandscreening;Depression": null,
+      "rfandscreening;Diabetes_DX": null,
+      "rfandscreening;CHD": null,
+      "rfandscreening;High_BP": null,
+      "rfandscreening;High_Cholesterol": null,
+      "rfandscreening;Had_Stroke": null
+    },
+    "Disabilities": {
+      "rfandscreening;No_Teeth": null,
+      "rfandscreening;Hearing_Disability": null,
+      "rfandscreening;Independent_Living_Disability": null,
+      "rfandscreening;Mobility_Disability": null,
+      "rfandscreening;Selfcare_Disability": null,
+      "rfandscreening;Vision_Disability": null
+    },
+    "Insecurities": {
+      "rfandscreening;Food_Insecure": null,
+      "rfandscreening;Housing_Insecure": null,
+      "rfandscreening;Lacked_Reliable_Transportation": null,
+      "rfandscreening;Lacked_Social_Emotional_Support": null
+    },
+    "Reported Conditions": {
+      "rfandscreening;Bad_Health": null,
+      "rfandscreening;Poor_Mental": null,
+      "rfandscreening;Poor_Physical": null,
+      "rfandscreening;Recent_Checkup": null,
+      "rfandscreening;Recent_Dentist": null,
+      "rfandscreening;Sleep_Debt": null,
+      "rfandscreening;Socially_Isolated": null
+    }
+  },
+
+  "Social Determinants Of Health": {
+    "Economics & Insurance": {
+      "economy;Annual Labor Force Participation Rate": null,
+      "economy;Annual Unemployment Rate": null,
+      "economy;Below Poverty": null,
+      "economy;Household Income": null,
+      "economy;Insurance Coverage": null,
+      "economy;Medicaid Enrollment": null,
+      "economy;Received Public Assistance": null,
+      "economy;Uninsured": null
+    },
+    "Environment": {
+      "environment;Diesel PM": null,
+      "environment;Drinking Water Noncompliance": null,
+      "environment;Hazardous Waste Proximity": null,
+      "environment;Lead Paint": null,
+      "environment;Nitrogen Dioxide": null,
+      "environment;Ozone": null,
+      "environment;PM25": null,
+      "environment;RMP Proximity": null,
+      "environment;Superfund Proximity": null,
+      "environment;Toxics Release to Air": null,
+      "environment;Traffic Proximity": null,
+      "environment;Underground Storage Tanks": null,
+      "environment;Water Discharge": null
+    },
+    "Housing & Transportation": {
+      "housingtrans;Median Gross Rent": null,
+      "housingtrans;Rent Burden (40% Income)": null,
+      "housingtrans;Median Home Value": null,
+      "housingtrans;Median Monthly Mortgage": null,
+      "housingtrans;Crowded Housing": null,
+      "housingtrans;Lack Complete Plumbing": null,
+      "housingtrans;No Home Broadband": null,
+      "housingtrans;No Vehicle": null,
+      "housingtrans;Owner Occupied Housing": null,
+      "housingtrans;Single Parent Household": null,
+      "housingtrans;Multi-Unit Structures": null,
+      "housingtrans;Mobile Homes": null,
+      "housingtrans;Vacancy Rate": null
+    },
+    "Sociodemographic Disparities": {
+      "disparities;Economic Segregation": null,
+      "disparities;Gender Pay Gap": null,
+      "disparities;Gini Coefficient": null,
+      "disparities;Lack_English_Prof": null,
+      "disparities;Living Below Poverty (Black)": null,
+      "disparities;Living Below Poverty (Hispanic)": null,
+      "disparities;Racial Segregation": null,
+      "disparities;Racial Economic Segregation": null,
+      "disparities;Uninsured Children": null,
+      "disparities;Uninsured (Black)": null,
+      "disparities;Uninsured (Hispanic)": null
+    }
+  },
+
+  "UCCC Research Participants": {
+    "ucccresponders;responses": null
+  }
+}

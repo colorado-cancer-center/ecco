@@ -1,3 +1,14 @@
+<script setup lang="ts">
+import { onMounted } from "vue";
+import AppButton from "@/components/AppButton.vue";
+import AppHeading from "@/components/AppHeading.vue";
+import { appTitle } from "@/meta";
+import { Bug, Form, Mail } from "@lucide/vue";
+
+/** page title */
+onMounted(() => (appTitle.value = ["Contact"]));
+</script>
+
 <template>
   <section>
     <AppHeading level="1">Contact</AppHeading>
@@ -27,14 +38,3 @@
     </div>
   </section>
 </template>
-
-<script setup lang="ts">
-import { onMounted } from "vue";
-import AppButton from "@/components/AppButton.vue";
-import AppHeading from "@/components/AppHeading.vue";
-import { appTitle } from "@/meta";
-import { Bug, Form, Mail } from "@lucide/vue";
-
-/** page title */
-onMounted(() => (appTitle.value = ["Contact"]));
-</script>

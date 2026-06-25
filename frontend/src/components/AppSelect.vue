@@ -1,96 +1,3 @@
-<template>
-  <label
-    :class="
-      multi
-        ? 'grid grid-cols-[1fr_min-content] gap-x-2 gap-y-1'
-        : 'grid grid-cols-1 gap-y-1'
-    "
-  >
-    <div :class="multi ? 'col-span-2' : ''">
-      {{ label }}
-    </div>
-
-    <Listbox
-      v-slot="{ open }"
-      :model-value="value"
-      :multiple="multi"
-      @update:model-value="onChange"
-    >
-      <Float
-        :middleware="middleware as any"
-        floating-as="template"
-        portal
-        adaptive-width
-        strategy="fixed"
-      >
-        <!-- button -->
-        <ListboxButton as="template">
-          <AppButton
-            v-tooltip="tooltip"
-            class="overflow-auto"
-            @keydown="onKeypress"
-          >
-            <span class="grow text-left" :class="truncate && 'truncate'">
-              {{ selectedLabel }}
-            </span>
-            <slot
-              v-if="selectedOption"
-              name="preview"
-              :option="selectedOption"
-            />
-            <ChevronUp v-if="open" class="text-stone-600" />
-            <ChevronDown v-else class="text-stone-600" />
-          </AppButton>
-        </ListboxButton>
-
-        <!-- dropdown -->
-        <ListboxOptions
-          class="list-none overflow-y-auto overscroll-none rounded-md bg-white shadow-md"
-        >
-          <template v-for="(option, index) in options" :key="index">
-            <!-- regular option -->
-            <ListboxOption
-              v-if="isOption(option)"
-              v-slot="{ active, selected }"
-              as="template"
-              :value="option"
-            >
-              <li
-                class="flex cursor-pointer items-center gap-2 p-2 transition"
-                :class="
-                  active ? 'bg-stone-100' : selected ? 'bg-stone-100' : ''
-                "
-                @vue:mounted="(node: VNode) => selected && onDropdownOpen(node)"
-              >
-                <Check
-                  class="text-emerald-500"
-                  :class="selected ? 'opacity-100' : 'opacity-0'"
-                />
-                <span class="grow" :class="truncate && 'truncate'">
-                  {{ option.label }}
-                </span>
-                <slot name="preview" :option="option" />
-              </li>
-            </ListboxOption>
-            <!-- group option -->
-            <li v-else class="flex items-center gap-2 p-2 pl-4 font-bold">
-              {{ option.group }}
-            </li>
-          </template>
-        </ListboxOptions>
-      </Float>
-    </Listbox>
-
-    <AppButton
-      v-if="multi"
-      v-tooltip="'Deselect all'"
-      @click="$emit('update:modelValue', [])"
-    >
-      <X />
-    </AppButton>
-  </label>
-</template>
-
 <script setup lang="ts" generic="O extends Option">
 import type { VNode } from "vue";
 import { computed } from "vue";
@@ -109,6 +16,7 @@ import { Check, ChevronDown, ChevronUp, X } from "@lucide/vue";
 export type Option = {
   id: string;
   label: string;
+  secondary?: string;
   [key: string]: unknown;
 };
 
@@ -245,3 +153,103 @@ const onKeypress = async ({ key }: KeyboardEvent) => {
   }
 };
 </script>
+
+<template>
+  <label
+    :class="
+      multi
+        ? 'grid grid-cols-[1fr_min-content] gap-x-2 gap-y-1'
+        : 'grid grid-cols-1 gap-y-1'
+    "
+  >
+    <div :class="multi ? 'col-span-2' : ''">
+      {{ label }}
+    </div>
+
+    <Listbox
+      v-slot="{ open }"
+      :model-value="value"
+      :multiple="multi"
+      @update:model-value="onChange"
+    >
+      <Float
+        :middleware="middleware as any"
+        floating-as="template"
+        portal
+        flip
+        adaptive-width
+        strategy="fixed"
+      >
+        <!-- button -->
+        <ListboxButton as="template">
+          <AppButton
+            v-tooltip="tooltip"
+            class="overflow-auto"
+            @keydown="onKeypress"
+          >
+            <span class="grow text-left" :class="truncate && 'truncate'">
+              {{ selectedLabel }}
+            </span>
+            <span v-if="selectedOption?.secondary" class="text-stone-400">
+              {{ selectedOption.secondary }}
+            </span>
+            <slot
+              v-if="selectedOption"
+              name="preview"
+              :option="selectedOption"
+            />
+            <ChevronUp v-if="open" class="text-stone-600" />
+            <ChevronDown v-else class="text-stone-600" />
+          </AppButton>
+        </ListboxButton>
+
+        <!-- dropdown -->
+        <ListboxOptions
+          class="list-none overflow-y-auto overscroll-none rounded-md bg-white shadow-md"
+        >
+          <template v-for="(option, index) in options" :key="index">
+            <!-- regular option -->
+            <ListboxOption
+              v-if="isOption(option)"
+              v-slot="{ active, selected }"
+              as="template"
+              :value="option"
+            >
+              <li
+                class="flex cursor-pointer items-center gap-2 p-2 transition"
+                :class="
+                  active ? 'bg-stone-100' : selected ? 'bg-stone-100' : ''
+                "
+                @vue:mounted="(node: VNode) => selected && onDropdownOpen(node)"
+              >
+                <Check
+                  class="text-emerald-500"
+                  :class="selected ? 'opacity-100' : 'opacity-0'"
+                />
+                <span class="grow" :class="truncate && 'truncate'">
+                  {{ option.label }}
+                </span>
+                <span v-if="option.secondary" class="text-stone-400">
+                  {{ option.secondary }}
+                </span>
+                <slot name="preview" :option="option" />
+              </li>
+            </ListboxOption>
+            <!-- group option -->
+            <li v-else class="flex items-center gap-2 p-2 pl-4 font-bold">
+              {{ option.group }}
+            </li>
+          </template>
+        </ListboxOptions>
+      </Float>
+    </Listbox>
+
+    <AppButton
+      v-if="multi"
+      v-tooltip="'Deselect all'"
+      @click="$emit('update:modelValue', [])"
+    >
+      <X />
+    </AppButton>
+  </label>
+</template>

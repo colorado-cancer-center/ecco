@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import AppAlert from "@/components/AppAlert.vue";
+</script>
+
 <template>
   <AppAlert>
     <p>
@@ -6,14 +10,10 @@
       demographics, cancer burden & disparities, risk factors, health behaviors,
       and environmental exposures, and local resources like cancer prevention,
       screening, treatment, and survivorship.
-      <i>
+      <em>
         This tool is intended to support research, community inquiries, and
         outreach activities. It should not be used to guide clinical decisions.
-      </i>
+      </em>
     </p>
   </AppAlert>
 </template>
-
-<script setup lang="ts">
-import AppAlert from "@/components/AppAlert.vue";
-</script>

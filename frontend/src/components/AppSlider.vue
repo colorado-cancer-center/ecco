@@ -1,3 +1,29 @@
+<script setup lang="ts">
+import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from "radix-vue";
+
+type Props = {
+  label: string;
+  modelValue: number;
+  min?: number;
+  max?: number;
+  step?: number;
+};
+
+const {
+  label,
+  modelValue,
+  min = 0,
+  max = 1,
+  step = 0.05,
+} = defineProps<Props>();
+
+type Emits = {
+  "update:modelValue": [Props["modelValue"]];
+};
+
+const emit = defineEmits<Emits>();
+</script>
+
 <template>
   <label class="flex flex-col items-stretch gap-1">
     <span>{{ label }}</span>
@@ -28,29 +54,3 @@
     </SliderRoot>
   </label>
 </template>
-
-<script setup lang="ts">
-import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from "radix-vue";
-
-type Props = {
-  label: string;
-  modelValue: number;
-  min?: number;
-  max?: number;
-  step?: number;
-};
-
-const {
-  label,
-  modelValue,
-  min = 0,
-  max = 1,
-  step = 0.05,
-} = defineProps<Props>();
-
-type Emits = {
-  "update:modelValue": [Props["modelValue"]];
-};
-
-const emit = defineEmits<Emits>();
-</script>

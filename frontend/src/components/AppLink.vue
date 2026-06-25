@@ -1,9 +1,3 @@
-<template>
-  <component :is="component" :[toAttr]="to" :target="target">
-    <slot />
-  </component>
-</template>
-
 <script setup lang="ts">
 import { computed } from "vue";
 
@@ -35,3 +29,9 @@ const toAttr = computed(() => (external.value ? "href" : "to"));
 
 const target = computed(() => ((newTab ?? external.value) ? "_blank" : ""));
 </script>
+
+<template>
+  <component :is="component" :[toAttr]="to" :target="target">
+    <slot />
+  </component>
+</template>

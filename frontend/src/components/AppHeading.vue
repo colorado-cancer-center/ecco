@@ -1,11 +1,3 @@
-<template>
-  <component :is="tag" :id="link" ref="heading">
-    <AppLink :to="link" class="contents">
-      <slot />
-    </AppLink>
-  </component>
-</template>
-
 <script setup lang="ts">
 import { computed, onMounted, onUpdated, ref, useTemplateRef } from "vue";
 import AppLink from "@/components/AppLink.vue";
@@ -42,3 +34,11 @@ const updateLink = () =>
 onMounted(updateLink);
 onUpdated(updateLink);
 </script>
+
+<template>
+  <component :is="tag" :id="link" ref="heading">
+    <AppLink :to="link" class="contents">
+      <slot />
+    </AppLink>
+  </component>
+</template>

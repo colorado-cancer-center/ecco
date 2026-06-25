@@ -1,19 +1,3 @@
-<template>
-  <label class="flex shrink-0 cursor-pointer flex-col items-stretch gap-1">
-    <span v-if="!hideLabel">{{ label }}</span>
-    <input
-      class="rounded-md border-none bg-stone-200 p-2 transition hover:bg-stone-100"
-      type="number"
-      :value="modelValue"
-      :min="min"
-      :max="max"
-      :step="step"
-      :aria-label="label"
-      @change="onChange"
-    />
-  </label>
-</template>
-
 <script setup lang="ts">
 import { clamp } from "lodash";
 
@@ -48,3 +32,19 @@ const onChange = (event: Event) => {
   emit("update:modelValue", value);
 };
 </script>
+
+<template>
+  <label class="flex shrink-0 cursor-pointer flex-col items-stretch gap-1">
+    <span v-if="!hideLabel">{{ label }}</span>
+    <input
+      class="rounded-md border-none bg-stone-200 p-2 transition hover:bg-stone-100"
+      type="number"
+      :value="modelValue"
+      :min="min"
+      :max="max"
+      :step="step"
+      :aria-label="label"
+      @change="onChange"
+    />
+  </label>
+</template>

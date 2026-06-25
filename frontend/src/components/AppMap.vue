@@ -1,149 +1,37 @@
-<template>
-  <div
-    ref="frameElement"
-    class="relative transition-all"
-    :style="{
-      '--zoom': immediateZoom,
-      '--label-opacity': geometryOpacity,
-    }"
-  >
-    <div ref="mapElement" v-bind="$attrs" class="size-full" />
-
-    <!-- legends -->
-    <template v-if="showLegends">
-      <!-- top left legend -->
-      <div
-        v-if="$slots['top-left-upper'] || $slots['top-left-lower']"
-        ref="topLeftLegend"
-        class="absolute top-4 left-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
-      >
-        <slot name="top-left-upper" />
-
-        <!-- scale key -->
-        <div
-          v-if="scale.steps.length"
-          class="grid grid-cols-[repeat(var(--cols),1fr)] grid-rows-[--spacing(6)] gap-y-1"
-          :style="{ '--cols': scale.steps.length }"
-        >
-          <div
-            v-for="(step, index) of scale.steps"
-            :key="index"
-            v-tooltip="step.tooltip"
-            class="relative size-full after:absolute after:inset-0 after:[background-image:var(--image)] after:opacity-50 after:content-['']"
-            tabindex="0"
-            :style="{
-              backgroundColor: step.color,
-              '--image': step.color === noDataColor ? `url(${hatch})` : 'none',
-            }"
-          />
-          <div
-            v-for="(step, index) of scale.steps"
-            :key="index"
-            class="px-1 text-center wrap-break-word"
-          >
-            {{ step.label }}
-          </div>
-        </div>
-
-        <slot name="top-left-lower" />
-      </div>
-
-      <!-- top right legend -->
-      <div
-        v-if="$slots['top-right']"
-        ref="topRightLegend"
-        class="absolute top-4 right-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
-      >
-        <slot name="top-right" />
-      </div>
-
-      <!-- bottom right legend -->
-      <div
-        v-if="$slots['bottom-right'] || !isEmpty(symbols)"
-        ref="bottomRightLegend"
-        class="absolute right-4 bottom-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
-      >
-        <slot name="bottom-right" />
-
-        <!-- symbol key -->
-        <div
-          v-if="!isEmpty(symbols)"
-          class="grid grid-cols-[auto_auto] items-center gap-4"
-        >
-          <template v-for="(symbol, label) of symbols" :key="label">
-            <template v-if="symbol">
-              <div v-html="symbol.html" />
-              <div class="text-sm">{{ label }}</div>
-            </template>
-          </template>
-        </div>
-      </div>
-
-      <!-- bottom left legend -->
-      <div
-        v-if="$slots['bottom-left']"
-        ref="bottomLeftLegend"
-        class="absolute bottom-4 left-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
-      >
-        <slot name="bottom-left" />
-      </div>
-    </template>
-
-    <!-- geometry labels -->
-    <div
-      v-for="(feature, index) of geometryFeaturesWLabels"
-      :key="index"
-      ref="geometryLabelElements"
-      class="flex flex-col items-center gap-1 rounded-md text-center text-[calc(var(--zoom)*2px)] text-white select-none text-stroke-1.5 text-stroke-black *:not-first:flex *:not-first:flex-wrap *:not-first:items-center *:not-first:justify-center *:not-first:gap-1 [:has(>&)]:pointer-events-none"
-    >
-      <div>{{ feature.get("label") }}</div>
-      <slot name="geometry-label" :feature="feature.getProperties()" />
-    </div>
-
-    <!-- feature popup -->
-    <div
-      v-if="$slots['popup'] && selectedFeature"
-      ref="popupElement"
-      v-stop
-      class="relative z-100! flex max-h-full w-100 max-w-max translate-y-[calc(--spacing(2)*-1.414)] flex-col gap-2 rounded-md bg-white p-4 shadow-md after:absolute after:top-full after:left-1/2 after:size-2 after:-translate-1/2 after:rotate-45 after:bg-white after:shadow-md after:content-[''] after:[clip-path:polygon(200%_-100%,200%_200%,-100%_200%)] *:first:pr-6"
-    >
-      <slot name="popup" :feature="selectedFeature.getProperties()" />
-      <button
-        class="absolute top-0 right-0 min-h-8 min-w-8 text-stone-300 hover:text-black"
-        aria-label="Close popup"
-        @click="selectedFeature = undefined"
-      >
-        <X />
-      </button>
-    </div>
-
-    <div
-      class="absolute bottom-0 left-0 max-w-1/2 bg-white/50 p-0.5 text-xs text-balance"
-      v-html="attribution"
-    />
-  </div>
-</template>
-
 <script lang="ts">
-type FeatureInfo = Record<string, unknown>;
-
-/** "no data" color */
-const noDataColor = "#a0a0a0";
-
 /** "no data scale entry */
 export const noDataEntry = {
   value: "",
   label: "ND",
-  color: noDataColor,
+  color: "#a0a0a0",
   tooltip: "No data or suppressed value",
 } as const;
+
+type Properties = {
+  [key: PropertyKey]: unknown;
+};
 </script>
 
-<script setup lang="ts">
+<script
+  setup
+  lang="ts"
+  generic="
+    GeographyProps extends Properties & {
+      value?: number | string;
+      center?: [number, number];
+    },
+    LocationProps extends Properties & {
+      symbol?: string;
+      translate?: [number, number];
+    }
+  "
+>
 import type { Ref } from "vue";
-import type { FeatureCollection } from "geojson";
+import type { FeatureCollection, Geometry } from "geojson";
 import type { FeatureLike } from "ol/Feature";
-import type { Geometry } from "ol/geom";
+import type { Geometry as OLGeometry } from "ol/geom";
+import type Layer from "ol/layer/Layer";
+import type { MarkerType } from "./markers";
 import {
   computed,
   nextTick,
@@ -159,12 +47,12 @@ import { type Unit } from "@/api";
 import hatch from "@/assets/hatch.svg?no-inline";
 import { backgroundOptions } from "@/components/background";
 import { getGradient, gradientOptions } from "@/components/gradient";
+import { getCssVar } from "@/util/dom";
 import { formatValue, normalizedApply } from "@/util/math";
-import { forceHex, getCssVar, sleep, waitFor } from "@/util/misc";
-import { X } from "@lucide/vue";
+import { sleep, waitFor } from "@/util/misc";
 import { useElementSize } from "@vueuse/core";
 import { extent, pairs, range, scaleQuantile, ticks, tickStep } from "d3";
-import { debounce, isEmpty, mapValues, upperFirst } from "lodash";
+import { debounce, isEmpty, upperFirst } from "lodash";
 import { Feature, Map, Overlay, View } from "ol";
 import { pointerMove } from "ol/events/condition";
 import GeoJSON from "ol/format/GeoJSON";
@@ -180,24 +68,20 @@ import { getMarkers } from "./markers";
 
 const frameElement = useTemplateRef("frameElement");
 const mapElement = useTemplateRef("mapElement");
-const popupElement = useTemplateRef("popupElement");
-const geometryLabelElements = useTemplateRef("geometryLabelElements");
+const geographyPopupElement = useTemplateRef("geographyPopupElement");
+const locationPopupElement = useTemplateRef("locationPopupElement");
+const geographyLabelElements = useTemplateRef("geographyLabelElements");
 const topLeftLegend = useTemplateRef("topLeftLegend");
 const topRightLegend = useTemplateRef("topRightLegend");
 const bottomRightLegend = useTemplateRef("bottomRightLegend");
 const bottomLeftLegend = useTemplateRef("bottomLeftLegend");
 
-const theme = forceHex(getCssVar("--color-theme"));
+const theme = getCssVar("--color-theme");
 
 type Props = {
   /** features */
-  geometry?: FeatureCollection;
-  locations?: Record<string, FeatureCollection>;
-  /** map of geometry id to value */
-  values?: Record<
-    string,
-    { value?: number | string | null; [key: string]: unknown }
-  >;
+  geography?: FeatureCollection<Geometry, GeographyProps>;
+  locations?: FeatureCollection<Geometry, LocationProps>[];
   /** value domain */
   min?: number | string;
   max?: number | string;
@@ -210,7 +94,7 @@ type Props = {
   showLegends?: boolean;
   /** layer opacities */
   backgroundOpacity?: number;
-  geometryOpacity?: number;
+  geographyOpacity?: number;
   locationOpacity?: number;
   /** tile provider */
   background?: string;
@@ -228,9 +112,8 @@ type Props = {
 };
 
 const {
-  geometry = { type: "FeatureCollection", features: [] },
-  locations = {},
-  values = {},
+  geography = { type: "FeatureCollection", features: [] },
+  locations = [],
   min,
   max,
   unit,
@@ -239,7 +122,7 @@ const {
   zoom = 0,
   showLegends = true,
   backgroundOpacity = 1,
-  geometryOpacity = 0.75,
+  geographyOpacity = 0.75,
   locationOpacity = 1,
   background = backgroundOptions[0]!.id,
   gradient = gradientOptions[3]!.id,
@@ -247,7 +130,7 @@ const {
   scaleSteps = 5,
   niceSteps = false,
   scalePower = 1,
-  scaleValues,
+  scaleValues = [],
   highlight = "",
 } = defineProps<Props>();
 
@@ -255,8 +138,6 @@ type Emits = {
   "update:zoom": [Props["zoom"]];
   "update:lat": [Props["lat"]];
   "update:long": [Props["long"]];
-  "update:no-data": [boolean];
-  "update:thumbnail": [string];
 };
 
 const emit = defineEmits<Emits>();
@@ -267,27 +148,16 @@ type Slots = {
   "top-right"?: () => unknown;
   "bottom-right"?: () => unknown;
   "bottom-left"?: () => unknown;
-  "geometry-label"?: ({ feature }: { feature: FeatureInfo }) => unknown;
-  popup?: ({ feature }: { feature: FeatureInfo }) => unknown;
+  "geography-popup"?: ({ geography }: { geography: GeographyProps }) => unknown;
+  "location-popup"?: ({ location }: { location: LocationProps }) => unknown;
 };
 
 defineSlots<Slots>();
 
-/** whether map has any "no data" geometry regions */
-const noData = computed(
-  () =>
-    /** whether all features have entry in values object */
-    !geometry.features.every(
-      (feature) => (feature.properties?.id ?? "") in values,
-    ) ||
-    /** whether any value is nullish */
-    Object.values(values).some(
-      ({ value }) => value === null || value === undefined,
-    ),
+/** whether map has any "no data" values */
+const noData = computed(() =>
+  geography.features.some((feature) => feature.properties.value === undefined),
 );
-
-/** tell parent about "no data" */
-watch(noData, () => emit("update:no-data", noData.value), { immediate: true });
 
 /** scale object */
 const scale = computed(() => {
@@ -308,7 +178,7 @@ const scale = computed(() => {
   ) & { label: string; color: string; tooltip: string })[] = [];
 
   /** map specific values to specific colors */
-  if (scaleValues) {
+  if (scaleValues.length) {
     /** add "no data" entry */
     if (noData.value) steps.push(noDataEntry);
 
@@ -329,18 +199,14 @@ const scale = computed(() => {
     );
 
     /** explicit color */
-    const getColor = (value?: number | string | null) =>
-      forceHex(
-        steps.find((step) =>
-          "value" in step ? step.value === value : undefined,
-        )?.color ?? noDataColor,
-      );
+    const getColor = (value?: number | string) =>
+      steps.find((step) => ("value" in step ? step.value === value : undefined))
+        ?.color ?? noDataEntry.color;
 
     return { steps, getColor };
   } else if (
     /** map continuous values to discrete colors */
     /** (if we have needed and valid values) */
-    !isEmpty(values) &&
     typeof min === "number" &&
     typeof max === "number" &&
     min !== max
@@ -398,15 +264,15 @@ const scale = computed(() => {
     if (noData.value) steps.unshift(noDataEntry);
 
     /** scale interpolator */
-    const getColor = (value?: number | string | null) =>
+    const getColor = (value?: number | string) =>
       typeof value === "number"
-        ? forceHex(scaleQuantile<string>().domain(bands).range(colors)(value))
-        : noDataColor;
+        ? scaleQuantile<string>().domain(bands).range(colors)(value)
+        : noDataEntry.color;
 
     return { steps, getColor };
   } else {
     /** last resort fallback */
-    return { steps: [noDataEntry], getColor: () => noDataColor };
+    return { steps: [noDataEntry], getColor: () => noDataEntry.color };
   }
 });
 
@@ -419,20 +285,20 @@ watchEffect(() => map.setTarget(mapElement.value ?? undefined));
 /** mercator https://epsg.io/3857 */
 const xy = "EPSG:3857";
 /** world geodetic system https://epsg.io/4326 */
-const latlong = "EPSG:4326";
+const longLat = "EPSG:4326";
 
 /** transform point coordinates */
-const xyToLatlong = (x = 0, y = 0) => {
+const xyToLongLat = (x = 0, y = 0) => {
   const [long = 0, lat = 0] = new Point([x, y])
-    .transform(xy, latlong)
+    .transform(xy, longLat)
     .getCoordinates();
-  return [lat, long];
+  return [long, lat];
 };
 
 /** transform point coordinates */
-const latlongToXy = (lat = 0, long = 0) => {
+const longLatToXy = (long = 0, lat = 0) => {
   const [x = 0, y = 0] = new Point([long, lat])
-    .transform(latlong, xy)
+    .transform(longLat, xy)
     .getCoordinates();
   return [x, y];
 };
@@ -452,7 +318,7 @@ map.addInteraction(mouseZoom);
 watchEffect(() => map.setView(view));
 
 /** update view center */
-watchEffect(() => view.setCenter(latlongToXy(lat, long)));
+watchEffect(() => view.setCenter(longLatToXy(long, lat)));
 /** update view zoom */
 watchEffect(() => view.setZoom(zoom));
 
@@ -460,9 +326,9 @@ watchEffect(() => view.setZoom(zoom));
 view.on("change:center", () => {
   const center = view.getCenter();
   if (!center) return;
-  const [lat, long] = xyToLatlong(center[0], center[1]);
-  emit("update:lat", lat);
+  const [long, lat] = xyToLongLat(center[0], center[1]);
   emit("update:long", long);
+  emit("update:lat", lat);
 });
 
 /** on view zoom */
@@ -501,33 +367,35 @@ watchEffect(() => {
 /** update background layer opacity */
 watchEffect(() => backgroundLayer.setOpacity(backgroundOpacity));
 
-/** geometry source object */
-const geometrySource = new VectorSource();
-/** geometry layer object */
-const geometryLayer = new VectorLayer({ source: geometrySource });
+/** geography source object */
+const geographySource = new VectorSource();
+/** geography layer object */
+const geographyLayer = new VectorLayer({ source: geographySource });
 
 /** geojson parser */
 const geojson = new GeoJSON({
   /** source projection */
-  dataProjection: latlong,
+  dataProjection: longLat,
   /** target projection */
   featureProjection: xy,
 });
 
-/** parse geometry features */
-const geometryFeatures = computed(() => geojson.readFeatures(geometry));
+/** parse geography features */
+const geographyFeatures = computed(
+  () =>
+    geojson.readFeatures(geography) as Feature<OLGeometry, GeographyProps>[],
+);
 
-/** update geometry layer source */
+/** update geography layer source */
 watchEffect(() => {
-  geometrySource.clear();
-  geometrySource.addFeatures(geometryFeatures.value);
+  geographySource.clear();
+  geographySource.addFeatures(geographyFeatures.value);
 });
 
-/** update geometry styles */
+/** update geography styles */
 watchEffect((onCleanup) => {
   /** get reactive values in root of watch so they can be auto-tracked */
   const getColor = scale.value.getColor;
-  const _values = values;
   const _highlight = highlight;
 
   /** generate styles per feature */
@@ -535,27 +403,25 @@ watchEffect((onCleanup) => {
     (hover = false) =>
     (feature: FeatureLike) => {
       const color =
-        feature.get("id") === _highlight
-          ? theme
-          : getColor(_values[feature.get("id")]?.value);
+        feature.getId() === _highlight ? theme : getColor(feature.get("value"));
       return new Style({
         stroke: new Stroke({ color: "black", width: hover ? 4 : 1 }),
         fill: new Fill({
-          color: color === noDataColor ? { color, src: hatch } : color,
+          color: color === noDataEntry.color ? { color, src: hatch } : color,
         }),
         zIndex: hover ? 1 : 0,
       });
     };
 
   /** base styles */
-  geometryLayer.setStyle(style());
+  geographyLayer.setStyle(style());
 
   /** hover styles */
   const hover = new Select({
     condition: pointerMove,
     style: style(true),
     /** don't count other layers, e.g. labels, in hover */
-    layers: [geometryLayer],
+    layers: [geographyLayer],
   });
 
   /** add interaction to map */
@@ -564,27 +430,35 @@ watchEffect((onCleanup) => {
   onCleanup(() => map.removeInteraction(hover));
 });
 
-/** update geometry layer opacity */
-watchEffect(() => geometryLayer.setOpacity(geometryOpacity));
+/** update geography layer opacity */
+watchEffect(() => geographyLayer.setOpacity(geographyOpacity));
 
 /** symbols (icon + label) associated with each location */
 const symbols = computed(() =>
   getMarkers(
-    Object.entries(locations).map(([label, location]) => [
-      label,
-      location.features[0]?.geometry.type ?? "",
-    ]),
+    locations
+      .map((location) => {
+        const feature = location.features[0];
+        if (!feature) return;
+        const symbol = feature.properties.symbol;
+        if (typeof symbol !== "string") return;
+        return [symbol, feature.geometry.type] as [string, MarkerType];
+      })
+      .filter((entry) => !!entry),
   ),
 );
 
 /** parse location features */
 const locationFeatures = computed(() =>
-  mapValues(locations, (value, location) => {
+  locations.map((location) => {
     /** parse geojson */
-    const features = geojson.readFeatures(value);
+    const features = geojson.readFeatures(location) as Feature<
+      OLGeometry,
+      LocationProps
+    >[];
 
     for (const feature of features) {
-      const symbol = symbols.value[location];
+      const symbol = symbols.value[feature.get("symbol")];
       if (!symbol) continue;
 
       /** add extra props */
@@ -613,7 +487,8 @@ const locationsLayer = new VectorLayer({ source: locationsSource });
 /** update locations layer source */
 watchEffect(() => {
   locationsSource.clear();
-  locationsSource.addFeatures(Object.values(locationFeatures.value).flat());
+  for (const features of locationFeatures.value)
+    locationsSource.addFeatures(features);
 });
 
 /** update location styles */
@@ -622,16 +497,28 @@ watchEffect((onCleanup) => {
   const style =
     (hover = false) =>
     (feature: FeatureLike) => {
-      const { color, icon, iconHover, count, dash } = feature.getProperties();
+      const { color, icon, iconHover, label, dash, displacement } =
+        feature.getProperties();
+
+      const text = new Text({
+        text: label === undefined || label === null ? undefined : String(label),
+        font: "12px Roboto",
+        fill: new Fill({ color: "white" }),
+        stroke: new Stroke({ color: "black", width: 2 }),
+        offsetY: 1,
+      });
+
+      /** adjust icon/text/etc offset */
+      if (displacement) {
+        icon.setDisplacement(displacement);
+        iconHover.setDisplacement(displacement);
+        text.setOffsetX(displacement[0]);
+        text.setOffsetY(-displacement[1] + 1);
+      }
+
       return new Style({
-        text: new Text({
-          text: count,
-          font: "12px Roboto",
-          fill: new Fill({ color: "white" }),
-          stroke: new Stroke({ color: "black", width: 2 }),
-          offsetY: 1,
-        }),
-        fill: new Fill({ color: hover ? color + "20" : "transparent" }),
+        text,
+        fill: new Fill({ color: hover ? color + "80" : color + "20" }),
         stroke: new Stroke({ color, width: hover ? 6 : 2, lineDash: dash }),
         image: hover ? iconHover : icon,
         zIndex: hover ? 2 : 1,
@@ -658,19 +545,17 @@ watchEffect((onCleanup) => {
 /** update locations layer opacity */
 watchEffect(() => locationsLayer.setOpacity(locationOpacity));
 
-/** geometry features that have a position for a label */
-const geometryFeaturesWLabels = computed(() =>
-  geometryFeatures.value.filter(
-    (feature) => feature.get("cent_lat") && feature.get("cent_long"),
-  ),
+/** geography features that have a position for a label */
+const geographyFeaturesWLabels = computed(() =>
+  geographyFeatures.value.filter((feature) => feature.get("center")),
 );
 
-/** update geometry feature labels */
+/** update geography feature labels */
 watchEffect(async (onCleanup) => {
   /** get reactive values before async so they can be auto-tracked */
   /** https://github.com/vuejs/core/issues/2093 */
-  const elements = geometryLabelElements.value ?? [];
-  const features = geometryFeaturesWLabels.value;
+  const elements = geographyLabelElements.value ?? [];
+  const features = geographyFeaturesWLabels.value;
 
   /** https://stackoverflow.com/questions/79031309/usetemplateref-is-not-reactive-for-arrays */
   await nextTick();
@@ -682,13 +567,13 @@ watchEffect(async (onCleanup) => {
     /** feature associated with element */
     const feature = features[index];
     if (!feature) continue;
-    const { cent_lat, cent_long } = feature.getProperties() ?? {};
+    const [long, lat] = feature.get("center") ?? [];
     /** don't create overlay if cent position not defined */
-    if (!cent_lat || !cent_long) continue;
+    if (!long || !lat) continue;
     /** overlay object */
     const overlay = new Overlay({
       element,
-      position: latlongToXy(cent_lat, cent_long),
+      position: longLatToXy(long, lat),
       positioning: "center-center",
       className: "pointer-events-none!",
     });
@@ -700,13 +585,17 @@ watchEffect(async (onCleanup) => {
   }
 });
 
-/** current selected feature */
-const selectedFeature = ref<Feature<Geometry>>();
+/** current selected geography feature */
+const selectedGeography = ref<Feature<OLGeometry>>();
+const selectedLocation = ref<Feature<OLGeometry>>();
 
 /** reset selected feature when data changes to avoid showing wrong popup info */
 watch(
-  [() => values, () => geometry, () => locations],
-  () => (selectedFeature.value = undefined),
+  [() => geography, () => locations],
+  () => {
+    selectedGeography.value = undefined;
+    selectedLocation.value = undefined;
+  },
   { deep: true },
 );
 
@@ -715,61 +604,71 @@ map.on("click", ({ pixel }) => {
   /** do like this instead of select to avoid double click debounce */
 
   /** reset selected */
-  selectedFeature.value = undefined;
-
+  selectedGeography.value = undefined;
+  selectedLocation.value = undefined;
   /** https://stackoverflow.com/a/50415743/2180570 */
-  map.forEachFeatureAtPixel(pixel, (feature, layer) => {
-    if (
-      /** select first */
-      !selectedFeature.value &&
-      feature instanceof Feature &&
-      /** don't allow selection of e.g. geometry labels */
-      (layer === geometryLayer || layer === locationsLayer)
-    ) {
-      /** set selected */
-      selectedFeature.value = feature;
+  const features: [Feature, Layer][] = [];
 
-      /** include data values in properties */
-      const id = feature.get("id");
-      for (const [key, value] of Object.entries(
-        values[typeof id === "string" ? id : ""] ?? {},
-      ))
-        selectedFeature.value.set(key, value);
-    }
+  map.forEachFeatureAtPixel(pixel, (feature, layer) => {
+    if (feature instanceof Feature) features.push([feature, layer]);
   });
+  /** select feature */
+  for (const [feature, layer] of features) {
+    if (layer === geographyLayer) {
+      selectedGeography.value = feature;
+      break;
+    }
+    if (layer === locationsLayer) {
+      selectedLocation.value = feature;
+      break;
+    }
+  }
+  return;
 });
 
-/** popup object */
-const popup = new Overlay({
+/** popup objects */
+const geographyPopup = new Overlay({
+  stopEvent: false,
+  positioning: "bottom-center",
+});
+const locationPopup = new Overlay({
   stopEvent: false,
   positioning: "bottom-center",
 });
 
-/** add popup to map */
-map.addOverlay(popup);
+/** add popups to map */
+map.addOverlay(geographyPopup);
+map.addOverlay(locationPopup);
 
-/** update popup element */
+/** update popup elements */
 watchEffect(() => {
-  if (popupElement.value) popup.setElement(popupElement.value);
+  if (geographyPopupElement.value)
+    geographyPopup.setElement(geographyPopupElement.value);
+  if (locationPopupElement.value)
+    locationPopup.setElement(locationPopupElement.value);
 });
 
-/** update popup position */
+/** update popup positions */
 watchEffect(async () => {
-  if (!selectedFeature.value) return;
-
-  /** get bounds of feature */
-  const extent = selectedFeature.value.getGeometry()?.getExtent();
-  if (!extent) return;
-
-  /** position popup */
-  const [left = 0, bottom = 0, right = 0, top = 0] = extent;
-  popup.setPosition([left + (right - left) * 0.5, top + (bottom - top) * 0.25]);
-
-  /** wait for popup to render */
-  await nextTick();
-
-  /** move view if needed */
-  popup.panIntoView({ animation: { duration: 0 } });
+  for (const [selected, popup] of [
+    [selectedGeography.value, geographyPopup],
+    [selectedLocation.value, locationPopup],
+  ] as const) {
+    if (!selected) continue;
+    /** get bounds of feature */
+    const extent = selected.getGeometry()?.getExtent();
+    if (!extent) continue;
+    /** position popup */
+    const [left = 0, bottom = 0, right = 0, top = 0] = extent;
+    popup.setPosition([
+      left + (right - left) * 0.5,
+      top + (bottom - top) * 0.25,
+    ]);
+    /** wait for popup to render */
+    await nextTick();
+    /** move view if needed */
+    popup.panIntoView({ animation: { duration: 0 } });
+  }
 });
 
 /** change cursor to indicate click-ability */
@@ -786,34 +685,32 @@ map.on("pointermove", ({ pixel }) => {
 
 /** add layers to map */
 watchEffect(() =>
-  map.setLayers([backgroundLayer, geometryLayer, locationsLayer]),
+  map.setLayers([backgroundLayer, geographyLayer, locationsLayer]),
 );
 
 /** preview image of canvas */
-const thumbnail = ref<Blob | null>(null);
+const thumbnail = ref("");
 
 /** make thumbnail blob from canvas */
 const generateThumbnail = debounce(async () => {
+  URL.revokeObjectURL(thumbnail.value);
   const canvas = mapElement.value?.querySelector("canvas");
   if (!canvas) return;
-  canvas.toBlob((blob) => (thumbnail.value = blob), "image/jpeg", 0.1);
+  const blob = await new Promise<Blob | null>((resolve) => {
+    canvas.toBlob(resolve, "image/jpeg", 0.1);
+  });
+  if (!blob) return (thumbnail.value = "");
+  const src = URL.createObjectURL(blob);
+  thumbnail.value = src;
 }, 500);
 
 /** generate thumbnail on any map update */
+onMounted(generateThumbnail);
 onUpdated(generateThumbnail);
 /** cancel any pending debounce */
 onUnmounted(generateThumbnail.cancel);
-
-watchEffect((cleanup) => {
-  /** object url, for img src */
-  const src = thumbnail.value ? URL.createObjectURL(thumbnail.value) : "";
-  emit("update:thumbnail", src);
-  cleanup(() => {
-    /** clean up object url */
-    URL.revokeObjectURL(src);
-    emit("update:thumbnail", "");
-  });
-});
+/** clean up thumbnail object url */
+onUnmounted(() => URL.revokeObjectURL(thumbnail.value));
 
 /** programmatic zoom in */
 const zoomIn = () => view.setZoom((view.getZoom() ?? 0) + 1);
@@ -824,21 +721,23 @@ const zoomOut = () => view.setZoom((view.getZoom() ?? 2) - 1);
 /** map client size */
 const { width: mapWidth, height: mapHeight } = useElementSize(frameElement);
 
-/** fit view to geometry layer content or highlighted feature */
+/** fit view to geography layer content or highlighted feature */
 const fit = async () => {
   /** wait for view to be attached to map */
   await waitFor(() => !!map.getView());
+  /** wait for legends to render */
+  await sleep();
 
   /** get bounding box */
   const extent = highlight
     ? /** highlighted feature */
-      geometryFeatures.value
+      geographyFeatures.value
         /** lookup feature by id */
-        .find((feature) => feature.get("id") === highlight)
+        .find((feature) => feature.getId() === highlight)
         ?.getGeometry()
         ?.getExtent()
-    : /** geometry layer */
-      geometrySource.getExtent();
+    : /** geography layer */
+      geographySource.getExtent();
 
   /** check if valid extent (can be infinities if no features) */
   if (!extent || extent.some((value) => !Number.isFinite(value))) return;
@@ -882,58 +781,27 @@ const fit = async () => {
     view.adjustZoom(-1);
 };
 
-/** auto-fit when geometry changes */
-watch(
-  () => geometry,
-  async () => {
-    /** if geometry not loaded yet or view already defined, don't fit */
-    if (!geometry || lat || long || zoom) return;
-    /** wait for render and layout shift */
-    await sleep(100);
-    fit();
-  },
-  { immediate: true, deep: true },
-);
-
-/** auto-fit when legends change */
-watch(
-  () => showLegends,
-  /** wait for legends mount/unmount */
-  () => nextTick().then(fit),
-);
-
-/** auto-fit when locations change */
-watch(
-  () => locations,
-  /** don't fit on first load */
-  (_, prevLocations) => !isEmpty(prevLocations) && fit(),
-  { deep: true },
-);
-
 onMounted(async () => {
-  /** if not highlighting specific feature */
-  if (highlight) return;
-
-  /** if no pan/zoom specified */
-  if (!lat || !long || !zoom) {
-    /** wait for features to be loaded, rendered/parsed */
-    await waitFor(() => geometrySource.getFeatures().length);
+  /** if no initial view provided, fit to content */
+  /** wait for features to be loaded, rendered/parsed */
+  await waitFor(() => geographySource.getFeatures().length);
+  /** preserve existing view */
+  if (!zoom || !lat || !long)
     /** fit view to content */
     fit();
-  }
 });
 
 /** get geojson data */
 const getGeo = (): FeatureCollection => ({
   type: "FeatureCollection",
   features: [
-    ...geojson.writeFeaturesObject(geometrySource.getFeatures()).features,
+    ...geojson.writeFeaturesObject(geographySource.getFeatures()).features,
     ...geojson.writeFeaturesObject(locationsSource.getFeatures()).features,
   ],
 });
 
 /** allow control from parent */
-defineExpose({ zoomIn, zoomOut, fit, getGeo });
+defineExpose({ zoomIn, zoomOut, fit, getGeo, thumbnail });
 
 /** clean up objects */
 onUnmounted(() => {
@@ -941,13 +809,150 @@ onUnmounted(() => {
   view.dispose();
   backgroundLayer.dispose();
   backgroundSource.dispose();
-  geometryLayer.dispose();
-  geometrySource.dispose();
+  geographyLayer.dispose();
+  geographySource.dispose();
   locationsLayer.dispose();
   locationsSource.dispose();
-  popup.dispose();
+  geographyPopup.dispose();
+  locationPopup.dispose();
 });
 </script>
+
+<template>
+  <div
+    ref="frameElement"
+    class="relative transition-all"
+    :style="{
+      '--zoom': immediateZoom,
+      '--label-opacity': geographyOpacity,
+    }"
+  >
+    <div ref="mapElement" v-bind="$attrs" class="size-full" />
+
+    <!-- legends -->
+    <template v-if="showLegends">
+      <!-- top left legend -->
+      <div
+        v-if="$slots['top-left-upper'] || $slots['top-left-lower']"
+        ref="topLeftLegend"
+        class="absolute top-4 left-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
+      >
+        <slot name="top-left-upper" />
+
+        <!-- scale key -->
+        <div
+          v-if="scale.steps.length"
+          class="grid grid-cols-[repeat(var(--cols),1fr)] grid-rows-[--spacing(6)] gap-y-1"
+          :style="{ '--cols': scale.steps.length }"
+        >
+          <div
+            v-for="(step, index) of scale.steps"
+            :key="index"
+            v-tooltip="step.tooltip"
+            class="relative size-full after:absolute after:inset-0 after:[background-image:var(--image)] after:opacity-50 after:content-['']"
+            tabindex="0"
+            :style="{
+              backgroundColor: step.color,
+              '--image':
+                step.color === noDataEntry.color ? `url(${hatch})` : 'none',
+            }"
+          />
+          <div
+            v-for="(step, index) of scale.steps"
+            :key="index"
+            class="px-1 text-center wrap-break-word"
+          >
+            {{ step.label }}
+          </div>
+        </div>
+
+        <slot name="top-left-lower" />
+      </div>
+
+      <!-- top right legend -->
+      <div
+        v-if="$slots['top-right']"
+        ref="topRightLegend"
+        class="absolute top-4 right-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
+      >
+        <slot name="top-right" />
+      </div>
+
+      <!-- bottom right legend -->
+      <div
+        v-if="$slots['bottom-right'] || !isEmpty(symbols)"
+        ref="bottomRightLegend"
+        class="absolute right-4 bottom-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
+      >
+        <slot name="bottom-right" />
+
+        <!-- symbol key -->
+        <div
+          v-if="!isEmpty(symbols)"
+          class="grid grid-cols-[auto_auto] items-center gap-4"
+        >
+          <template v-for="(symbol, label) of symbols" :key="label">
+            <template v-if="symbol">
+              <div v-html="symbol.html" />
+              <div class="text-sm">{{ label }}</div>
+            </template>
+          </template>
+        </div>
+      </div>
+
+      <!-- bottom left legend -->
+      <div
+        v-if="$slots['bottom-left']"
+        ref="bottomLeftLegend"
+        class="absolute bottom-4 left-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
+      >
+        <slot name="bottom-left" />
+      </div>
+    </template>
+
+    <!-- geography labels -->
+    <div
+      v-for="(feature, index) of geographyFeaturesWLabels"
+      :key="index"
+      ref="geographyLabelElements"
+      class="flex flex-col items-center gap-1 rounded-md text-center text-[calc(var(--zoom)*2px)] text-white select-none text-stroke-1.5 text-stroke-black [:has(>&)]:pointer-events-none"
+      :style="{ opacity: geographyOpacity }"
+    >
+      {{ feature.get("label") }}
+    </div>
+
+    <!-- geography popup -->
+    <div
+      v-if="$slots['geography-popup'] && selectedGeography"
+      ref="geographyPopupElement"
+      v-stop
+      class="relative z-100! flex max-h-full w-100 max-w-max translate-y-[calc(--spacing(2)*-1.414)] flex-col gap-2 rounded-md bg-white p-4 shadow-md after:absolute after:top-full after:left-1/2 after:size-2 after:-translate-1/2 after:rotate-45 after:bg-white after:shadow-md after:content-[''] after:[clip-path:polygon(200%_-100%,200%_200%,-100%_200%)]"
+    >
+      <slot
+        name="geography-popup"
+        :geography="selectedGeography.getProperties() as GeographyProps"
+      />
+    </div>
+
+    <!-- location popup -->
+    <div
+      v-if="$slots['location-popup'] && selectedLocation"
+      ref="locationPopupElement"
+      v-stop
+      class="relative z-100! flex max-h-full w-100 max-w-max translate-y-[calc(--spacing(2)*-1.414)] flex-col gap-2 rounded-md bg-white p-4 shadow-md after:absolute after:top-full after:left-1/2 after:size-2 after:-translate-1/2 after:rotate-45 after:bg-white after:shadow-md after:content-[''] after:[clip-path:polygon(200%_-100%,200%_200%,-100%_200%)]"
+    >
+      <slot
+        name="location-popup"
+        :location="selectedLocation.getProperties() as LocationProps"
+      />
+    </div>
+
+    <div
+      class="absolute bottom-0 left-0 bg-white/75 p-0.5 text-xs text-balance"
+      v-html="attribution"
+    />
+  </div>
+</template>
 
 <style>
 .ol-overlaycontainer {

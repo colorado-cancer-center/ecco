@@ -1,5 +1,3 @@
-import { color } from "d3";
-
 /** wait ms */
 export const sleep = (ms = 0) =>
   new Promise((resolve) => window.setTimeout(resolve, ms));
@@ -21,22 +19,6 @@ export const waitFor = async <Result>(
     await sleep(waits.shift());
   }
 };
-
-/** get defined css variable value */
-export const getCssVar = (
-  name: `--${string}`,
-  element = document.documentElement,
-) => getComputedStyle(element).getPropertyValue(name);
-
-/** force color to hex format */
-export const forceHex = (string: string) =>
-  color(string)?.formatHex() || "#000000";
-
-/** convert [0,1] value to two hex digits */
-export const toHex = (value = 0) =>
-  Math.floor(value * 255)
-    .toString(16)
-    .padStart(2, "0");
 
 /** copy text to clipboard */
 export const copy = async (text: string) => {

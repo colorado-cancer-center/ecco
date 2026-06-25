@@ -64,12 +64,12 @@
   }
 
   a {
-    @apply transition;
+    @apply text-yellow-800 underline transition hover:text-current;
   }
 
   header a,
   footer a {
-    @apply relative p-1;
+    @apply relative p-1 text-black no-underline;
 
     &::after {
       @apply absolute right-0 bottom-0 left-0 h-0.5 scale-x-0 bg-current transition content-[''];
@@ -79,11 +79,6 @@
     &[data-active="true"]::after {
       @apply scale-x-100;
     }
-  }
-
-  p a,
-  td a {
-    @apply text-yellow-800 underline hover:text-current;
   }
 
   p {
@@ -124,7 +119,7 @@
   }
 
   dl {
-    @apply grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2;
+    @apply grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 *:min-w-0 *:wrap-break-word [&_a]:wrap-anywhere;
   }
 
   dt {
@@ -138,14 +133,14 @@
   .lucide {
     @apply h-[1.25em] shrink-0;
   }
+
+  [disabled] {
+    @apply cursor-not-allowed opacity-50 grayscale;
+  }
 }
 
 @utility table-wrapper {
   @apply overflow-x-auto;
-}
-
-@utility preview {
-  filter: contrast(0.5) saturate(0) brightness(1.25);
 }
 
 @utility text-stroke-* {
@@ -154,8 +149,75 @@
   paint-order: stroke;
 }
 
+@utility scrollable {
+  @apply relative;
+
+  mask-image:
+    linear-gradient(
+      to right,
+      transparent,
+      black calc(25% * var(--scrollable-left))
+    ),
+    linear-gradient(
+      to left,
+      transparent,
+      black calc(25% * var(--scrollable-right))
+    ),
+    linear-gradient(
+      to bottom,
+      transparent,
+      black calc(25% * var(--scrollable-top))
+    ),
+    linear-gradient(
+      to top,
+      transparent,
+      black calc(25% * var(--scrollable-bottom))
+    );
+  mask-composite: intersect;
+}
+
+@utility animate-loading {
+  @apply pointer-events-none relative grayscale;
+  animation: loading 1s linear infinite;
+
+  &::after {
+    @apply text-stroke-white text-stroke-2 absolute inset-0 grid place-items-center text-xl uppercase;
+    content: "Loading";
+  }
+}
+
+@keyframes loading {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+
+@utility animate-error {
+  @apply pointer-events-none relative;
+  animation: error 0.5s linear 3 both;
+
+  &::after {
+    @apply text-stroke-white text-stroke-2 absolute inset-0 grid place-items-center text-xl uppercase;
+    content: "Error";
+  }
+}
+
+@keyframes error {
+  0%,
+  100% {
+    filter: contrast(50%) sepia(100%) hue-rotate(-60deg);
+  }
+  50% {
+    filter: contrast(50%) sepia(50%) hue-rotate(-60deg);
+  }
+}
+
 .tippy-box {
-  @apply rounded-md bg-stone-600 p-1 leading-relaxed! text-white shadow-md shadow-white;
+  @apply rounded-md border-2 border-white bg-stone-600 p-1 leading-relaxed! text-white;
   font: inherit;
 }
 
