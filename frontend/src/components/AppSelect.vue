@@ -16,6 +16,7 @@ import { Check, ChevronDown, ChevronUp, X } from "@lucide/vue";
 export type Option = {
   id: string;
   label: string;
+  secondary?: string;
   [key: string]: unknown;
 };
 
@@ -175,6 +176,7 @@ const onKeypress = async ({ key }: KeyboardEvent) => {
         :middleware="middleware as any"
         floating-as="template"
         portal
+        flip
         adaptive-width
         strategy="fixed"
       >
@@ -187,6 +189,9 @@ const onKeypress = async ({ key }: KeyboardEvent) => {
           >
             <span class="grow text-left" :class="truncate && 'truncate'">
               {{ selectedLabel }}
+            </span>
+            <span v-if="selectedOption?.secondary" class="text-stone-400">
+              {{ selectedOption.secondary }}
             </span>
             <slot
               v-if="selectedOption"
@@ -223,6 +228,9 @@ const onKeypress = async ({ key }: KeyboardEvent) => {
                 />
                 <span class="grow" :class="truncate && 'truncate'">
                   {{ option.label }}
+                </span>
+                <span v-if="option.secondary" class="text-stone-400">
+                  {{ option.secondary }}
                 </span>
                 <slot name="preview" :option="option" />
               </li>

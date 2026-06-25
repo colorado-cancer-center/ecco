@@ -45,10 +45,10 @@ import { formatValue } from "@/util/math";
 import { copy } from "@/util/misc";
 import { getValue } from "@/util/types";
 import {
+  CircleDotDashed,
   Copy,
   Crop,
   Download,
-  EyeDashed,
   Feather,
   Fullscreen,
   Info,
@@ -66,7 +66,7 @@ import {
   useWindowSize,
 } from "@vueuse/core";
 import { toBlob } from "html-to-image";
-import { clamp, isEqual } from "lodash";
+import { clamp, isEqual, pick } from "lodash";
 
 /** element refs */
 const rightPanelElement = useTemplateRef("rightPanelElement");
@@ -160,11 +160,10 @@ onMounted(async () => {
 const levelOptions = computed(() =>
   Object.entries(levels.value).map(([level, { label }]) => ({
     id: level,
-    label:
-      label +
-      (statistics.value[selectedMap().statistic]?.levels.includes(level)
-        ? ""
-        : " (no data)"),
+    label,
+    secondary: statistics.value[selectedMap().statistic]?.levels.includes(level)
+      ? undefined
+      : "no data",
   })),
 );
 
@@ -253,7 +252,11 @@ const {
       const statistic = await getStatistic(
         selected.statistic,
         selected.level,
-        selected.factors,
+        pick(
+          selected.factors,
+          /** only keep factors that statistic supports */
+          Object.keys(statistics.value[selected.statistic]?.factors ?? []),
+        ),
       );
       /** load locations */
       const locations = await Promise.all(selected.locations.map(getLocation));
@@ -326,8 +329,9 @@ const factorOptions = computed(() => {
       label,
       options: Object.entries(values).map(([id, { label }]) => ({
         id,
+        label: label,
         /** if factor value available for statistic */
-        label: label + (available[factor]?.values[id] ? "" : " (no data)"),
+        secondary: available[factor]?.values[id] ? undefined : "no data",
       })),
     };
   }
@@ -880,6 +884,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
           <!-- main legend -->
           <template #top-left-upper>
             <div class="flex flex-col gap-1">
+              <!-- selected statistic -->
               <div
                 v-for="(part, index) in [
                   levels[selected.level]?.label,
@@ -891,11 +896,18 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
                 {{ part }}
               </div>
             </div>
+            <!-- selected factors -->
             <div class="text-sm">
               {{
                 Object.entries(selected.factors)
+                  /** only factors that statistic supports */
+                  .filter(
+                    ([factor]) =>
+                      statistics[selected.statistic]?.factors[factor],
+                  )
                   .map(
                     ([factor, value]) =>
+                      /** get value label */
                       statistics[selected.statistic]?.factors[factor]?.values[
                         value
                       ]?.label ?? value,
@@ -933,7 +945,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
               "
               class="flex items-center gap-1 text-sm text-stone-500"
             >
-              <EyeDashed />
+              <CircleDotDashed />
               No data for this combo of level/statistic/factors, try changing
               one of them.
             </div>
