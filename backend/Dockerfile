@@ -1,8 +1,14 @@
 FROM python:3.10
 
 # install a few system packages
-RUN apt-get update && apt-get install -y gdal-bin jq && \
+RUN apt-get update && apt-get install -y gdal-bin jq
+
+# install node, since we need mapshaper, an npm package
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs && \
     rm -rf /var/lib/apt/lists/*
+# install mapshaper
+RUN npm install -g mapshaper
 
 # install curl, certs, openssl
 # patch in an intermediate cert that cancerinfocus is missing for some reason

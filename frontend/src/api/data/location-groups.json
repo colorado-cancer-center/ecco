@@ -60,5 +60,9 @@
     "fit-kits": null,
     "radon-kits": null,
     "2morrow-signups": null
+  },
+  "Urbanicity": {
+    "urban-areas": null,
+    "rural-areas": null
   }
 }

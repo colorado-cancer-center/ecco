@@ -53,5 +53,9 @@
     "CO Senate Districts": "senate-districts",
     "CO House Districts": "house-districts",
     "US Congressional Districts": "congressional-districts"
+  },
+  "Urbanicity": {
+    "Urban": "urban-areas",
+    "Rural": "rural-areas"
   }
 }

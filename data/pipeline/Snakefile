@@ -341,6 +341,20 @@ rule format_friendly_legislative_maps:
             """
             )
 
+rule create_urban_rural_geojson:
+    output:
+        f"{TARGET_DIR}/locations/urbanicity/colorado-urban.geojson",
+        f"{TARGET_DIR}/locations/urbanicity/colorado-rural.geojson"
+    log:
+        f"{LOGS_DIR}/create_urban_rural_geojson.log"
+    shell:
+        """
+        (
+            export OUTPUT_DIR="{TARGET_DIR}/locations/urbanicity"
+            {PIPELINE_DIR}/scripts/locations/get_urban_rural_geojson.sh
+        ) > {log} 2>&1
+        """
+
 # given the following sources, produces a locations-data.json file
 # that is fed to the backend to allow locations to be plotted on the map.
 # sources:
@@ -355,7 +369,9 @@ rule create_locations_json:
         f"{TARGET_DIR}/cif/stats/us_facilities_and_providers_DATE.csv",
         [ f"{TARGET_DIR}/locations/legislative/{map_name}/{map_name}.geojson" for map_name in LEG_MAPS_TO_URL ],
         f"{TARGET_DIR}/locations/legislative/member_directory.xlsx",
-        f"{TARGET_DIR}/locations/legislative/co_congress_members.csv"
+        f"{TARGET_DIR}/locations/legislative/co_congress_members.csv",
+        f"{TARGET_DIR}/locations/urbanicity/colorado-urban.geojson",
+        f"{TARGET_DIR}/locations/urbanicity/colorado-rural.geojson"
     output:
         f"{TARGET_DIR}/locations/locations-data.json"
     log:
@@ -372,6 +388,8 @@ rule create_locations_json:
             {TARGET_DIR}/locations/legislative/2021_Approved_Congressional_Plan_with_Final_Adjustments/2021_Approved_Congressional_Plan_with_Final_Adjustments.geojson \
             {TARGET_DIR}/locations/legislative/member_directory.xlsx \
             {TARGET_DIR}/locations/legislative/co_congress_members.csv \
+            {TARGET_DIR}/locations/urbanicity/colorado-urban.geojson \
+            {TARGET_DIR}/locations/urbanicity/colorado-rural.geojson \
             --output {output}
         ) > {log} 2>&1
         """

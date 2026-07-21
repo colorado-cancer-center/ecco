@@ -3,6 +3,13 @@
 # abort script on any error
 set -euo pipefail
 
+# first, check if we're running in a docker container and abort if so,
+# since this is intended to be run from the host
+if [ -f /.dockerenv ]; then
+	echo "This script is intended to be run from the host, not inside a container."
+	exit 1
+fi
+
 # identify where this script is located...
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 # ...and move one above it, to the /data folder

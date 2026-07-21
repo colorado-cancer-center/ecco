@@ -76,6 +76,10 @@ SRC_LABELS_TO_LOCATIONS_DATA = {
         'CO Senate Districts': 'senate-districts',
         'CO House Districts': 'house-districts',
         'US Congressional Districts': 'congressional-districts',
+    },
+    "urbanicity": {
+        "Urban": "urban-areas",
+        "Rural": "rural-areas"
     }
 }
 
@@ -408,11 +412,14 @@ def _flatten_dict(in_dict):
 @click.argument('congressional_geojson', type=click.File('r'))
 @click.argument('house_senate_reps_excel', type=click.File('rb'))
 @click.argument('congressional_reps_csv', type=click.File('r'))
+@click.argument('colorado_urban', type=click.File('r'))
+@click.argument('colorado_rural', type=click.File('r'))
 @click.option('--output', help='Output file', type=click.File('w'), default='-')
 def produce_features(
     locations_json, ccrm_json, cif_locations_csv,
     house_geojson, senate_geojson, congressional_geojson,
     house_senate_reps_excel, congressional_reps_csv,
+    colorado_urban, colorado_rural,
     output
 ):
     # create dict that will store features for each location type
@@ -424,6 +431,7 @@ def produce_features(
     # --- 1b: extract features from the CIF locations CSV
     # --- 1c: extract features from the CCRM JSON
     # --- 1d: extract features from the legislative data
+    # --- 1e: extract features from the urban/rural data
     # ------------------------------------
     
     # 1a. open locations.json and read all the values into a list
@@ -455,6 +463,10 @@ def produce_features(
         house_senate_reps_excel, congressional_reps_csv
     )
     features.update(legislative_features)
+
+    # 1e. add urban/rural features
+    features['urban-areas'] = json.load(colorado_urban)
+    features['rural-areas'] = json.load(colorado_rural)
 
     # write the relevant layers to the output file
     json.dump(features, output, indent=2)
