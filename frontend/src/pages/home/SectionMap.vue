@@ -1096,7 +1096,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
           </template>
 
           <template #location-popup="{ location }">
-            {{ console.log("location", location) }}
+            {{ console.debug("location", location) }}
 
             <dl>
               <!-- overview -->
