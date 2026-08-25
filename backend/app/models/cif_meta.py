@@ -45,6 +45,12 @@ CIF_MEASURE_DESCRIPTIONS = {
       "source_url": "https://data.census.gov/",
       "unit": MeasureUnit.PERCENT
     },
+    "Female": {
+      "label": "Female",
+      "source": "ACS 5-Year, 2019 - 2023",
+      "source_url": "https://data.census.gov/",
+      "unit": MeasureUnit.PERCENT
+    },
     "AIAN": {
       "label": "American Indian and Alaska Native (non-Hispanic)",
       "source": "ACS 5-Year, 2019 - 2023",
