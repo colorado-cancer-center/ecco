@@ -21,7 +21,7 @@ const component = computed(() => (to ? AppLink : "button"));
 <template>
   <component
     :is="component"
-    class="inline-flex min-h-10 min-w-10 items-center justify-center gap-2 rounded-md p-2 no-underline"
+    class="inline-flex min-h-10 min-w-10 items-center justify-center gap-2 rounded-md p-2 leading-none no-underline"
     :class="
       accent
         ? 'bg-stone-600 text-white hover:bg-stone-500'

@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import SectionBanner from "@/pages/home/SectionBanner.vue";
 import SectionMap from "@/pages/home/SectionMap.vue";
+import TheTour from "@/pages/home/TheTour.vue";
 </script>
 
 <template>
-  <SectionBanner />
+  <TheTour />
   <section class="[--content:999]">
     <SectionMap />
   </section>

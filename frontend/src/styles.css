@@ -131,7 +131,7 @@
   }
 
   .lucide {
-    @apply h-[1.25em] shrink-0;
+    @apply h-[1.25em] shrink-0 w-[unset];
   }
 
   [disabled] {
