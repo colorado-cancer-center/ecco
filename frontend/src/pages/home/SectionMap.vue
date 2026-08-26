@@ -290,6 +290,12 @@ const {
   return maps;
 }, []);
 
+type GeographyProperties =
+  (typeof mapData.value)[number]["geography"]["features"][number]["properties"];
+type LocationProperties =
+  (typeof mapData.value)[number]["locations"][number]["features"][number]["properties"];
+type FeatureProperties = GeographyProperties & LocationProperties;
+
 /** re-load data when selected maps change */
 watch(selectedMaps, loadMapData, { immediate: true, deep: true });
 
@@ -495,6 +501,32 @@ const downloadMapGeo = async () => {
   for (const map of mapElements.value) {
     const geo = map?.getGeo();
     if (!geo) continue;
+
+    /** clean up feature properties */
+    geo.features.forEach((feature) => {
+      const properties = feature.properties as FeatureProperties | null;
+      if (!properties) return;
+      /** opt out of certain props, leave in by default */
+      delete properties.fit_kits;
+      delete properties.radon_kits;
+      delete properties.total_kits;
+      delete properties.community_events;
+      delete properties.health_fairs;
+      delete properties.educational_talks;
+      delete properties.radio_talks;
+      delete properties.school_church_events;
+      delete properties.total_events;
+      delete properties.womens_wellness_centers;
+      delete properties["2morrow_signups"];
+      delete properties.has_fit_kits;
+      delete properties.has_radon_kits;
+      delete properties.has_2morrow;
+      delete properties.has_womens_wellness_center;
+      delete properties.has_both_kits;
+      delete properties.has_any_activity;
+      delete properties.has_all;
+    });
+
     downloadJson(geo, "map-geo");
   }
 };
