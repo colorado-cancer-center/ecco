@@ -1268,9 +1268,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
           </AppButton>
         </div>
 
-        <div class="flex grow flex-wrap items-center justify-center gap-2">
-          <Pointer />Try interacting with the map
-        </div>
+        <div class="grow" />
 
         <div class="flex flex-wrap items-center justify-center gap-2">
           <AppButton to="/contact" :accent="true">
