@@ -982,8 +982,8 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
               class="flex items-center gap-1 text-sm text-stone-500"
             >
               <CircleDotDashed />
-              No data for this combo of level/statistic/factors, try changing
-              one of them.
+              No data for this combo of level/statistic, try changing one of
+              them.
             </div>
 
             <div v-if="statistic.state">

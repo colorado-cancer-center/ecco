@@ -74,7 +74,7 @@ const steps: StepEntity[] = [
     content: {
       title: "Compare",
       description:
-        "Compare multiple maps side by side. Add/select a new map and choose a different set of level/statistic/resources to compare. Drag the mini-maps to reorder, click the Xs to remove.",
+        "Compare multiple maps side by side. Add/select a new map and choose a different combo of level/statistic/resources to compare. Drag the mini-maps to reorder, click the Xs to remove.",
     },
   },
   {
