@@ -58,7 +58,7 @@ const steps: StepEntity[] = [
     content: {
       title: "Statistic",
       description:
-        "Select the main data to be colored on the map. Search for terms of interest or browse through the categories.",
+        'Select the main data to be colored on the map. Search for terms of interest or browse through the categories. Some statistics have extra sub-filtering ("facets") you can select, like female vs. male.',
     },
   },
   {
