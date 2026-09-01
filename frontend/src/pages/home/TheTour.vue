@@ -13,13 +13,33 @@ import {
 } from "v-onboarding";
 import "v-onboarding/dist/style.css";
 
+type Slots = {
+  trigger: [{ start: (reset?: boolean) => void }];
+};
+
+defineSlots<Slots>();
+
 /** tour handler */
-const tour = useTemplateRef("tour");
-const { start, finish } = useVOnboarding(tour);
+const tourElement = useTemplateRef("tour");
+const tour = useVOnboarding(tourElement);
+
+/** current step */
+const index = useLocalStorage("tour-step", 0);
+
+/** common step options */
+const common: Partial<StepEntity> = {
+  on: {
+    beforeStep: (options) => {
+      console.log(options?.index);
+      index.value = options?.index || 0;
+    },
+  },
+};
 
 /** tour steps */
 const steps: StepEntity[] = [
   {
+    ...common,
     attachTo: { element: "header" },
     content: {
       title: "Welcome",
@@ -30,6 +50,7 @@ const steps: StepEntity[] = [
     },
   },
   {
+    ...common,
     attachTo: { element: "#map-grid" },
     content: {
       title: "Intro",
@@ -38,6 +59,7 @@ const steps: StepEntity[] = [
     },
   },
   {
+    ...common,
     attachTo: { element: "#map-grid" },
     content: {
       title: "Map Controls",
@@ -46,6 +68,7 @@ const steps: StepEntity[] = [
     },
   },
   {
+    ...common,
     attachTo: { element: "#geographic-level" },
     content: {
       title: "Geographic level",
@@ -54,6 +77,7 @@ const steps: StepEntity[] = [
     },
   },
   {
+    ...common,
     attachTo: { element: "#statistic" },
     content: {
       title: "Statistic",
@@ -62,6 +86,7 @@ const steps: StepEntity[] = [
     },
   },
   {
+    ...common,
     attachTo: { element: "#locations" },
     content: {
       title: "Resources",
@@ -70,6 +95,7 @@ const steps: StepEntity[] = [
     },
   },
   {
+    ...common,
     attachTo: { element: "#compare" },
     content: {
       title: "Compare",
@@ -78,6 +104,7 @@ const steps: StepEntity[] = [
     },
   },
   {
+    ...common,
     attachTo: { element: "#customizations" },
     content: {
       title: "Customizations",
@@ -86,6 +113,7 @@ const steps: StepEntity[] = [
     },
   },
   {
+    ...common,
     attachTo: { element: "#map-download" },
     content: {
       title: "Download",
@@ -94,6 +122,7 @@ const steps: StepEntity[] = [
     },
   },
   {
+    ...common,
     attachTo: { element: "header" },
     content: {
       title: "Share",
@@ -102,6 +131,7 @@ const steps: StepEntity[] = [
     },
   },
   {
+    ...common,
     attachTo: { element: "nav" },
     content: {
       title: "More Info",
@@ -119,16 +149,33 @@ const dismissed = useLocalStorage("tour-dismissed", false);
 /** close and remember dismissed preference */
 const dismiss = () => {
   dismissed.value = true;
-  finish();
+  index.value = 0;
+  tour.finish();
 };
 
-/** start if not dismissed */
+/** start tour */
+const start = (reset = false, dismiss = true) => {
+  let step = index.value;
+  if (reset) step = 0;
+  tour.start();
+  tour.goToStep(step);
+  if (dismiss) dismissed.value = false;
+};
+
+/** stop tour */
+const stop = (reset = false, dismiss = false) => {
+  tour.finish();
+  if (reset) index.value = 0;
+  if (dismiss) dismissed.value = true;
+};
+
+/** start on page load */
 if (!dismissed.value) onMounted(start);
 
 /** exit */
-onClickOutside(tour, finish);
+onClickOutside(tourElement, () => stop());
 useEventListener("keyup", (event: KeyboardEvent) => {
-  if (event.key === "Escape") finish();
+  if (event.key === "Escape") stop();
 });
 </script>
 
@@ -157,7 +204,7 @@ useEventListener("keyup", (event: KeyboardEvent) => {
           />
           <div class="contents" v-html="step.content.description" />
           <div class="flex flex-row-reverse gap-4">
-            <button @click="next">
+            <button @click="isLast ? stop(true, true) : next()">
               {{ isLast ? "Finish" : "Next" }}
             </button>
             <button v-if="!isFirst" @click="previous">Back</button>
@@ -168,6 +215,7 @@ useEventListener("keyup", (event: KeyboardEvent) => {
       </VOnboardingStep>
     </template>
   </VOnboardingWrapper>
+  <slot v-bind="{ start }" name="trigger" />
 </template>
 
 <style scoped>
