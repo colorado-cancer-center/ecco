@@ -37,7 +37,7 @@ onUpdated(updateLink);
 
 <template>
   <component :is="tag" :id="link" ref="heading">
-    <AppLink :to="link" class="contents">
+    <AppLink :to="`#${link}`" class="contents">
       <slot />
     </AppLink>
   </component>

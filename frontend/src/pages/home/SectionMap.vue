@@ -614,7 +614,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         v-model="selectedMap().locations"
         multi
         :options="locationOptions"
-        label="Resources & Other Locations"
+        label="Resources & Locations"
         :class="[
           locationsStatus === 'loading' && 'animate-loading',
           locationsStatus === 'error' && 'animate-error',
@@ -671,7 +671,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         </AppButton>
       </AppCollapsible>
 
-      <AppCollapsible label="Customization">
+      <AppCollapsible id="customizations" label="Customization">
         <!-- legend -->
         <AppCheckbox
           v-model="showLegends"
@@ -1225,7 +1225,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
       <!-- actions -->
       <div class="flex flex-wrap items-center justify-center gap-4">
         <div
-          id="map-controls"
+          id="map-download"
           class="flex flex-wrap items-center justify-center gap-2"
         >
           <AppButton
@@ -1243,6 +1243,12 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
             <Download />
             Geo
           </AppButton>
+        </div>
+
+        <div
+          id="map-controls"
+          class="flex flex-wrap items-center justify-center gap-2"
+        >
           <AppButton
             v-tooltip="'Zoom out'"
             @click="mapElements?.forEach((map) => map?.zoomOut())"
