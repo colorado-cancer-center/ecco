@@ -1,11 +1,19 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
+import AppButton from "@/components/AppButton.vue";
 import AppHeading from "@/components/AppHeading.vue";
 import AppLink from "@/components/AppLink.vue";
 import { appTitle } from "@/meta";
+import { Trash } from "@lucide/vue";
 
 /** page title */
 onMounted(() => (appTitle.value = ["About"]));
+
+/** clear local data */
+const clearData = () => {
+  if (window.confirm("Clear local data? Cannot be undone."))
+    localStorage.clear();
+};
 </script>
 
 <template>
@@ -36,26 +44,6 @@ onMounted(() => (appTitle.value = ["About"]));
     <p>
       This tool is intended to support research, community inquiries, and
       outreach activities. It should not be used to guide clinical decisions.
-    </p>
-  </section>
-
-  <section>
-    <AppHeading level="2">The Map</AppHeading>
-
-    <p>
-      Create your own map to visualize your data and region of interest. First
-      select the geographic level you want to see data split by, e.g. county or
-      tract (census). Then select what type of data statistic you want to see,
-      e.g. % college graduates, household income, high rent burden. Note that
-      some statistics are only available for certain geographic levels. You can
-      select locations to overlay on the map, e.g. screening centers, clinics,
-      specialists.
-    </p>
-
-    <p>
-      You can download the raw data in tabular form to perform analyses and
-      produce other tables, charts, etc. You can also download the current view
-      of the map as an image.
     </p>
   </section>
 
@@ -96,5 +84,19 @@ onMounted(() => (appTitle.value = ["About"]));
       This work is supported by the University of Colorado Cancer Center Support
       Grant (P30CA046934).
     </p>
+  </section>
+
+  <section>
+    <AppHeading level="2">Local Data</AppHeading>
+
+    <p>
+      For your convenience, this site saves some small bits of data locally in
+      your browser, such as whether you've dismissed the welcome tour.
+    </p>
+
+    <AppButton class="self-center" @click="clearData">
+      <Trash />
+      Clear Local Data
+    </AppButton>
   </section>
 </template>

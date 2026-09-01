@@ -71,10 +71,7 @@ export default defineConfigWithVueTs(
           printWidth: 0,
         },
       ],
-      "better-tailwindcss/no-unknown-classes": [
-        "warn",
-        { ignore: ["dark", "striped"] },
-      ],
+      "better-tailwindcss/no-unknown-classes": ["warn", { ignore: ["step"] }],
     },
     settings: {
       "better-tailwindcss": { entryPoint: "src/styles.css" },
