@@ -55,7 +55,6 @@ import {
   MessageCircle,
   Minus,
   Plus,
-  Pointer,
   RefreshCw,
   X,
 } from "@lucide/vue";
