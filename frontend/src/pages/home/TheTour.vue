@@ -20,7 +20,7 @@ type Slots = {
 defineSlots<Slots>();
 
 /** tour handler */
-const tourElement = useTemplateRef("tour");
+const tourElement = useTemplateRef("tourElement");
 const tour = useVOnboarding(tourElement);
 
 /** current step */
@@ -30,7 +30,6 @@ const index = useLocalStorage("tour-step", 0);
 const common: Partial<StepEntity> = {
   on: {
     beforeStep: (options) => {
-      console.log(options?.index);
       index.value = options?.index || 0;
     },
   },
@@ -181,7 +180,7 @@ useEventListener("keyup", (event: KeyboardEvent) => {
 
 <template>
   <VOnboardingWrapper
-    ref="tour"
+    ref="tourElement"
     :steps="steps"
     class="[--v-onboarding-step-z:100]"
     :options="{
