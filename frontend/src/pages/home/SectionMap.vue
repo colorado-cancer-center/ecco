@@ -607,18 +607,20 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         </template>
       </div>
 
-      <!-- locations -->
+      <!-- resources -->
       <AppSelect
-        id="locations"
+        id="resources"
         v-model="selectedMap().locations"
         multi
         :options="locationOptions"
-        label="Resources & Locations"
         :class="[
           locationsStatus === 'loading' && 'animate-loading',
           locationsStatus === 'error' && 'animate-error',
         ]"
-      />
+      >
+        Resources
+        <span class="text-sm text-stone-500">and other locations</span>
+      </AppSelect>
 
       <!-- multi-map compare -->
       <AppCollapsible id="compare" label="Compare">

@@ -1,6 +1,11 @@
+<script lang="ts">
+export const startEvent = "tour-step-start";
+export const endEvent = "tour-step-end";
+</script>
+
 <script setup lang="ts">
 import type { StepEntity } from "v-onboarding";
-import { onMounted, useTemplateRef } from "vue";
+import { onMounted, ref, useTemplateRef, watchEffect } from "vue";
 import {
   onClickOutside,
   useEventListener,
@@ -26,13 +31,33 @@ const tour = useVOnboarding(tourElement);
 /** current step */
 const index = useLocalStorage("tour-step", 0);
 
+/** is tour open */
+const open = ref(false);
+
 /** common step options */
 const common: Partial<StepEntity> = {
   on: {
-    beforeStep: (options) => {
-      index.value = options?.index || 0;
+    beforeStep: (option) => {
+      /** track step index */
+      index.value = option?.index || 0;
+
+      getElement()?.dispatchEvent(new CustomEvent(startEvent));
+    },
+    afterStep: () => {
+      const element = getElement();
+      if (!element) return;
+      getElement()?.dispatchEvent(new CustomEvent(endEvent));
     },
   },
+};
+
+/** current element */
+const getElement = () => {
+  const attach = steps[index.value]?.attachTo?.element;
+  if (typeof attach === "function") return attach();
+  if (typeof attach === "string") return document.querySelector(attach) || null;
+  if (!attach) return null;
+  return attach.value || null;
 };
 
 /** tour steps */
@@ -54,7 +79,7 @@ const steps: StepEntity[] = [
     content: {
       title: "Intro",
       description:
-        "View map data like population, demographics, cancer burden & disparities, risk factors, health behaviors, and environmental exposures, and local resources like cancer prevention, screening, treatment, and survivorship.",
+        "View map statistics like population, demographics, cancer burden, risk factors, health behaviors, and environmental exposures, and local resources like cancer prevention, screening, and treatment.",
     },
   },
   {
@@ -63,7 +88,7 @@ const steps: StepEntity[] = [
     content: {
       title: "Map Controls",
       description:
-        "Click and drag to move the map. Scroll/pinch to zoom. Try clicking or hovering over an item for more info.",
+        "Click + drag to move the map. Scroll/pinch to zoom. Click/hover over items for more info.",
     },
   },
   {
@@ -81,16 +106,16 @@ const steps: StepEntity[] = [
     content: {
       title: "Statistic",
       description:
-        'Select the main data to be colored on the map. Search for terms of interest or browse through the categories. Some statistics have extra sub-filtering ("facets") you can select, like female vs. male.',
+        'Select the main data to be colored on the map. Search for terms of interest or browse by category. Some statistics have extra sub-filters ("facets") you can select, like female vs. male.',
     },
   },
   {
     ...common,
-    attachTo: { element: "#locations" },
+    attachTo: { element: "#resources" },
     content: {
       title: "Resources",
       description:
-        "Choose additional resources, locations, sites, boundaries, and more to overlay on the map.",
+        "Overlay local resources on the map – like clinics, centers, and services – and other locations like boundaries and districts.",
     },
   },
   {
@@ -126,7 +151,7 @@ const steps: StepEntity[] = [
     content: {
       title: "Share",
       description:
-        "Your level/statistic/resources selections are saved in the URL. You can simply share the URL with someone as you would with any other site. Use your browser's back/forward buttons to quickly hop between or undo selections.",
+        "Your level/statistic/resource selections are saved in the URL. You can simply share your current page with someone as you would any other site. Use your browser's back/forward buttons to quickly hop between or undo selections.",
     },
   },
   {
@@ -142,11 +167,14 @@ const steps: StepEntity[] = [
   },
 ];
 
+watchEffect(() => {});
+
 /** remember user preference */
 const dismissed = useLocalStorage("tour-dismissed", false);
 
 /** close and remember dismissed preference */
 const dismiss = () => {
+  open.value = false;
   dismissed.value = true;
   index.value = 0;
   tour.finish();
@@ -154,6 +182,7 @@ const dismiss = () => {
 
 /** start tour */
 const start = (reset = false, dismiss = true) => {
+  open.value = true;
   let step = index.value;
   if (reset) step = 0;
   tour.start();
@@ -163,6 +192,7 @@ const start = (reset = false, dismiss = true) => {
 
 /** stop tour */
 const stop = (reset = false, dismiss = false) => {
+  open.value = false;
   tour.finish();
   if (reset) index.value = 0;
   if (dismiss) dismissed.value = true;
@@ -201,7 +231,11 @@ useEventListener("keyup", (event: KeyboardEvent) => {
             class="text-lg tracking-wide text-stone-500 uppercase"
             v-html="step.content.title"
           />
-          <div class="contents" v-html="step.content.description" />
+          <div
+            class="contents"
+            role="alert"
+            v-html="step.content.description"
+          />
           <div class="flex flex-row-reverse gap-4">
             <button @click="isLast ? stop(true, true) : next()">
               {{ isLast ? "Finish" : "Next" }}

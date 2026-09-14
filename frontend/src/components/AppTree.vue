@@ -36,6 +36,7 @@ import AppTreeItem from "@/components/AppTreeItem.vue";
 import { useScrollable } from "@/util/composables";
 import { sleep } from "@/util/misc";
 import {
+  Check,
   ListCheck,
   ListChevronsDownUp,
   ListChevronsUpDown,
@@ -198,12 +199,13 @@ provide(treeKey, {
   <div ref="root" class="flex flex-col gap-1">
     <label :id="id">{{ label }}</label>
 
-    <div class="flex items-center gap-2 text-sm text-stone-500">
+    <div class="mb-1 flex items-center gap-2 text-sm text-stone-500">
+      <Check />
       <slot name="selected" v-bind="{ value: modelValue }" />
     </div>
 
     <!-- top controls -->
-    <div class="my-1 flex gap-2">
+    <div class="flex gap-2">
       <AppInput v-model="search" :icon="Search" placeholder="Search" />
       <AppButton
         v-if="allClosed()"

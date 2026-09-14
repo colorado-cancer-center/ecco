@@ -27,7 +27,7 @@ export type Group = {
 export type Entry = Option | Group;
 
 type Props = {
-  label: string;
+  label?: string;
   options: (O | Group)[];
   multi?: boolean;
   modelValue: O["id"] | O["id"][];
@@ -51,6 +51,8 @@ type Emits = {
 const emit = defineEmits<Emits>();
 
 type Slots = {
+  /** label */
+  default: () => unknown;
   /** extra preview for each option in dropdown and selected label */
   preview: (props: { option?: O }) => unknown;
 };
@@ -162,8 +164,9 @@ const onKeypress = async ({ key }: KeyboardEvent) => {
         : 'grid grid-cols-1 gap-y-1'
     "
   >
-    <div :class="multi ? 'col-span-2' : ''">
+    <div :class="['flex items-center gap-2', multi ? 'col-span-2' : '']">
       {{ label }}
+      <slot />
     </div>
 
     <Listbox
