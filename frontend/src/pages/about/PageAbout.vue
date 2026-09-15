@@ -10,8 +10,8 @@ import { Trash } from "@lucide/vue";
 onMounted(() => (appTitle.value = ["About"]));
 
 /** clear local data */
-const clearData = () => {
-  if (window.confirm("Clear local data? Cannot be undone."))
+const clear = () => {
+  if (window.confirm("Clear preferences? Cannot be undone."))
     localStorage.clear();
 };
 </script>
@@ -45,6 +45,17 @@ const clearData = () => {
       This tool is intended to support research, community inquiries, and
       outreach activities. It should not be used to guide clinical decisions.
     </p>
+
+    <p>
+      For your convenience, this site stores a small amount of data in your
+      browser, such as preferences. This data is never shared, and you may clear
+      it at any time:
+    </p>
+
+    <AppButton class="self-center" @click="clear">
+      <Trash />
+      Clear Local Data
+    </AppButton>
   </section>
 
   <section>
@@ -84,19 +95,5 @@ const clearData = () => {
       This work is supported by the University of Colorado Cancer Center Support
       Grant (P30CA046934).
     </p>
-  </section>
-
-  <section>
-    <AppHeading level="2">Local Data</AppHeading>
-
-    <p>
-      For your convenience, this site saves some small bits of data locally in
-      your browser, such as whether you've dismissed the welcome tour.
-    </p>
-
-    <AppButton class="self-center" @click="clearData">
-      <Trash />
-      Clear Local Data
-    </AppButton>
   </section>
 </template>

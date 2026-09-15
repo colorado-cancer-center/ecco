@@ -39,6 +39,7 @@ import { backgroundOptions, defaultBackground } from "@/components/background";
 import { defaultGradient, gradientOptions } from "@/components/gradient";
 import { appTitle } from "@/meta";
 import { jsonParam, numberParam, useParam } from "@/pages";
+import TheTour from "@/pages/home/TheTour.vue";
 import { useQuery } from "@/util/composables";
 import { downloadJson, downloadPng } from "@/util/download";
 import { formatValue } from "@/util/math";
@@ -51,6 +52,7 @@ import {
   Download,
   Feather,
   Fullscreen,
+  GraduationCap,
   Info,
   MessageCircle,
   Minus,
@@ -1278,7 +1280,15 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         <div class="grow" />
 
         <div class="flex flex-wrap items-center justify-center gap-2">
-          <AppButton to="/contact" :accent="true">
+          <TheTour>
+            <template #trigger="{ start }">
+              <AppButton class="self-center" @click="start()">
+                Tour
+                <GraduationCap />
+              </AppButton>
+            </template>
+          </TheTour>
+          <AppButton to="/contact">
             Feedback
             <MessageCircle />
           </AppButton>
