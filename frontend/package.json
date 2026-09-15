@@ -30,6 +30,7 @@
     "micromark-extension-gfm-table": "^2.1.1",
     "ol": "^10.9.0",
     "radix-vue": "^1.9.17",
+    "v-onboarding": "^2.12.4",
     "vue": "^3.5.38",
     "vue-echarts": "^8.0.1",
     "vue-gtag": "^3.7.1",

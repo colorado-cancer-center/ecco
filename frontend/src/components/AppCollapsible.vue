@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, useTemplateRef } from "vue";
 import AppButton from "@/components/AppButton.vue";
+import { endEvent, startEvent } from "@/pages/home/TheTour.vue";
 import { useAutoHeight } from "@/util/composables";
 import { Disclosure, DisclosureButton, DisclosurePanel } from "@headlessui/vue";
 import { ChevronDown, ChevronUp } from "@lucide/vue";
+import { useEventListener } from "@vueuse/core";
 
 type Props = {
   label: string;
@@ -17,15 +19,20 @@ type Slots = {
 
 defineSlots<Slots>();
 
+const root = useTemplateRef("root");
 const panel = useTemplateRef("panel");
 const open = ref(false);
 
 useAutoHeight(panel, open);
+
+useEventListener(root, startEvent, () => (open.value = true));
+useEventListener(root, endEvent, () => (open.value = false));
 </script>
 
 <template>
   <Disclosure>
     <div
+      ref="root"
       class="flex flex-col rounded-md bg-stone-50 transition"
       :class="open && 'shadow-md'"
     >

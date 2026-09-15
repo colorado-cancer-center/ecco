@@ -1,6 +1,6 @@
 import type { Ref } from "vue";
 import { nextTick, onMounted, ref, watchEffect } from "vue";
-import { frame } from "@/util/misc";
+import { frame, sleep } from "@/util/misc";
 import {
   useMutationObserver,
   useResizeObserver,
@@ -71,12 +71,20 @@ export const useAutoHeight = (
   ref: Ref<HTMLElement | null>,
   open: Ref<boolean>,
 ) => {
+  let first = true;
   watchEffect((onCleanup) => {
     const element = ref.value;
     if (!element) return;
 
     /** reset height so content can size naturally */
     const reset = () => (element.style.maxHeight = "");
+
+    /** don't transition on first render */
+    if (first) {
+      element.style.transition = "none";
+      sleep().then(() => (element.style.transition = ""));
+      first = false;
+    }
 
     if (open.value) {
       /** set height to content height */

@@ -39,6 +39,7 @@ import { backgroundOptions, defaultBackground } from "@/components/background";
 import { defaultGradient, gradientOptions } from "@/components/gradient";
 import { appTitle } from "@/meta";
 import { jsonParam, numberParam, useParam } from "@/pages";
+import TheTour from "@/pages/home/TheTour.vue";
 import { useQuery } from "@/util/composables";
 import { downloadJson, downloadPng } from "@/util/download";
 import { formatValue } from "@/util/math";
@@ -51,11 +52,11 @@ import {
   Download,
   Feather,
   Fullscreen,
+  GraduationCap,
   Info,
   MessageCircle,
   Minus,
   Plus,
-  Pointer,
   RefreshCw,
   X,
 } from "@lucide/vue";
@@ -554,6 +555,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
 
       <!-- geographic level -->
       <AppSelect
+        id="geographic-level"
         v-model="selectedMap().level"
         :options="levelOptions"
         label="Geographic level"
@@ -565,6 +567,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
 
       <!-- statistic -->
       <AppTree
+        id="statistic"
         v-model="selectedMap().statistic"
         label="Statistic"
         :tree="statisticOptions"
@@ -606,20 +609,23 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         </template>
       </div>
 
-      <!-- locations -->
+      <!-- resources -->
       <AppSelect
+        id="resources"
         v-model="selectedMap().locations"
         multi
         :options="locationOptions"
-        label="Resources & Other Locations"
         :class="[
           locationsStatus === 'loading' && 'animate-loading',
           locationsStatus === 'error' && 'animate-error',
         ]"
-      />
+      >
+        Resources
+        <span class="text-sm text-stone-500">and other locations</span>
+      </AppSelect>
 
       <!-- multi-map compare -->
-      <AppCollapsible label="Compare">
+      <AppCollapsible id="compare" label="Compare">
         <p class="text-center">
           Comparing <strong>{{ selectedMaps.length }}</strong> map(s)
         </p>
@@ -668,7 +674,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         </AppButton>
       </AppCollapsible>
 
-      <AppCollapsible label="Customization">
+      <AppCollapsible id="customizations" label="Customization">
         <!-- legend -->
         <AppCheckbox
           v-model="showLegends"
@@ -867,8 +873,9 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
       class="sticky top-4 flex min-h-0 min-w-0 flex-col items-stretch gap-4"
       :style="{ height: autoRightPanelHeight + 'px' }"
     >
-      <!-- map -->
+      <!-- maps -->
       <div
+        id="map-grid"
         ref="mapGridElement"
         class="grid h-(--height) w-(--width) grid-cols-[repeat(var(--cols),1fr)] gap-1 bg-stone-600 shadow-md transition max-md:h-[90dvh]"
         :class="[
@@ -978,8 +985,8 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
               class="flex items-center gap-1 text-sm text-stone-500"
             >
               <CircleDotDashed />
-              No data for this combo of level/statistic/factors, try changing
-              one of them.
+              No data for this combo of level/statistic, try changing one of
+              them.
             </div>
 
             <div v-if="statistic.state">
@@ -1220,7 +1227,10 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
 
       <!-- actions -->
       <div class="flex flex-wrap items-center justify-center gap-4">
-        <div class="flex flex-wrap items-center justify-center gap-2">
+        <div
+          id="map-download"
+          class="flex flex-wrap items-center justify-center gap-2"
+        >
           <AppButton
             v-tooltip="'Download map(s) as PNG'"
             :accent="true"
@@ -1236,6 +1246,12 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
             <Download />
             Geo
           </AppButton>
+        </div>
+
+        <div
+          id="map-controls"
+          class="flex flex-wrap items-center justify-center gap-2"
+        >
           <AppButton
             v-tooltip="'Zoom out'"
             @click="mapElements?.forEach((map) => map?.zoomOut())"
@@ -1261,12 +1277,18 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
           </AppButton>
         </div>
 
-        <div class="flex grow flex-wrap items-center justify-center gap-2">
-          <Pointer />Try interacting with the map
-        </div>
+        <div class="grow" />
 
         <div class="flex flex-wrap items-center justify-center gap-2">
-          <AppButton to="/contact" :accent="true">
+          <TheTour>
+            <template #trigger="{ start }">
+              <AppButton class="self-center" @click="start()">
+                Tour
+                <GraduationCap />
+              </AppButton>
+            </template>
+          </TheTour>
+          <AppButton to="/contact">
             Feedback
             <MessageCircle />
           </AppButton>
