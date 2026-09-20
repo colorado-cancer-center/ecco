@@ -181,7 +181,7 @@
   animation: loading 1s linear infinite;
 
   &::after {
-    @apply text-stroke-white text-stroke-2 absolute inset-0 grid place-items-center text-xl uppercase;
+    @apply absolute inset-0 grid place-items-center text-xl uppercase text-stroke-2 text-stroke-white;
     content: "Loading";
   }
 }
@@ -201,7 +201,7 @@
   animation: error 0.5s linear 3 both;
 
   &::after {
-    @apply text-stroke-white text-stroke-2 absolute inset-0 grid place-items-center text-xl uppercase;
+    @apply absolute inset-0 grid place-items-center text-xl uppercase text-stroke-2 text-stroke-white;
     content: "Error";
   }
 }
