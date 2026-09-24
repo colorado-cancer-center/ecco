@@ -120,13 +120,17 @@ def factor_default_clauses(constraints:dict[str,dict[str,Any]], model:BaseStatsM
     clauses = []
 
     for measure, factor_values in constraints.items():
+        factor_clauses = []
+        for factor, default in factor_values.items():
+            try:
+                factor_clauses.append(getattr(model, factor) == default)
+            except AttributeError:
+                raise ValueError(f"Factor '{factor}' not found in model '{model.__name__}'")
+
         clauses += [
             and_(
                 measure_col == measure,
-                *[
-                    getattr(model, factor) == default
-                    for factor, default in factor_values.items()
-                ]
+                *factor_clauses
             ).self_group()
         ]
 
