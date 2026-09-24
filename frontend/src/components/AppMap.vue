@@ -173,8 +173,7 @@ const scale = computed(() => {
 
   /** scale steps */
   const steps: ((
-    | { value: number | string }
-    | { lower: number; upper: number }
+    { value: number | string } | { lower: number; upper: number }
   ) & { label: string; color: string; tooltip: string })[] = [];
 
   /** map specific values to specific colors */

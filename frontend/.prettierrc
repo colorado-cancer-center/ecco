@@ -27,8 +27,7 @@
           "^../"
         ],
         "importOrderParserPlugins": ["typescript", "importAssertions"],
-        "htmlWhitespaceSensitivity": "strict",
-        "jsdocCapitalizeDescription": false
+        "htmlWhitespaceSensitivity": "strict"
       }
     }
   ]
