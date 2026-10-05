@@ -943,18 +943,18 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         >
           <!-- main legend -->
           <template #top-left-upper>
-            <div class="flex flex-col gap-1">
+            <div>
               <!-- selected statistic -->
-              <div
+              <span
                 v-for="(part, index) in [
                   levels[selected.level]?.label,
                   ...(statisticPaths[selected.statistic] ?? []),
                 ]"
                 :key="index"
-                class="not-last:text-sm last:font-bold"
+                class="not-last:text-sm last:w-full last:font-bold not-last:[&_br]:hidden last:[&_span]:hidden"
               >
-                {{ part }}
-              </div>
+                <br />{{ part }}<span>... </span>
+              </span>
             </div>
             <!-- selected factors -->
             <div class="text-sm">
@@ -997,17 +997,17 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
               </AppButton>
             </div>
 
-            <p
+            <div
               v-if="
                 geography.features.every(
                   (feature) => feature.properties.value === undefined,
                 )
               "
-              class="rounded-md border border-gray bg-pale-gold p-2 text-sm/normal"
+              class="rounded-md border border-gray bg-pale-gold p-2 text-sm"
             >
               No data for this combo of level/statistic, try changing one of
               them.
-            </p>
+            </div>
 
             <div v-if="statistic.state">
               State: {{ formatValue(statistic.state, statistic.unit) }}
