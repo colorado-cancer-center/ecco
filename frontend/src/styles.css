@@ -160,33 +160,6 @@
   paint-order: stroke;
 }
 
-@utility scrollable {
-  @apply relative;
-
-  mask-image:
-    linear-gradient(
-      to right,
-      transparent,
-      black calc(25% * var(--scrollable-left))
-    ),
-    linear-gradient(
-      to left,
-      transparent,
-      black calc(25% * var(--scrollable-right))
-    ),
-    linear-gradient(
-      to bottom,
-      transparent,
-      black calc(25% * var(--scrollable-top))
-    ),
-    linear-gradient(
-      to top,
-      transparent,
-      black calc(25% * var(--scrollable-bottom))
-    );
-  mask-composite: intersect;
-}
-
 @utility animate-loading {
   @apply pointer-events-none relative grayscale;
   animation: loading 1s linear infinite;

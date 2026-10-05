@@ -33,7 +33,6 @@ import { computed, provide, ref, useId, useTemplateRef, watch } from "vue";
 import AppButton from "@/components/AppButton.vue";
 import AppInput from "@/components/AppInput.vue";
 import AppTreeItem from "@/components/AppTreeItem.vue";
-import { useScrollable } from "@/util/composables";
 import { sleep } from "@/util/misc";
 import {
   ListCheck,
@@ -72,10 +71,6 @@ defineSlots<Slots>();
 
 /** root element */
 const rootElement = useTemplateRef("root");
-
-/** scrollable tree element */
-const scrollElement = useTemplateRef("scroll");
-useScrollable(scrollElement);
 
 /** search string */
 const search = ref("");
@@ -235,12 +230,7 @@ provide(treeKey, {
     </div>
 
     <!-- tree structure -->
-    <div
-      ref="scroll"
-      role="tree"
-      :aria-labelledby="id"
-      class="scrollable overflow-y-auto"
-    >
+    <div role="tree" :aria-labelledby="id" class="overflow-y-auto">
       <AppTreeItem
         :model-value="modelValue"
         :update-model-value="updateModelValue"

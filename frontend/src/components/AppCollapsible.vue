@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, useTemplateRef } from "vue";
+import { ref, useTemplateRef, watchEffect } from "vue";
 import AppButton from "@/components/AppButton.vue";
 import { endEvent, startEvent } from "@/pages/home/TheTour.vue";
 import { useAutoHeight } from "@/util/composables";
+import { sleep } from "@/util/misc";
 import { Disclosure, DisclosureButton, DisclosurePanel } from "@headlessui/vue";
 import { ChevronDown, ChevronUp } from "@lucide/vue";
 import { useEventListener } from "@vueuse/core";
@@ -27,6 +28,13 @@ useAutoHeight(panel, open);
 
 useEventListener(root, startEvent, () => (open.value = true));
 useEventListener(root, endEvent, () => (open.value = false));
+
+watchEffect(async () => {
+  if (open.value === true) {
+    await sleep(100);
+    panel.value?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+});
 </script>
 
 <template>
@@ -46,7 +54,7 @@ useEventListener(root, endEvent, () => (open.value = false));
       <DisclosurePanel as="template" static :unmount="false">
         <div
           ref="panel"
-          class="flex flex-col gap-4 overflow-y-clip px-4 transition-all"
+          class="flex scroll-mt-12 flex-col gap-4 overflow-y-clip px-4 transition-all"
           :class="open ? 'py-4' : ''"
         >
           <slot />

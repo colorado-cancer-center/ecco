@@ -63,17 +63,11 @@ import {
   VectorPolygon,
   X,
 } from "@lucide/vue";
-import {
-  useElementBounding,
-  useFullscreen,
-  useResizeObserver,
-  useWindowSize,
-} from "@vueuse/core";
+import { useFullscreen } from "@vueuse/core";
 import { toBlob } from "html-to-image";
-import { clamp, isEmpty, isEqual, pick } from "lodash";
+import { isEmpty, isEqual, pick } from "lodash";
 
 /** element refs */
-const rightPanelElement = useTemplateRef("rightPanelElement");
 const mapGridElement = useTemplateRef("mapGridElement");
 const mapElements = useTemplateRef("mapElements");
 
@@ -463,22 +457,6 @@ const resetCustomizations = async () => {
 /** fit all maps */
 const fit = () => mapElements.value?.forEach((map) => map?.fit());
 
-/** auto-adjust right panel/map height */
-const autoRightPanelHeight = ref(0);
-const { top: rightPanelTop, update: updateRightPanelHeight } =
-  useElementBounding(rightPanelElement);
-useResizeObserver(document.body, updateRightPanelHeight);
-const { height: windowHeight } = useWindowSize();
-watchEffect(() => {
-  if (windowHeight.value < 400) return;
-  if (!rightPanelTop.value) return;
-  if (mapWidth.value || mapHeight.value) return;
-  const max = windowHeight.value - 20;
-  const height = clamp(max - rightPanelTop.value, 400, max);
-  if (Math.abs(height - autoRightPanelHeight.value) > 1)
-    autoRightPanelHeight.value = height;
-});
-
 /** download maps as pngs */
 const downloadMapImage = async () => {
   if (!mapGridElement.value) return;
@@ -541,11 +519,11 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
 
 <template>
   <div
-    class="grid grid-cols-[--spacing(100)_1fr] gap-8 max-md:grid-cols-1"
+    class="grid h-full grid-cols-[--spacing(100)_1fr] gap-8 max-md:grid-cols-1"
     :style="{ '--cols': mapCols }"
   >
     <!-- left panel -->
-    <div class="flex flex-col gap-4" role="group">
+    <div class="flex flex-col gap-4 overflow-y-auto" role="group">
       <!-- reset map -->
       <AppButton
         v-if="!isEqual(selectedMap(), defaultMap())"
@@ -578,7 +556,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         id="statistic"
         v-model="selectedMap().statistic"
         :tree="statisticOptions"
-        class="max-h-max min-h-82 grow basis-0 gap-2 rounded-md border border-gray bg-white p-4"
+        class="min-h-92 grow gap-2 overflow-y-hidden rounded-md border border-gray bg-white p-4"
         :class="[
           statisticStatus === 'loading' && 'animate-loading',
           statisticStatus === 'error' && 'animate-error',
@@ -645,7 +623,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         <span class="text-sm text-gray">and other locations</span>
       </AppSelect>
 
-      <!-- multi-map compare -->
+      <!-- compare -->
       <AppCollapsible id="compare" label="Compare">
         <p class="text-center">
           Comparing <strong>{{ selectedMaps.length }}</strong> map(s)
@@ -695,6 +673,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         </AppButton>
       </AppCollapsible>
 
+      <!-- customization -->
       <AppCollapsible id="customizations" label="Customization">
         <!-- legend -->
         <AppCheckbox
@@ -889,11 +868,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
     </div>
 
     <!-- right panel -->
-    <div
-      ref="rightPanelElement"
-      class="sticky top-4 flex min-h-0 min-w-0 flex-col items-stretch gap-4"
-      :style="{ height: autoRightPanelHeight + 'px' }"
-    >
+    <div class="flex flex-col items-stretch gap-4">
       <!-- maps -->
       <div
         id="map-grid"
