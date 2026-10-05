@@ -97,7 +97,7 @@
   }
 
   blockquote {
-    @apply rounded-r-md border-l-2 bg-pale p-2 pl-4 leading-loose;
+    @apply rounded-r-md border-l-4 bg-light-gold p-2 pl-4 leading-loose;
   }
 
   button {
@@ -228,7 +228,7 @@
 }
 
 .tippy-box {
-  @apply rounded-md border border-black bg-white p-2 leading-relaxed trim;
+  @apply rounded-md border border-black bg-white p-2 trim;
 
   .tippy-arrow {
     @apply grid size-0 place-content-center;

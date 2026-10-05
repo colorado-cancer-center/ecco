@@ -46,7 +46,6 @@ import { formatValue } from "@/util/math";
 import { copy } from "@/util/misc";
 import { getValue } from "@/util/types";
 import {
-  CircleDotDashed,
   Copy,
   Crop,
   Download,
@@ -60,6 +59,7 @@ import {
   Plus,
   RefreshCw,
   Ruler,
+  SwatchBook,
   VectorPolygon,
   X,
 } from "@lucide/vue";
@@ -608,6 +608,12 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
       <div
         class="grid grid-cols-[min-content_1fr] items-center gap-2 rounded-md border border-gray bg-white p-4 empty:hidden"
       >
+        <div class="col-span-full flex items-center gap-2">
+          <SwatchBook
+            class="size-6 rounded-full bg-pale-gold p-1 text-dark-gold"
+          />
+          Factors
+        </div>
         <template
           v-for="({ label, options }, factor, index) in factorOptions"
           :key="index"
@@ -990,18 +996,17 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
               </AppButton>
             </div>
 
-            <div
+            <p
               v-if="
                 geography.features.every(
                   (feature) => feature.properties.value === undefined,
                 )
               "
-              class="flex items-center gap-1 text-sm text-gray"
+              class="rounded-md border border-gray bg-pale-gold p-2 text-sm/normal"
             >
-              <CircleDotDashed />
               No data for this combo of level/statistic, try changing one of
               them.
-            </div>
+            </p>
 
             <div v-if="statistic.state">
               State: {{ formatValue(statistic.state, statistic.unit) }}
