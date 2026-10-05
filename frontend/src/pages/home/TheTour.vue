@@ -6,6 +6,7 @@ export const endEvent = "tour-step-end";
 <script setup lang="ts">
 import type { StepEntity } from "v-onboarding";
 import { onMounted, ref, useTemplateRef, watchEffect } from "vue";
+import AppButton from "@/components/AppButton.vue";
 import {
   onClickOutside,
   useEventListener,
@@ -16,7 +17,6 @@ import {
   VOnboardingStep,
   VOnboardingWrapper,
 } from "v-onboarding";
-import "v-onboarding/dist/style.css";
 
 type Slots = {
   trigger: [{ start: (reset?: boolean) => void }];
@@ -226,35 +226,24 @@ useEventListener("keyup", (event: KeyboardEvent) => {
   >
     <template #default="{ step, next, previous, isFirst, isLast }">
       <VOnboardingStep>
-        <div class="step flex max-w-100 flex-col gap-4 rounded-md bg-white p-4">
-          <div
-            class="text-lg tracking-wide text-stone-500 uppercase"
-            v-html="step.content.title"
-          />
-          <div
-            class="contents"
-            role="alert"
-            v-html="step.content.description"
-          />
-          <div class="flex flex-row-reverse gap-4">
-            <button @click="isLast ? stop(true, true) : next()">
-              {{ isLast ? "Finish" : "Next" }}
-            </button>
-            <button v-if="!isFirst" @click="previous">Back</button>
-            <div class="grow" />
-            <button @click="dismiss">Dismiss</button>
-          </div>
+        <div
+          class="text-lg tracking-wide text-dark-gold uppercase"
+          v-html="step.content.title"
+        />
+        <div class="contents" role="alert" v-html="step.content.description" />
+        <div class="flex flex-row-reverse gap-4">
+          <AppButton
+            design="accent"
+            @click="isLast ? stop(true, true) : next()"
+          >
+            {{ isLast ? "Finish" : "Next" }}
+          </AppButton>
+          <AppButton v-if="!isFirst" @click="previous">Back</AppButton>
+          <div class="grow" />
+          <AppButton @click="dismiss">Dismiss</AppButton>
         </div>
       </VOnboardingStep>
     </template>
   </VOnboardingWrapper>
   <slot v-bind="{ start }" name="trigger" />
 </template>
-
-<style scoped>
-@reference "@/styles.css";
-
-.step button {
-  @apply bg-stone-200 rounded-md px-2 py-1 hover:bg-theme;
-}
-</style>

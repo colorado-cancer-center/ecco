@@ -3,7 +3,7 @@ import SectionMap from "@/pages/home/SectionMap.vue";
 </script>
 
 <template>
-  <section class="[--content:999]">
+  <section class="p-8">
     <SectionMap />
   </section>
 </template>

@@ -53,11 +53,14 @@ import {
   Feather,
   Fullscreen,
   GraduationCap,
+  Hospital,
   Info,
   MessageCircle,
   Minus,
   Plus,
   RefreshCw,
+  Ruler,
+  VectorPolygon,
   X,
 } from "@lucide/vue";
 import {
@@ -542,12 +545,12 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
     :style="{ '--cols': mapCols }"
   >
     <!-- left panel -->
-    <div class="flex flex-col gap-8 text-left" role="group">
+    <div class="flex flex-col gap-4" role="group">
       <!-- reset map -->
       <AppButton
         v-if="!isEqual(selectedMap(), defaultMap())"
         v-tooltip="'Reset current map selections to defaults'"
-        :accent="true"
+        design="accent"
         @click="resetMap"
       >
         Reset<RefreshCw />
@@ -558,25 +561,33 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         id="geographic-level"
         v-model="selectedMap().level"
         :options="levelOptions"
-        label="Geographic level"
+        class="gap-2 rounded-md border border-gray bg-white p-4"
         :class="[
           levelStatus === 'loading' && 'animate-loading',
           levelStatus === 'error' && 'animate-error',
         ]"
-      />
+      >
+        <VectorPolygon
+          class="size-6 rounded-full bg-pale-gold p-1 text-dark-gold"
+        />
+        Geographic level
+      </AppSelect>
 
       <!-- statistic -->
       <AppTree
         id="statistic"
         v-model="selectedMap().statistic"
-        label="Statistic"
         :tree="statisticOptions"
-        class="max-h-max min-h-82 grow basis-0"
+        class="max-h-max min-h-82 grow basis-0 gap-2 rounded-md border border-gray bg-white p-4"
         :class="[
           statisticStatus === 'loading' && 'animate-loading',
           statisticStatus === 'error' && 'animate-error',
         ]"
       >
+        <template #default>
+          <Ruler class="size-6 rounded-full bg-pale-gold p-1 text-dark-gold" />
+          Statistic
+        </template>
         <template #selected="{ value }">
           {{ statisticPaths[value]?.join(" > ") ?? value }}
         </template>
@@ -585,7 +596,8 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
             v-if="child.id"
             v-tooltip="'Download statistic data'"
             :to="onTreeDownload(child.id)"
-            class="size-8 min-h-0! min-w-0! rounded-md bg-transparent text-stone-300 hover:text-black"
+            design="none"
+            class="p-1! text-light-gray hover:text-black"
           >
             <Download />
           </AppButton>
@@ -594,7 +606,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
 
       <!-- factors -->
       <div
-        class="grid grid-cols-[min-content_1fr] items-center gap-2 empty:hidden"
+        class="grid grid-cols-[min-content_1fr] items-center gap-2 rounded-md border border-gray bg-white p-4 empty:hidden"
       >
         <template
           v-for="({ label, options }, factor, index) in factorOptions"
@@ -615,13 +627,15 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         v-model="selectedMap().locations"
         multi
         :options="locationOptions"
+        class="gap-2 rounded-md border border-gray bg-white p-4"
         :class="[
           locationsStatus === 'loading' && 'animate-loading',
           locationsStatus === 'error' && 'animate-error',
         ]"
       >
+        <Hospital class="size-6 rounded-full bg-pale-gold p-1 text-dark-gold" />
         Resources
-        <span class="text-sm text-stone-500">and other locations</span>
+        <span class="text-sm text-gray">and other locations</span>
       </AppSelect>
 
       <!-- multi-map compare -->
@@ -640,11 +654,11 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
                 <button
                   v-tooltip="'Click to select, drag to reorder'"
                   v-bind="highlightListeners(index)"
-                  class="size-full overflow-hidden border-2 bg-stone-100"
+                  class="size-full overflow-hidden border-2 bg-pale"
                   :class="
                     selectedIndex === index
-                      ? 'border-theme'
-                      : 'border-stone-100 hover:border-theme'
+                      ? 'border-gold'
+                      : 'border-light-gray hover:border-gold'
                   "
                   @click="selectedIndex = index"
                 >
@@ -659,7 +673,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
                 <button
                   v-tooltip="'Remove map from comparison'"
                   v-bind="highlightListeners(index)"
-                  class="absolute top-0.5 right-0.5 z-10 size-6 bg-stone-100 hover:text-theme"
+                  class="absolute top-0.5 right-0.5 z-10 size-6 bg-pale hover:text-gray"
                   @click="deleteMap(index)"
                 >
                   <X />
@@ -735,7 +749,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
           tooltip="Provider to use for background map layer"
         >
           <template #preview="{ option }">
-            <div class="size-12 shrink-0 overflow-hidden bg-stone-300">
+            <div class="size-12 shrink-0 overflow-hidden bg-gray">
               <img
                 :src="option?.image"
                 alt=""
@@ -858,7 +872,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         <!-- reset -->
         <AppButton
           v-tooltip="'Reset customizations to defaults'"
-          :accent="true"
+          design="accent"
           @click="resetCustomizations"
         >
           <RefreshCw />
@@ -877,7 +891,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
       <div
         id="map-grid"
         ref="mapGridElement"
-        class="grid h-(--height) w-(--width) grid-cols-[repeat(var(--cols),1fr)] gap-1 bg-stone-600 shadow-md transition max-md:h-[90dvh]"
+        class="grid h-(--height) w-(--width) grid-cols-[repeat(var(--cols),1fr)] gap-1 overflow-hidden rounded-md border border-gray bg-dark-gray transition max-md:h-[90dvh]"
         :class="[
           mapDataStatus === 'loading' && 'animate-loading',
           mapDataStatus === 'error' && 'animate-error',
@@ -900,7 +914,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
           :class="[
             'outline-8',
             index === highlightedIndex
-              ? 'z-10 outline-theme'
+              ? 'z-10 outline-gold'
               : 'outline-transparent',
           ]"
           :geography="geography"
@@ -982,7 +996,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
                   (feature) => feature.properties.value === undefined,
                 )
               "
-              class="flex items-center gap-1 text-sm text-stone-500"
+              class="flex items-center gap-1 text-sm text-gray"
             >
               <CircleDotDashed />
               No data for this combo of level/statistic, try changing one of
@@ -1233,7 +1247,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         >
           <AppButton
             v-tooltip="'Download map(s) as PNG'"
-            :accent="true"
+            design="accent"
             @click="downloadMapImage"
           >
             <Download />
@@ -1292,7 +1306,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
             Feedback
             <MessageCircle />
           </AppButton>
-          <AppButton to="/about#acknowledge" :accent="true">
+          <AppButton to="/about#acknowledge" design="accent">
             Acknowledge
             <Feather />
           </AppButton>

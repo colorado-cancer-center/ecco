@@ -62,7 +62,7 @@ onUpdated(() => {
         v-tooltip="'Download all sources data in CSV format'"
         :to="getDownloadStatistics()"
         :new-tab="true"
-        :accent="true"
+        design="accent"
       >
         Download All Data
         <Download />

@@ -29,7 +29,7 @@ export const tippyOptions: {
   component: "tooltip",
   defaultProps: {
     allowHTML: true,
-    offset: [0, 15],
+    offset: [0, 16],
     duration: [100, 0],
     delay: [100, 0],
     onCreate: update,

@@ -157,13 +157,7 @@ const onKeypress = async ({ key }: KeyboardEvent) => {
 </script>
 
 <template>
-  <label
-    :class="
-      multi
-        ? 'grid grid-cols-[1fr_min-content] gap-x-2 gap-y-1'
-        : 'grid grid-cols-1 gap-y-1'
-    "
-  >
+  <label :class="multi ? 'grid grid-cols-[1fr_min-content]' : 'grid'">
     <div :class="['flex items-center gap-2', multi ? 'col-span-2' : '']">
       {{ label }}
       <slot />
@@ -193,7 +187,7 @@ const onKeypress = async ({ key }: KeyboardEvent) => {
             <span class="grow text-left" :class="truncate && 'truncate'">
               {{ selectedLabel }}
             </span>
-            <span v-if="selectedOption?.secondary" class="text-stone-400">
+            <span v-if="selectedOption?.secondary" class="text-gray">
               {{ selectedOption.secondary }}
             </span>
             <slot
@@ -201,14 +195,14 @@ const onKeypress = async ({ key }: KeyboardEvent) => {
               name="preview"
               :option="selectedOption"
             />
-            <ChevronUp v-if="open" class="text-stone-600" />
-            <ChevronDown v-else class="text-stone-600" />
+            <ChevronUp v-if="open" class="text-dark-gray" />
+            <ChevronDown v-else class="text-dark-gray" />
           </AppButton>
         </ListboxButton>
 
         <!-- dropdown -->
         <ListboxOptions
-          class="list-none overflow-y-auto overscroll-none rounded-md bg-white shadow-md"
+          class="list-none overflow-y-auto overscroll-none rounded-md border border-gray bg-white"
         >
           <template v-for="(option, index) in options" :key="index">
             <!-- regular option -->
@@ -220,19 +214,17 @@ const onKeypress = async ({ key }: KeyboardEvent) => {
             >
               <li
                 class="flex cursor-pointer items-center gap-2 p-2 transition"
-                :class="
-                  active ? 'bg-stone-100' : selected ? 'bg-stone-100' : ''
-                "
+                :class="active ? 'bg-pale' : selected ? 'bg-pale' : ''"
                 @vue:mounted="(node: VNode) => selected && onDropdownOpen(node)"
               >
                 <Check
-                  class="text-emerald-500"
+                  class="text-success"
                   :class="selected ? 'opacity-100' : 'opacity-0'"
                 />
                 <span class="grow" :class="truncate && 'truncate'">
                   {{ option.label }}
                 </span>
-                <span v-if="option.secondary" class="text-stone-400">
+                <span v-if="option.secondary" class="text-gray">
                   {{ option.secondary }}
                 </span>
                 <slot name="preview" :option="option" />

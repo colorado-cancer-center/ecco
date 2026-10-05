@@ -3,7 +3,7 @@
 export const noDataEntry = {
   value: "",
   label: "ND",
-  color: "#a0a0a0",
+  color: getCssVar("--color-light-gray"),
   tooltip: "No data or suppressed value",
 } as const;
 
@@ -76,7 +76,7 @@ const topRightLegend = useTemplateRef("topRightLegend");
 const bottomRightLegend = useTemplateRef("bottomRightLegend");
 const bottomLeftLegend = useTemplateRef("bottomLeftLegend");
 
-const theme = getCssVar("--color-theme");
+const gold = getCssVar("--color-gold");
 
 type Props = {
   /** features */
@@ -402,7 +402,7 @@ watchEffect((onCleanup) => {
     (hover = false) =>
     (feature: FeatureLike) => {
       const color =
-        feature.getId() === _highlight ? theme : getColor(feature.get("value"));
+        feature.getId() === _highlight ? gold : getColor(feature.get("value"));
       return new Style({
         stroke: new Stroke({ color: "black", width: hover ? 4 : 1 }),
         fill: new Fill({
@@ -834,7 +834,7 @@ onUnmounted(() => {
       <div
         v-if="$slots['top-left-upper'] || $slots['top-left-lower']"
         ref="topLeftLegend"
-        class="absolute top-4 left-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
+        class="absolute top-4 left-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md border border-gray bg-white p-4"
       >
         <slot name="top-left-upper" />
 
@@ -872,7 +872,7 @@ onUnmounted(() => {
       <div
         v-if="$slots['top-right']"
         ref="topRightLegend"
-        class="absolute top-4 right-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
+        class="absolute top-4 right-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md border border-gray bg-white p-4"
       >
         <slot name="top-right" />
       </div>
@@ -881,7 +881,7 @@ onUnmounted(() => {
       <div
         v-if="$slots['bottom-right'] || !isEmpty(symbols)"
         ref="bottomRightLegend"
-        class="absolute right-4 bottom-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
+        class="absolute right-4 bottom-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md border border-gray bg-white p-4"
       >
         <slot name="bottom-right" />
 
@@ -903,7 +903,7 @@ onUnmounted(() => {
       <div
         v-if="$slots['bottom-left']"
         ref="bottomLeftLegend"
-        class="absolute bottom-4 left-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md bg-white p-4 shadow-md"
+        class="absolute bottom-4 left-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md border border-gray bg-white p-4"
       >
         <slot name="bottom-left" />
       </div>
@@ -925,7 +925,7 @@ onUnmounted(() => {
       v-if="$slots['geography-popup'] && selectedGeography"
       ref="geographyPopupElement"
       v-stop
-      class="relative z-100! flex max-h-full w-100 max-w-max translate-y-[calc(--spacing(2)*-1.414)] flex-col gap-2 rounded-md bg-white p-4 shadow-md after:absolute after:top-full after:left-1/2 after:size-2 after:-translate-1/2 after:rotate-45 after:bg-white after:shadow-md after:content-[''] after:[clip-path:polygon(200%_-100%,200%_200%,-100%_200%)]"
+      class="relative z-100! flex max-h-full w-100 max-w-max translate-y-[calc(--spacing(2)*-1.414)] flex-col gap-2 rounded-md border border-gray bg-white p-4 after:absolute after:top-full after:left-1/2 after:size-2 after:-translate-1/2 after:rotate-45 after:border after:border-gray after:bg-white after:content-[''] after:[clip-path:polygon(200%_-100%,200%_200%,-100%_200%)]"
     >
       <slot
         name="geography-popup"
@@ -938,7 +938,7 @@ onUnmounted(() => {
       v-if="$slots['location-popup'] && selectedLocation"
       ref="locationPopupElement"
       v-stop
-      class="relative z-100! flex max-h-full w-100 max-w-max translate-y-[calc(--spacing(2)*-1.414)] flex-col gap-2 rounded-md bg-white p-4 shadow-md after:absolute after:top-full after:left-1/2 after:size-2 after:-translate-1/2 after:rotate-45 after:bg-white after:shadow-md after:content-[''] after:[clip-path:polygon(200%_-100%,200%_200%,-100%_200%)]"
+      class="relative z-100! flex max-h-full w-100 max-w-max translate-y-[calc(--spacing(2)*-1.414)] flex-col gap-2 rounded-md border border-gray bg-white p-4 after:absolute after:top-full after:left-1/2 after:size-2 after:-translate-1/2 after:rotate-45 after:border after:border-gray after:bg-white after:content-[''] after:[clip-path:polygon(200%_-100%,200%_200%,-100%_200%)]"
     >
       <slot
         name="location-popup"

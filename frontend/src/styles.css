@@ -5,13 +5,29 @@
   --breakpoint-md: 55rem;
   --breakpoint-lg: 70rem;
 
-  --color-theme: hsl(43, 46%, 65%);
+  --color-*: initial;
+
+  /* https://www.colorado.edu/imc/cu-boulder-brand/visual-identity */
+
+  --color-black: #000000;
+  --color-dark-gray: #565a5c;
+  --color-gray: #8f8d8a;
+  --color-light-gray: #d8d5d0;
+  --color-pale: #eef5f8;
+  --color-white: #ffffff;
+
+  --color-dark-gold: #8d7334;
+  --color-gold: #cfb87c;
+  --color-light-gold: #e8d5a8;
+  --color-pale-gold: #f3f0e9;
+
+  --color-success: #096fae;
 
   --radius-*: initial;
   --radius-md: 8px;
 
   --shadow-*: initial;
-  --shadow-md: 0px 2px 10px #00000040, 0 0 4px #00000020;
+  --shadow-md: 0px 2px 10px #00000020, 0 0 4px #00000020;
 
   --font-sans: "Inter Variable", sans-serif;
 }
@@ -35,7 +51,7 @@
 
   header,
   footer {
-    @apply bg-theme;
+    @apply border-gold bg-black text-white;
   }
 
   section {
@@ -44,7 +60,7 @@
   }
 
   section:nth-child(odd) {
-    @apply bg-stone-50;
+    @apply bg-pale-gold;
   }
 
   h1 {
@@ -64,25 +80,16 @@
   }
 
   a {
-    @apply text-yellow-800 underline transition hover:text-current;
+    @apply text-dark-gold underline transition hover:text-current;
   }
 
   header a,
   footer a {
-    @apply relative p-1 text-black no-underline;
-
-    &::after {
-      @apply absolute right-0 bottom-0 left-0 h-0.5 scale-x-0 bg-current transition content-[''];
-    }
-
-    &:hover::after,
-    &[data-active="true"]::after {
-      @apply scale-x-100;
-    }
+    @apply rounded-md p-2 text-white no-underline trim hover:bg-white/25 hover:text-light-gold;
   }
 
   p {
-    @apply leading-loose;
+    @apply leading-loose trim;
   }
 
   svg {
@@ -90,7 +97,7 @@
   }
 
   blockquote {
-    @apply rounded-r-md border-l-2 bg-stone-100 p-2 pl-4 leading-loose;
+    @apply rounded-r-md border-l-2 bg-pale p-2 pl-4 leading-loose;
   }
 
   button {
@@ -98,7 +105,7 @@
   }
 
   input {
-    @apply transition;
+    @apply min-w-0 transition;
   }
 
   table {
@@ -111,11 +118,11 @@
   }
 
   thead tr {
-    @apply bg-theme!;
+    @apply bg-gold!;
   }
 
   tbody tr {
-    @apply odd:bg-white even:bg-stone-50;
+    @apply odd:bg-white even:bg-pale-gold;
   }
 
   dl {
@@ -123,7 +130,7 @@
   }
 
   dt {
-    @apply text-stone-600;
+    @apply text-dark-gray;
   }
 
   dd {
@@ -137,6 +144,10 @@
   [disabled] {
     @apply cursor-not-allowed opacity-50 grayscale;
   }
+}
+
+@utility trim {
+  text-box: trim-both text;
 }
 
 @utility table-wrapper {
@@ -217,10 +228,95 @@
 }
 
 .tippy-box {
-  @apply rounded-md border-2 border-white bg-stone-600 p-1 leading-relaxed! text-white;
-  font: inherit;
+  @apply rounded-md border border-black bg-white p-2 leading-relaxed trim;
+
+  .tippy-arrow {
+    @apply grid size-0 place-content-center;
+  }
+
+  .tippy-arrow::before {
+    @apply flex size-3 origin-center border-t border-l bg-white content-[''];
+  }
+
+  &[data-placement^="top"] > .tippy-arrow {
+    @apply top-full;
+
+    &::before {
+      @apply rotate-225;
+    }
+  }
+
+  &[data-placement^="bottom"] > .tippy-arrow {
+    @apply bottom-full;
+
+    &::before {
+      @apply rotate-45;
+    }
+  }
+
+  &[data-placement^="left"] > .tippy-arrow {
+    @apply left-full;
+
+    &::before {
+      @apply rotate-135;
+    }
+  }
+
+  &[data-placement^="right"] > .tippy-arrow {
+    @apply right-full;
+
+    &::before {
+      @apply rotate-315;
+    }
+  }
 }
 
-.tippy-arrow {
-  @apply text-stone-600;
+[data-v-onboarding-wrapper] {
+  & > div {
+    @apply contents;
+  }
+
+  [data-popper-placement] {
+    @apply flex max-w-100 flex-col gap-4 rounded-md border bg-white p-4 trim;
+
+    [data-popper-arrow] {
+      @apply grid size-0 place-content-center;
+    }
+
+    [data-popper-arrow]::before {
+      @apply flex size-3 origin-center border-t border-l bg-white content-[''];
+    }
+
+    &[data-popper-placement^="top"] > [data-popper-arrow] {
+      @apply top-full;
+
+      &::before {
+        @apply rotate-225;
+      }
+    }
+
+    &[data-popper-placement^="bottom"] > [data-popper-arrow] {
+      @apply bottom-full;
+
+      &::before {
+        @apply rotate-45;
+      }
+    }
+
+    &[data-popper-placement^="left"] > [data-popper-arrow] {
+      @apply left-full;
+
+      &::before {
+        @apply rotate-135;
+      }
+    }
+
+    &[data-popper-placement^="right"] > [data-popper-arrow] {
+      @apply right-full;
+
+      &::before {
+        @apply rotate-315;
+      }
+    }
+  }
 }

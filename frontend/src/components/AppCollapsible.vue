@@ -33,11 +33,11 @@ useEventListener(root, endEvent, () => (open.value = false));
   <Disclosure>
     <div
       ref="root"
-      class="flex flex-col rounded-md bg-stone-50 transition"
-      :class="open && 'shadow-md'"
+      class="flex flex-col rounded-md border bg-white transition"
+      :class="open ? 'border-gray' : 'border-transparent'"
     >
       <DisclosureButton as="template">
-        <AppButton ref="button" :accent="true" @click="open = !open">
+        <AppButton ref="button" design="accent" @click="open = !open">
           {{ label }}
           <ChevronUp v-if="open" />
           <ChevronDown v-else />

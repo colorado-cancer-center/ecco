@@ -36,7 +36,6 @@ import AppTreeItem from "@/components/AppTreeItem.vue";
 import { useScrollable } from "@/util/composables";
 import { sleep } from "@/util/misc";
 import {
-  Check,
   ListCheck,
   ListChevronsDownUp,
   ListChevronsUpDown,
@@ -61,7 +60,11 @@ type Emits = {
 const emit = defineEmits<Emits>();
 
 type Slots = {
+  /** label */
+  default: () => unknown;
+  /** selected item label */
   selected(props: { value: ID }): VNode;
+  /** item action */
   action(props: { child: _Tree }): VNode;
 };
 
@@ -197,10 +200,9 @@ provide(treeKey, {
 
 <template>
   <div ref="root" class="flex flex-col gap-1">
-    <label :id="id">{{ label }}</label>
+    <label :id="id" class="flex items-center gap-2">{{ label }}<slot /></label>
 
-    <div class="mb-1 flex items-center gap-2 text-sm text-stone-500">
-      <Check />
+    <div class="mb-1 flex items-center gap-2 text-sm text-gray">
       <slot name="selected" v-bind="{ value: modelValue }" />
     </div>
 
@@ -210,6 +212,7 @@ provide(treeKey, {
       <AppButton
         v-if="allClosed()"
         v-tooltip="'Expand all tree levels'"
+        :square="true"
         @click="openAll()"
       >
         <ListChevronsUpDown />
@@ -217,12 +220,14 @@ provide(treeKey, {
       <AppButton
         v-else
         v-tooltip="'Collapse all tree levels'"
+        :square="true"
         @click="closeAll()"
       >
         <ListChevronsDownUp />
       </AppButton>
       <AppButton
         v-tooltip="'Expand tree to show selected'"
+        :square="true"
         @click="isSelectedOpen() ? closeAll() : openSelected()"
       >
         <ListCheck />
