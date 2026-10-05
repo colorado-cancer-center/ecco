@@ -70,7 +70,7 @@ import {
   useWindowSize,
 } from "@vueuse/core";
 import { toBlob } from "html-to-image";
-import { clamp, isEqual, pick } from "lodash";
+import { clamp, isEmpty, isEqual, pick } from "lodash";
 
 /** element refs */
 const rightPanelElement = useTemplateRef("rightPanelElement");
@@ -606,7 +606,8 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
 
       <!-- factors -->
       <div
-        class="grid grid-cols-[min-content_1fr] items-center gap-2 rounded-md border border-gray bg-white p-4 empty:hidden"
+        v-if="!isEmpty(factorOptions)"
+        class="grid grid-cols-[min-content_1fr] items-center gap-2 rounded-md border border-gray bg-white p-4"
       >
         <div class="col-span-full flex items-center gap-2">
           <SwatchBook
