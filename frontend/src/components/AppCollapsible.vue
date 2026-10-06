@@ -31,8 +31,9 @@ useEventListener(root, endEvent, () => (open.value = false));
 
 watchEffect(async () => {
   if (open.value === true) {
-    await sleep(100);
-    panel.value?.scrollIntoView({ behavior: "smooth", block: "start" });
+    /** wait for auto-height open animation to finish */
+    await sleep(500);
+    panel.value?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 });
 </script>

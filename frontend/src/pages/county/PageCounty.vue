@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Unit, Value } from "@/api";
-import type { Groups } from "@/pages/home/SectionMap.vue";
+import type { Groups } from "@/pages/home/PageHome.vue";
 import { computed, onMounted, ref, watch, watchEffect } from "vue";
 import { useRoute } from "vue-router";
 import { getFeature, getLevel } from "@/api";
