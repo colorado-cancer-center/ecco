@@ -45,10 +45,8 @@ import TheTour from "@/pages/home/TheTour.vue";
 import { useQuery } from "@/util/composables";
 import { downloadJson, downloadPng } from "@/util/download";
 import { formatValue } from "@/util/math";
-import { copy } from "@/util/misc";
 import { getValue } from "@/util/types";
 import {
-  Copy,
   Crop,
   Download,
   Feather,
