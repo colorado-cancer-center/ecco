@@ -9,7 +9,7 @@
     "test:types": "vue-tsc --build",
     "test:lint": "eslint .",
     "test:format": "prettier --check src/",
-    "test": "bun run test:types && bun run test:lint && bun run test:format",
+    "test": "bun run test:types && bun run test:lint && bun run test:format && bun run build",
     "clean": "rm -rf node_modules bun.lock && bun pm cache rm"
   },
   "dependencies": {
