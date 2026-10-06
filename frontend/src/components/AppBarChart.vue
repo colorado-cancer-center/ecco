@@ -54,8 +54,8 @@ watchEffect(() => {
 provide(THEME_KEY, "light");
 
 /** get colors from css theme vars */
-const colorA = getCssVar("--color-lime-500");
-const colorB = getCssVar("--color-sky-500");
+const colorA = getCssVar("--color-gold");
+const colorB = getCssVar("--color-dark-gray");
 
 /** echarts options */
 const option = computed(() => {
@@ -159,7 +159,7 @@ const option = computed(() => {
 <template>
   <v-chart
     ref="chart"
-    class="aspect-video rounded-md shadow-md"
+    class="aspect-video rounded-md border border-gray bg-white"
     :option="option"
   />
 </template>

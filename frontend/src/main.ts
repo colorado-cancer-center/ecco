@@ -1,4 +1,3 @@
-import "tippy.js/dist/tippy.css";
 import "./styles.css";
 import "@fontsource-variable/inter/wght.css";
 import { createApp } from "vue";

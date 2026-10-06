@@ -183,14 +183,14 @@ const flatGroups = computed(() => {
         />
 
         <p class="text-center">
-          <span class="rounded-md bg-lime-500/25 p-1">{{ feature.label }}</span>
+          <span class="rounded-md bg-light-gold p-1">{{ feature.label }}</span>
           vs.
-          <span class="rounded-md bg-sky-500/25 p-1">Colorado</span>
+          <span class="rounded-md bg-dark-gray p-1 text-white">Colorado</span>
         </p>
 
         <p class="text-center">
           <strong>Population</strong>{{ " " }}
-          <span class="rounded-md bg-lime-500/25 p-1">
+          <span class="rounded-md bg-light-gold p-1">
             {{
               formatValue(
                 feature.statistics["sociodemographics;Total"]?.value ?? "-",
@@ -198,7 +198,7 @@ const flatGroups = computed(() => {
             }}
           </span>
           vs.
-          <span class="rounded-md bg-sky-500/25 p-1">
+          <span class="rounded-md bg-dark-gray p-1 text-white">
             {{
               formatValue(
                 formatValue(
@@ -268,7 +268,7 @@ const flatGroups = computed(() => {
             v-tooltip="
               formatValue(statisticOrGroup.value, statisticOrGroup.unit)
             "
-            class="bg-lime-500/25"
+            class="bg-light-gold"
           >
             {{
               formatValue(statisticOrGroup.value, statisticOrGroup.unit, true)
@@ -284,7 +284,7 @@ const flatGroups = computed(() => {
             v-tooltip="
               formatValue(statisticOrGroup.state, statisticOrGroup.unit)
             "
-            class="bg-sky-500/25"
+            class="bg-dark-gray text-white"
           >
             {{
               formatValue(statisticOrGroup.state, statisticOrGroup.unit, true)

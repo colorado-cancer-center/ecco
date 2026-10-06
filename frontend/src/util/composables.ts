@@ -1,11 +1,6 @@
 import type { Ref } from "vue";
-import { nextTick, onMounted, ref, watchEffect } from "vue";
+import { ref, watchEffect } from "vue";
 import { frame, sleep } from "@/util/misc";
-import {
-  useMutationObserver,
-  useResizeObserver,
-  useScroll,
-} from "@vueuse/core";
 
 /**
  * inspired by tanstack-query. simple query manager/wrapper for making queries
@@ -104,30 +99,4 @@ export const useAutoHeight = (
       element.removeEventListener("transitionend", reset);
     });
   });
-};
-
-/** style element with gradients at edges to indicate scroll-ability */
-export const useScrollable = (element: Ref<HTMLElement | null>) => {
-  const { arrivedState } = useScroll(element);
-
-  /** whether any scrolling is possible */
-  watchEffect(() => {
-    const { left, top, right, bottom } = arrivedState;
-    if (!element.value) return false;
-    element.value.style.setProperty("--scrollable-left", left ? "0" : "1");
-    element.value.style.setProperty("--scrollable-top", top ? "0" : "1");
-    element.value.style.setProperty("--scrollable-right", right ? "0" : "1");
-    element.value.style.setProperty("--scrollable-bottom", bottom ? "0" : "1");
-  });
-
-  /** force scroll to update */
-  const update = async () => {
-    await nextTick();
-    element.value?.dispatchEvent(new Event("scroll"));
-  };
-
-  /** update scroll on some events that might affect element's scrollWidth/Height */
-  onMounted(update);
-  useResizeObserver(element, update);
-  useMutationObserver(element, update, { childList: true, subtree: true });
 };

@@ -98,7 +98,7 @@ const onKey = (event: KeyboardEvent, child: _Tree) => {
       class="relative flex flex-col"
       :class="[
         level > 1 &&
-          'relative pl-4 before:absolute before:inset-y-0 before:left-3.5 before:w-0.5 before:bg-stone-50',
+          'relative pl-4 before:absolute before:inset-y-0 before:left-3.5 before:w-0.5 before:bg-pale-gold',
       ]"
       role="treeitem"
       :aria-selected="modelValue === child.id"
@@ -111,8 +111,8 @@ const onKey = (event: KeyboardEvent, child: _Tree) => {
       <div v-show="child.match" class="flex items-center gap-2">
         <!-- expand/collapse/select -->
         <button
-          class="min-h-8 grow basis-0 justify-start gap-2 rounded-md p-1 text-left hover:bg-stone-100"
-          :class="modelValue === child.id && 'bg-stone-100'"
+          class="grow basis-0 justify-start gap-2 rounded-md p-1 text-left hover:bg-pale"
+          :class="modelValue === child.id && 'bg-pale'"
           :data-level="level"
           :disabled="search && !!child.children.length"
           @click="() => onClick(child)"
@@ -120,12 +120,12 @@ const onKey = (event: KeyboardEvent, child: _Tree) => {
         >
           <!-- expand/collapse icon -->
           <template v-if="child.children.length">
-            <ChevronDown v-if="child.open" class="text-stone-300" />
-            <ChevronRight v-else class="text-stone-300" />
+            <ChevronDown v-if="child.open" class="text-gray" />
+            <ChevronRight v-else class="text-gray" />
           </template>
           <!-- selection icon -->
           <template v-else>
-            <Check v-if="modelValue === child.id" class="text-emerald-500" />
+            <Check v-if="modelValue === child.id" class="text-success" />
             <Check v-else class="opacity-0" />
           </template>
 
@@ -135,7 +135,7 @@ const onKey = (event: KeyboardEvent, child: _Tree) => {
           </span>
 
           <!-- count -->
-          <span v-if="child.children.length" class="text-stone-300">
+          <span v-if="child.children.length" class="text-gray">
             {{ child.children.length.toLocaleString() }}
           </span>
         </button>

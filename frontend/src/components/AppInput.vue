@@ -26,12 +26,12 @@ const sideSize = useElementSize(sideElement, undefined, { box: "border-box" });
 
 <template>
   <div
-    class="relative flex grow rounded-md bg-stone-200 transition hover:bg-stone-100"
+    class="relative flex grow rounded-md border border-light-gray bg-white transition hover:border-black"
     :class="$attrs.class"
   >
     <input
       v-bind="omit($attrs, 'class')"
-      class="size-full min-h-10 min-w-0 rounded-md p-2"
+      class="size-full rounded-md p-2"
       :style="{ paddingRight: sideSize.width.value + 'px' }"
       :value="modelValue"
       @input="
@@ -50,7 +50,7 @@ const sideSize = useElementSize(sideElement, undefined, { box: "border-box" });
       <button v-if="modelValue" @click="$emit('update:modelValue', '')">
         <X />
       </button>
-      <div v-else-if="icon" class="grid place-items-center text-stone-500">
+      <div v-else-if="icon" class="grid place-items-center text-gray">
         <component :is="icon" />
       </div>
     </div>

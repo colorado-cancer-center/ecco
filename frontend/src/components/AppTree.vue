@@ -32,11 +32,10 @@ import type { VNode } from "vue";
 import { computed, provide, ref, useId, useTemplateRef, watch } from "vue";
 import AppButton from "@/components/AppButton.vue";
 import AppInput from "@/components/AppInput.vue";
+import AppScrollable from "@/components/AppScrollable.vue";
 import AppTreeItem from "@/components/AppTreeItem.vue";
-import { useScrollable } from "@/util/composables";
 import { sleep } from "@/util/misc";
 import {
-  Check,
   ListCheck,
   ListChevronsDownUp,
   ListChevronsUpDown,
@@ -61,7 +60,11 @@ type Emits = {
 const emit = defineEmits<Emits>();
 
 type Slots = {
+  /** label */
+  default: () => unknown;
+  /** selected item label */
   selected(props: { value: ID }): VNode;
+  /** item action */
   action(props: { child: _Tree }): VNode;
 };
 
@@ -69,10 +72,6 @@ defineSlots<Slots>();
 
 /** root element */
 const rootElement = useTemplateRef("root");
-
-/** scrollable tree element */
-const scrollElement = useTemplateRef("scroll");
-useScrollable(scrollElement);
 
 /** search string */
 const search = ref("");
@@ -197,10 +196,9 @@ provide(treeKey, {
 
 <template>
   <div ref="root" class="flex flex-col gap-1">
-    <label :id="id">{{ label }}</label>
+    <label :id="id" class="flex items-center gap-2">{{ label }}<slot /></label>
 
-    <div class="mb-1 flex items-center gap-2 text-sm text-stone-500">
-      <Check />
+    <div class="mb-1 flex items-center gap-2 text-sm text-gray">
       <slot name="selected" v-bind="{ value: modelValue }" />
     </div>
 
@@ -210,6 +208,7 @@ provide(treeKey, {
       <AppButton
         v-if="allClosed()"
         v-tooltip="'Expand all tree levels'"
+        :square="true"
         @click="openAll()"
       >
         <ListChevronsUpDown />
@@ -217,12 +216,14 @@ provide(treeKey, {
       <AppButton
         v-else
         v-tooltip="'Collapse all tree levels'"
+        :square="true"
         @click="closeAll()"
       >
         <ListChevronsDownUp />
       </AppButton>
       <AppButton
         v-tooltip="'Expand tree to show selected'"
+        :square="true"
         @click="isSelectedOpen() ? closeAll() : openSelected()"
       >
         <ListCheck />
@@ -230,12 +231,7 @@ provide(treeKey, {
     </div>
 
     <!-- tree structure -->
-    <div
-      ref="scroll"
-      role="tree"
-      :aria-labelledby="id"
-      class="scrollable overflow-y-auto"
-    >
+    <AppScrollable role="tree" :aria-labelledby="id">
       <AppTreeItem
         :model-value="modelValue"
         :update-model-value="updateModelValue"
@@ -247,6 +243,6 @@ provide(treeKey, {
           <slot name="action" v-bind="slotProps" />
         </template>
       </AppTreeItem>
-    </div>
+    </AppScrollable>
   </div>
 </template>

@@ -5,15 +5,13 @@ import { routes } from "@/pages";
 
 <template>
   <header
-    class="flex flex-wrap items-center justify-between gap-2 p-4 max-md:flex-col max-md:text-center"
+    class="flex flex-wrap items-center justify-between gap-2 border-b-4 p-4 max-md:flex-col max-md:text-center"
   >
-    <div
-      class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-black"
-    >
-      <AppLink to="/">
-        <b>E</b><span class="font-light">xploring</span> <b>C</b
-        ><span class="font-light">ancer in</span> <b>Co</b
-        ><span class="font-light">lorado</span>
+    <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+      <AppLink to="/" class="text-lg font-light [&_b]:font-bold">
+        <b class="text-light-gold">E</b>xploring
+        <b class="text-light-gold">C</b>ancer in
+        <b class="text-light-gold">Co</b>lorado
       </AppLink>
       <AppLink
         to="https://medschool.cuanschutz.edu/colorado-cancer-center"

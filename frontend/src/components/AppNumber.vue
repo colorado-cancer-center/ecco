@@ -37,7 +37,7 @@ const onChange = (event: Event) => {
   <label class="flex shrink-0 cursor-pointer flex-col items-stretch gap-1">
     <span v-if="!hideLabel">{{ label }}</span>
     <input
-      class="rounded-md border-none bg-stone-200 p-2 transition hover:bg-stone-100"
+      class="rounded-md border border-light-gray bg-white p-2 transition hover:border-black"
       type="number"
       :value="modelValue"
       :min="min"

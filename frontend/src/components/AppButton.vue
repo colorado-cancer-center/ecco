@@ -4,10 +4,10 @@ import AppLink from "@/components/AppLink.vue";
 
 type Props = {
   to?: string;
-  accent?: boolean;
+  design?: "none" | "normal" | "accent";
 };
 
-const { to } = defineProps<Props>();
+const { to, design = "normal" } = defineProps<Props>();
 
 type Slots = {
   default?: () => unknown;
@@ -21,12 +21,13 @@ const component = computed(() => (to ? AppLink : "button"));
 <template>
   <component
     :is="component"
-    class="inline-flex min-h-10 min-w-10 items-center justify-center gap-2 rounded-md p-2 leading-none no-underline"
-    :class="
-      accent
-        ? 'bg-stone-600 text-white hover:bg-stone-500'
-        : 'bg-stone-200 text-black hover:bg-stone-100'
-    "
+    class="inline-flex items-center justify-center gap-2 rounded-md p-2 leading-none no-underline"
+    :class="[
+      design === 'accent' &&
+        'border-dark-gray bg-dark-gray text-white hover:border-black hover:bg-black',
+      design === 'normal' &&
+        'border border-light-gray bg-white text-black hover:border-black',
+    ]"
     :to="to"
   >
     <slot />

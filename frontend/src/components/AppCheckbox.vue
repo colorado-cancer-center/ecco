@@ -19,7 +19,7 @@ const emit = defineEmits<Emits>();
 <template>
   <SwitchGroup>
     <div
-      class="flex items-center rounded-md bg-stone-200 p-1 transition hover:bg-stone-100"
+      class="flex items-center rounded-md border border-light-gray bg-white p-1 transition hover:border-black"
     >
       <Switch
         :model-value="modelValue"
@@ -29,7 +29,7 @@ const emit = defineEmits<Emits>();
         "
       >
         <button
-          class="flex cursor-pointer items-center justify-center border-none bg-transparent p-1 text-stone-600 not-focus-visible:outline-none"
+          class="flex cursor-pointer items-center justify-center border-none bg-transparent p-1 text-dark-gray not-focus-visible:outline-none"
         >
           <SquareCheck v-if="modelValue" />
           <Square v-else />
