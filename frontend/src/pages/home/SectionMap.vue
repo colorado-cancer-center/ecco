@@ -32,6 +32,7 @@ import AppCollapsible from "@/components/AppCollapsible.vue";
 import AppLink from "@/components/AppLink.vue";
 import AppMap from "@/components/AppMap.vue";
 import AppNumber from "@/components/AppNumber.vue";
+import AppScrollable from "@/components/AppScrollable.vue";
 import AppSelect from "@/components/AppSelect.vue";
 import AppSlider from "@/components/AppSlider.vue";
 import AppTree from "@/components/AppTree.vue";
@@ -523,7 +524,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
     :style="{ '--cols': mapCols }"
   >
     <!-- left panel -->
-    <div class="flex flex-col gap-4 overflow-y-auto" role="group">
+    <AppScrollable class="flex flex-col gap-4" role="group">
       <!-- reset map -->
       <AppButton
         v-if="!isEqual(selectedMap(), defaultMap())"
@@ -865,7 +866,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
           Reset
         </AppButton>
       </AppCollapsible>
-    </div>
+    </AppScrollable>
 
     <!-- right panel -->
     <div class="flex flex-col items-stretch gap-4">

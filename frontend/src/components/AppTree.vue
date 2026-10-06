@@ -32,6 +32,7 @@ import type { VNode } from "vue";
 import { computed, provide, ref, useId, useTemplateRef, watch } from "vue";
 import AppButton from "@/components/AppButton.vue";
 import AppInput from "@/components/AppInput.vue";
+import AppScrollable from "@/components/AppScrollable.vue";
 import AppTreeItem from "@/components/AppTreeItem.vue";
 import { sleep } from "@/util/misc";
 import {
@@ -230,7 +231,7 @@ provide(treeKey, {
     </div>
 
     <!-- tree structure -->
-    <div role="tree" :aria-labelledby="id" class="overflow-y-auto">
+    <AppScrollable role="tree" :aria-labelledby="id">
       <AppTreeItem
         :model-value="modelValue"
         :update-model-value="updateModelValue"
@@ -242,6 +243,6 @@ provide(treeKey, {
           <slot name="action" v-bind="slotProps" />
         </template>
       </AppTreeItem>
-    </div>
+    </AppScrollable>
   </div>
 </template>
