@@ -3,10 +3,10 @@ import { onMounted, onUpdated } from "vue";
 import { getDownloadStatistics, getSourceCitation } from "@/api";
 import sources from "@/api/data/source-details.json";
 import AppButton from "@/components/AppButton.vue";
+import AppCopyButton from "@/components/AppCopyButton.vue";
 import AppHeading from "@/components/AppHeading.vue";
 import AppLink from "@/components/AppLink.vue";
 import { appTitle } from "@/meta";
-import { copy } from "@/util/misc";
 import { Download, Feather } from "@lucide/vue";
 import { kebabCase } from "lodash";
 import { micromark } from "micromark";
@@ -93,12 +93,12 @@ onUpdated(() => {
           <td>{{ source.data_description }}</td>
           <td>{{ source.date }}<br />{{ source.date_description }}</td>
           <td>
-            <AppButton
+            <AppCopyButton
               v-tooltip="'Copy citation text to clipboard'"
-              @click="copy(getSourceCitation(source))"
+              :text="getSourceCitation(source)"
             >
               <Feather />
-            </AppButton>
+            </AppCopyButton>
           </td>
         </tr>
       </tbody>

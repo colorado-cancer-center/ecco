@@ -29,6 +29,7 @@ import statisticGroups from "@/api/data/statistic-groups.json";
 import AppButton from "@/components/AppButton.vue";
 import AppCheckbox from "@/components/AppCheckbox.vue";
 import AppCollapsible from "@/components/AppCollapsible.vue";
+import AppCopyButton from "@/components/AppCopyButton.vue";
 import AppLink from "@/components/AppLink.vue";
 import AppMap from "@/components/AppMap.vue";
 import AppNumber from "@/components/AppNumber.vue";
@@ -962,15 +963,11 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
                 </template>
                 {{ statistic.source.date }}
               </AppLink>
-              <AppButton
-                v-if="getSourceCitation(statistic.source)"
+              <AppCopyButton
                 v-tooltip="'Copy citation text to clipboard'"
-                class="size-8 min-h-0! min-w-0! shrink-0 p-0!"
+                :text="getSourceCitation(statistic.source)"
                 data-save-hide
-                @click="copy(getSourceCitation(statistic.source))"
-              >
-                <Copy />
-              </AppButton>
+              />
             </div>
 
             <div

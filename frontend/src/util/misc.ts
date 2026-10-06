@@ -19,9 +19,3 @@ export const waitFor = async <Result>(
     await sleep(waits.shift());
   }
 };
-
-/** copy text to clipboard */
-export const copy = async (text: string) => {
-  await navigator.clipboard.writeText(text);
-  window.alert("Copied to clipboard");
-};
