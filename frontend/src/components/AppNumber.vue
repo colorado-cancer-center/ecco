@@ -3,7 +3,6 @@ import { clamp } from "lodash";
 
 type Props = {
   label: string;
-  modelValue: number;
   min?: number;
   max?: number;
   step?: number;
@@ -12,24 +11,19 @@ type Props = {
 
 const {
   label,
-  modelValue,
   min = 0,
   max = 1,
   step = 0.01,
   hideLabel = false,
 } = defineProps<Props>();
 
-type Emits = {
-  "update:modelValue": [Props["modelValue"]];
-};
-
-const emit = defineEmits<Emits>();
+const modelValue = defineModel<number>({ required: true });
 
 /** emit model value to parent */
 const onChange = (event: Event) => {
   let value = Number((event.target as HTMLInputElement).value);
   value = clamp(value, min, max);
-  emit("update:modelValue", value);
+  modelValue.value = value;
 };
 </script>
 

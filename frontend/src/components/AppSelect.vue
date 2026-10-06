@@ -31,25 +31,21 @@ type Props = {
   label?: string;
   options: (O | Group)[];
   multi?: boolean;
-  modelValue: O["id"] | O["id"][];
   tooltip?: string;
   truncate?: boolean;
 };
+
+type Value = O["id"] | O["id"][];
 
 const {
   label,
   options,
   multi = false,
-  modelValue,
   tooltip = "",
   truncate = false,
 } = defineProps<Props>();
 
-type Emits = {
-  "update:modelValue": [Props["modelValue"]];
-};
-
-const emit = defineEmits<Emits>();
+const modelValue = defineModel<Value>({ required: true });
 
 type Slots = {
   /** label */
@@ -78,17 +74,17 @@ const optionLookup = computed(() =>
 
 /** model value to pass from listbox */
 const value = computed(() => {
-  const list = toArray(modelValue);
+  const list = toArray(modelValue.value);
   return multi
     ? list.map((id) => optionLookup.value[id]).filter((option) => !!option)
     : optionLookup.value[list[0] ?? ""];
 });
 
 /** model value to emit from listbox to parent */
-const onChange = (value: unknown) => {
-  const list = toArray(value).filter(isOption);
+const onChange = (newValue: unknown) => {
+  const list = toArray(newValue).filter(isOption);
   const id = multi ? list.map((option) => option.id) : list[0]?.id || "";
-  emit("update:modelValue", id);
+  modelValue.value = id;
   if (!multi) isOpen.value = false;
 };
 
@@ -97,14 +93,14 @@ const isOpen = ref(false);
 
 /** full selected option (only relevant in single mode) */
 const selectedOption = computed(() => {
-  const list = toArray(modelValue);
+  const list = toArray(modelValue.value);
   if (!multi) return optionsOnly.value.find((option) => option.id === list[0]);
   else return undefined;
 });
 
 /** label to show as selected value in box */
 const selectedLabel = computed<string>(() => {
-  const list = toArray(modelValue);
+  const list = toArray(modelValue.value);
 
   if (!multi) {
     const find = optionLookup.value[list[0] ?? ""];
@@ -128,7 +124,7 @@ const onDropdownOpen = async (node: VNode) => {
 const onKeypress = async ({ key }: KeyboardEvent) => {
   if (!multi && (key === "ArrowLeft" || key === "ArrowRight")) {
     let index = options.findIndex((option) =>
-      isOption(option) ? option.id === modelValue : false,
+      isOption(option) ? option.id === modelValue.value : false,
     );
     if (index === -1) return;
 
@@ -144,7 +140,7 @@ const onKeypress = async ({ key }: KeyboardEvent) => {
         if (isOption(options[index])) break;
       }
 
-    emit("update:modelValue", (options[index] as O).id);
+    modelValue.value = (options[index] as O).id;
   }
 };
 </script>
@@ -228,11 +224,7 @@ const onKeypress = async ({ key }: KeyboardEvent) => {
       </PopoverPortal>
     </PopoverRoot>
 
-    <AppButton
-      v-if="multi"
-      v-tooltip="'Deselect all'"
-      @click="$emit('update:modelValue', [])"
-    >
+    <AppButton v-if="multi" v-tooltip="'Deselect all'" @click="modelValue = []">
       <X />
     </AppButton>
   </label>

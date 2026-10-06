@@ -45,19 +45,13 @@ import {
 type Props = {
   /** label */
   label?: string;
-  /** selected item */
-  modelValue?: ID;
   /** tree structure */
   tree: Tree[];
 };
 
-const { tree, modelValue = "" } = defineProps<Props>();
+const { tree } = defineProps<Props>();
 
-type Emits = {
-  "update:modelValue": [ID];
-};
-
-const emit = defineEmits<Emits>();
+const modelValue = defineModel<ID>({ default: "" });
 
 type Slots = {
   /** label */
@@ -155,7 +149,7 @@ const openSelected = () => {
   closeAll();
   const recurse = (children: _Tree[] = _tree.value) => {
     for (const child of children)
-      if (child.id === modelValue || recurse(child.children))
+      if (child.id === modelValue.value || recurse(child.children))
         return (child.open = true);
     return false;
   };
@@ -172,7 +166,7 @@ const openSelected = () => {
 const isSelectedOpen = () => {
   const recurse = (children: _Tree[] = _tree.value) => {
     for (const child of children) {
-      if (child.id === modelValue) return true;
+      if (child.id === modelValue.value) return true;
       if (child.open && recurse(child.children)) return true;
     }
     return false;
@@ -181,15 +175,15 @@ const isSelectedOpen = () => {
 };
 
 /** function to update model value */
-const updateModelValue = (child: _Tree) => emit("update:modelValue", child.id);
+const updateModelValue = (child: _Tree) => (modelValue.value = child.id);
 
 /** unique id for tree */
 const id = useId();
 
 /** provide tree context */
 provide(treeKey, {
-  modelValue: computed(() => modelValue),
-  updateModelValue: (child: _Tree) => emit("update:modelValue", child.id),
+  modelValue: computed(() => modelValue.value),
+  updateModelValue,
   search: computed(() => !!search.value),
 });
 </script>

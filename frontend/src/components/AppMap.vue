@@ -86,10 +86,6 @@ type Props = {
   min?: number | string;
   max?: number | string;
   unit?: Unit;
-  /** map pan/zoom */
-  lat?: number;
-  long?: number;
-  zoom?: number;
   /** show/hide elements */
   showLegends?: boolean;
   /** layer opacities */
@@ -117,9 +113,6 @@ const {
   min,
   max,
   unit,
-  lat = 0,
-  long = 0,
-  zoom = 0,
   showLegends = true,
   backgroundOpacity = 1,
   geographyOpacity = 0.75,
@@ -134,13 +127,9 @@ const {
   highlight = "",
 } = defineProps<Props>();
 
-type Emits = {
-  "update:zoom": [Props["zoom"]];
-  "update:lat": [Props["lat"]];
-  "update:long": [Props["long"]];
-};
-
-const emit = defineEmits<Emits>();
+const lat = defineModel<number>("lat", { default: 0 });
+const long = defineModel<number>("long", { default: 0 });
+const zoom = defineModel<number>("zoom", { default: 0 });
 
 type Slots = {
   "top-left-upper"?: () => unknown;
@@ -317,24 +306,24 @@ map.addInteraction(mouseZoom);
 watchEffect(() => map.setView(view));
 
 /** update view center */
-watchEffect(() => view.setCenter(longLatToXy(long, lat)));
+watchEffect(() => view.setCenter(longLatToXy(long.value, lat.value)));
 /** update view zoom */
-watchEffect(() => view.setZoom(zoom));
+watchEffect(() => view.setZoom(zoom.value));
 
 /** on view pan */
 view.on("change:center", () => {
   const center = view.getCenter();
   if (!center) return;
-  const [long, lat] = xyToLongLat(center[0], center[1]);
-  emit("update:long", long);
-  emit("update:lat", lat);
+  const [newLong = 0, newLat = 0] = xyToLongLat(center[0], center[1]);
+  long.value = newLong;
+  lat.value = newLat;
 });
 
 /** on view zoom */
 view.on("change:resolution", () => {
-  const zoom = view.getZoom();
-  if (!zoom) return;
-  emit("update:zoom", zoom);
+  const currentZoom = view.getZoom();
+  if (!currentZoom) return;
+  zoom.value = currentZoom;
 });
 
 /** on immediate view zoom */
@@ -785,7 +774,7 @@ onMounted(async () => {
   /** wait for features to be loaded, rendered/parsed */
   await waitFor(() => geographySource.getFeatures().length);
   /** preserve existing view */
-  if (!zoom || !lat || !long)
+  if (!zoom.value || !lat.value || !long.value)
     /** fit view to content */
     fit();
 });
