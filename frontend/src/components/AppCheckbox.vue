@@ -1,43 +1,32 @@
 <script setup lang="ts">
-import { Switch, SwitchGroup, SwitchLabel } from "@headlessui/vue";
 import { Square, SquareCheck } from "@lucide/vue";
+import { SwitchRoot } from "reka-ui";
 
 type Props = {
   label: string;
-  modelValue: boolean;
 };
 
 defineProps<Props>();
 
-type Emits = {
-  "update:modelValue": [Props["modelValue"]];
-};
-
-const emit = defineEmits<Emits>();
+const checked = defineModel<boolean>();
 </script>
 
 <template>
-  <SwitchGroup>
-    <div
-      class="flex items-center rounded-md border border-light-gray bg-white p-1 transition hover:border-black"
+  <label
+    class="flex cursor-pointer items-center rounded-md border border-light-gray bg-white p-1 transition hover:border-black"
+  >
+    <SwitchRoot
+      v-model="checked"
+      as="button"
+      type="button"
+      class="flex cursor-pointer items-center justify-center border-none bg-transparent p-1 text-dark-gray not-focus-visible:outline-none"
     >
-      <Switch
-        :model-value="modelValue"
-        as="template"
-        @update:model-value="
-          (value: boolean) => emit('update:modelValue', value)
-        "
-      >
-        <button
-          class="flex cursor-pointer items-center justify-center border-none bg-transparent p-1 text-dark-gray not-focus-visible:outline-none"
-        >
-          <SquareCheck v-if="modelValue" />
-          <Square v-else />
-        </button>
-      </Switch>
-      <SwitchLabel class="grow cursor-pointer p-1">
-        {{ label }}
-      </SwitchLabel>
+      <SquareCheck v-if="checked" />
+      <Square v-else />
+    </SwitchRoot>
+
+    <div class="grow">
+      {{ label }}
     </div>
-  </SwitchGroup>
+  </label>
 </template>

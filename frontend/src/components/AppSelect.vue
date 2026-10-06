@@ -1,17 +1,18 @@
 <script setup lang="ts" generic="O extends Option">
 import type { VNode } from "vue";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import AppButton from "@/components/AppButton.vue";
 import { frame } from "@/util/misc";
-import { size } from "@floating-ui/dom";
-import { Float } from "@headlessui-float/vue";
-import {
-  Listbox,
-  ListboxButton,
-  ListboxOption,
-  ListboxOptions,
-} from "@headlessui/vue";
 import { Check, ChevronDown, ChevronUp, X } from "@lucide/vue";
+import {
+  ListboxContent,
+  ListboxItem,
+  ListboxRoot,
+  PopoverContent,
+  PopoverPortal,
+  PopoverRoot,
+  PopoverTrigger,
+} from "reka-ui";
 
 export type Option = {
   id: string;
@@ -59,25 +60,13 @@ type Slots = {
 
 defineSlots<Slots>();
 
-/** floating-ui middleware */
-const middleware = [
-  size({
-    apply({ availableHeight, elements }) {
-      Object.assign(elements.floating.style, {
-        /** limit popover height to available height */
-        maxHeight: `${availableHeight - 20}px`,
-      });
-    },
-  }),
-];
-
 /** normalize single/multi to array */
 const toArray = <T,>(value: T | T[]): T[] =>
   Array.isArray(value) ? value : [value];
 
 /** type helper func to check if option is real option or group */
-const isOption = (option: O | Group | undefined): option is O =>
-  !!option && "id" in option;
+const isOption = (option: unknown): option is O =>
+  typeof option === "object" && option !== null && "id" in option;
 
 /** options excluding groups */
 const optionsOnly = computed(() => options.filter(isOption));
@@ -87,7 +76,7 @@ const optionLookup = computed(() =>
   Object.fromEntries(optionsOnly.value.map((option) => [option.id, option])),
 );
 
-/** model value to pass from parent to headlessui */
+/** model value to pass from listbox */
 const value = computed(() => {
   const list = toArray(modelValue);
   return multi
@@ -95,12 +84,16 @@ const value = computed(() => {
     : optionLookup.value[list[0] ?? ""];
 });
 
-/** model value to emit from headlessui to parent */
-const onChange = async (value: O | O[]) => {
-  const list = toArray(value);
+/** model value to emit from listbox to parent */
+const onChange = (value: unknown) => {
+  const list = toArray(value).filter(isOption);
   const id = multi ? list.map((option) => option.id) : list[0]?.id || "";
   emit("update:modelValue", id);
+  if (!multi) isOpen.value = false;
 };
+
+/** open state */
+const isOpen = ref(false);
 
 /** full selected option (only relevant in single mode) */
 const selectedOption = computed(() => {
@@ -163,81 +156,77 @@ const onKeypress = async ({ key }: KeyboardEvent) => {
       <slot />
     </div>
 
-    <Listbox
-      v-slot="{ open }"
-      :model-value="value"
-      :multiple="multi"
-      @update:model-value="onChange"
-    >
-      <Float
-        :middleware="middleware as any"
-        floating-as="template"
-        portal
-        flip
-        adaptive-width
-        strategy="fixed"
-      >
-        <!-- button -->
-        <ListboxButton as="template">
-          <AppButton
-            v-tooltip="tooltip"
-            class="overflow-auto"
-            @keydown="onKeypress"
-          >
-            <span class="grow text-left" :class="truncate && 'truncate'">
-              {{ selectedLabel }}
-            </span>
-            <span v-if="selectedOption?.secondary" class="text-gray">
-              {{ selectedOption.secondary }}
-            </span>
-            <slot
-              v-if="selectedOption"
-              name="preview"
-              :option="selectedOption"
-            />
-            <ChevronUp v-if="open" class="text-dark-gray" />
-            <ChevronDown v-else class="text-dark-gray" />
-          </AppButton>
-        </ListboxButton>
-
-        <!-- dropdown -->
-        <ListboxOptions
-          class="list-none overflow-y-auto overscroll-none rounded-md border border-gray bg-white"
+    <PopoverRoot v-model:open="isOpen">
+      <!-- button -->
+      <PopoverTrigger as-child>
+        <AppButton
+          v-tooltip="tooltip"
+          class="overflow-auto"
+          @keydown="onKeypress"
         >
-          <template v-for="(option, index) in options" :key="index">
-            <!-- regular option -->
-            <ListboxOption
-              v-if="isOption(option)"
-              v-slot="{ active, selected }"
-              as="template"
-              :value="option"
-            >
-              <li
-                class="flex cursor-pointer items-center gap-2 p-2 transition"
-                :class="active ? 'bg-pale' : selected ? 'bg-pale' : ''"
-                @vue:mounted="(node: VNode) => selected && onDropdownOpen(node)"
-              >
-                <Check
-                  class="text-success"
-                  :class="selected ? 'opacity-100' : 'opacity-0'"
-                />
-                <span class="grow" :class="truncate && 'truncate'">
-                  {{ option.label }}
-                </span>
-                <span v-if="option.secondary" class="text-gray">
-                  {{ option.secondary }}
-                </span>
-                <slot name="preview" :option="option" />
-              </li>
-            </ListboxOption>
-            <!-- group option -->
-            <li v-else class="flex items-center gap-2 p-2 pl-4 font-bold">
-              {{ option.group }}
-            </li>
-          </template>
-        </ListboxOptions>
-      </Float>
-    </Listbox>
+          <span class="grow text-left" :class="truncate && 'truncate'">
+            {{ selectedLabel }}
+          </span>
+          <span v-if="selectedOption?.secondary" class="text-gray">
+            {{ selectedOption.secondary }}
+          </span>
+          <slot v-if="selectedOption" name="preview" :option="selectedOption" />
+          <ChevronUp v-if="isOpen" class="text-dark-gray" />
+          <ChevronDown v-else class="text-dark-gray" />
+        </AppButton>
+      </PopoverTrigger>
+
+      <!-- dropdown -->
+      <PopoverPortal>
+        <PopoverContent
+          align="start"
+          :collision-padding="10"
+          class="z-100 max-h-(--reka-popover-content-available-height) w-(--reka-popover-trigger-width) overflow-y-auto overscroll-none rounded-md border border-gray bg-white"
+        >
+          <ListboxRoot
+            :model-value="value"
+            :multiple="multi"
+            :selection-behavior="multi ? 'toggle' : 'replace'"
+            @update:model-value="onChange"
+          >
+            <ListboxContent class="list-none">
+              <template v-for="(option, index) in options" :key="index">
+                <!-- regular option -->
+                <ListboxItem
+                  v-if="isOption(option)"
+                  v-slot="{ selected }"
+                  as-child
+                  :value="option"
+                >
+                  <li
+                    class="flex cursor-pointer items-center gap-2 p-2 transition hover:bg-pale data-highlighted:bg-pale data-[state='checked']:bg-pale"
+                    @vue:mounted="
+                      (node: VNode) => selected && onDropdownOpen(node)
+                    "
+                  >
+                    <Check
+                      class="text-success"
+                      :class="selected ? 'opacity-100' : 'opacity-0'"
+                    />
+                    <span class="grow" :class="truncate && 'truncate'">
+                      {{ option.label }}
+                    </span>
+                    <span v-if="option.secondary" class="text-gray">
+                      {{ option.secondary }}
+                    </span>
+                    <slot name="preview" :option="option" />
+                  </li>
+                </ListboxItem>
+                <!-- group option -->
+                <li v-else class="flex items-center gap-2 p-2 pl-4 font-bold">
+                  {{ option.group }}
+                </li>
+              </template>
+            </ListboxContent>
+          </ListboxRoot>
+        </PopoverContent>
+      </PopoverPortal>
+    </PopoverRoot>
 
     <AppButton
       v-if="multi"
