@@ -44,21 +44,23 @@ onMounted(() => {
 <template>
   <template v-if="content || $slots.content">
     <TooltipProvider :delay-duration="100" :skip-delay-duration="0">
-      <TooltipRoot :open="true">
+      <TooltipRoot>
         <TooltipTrigger ref="trigger" v-bind="$attrs" as-child>
           <slot />
         </TooltipTrigger>
         <TooltipPortal>
           <TooltipContent
             :side-offset="16"
+            :collision-padding="16"
+            :arrow-padding="16"
             class="z-90 rounded-md border border-black bg-white p-2 will-change-transform trim"
           >
             <slot name="content">{{ content }}</slot>
-            <TooltipArrow
-              :width="12"
-              :height="6"
-              class="fill-white stroke-black"
-            />
+            <TooltipArrow as-child>
+              <div
+                class="absolute left-1/2 size-3 -translate-1/2 rotate-45 border border-black border-t-white border-l-white bg-white"
+              />
+            </TooltipArrow>
           </TooltipContent>
         </TooltipPortal>
       </TooltipRoot>
