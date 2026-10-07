@@ -8,30 +8,32 @@ import {
 
 defineOptions({ inheritAttrs: false });
 
-const element = useTemplateRef("element");
+const scrollElement = useTemplateRef("scrollElement");
 
 /** scroll state */
-const { arrivedState } = useScroll(element);
+const { arrivedState } = useScroll(scrollElement);
 
 /** gap of parent */
 const gap = computed(() =>
-  element.value ? parseInt(window.getComputedStyle(element.value).gap) : 0,
+  scrollElement.value
+    ? parseInt(window.getComputedStyle(scrollElement.value).gap)
+    : 0,
 );
 
 /** force scroll to update */
 const update = async () => {
   await nextTick();
-  element.value?.dispatchEvent(new Event("scroll"));
+  scrollElement.value?.dispatchEvent(new Event("scroll"));
 };
 
-/** update scroll on some events that might affect element's scrollWidth/Height */
+/** update scroll on some events that might affect scrollElement's scrollWidth/Height */
 onMounted(update);
-useResizeObserver(element, update);
-useMutationObserver(element, update, { childList: true, subtree: true });
+useResizeObserver(scrollElement, update);
+useMutationObserver(scrollElement, update, { childList: true, subtree: true });
 </script>
 
 <template>
-  <div v-bind="$attrs" ref="element" class="overflow-y-auto">
+  <div v-bind="$attrs" ref="scrollElement" class="overflow-y-auto">
     <div
       class="pointer-events-none sticky top-0 z-10 h-0"
       :class="arrivedState.top ? 'opacity-0' : 'opacity-25'"

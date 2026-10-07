@@ -45,6 +45,7 @@ import {
 } from "vue";
 import { type Unit } from "@/api";
 import hatch from "@/assets/hatch.svg?no-inline";
+import AppTooltip from "@/components/AppTooltip.vue";
 import { backgroundOptions } from "@/components/background";
 import { getGradient, gradientOptions } from "@/components/gradient";
 import { getCssVar } from "@/util/dom";
@@ -71,10 +72,10 @@ const mapElement = useTemplateRef("mapElement");
 const geographyPopupElement = useTemplateRef("geographyPopupElement");
 const locationPopupElement = useTemplateRef("locationPopupElement");
 const geographyLabelElements = useTemplateRef("geographyLabelElements");
-const topLeftLegend = useTemplateRef("topLeftLegend");
-const topRightLegend = useTemplateRef("topRightLegend");
-const bottomRightLegend = useTemplateRef("bottomRightLegend");
-const bottomLeftLegend = useTemplateRef("bottomLeftLegend");
+const topLeftLegendElement = useTemplateRef("topLeftLegendElement");
+const topRightLegendElement = useTemplateRef("topRightLegendElement");
+const bottomRightLegendElement = useTemplateRef("bottomRightLegendElement");
+const bottomLeftLegendElement = useTemplateRef("bottomLeftLegendElement");
 
 const gold = getCssVar("--color-gold");
 
@@ -86,10 +87,6 @@ type Props = {
   min?: number | string;
   max?: number | string;
   unit?: Unit;
-  /** map pan/zoom */
-  lat?: number;
-  long?: number;
-  zoom?: number;
   /** show/hide elements */
   showLegends?: boolean;
   /** layer opacities */
@@ -117,9 +114,6 @@ const {
   min,
   max,
   unit,
-  lat = 0,
-  long = 0,
-  zoom = 0,
   showLegends = true,
   backgroundOpacity = 1,
   geographyOpacity = 0.75,
@@ -134,13 +128,9 @@ const {
   highlight = "",
 } = defineProps<Props>();
 
-type Emits = {
-  "update:zoom": [Props["zoom"]];
-  "update:lat": [Props["lat"]];
-  "update:long": [Props["long"]];
-};
-
-const emit = defineEmits<Emits>();
+const lat = defineModel<number>("lat", { default: 0 });
+const long = defineModel<number>("long", { default: 0 });
+const zoom = defineModel<number>("zoom", { default: 0 });
 
 type Slots = {
   "top-left-upper"?: () => unknown;
@@ -252,7 +242,7 @@ const scale = computed(() => {
               ? formatValue(max, unit, true)
               : "",
         color: gradientFunc(index / (array.length - 1)),
-        tooltip: `${formatValue(lower, unit)} &ndash; ${formatValue(upper, unit)}`,
+        tooltip: `${formatValue(lower, unit)} – ${formatValue(upper, unit)}`,
       })),
     );
 
@@ -317,24 +307,24 @@ map.addInteraction(mouseZoom);
 watchEffect(() => map.setView(view));
 
 /** update view center */
-watchEffect(() => view.setCenter(longLatToXy(long, lat)));
+watchEffect(() => view.setCenter(longLatToXy(long.value, lat.value)));
 /** update view zoom */
-watchEffect(() => view.setZoom(zoom));
+watchEffect(() => view.setZoom(zoom.value));
 
 /** on view pan */
 view.on("change:center", () => {
   const center = view.getCenter();
   if (!center) return;
-  const [long, lat] = xyToLongLat(center[0], center[1]);
-  emit("update:long", long);
-  emit("update:lat", lat);
+  const [newLong = 0, newLat = 0] = xyToLongLat(center[0], center[1]);
+  long.value = newLong;
+  lat.value = newLat;
 });
 
 /** on view zoom */
 view.on("change:resolution", () => {
-  const zoom = view.getZoom();
-  if (!zoom) return;
-  emit("update:zoom", zoom);
+  const currentZoom = view.getZoom();
+  if (!currentZoom) return;
+  zoom.value = currentZoom;
 });
 
 /** on immediate view zoom */
@@ -763,10 +753,10 @@ const fit = async () => {
         padding[v] = Math.max(height, padding[v]);
     };
     /** pad each corner */
-    padCorner("top", "left", topLeftLegend);
-    padCorner("top", "right", topRightLegend);
-    padCorner("bottom", "left", bottomLeftLegend);
-    padCorner("bottom", "right", bottomRightLegend);
+    padCorner("top", "left", topLeftLegendElement);
+    padCorner("top", "right", topRightLegendElement);
+    padCorner("bottom", "left", bottomLeftLegendElement);
+    padCorner("bottom", "right", bottomRightLegendElement);
   }
 
   const { top, right, bottom, left } = padding;
@@ -785,7 +775,7 @@ onMounted(async () => {
   /** wait for features to be loaded, rendered/parsed */
   await waitFor(() => geographySource.getFeatures().length);
   /** preserve existing view */
-  if (!zoom || !lat || !long)
+  if (!zoom.value || !lat.value || !long.value)
     /** fit view to content */
     fit();
 });
@@ -826,14 +816,14 @@ onUnmounted(() => {
       '--label-opacity': geographyOpacity,
     }"
   >
-    <div ref="mapElement" v-bind="$attrs" class="size-full" />
+    <div ref="mapElement" class="size-full" />
 
     <!-- legends -->
     <template v-if="showLegends">
       <!-- top left legend -->
       <div
         v-if="$slots['top-left-upper'] || $slots['top-left-lower']"
-        ref="topLeftLegend"
+        ref="topLeftLegendElement"
         class="absolute top-4 left-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md border border-gray bg-white p-4"
       >
         <slot name="top-left-upper" />
@@ -844,18 +834,21 @@ onUnmounted(() => {
           class="grid grid-cols-[repeat(var(--cols),1fr)] grid-rows-[--spacing(6)] gap-y-1"
           :style="{ '--cols': scale.steps.length }"
         >
-          <div
+          <AppTooltip
             v-for="(step, index) of scale.steps"
             :key="index"
-            v-tooltip="step.tooltip"
-            class="relative size-full after:absolute after:inset-0 after:[background-image:var(--image)] after:opacity-50 after:content-['']"
-            tabindex="0"
-            :style="{
-              backgroundColor: step.color,
-              '--image':
-                step.color === noDataEntry.color ? `url(${hatch})` : 'none',
-            }"
-          />
+            :content="step.tooltip"
+          >
+            <div
+              class="relative size-full after:absolute after:inset-0 after:[background-image:var(--image)] after:opacity-50 after:content-['']"
+              tabindex="0"
+              :style="{
+                backgroundColor: step.color,
+                '--image':
+                  step.color === noDataEntry.color ? `url(${hatch})` : 'none',
+              }"
+            />
+          </AppTooltip>
           <div
             v-for="(step, index) of scale.steps"
             :key="index"
@@ -871,7 +864,7 @@ onUnmounted(() => {
       <!-- top right legend -->
       <div
         v-if="$slots['top-right']"
-        ref="topRightLegend"
+        ref="topRightLegendElement"
         class="absolute top-4 right-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md border border-gray bg-white p-4"
       >
         <slot name="top-right" />
@@ -880,7 +873,7 @@ onUnmounted(() => {
       <!-- bottom right legend -->
       <div
         v-if="$slots['bottom-right'] || !isEmpty(symbols)"
-        ref="bottomRightLegend"
+        ref="bottomRightLegendElement"
         class="absolute right-4 bottom-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md border border-gray bg-white p-4"
       >
         <slot name="bottom-right" />
@@ -902,7 +895,7 @@ onUnmounted(() => {
       <!-- bottom left legend -->
       <div
         v-if="$slots['bottom-left']"
-        ref="bottomLeftLegend"
+        ref="bottomLeftLegendElement"
         class="absolute bottom-4 left-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md border border-gray bg-white p-4"
       >
         <slot name="bottom-left" />

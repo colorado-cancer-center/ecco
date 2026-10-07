@@ -6,6 +6,7 @@ import AppButton from "@/components/AppButton.vue";
 import AppCopyButton from "@/components/AppCopyButton.vue";
 import AppHeading from "@/components/AppHeading.vue";
 import AppLink from "@/components/AppLink.vue";
+import AppTooltip from "@/components/AppTooltip.vue";
 import { appTitle } from "@/meta";
 import { Download, Feather } from "@lucide/vue";
 import { kebabCase } from "lodash";
@@ -58,15 +59,16 @@ onUpdated(() => {
     </p>
 
     <div class="text-center">
-      <AppButton
-        v-tooltip="'Download all sources data in CSV format'"
-        :to="getDownloadStatistics()"
-        :new-tab="true"
-        design="accent"
-      >
-        Download All Data
-        <Download />
-      </AppButton>
+      <AppTooltip content="Download all sources data in CSV format">
+        <AppButton
+          :to="getDownloadStatistics()"
+          :new-tab="true"
+          design="accent"
+        >
+          Download All Data
+          <Download />
+        </AppButton>
+      </AppTooltip>
     </div>
   </section>
 
@@ -93,12 +95,11 @@ onUpdated(() => {
           <td>{{ source.data_description }}</td>
           <td>{{ source.date }}<br />{{ source.date_description }}</td>
           <td>
-            <AppCopyButton
-              v-tooltip="'Copy citation text to clipboard'"
-              :text="getSourceCitation(source)"
-            >
-              <Feather />
-            </AppCopyButton>
+            <AppTooltip content="Copy citation text to clipboard">
+              <AppCopyButton :text="getSourceCitation(source)">
+                <Feather />
+              </AppCopyButton>
+            </AppTooltip>
           </td>
         </tr>
       </tbody>

@@ -33,6 +33,7 @@ import { computed, provide, ref, useId, useTemplateRef, watch } from "vue";
 import AppButton from "@/components/AppButton.vue";
 import AppInput from "@/components/AppInput.vue";
 import AppScrollable from "@/components/AppScrollable.vue";
+import AppTooltip from "@/components/AppTooltip.vue";
 import AppTreeItem from "@/components/AppTreeItem.vue";
 import { sleep } from "@/util/misc";
 import {
@@ -45,19 +46,13 @@ import {
 type Props = {
   /** label */
   label?: string;
-  /** selected item */
-  modelValue?: ID;
   /** tree structure */
   tree: Tree[];
 };
 
-const { tree, modelValue = "" } = defineProps<Props>();
+const { tree } = defineProps<Props>();
 
-type Emits = {
-  "update:modelValue": [ID];
-};
-
-const emit = defineEmits<Emits>();
+const modelValue = defineModel<ID>({ default: "" });
 
 type Slots = {
   /** label */
@@ -71,7 +66,7 @@ type Slots = {
 defineSlots<Slots>();
 
 /** root element */
-const rootElement = useTemplateRef("root");
+const rootElement = useTemplateRef("rootElement");
 
 /** search string */
 const search = ref("");
@@ -155,7 +150,7 @@ const openSelected = () => {
   closeAll();
   const recurse = (children: _Tree[] = _tree.value) => {
     for (const child of children)
-      if (child.id === modelValue || recurse(child.children))
+      if (child.id === modelValue.value || recurse(child.children))
         return (child.open = true);
     return false;
   };
@@ -172,7 +167,7 @@ const openSelected = () => {
 const isSelectedOpen = () => {
   const recurse = (children: _Tree[] = _tree.value) => {
     for (const child of children) {
-      if (child.id === modelValue) return true;
+      if (child.id === modelValue.value) return true;
       if (child.open && recurse(child.children)) return true;
     }
     return false;
@@ -181,21 +176,21 @@ const isSelectedOpen = () => {
 };
 
 /** function to update model value */
-const updateModelValue = (child: _Tree) => emit("update:modelValue", child.id);
+const updateModelValue = (child: _Tree) => (modelValue.value = child.id);
 
 /** unique id for tree */
 const id = useId();
 
 /** provide tree context */
 provide(treeKey, {
-  modelValue: computed(() => modelValue),
-  updateModelValue: (child: _Tree) => emit("update:modelValue", child.id),
+  modelValue: computed(() => modelValue.value),
+  updateModelValue,
   search: computed(() => !!search.value),
 });
 </script>
 
 <template>
-  <div ref="root" class="flex flex-col gap-1">
+  <div ref="rootElement" class="flex flex-col gap-1">
     <label :id="id" class="flex items-center gap-2">{{ label }}<slot /></label>
 
     <div class="mb-1 flex items-center gap-2 text-sm text-gray">
@@ -205,29 +200,21 @@ provide(treeKey, {
     <!-- top controls -->
     <div class="flex gap-2">
       <AppInput v-model="search" :icon="Search" placeholder="Search" />
-      <AppButton
-        v-if="allClosed()"
-        v-tooltip="'Expand all tree levels'"
-        :square="true"
-        @click="openAll()"
-      >
-        <ListChevronsUpDown />
-      </AppButton>
-      <AppButton
-        v-else
-        v-tooltip="'Collapse all tree levels'"
-        :square="true"
-        @click="closeAll()"
-      >
-        <ListChevronsDownUp />
-      </AppButton>
-      <AppButton
-        v-tooltip="'Expand tree to show selected'"
-        :square="true"
-        @click="isSelectedOpen() ? closeAll() : openSelected()"
-      >
-        <ListCheck />
-      </AppButton>
+      <AppTooltip v-if="allClosed()" content="Expand all tree levels">
+        <AppButton @click="openAll()">
+          <ListChevronsUpDown />
+        </AppButton>
+      </AppTooltip>
+      <AppTooltip v-else content="Collapse all tree levels">
+        <AppButton @click="closeAll()">
+          <ListChevronsDownUp />
+        </AppButton>
+      </AppTooltip>
+      <AppTooltip content="Expand tree to show selected">
+        <AppButton @click="isSelectedOpen() ? closeAll() : openSelected()">
+          <ListCheck />
+        </AppButton>
+      </AppTooltip>
     </div>
 
     <!-- tree structure -->
