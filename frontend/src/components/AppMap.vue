@@ -45,6 +45,7 @@ import {
 } from "vue";
 import { type Unit } from "@/api";
 import hatch from "@/assets/hatch.svg?no-inline";
+import AppTooltip from "@/components/AppTooltip.vue";
 import { backgroundOptions } from "@/components/background";
 import { getGradient, gradientOptions } from "@/components/gradient";
 import { getCssVar } from "@/util/dom";
@@ -241,7 +242,7 @@ const scale = computed(() => {
               ? formatValue(max, unit, true)
               : "",
         color: gradientFunc(index / (array.length - 1)),
-        tooltip: `${formatValue(lower, unit)} &ndash; ${formatValue(upper, unit)}`,
+        tooltip: `${formatValue(lower, unit)} – ${formatValue(upper, unit)}`,
       })),
     );
 
@@ -833,18 +834,21 @@ onUnmounted(() => {
           class="grid grid-cols-[repeat(var(--cols),1fr)] grid-rows-[--spacing(6)] gap-y-1"
           :style="{ '--cols': scale.steps.length }"
         >
-          <div
+          <AppTooltip
             v-for="(step, index) of scale.steps"
             :key="index"
-            v-tooltip="step.tooltip"
-            class="relative size-full after:absolute after:inset-0 after:[background-image:var(--image)] after:opacity-50 after:content-['']"
-            tabindex="0"
-            :style="{
-              backgroundColor: step.color,
-              '--image':
-                step.color === noDataEntry.color ? `url(${hatch})` : 'none',
-            }"
-          />
+            :content="step.tooltip"
+          >
+            <div
+              class="relative size-full after:absolute after:inset-0 after:[background-image:var(--image)] after:opacity-50 after:content-['']"
+              tabindex="0"
+              :style="{
+                backgroundColor: step.color,
+                '--image':
+                  step.color === noDataEntry.color ? `url(${hatch})` : 'none',
+              }"
+            />
+          </AppTooltip>
           <div
             v-for="(step, index) of scale.steps"
             :key="index"

@@ -33,6 +33,7 @@ import { computed, provide, ref, useId, useTemplateRef, watch } from "vue";
 import AppButton from "@/components/AppButton.vue";
 import AppInput from "@/components/AppInput.vue";
 import AppScrollable from "@/components/AppScrollable.vue";
+import AppTooltip from "@/components/AppTooltip.vue";
 import AppTreeItem from "@/components/AppTreeItem.vue";
 import { sleep } from "@/util/misc";
 import {
@@ -199,29 +200,21 @@ provide(treeKey, {
     <!-- top controls -->
     <div class="flex gap-2">
       <AppInput v-model="search" :icon="Search" placeholder="Search" />
-      <AppButton
-        v-if="allClosed()"
-        v-tooltip="'Expand all tree levels'"
-        :square="true"
-        @click="openAll()"
-      >
-        <ListChevronsUpDown />
-      </AppButton>
-      <AppButton
-        v-else
-        v-tooltip="'Collapse all tree levels'"
-        :square="true"
-        @click="closeAll()"
-      >
-        <ListChevronsDownUp />
-      </AppButton>
-      <AppButton
-        v-tooltip="'Expand tree to show selected'"
-        :square="true"
-        @click="isSelectedOpen() ? closeAll() : openSelected()"
-      >
-        <ListCheck />
-      </AppButton>
+      <AppTooltip v-if="allClosed()" content="Expand all tree levels">
+        <AppButton @click="openAll()">
+          <ListChevronsUpDown />
+        </AppButton>
+      </AppTooltip>
+      <AppTooltip v-else content="Collapse all tree levels">
+        <AppButton @click="closeAll()">
+          <ListChevronsDownUp />
+        </AppButton>
+      </AppTooltip>
+      <AppTooltip content="Expand tree to show selected">
+        <AppButton @click="isSelectedOpen() ? closeAll() : openSelected()">
+          <ListCheck />
+        </AppButton>
+      </AppTooltip>
     </div>
 
     <!-- tree structure -->

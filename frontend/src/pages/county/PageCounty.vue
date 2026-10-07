@@ -10,6 +10,7 @@ import AppBarChart from "@/components/AppBarChart.vue";
 import AppHeading from "@/components/AppHeading.vue";
 import AppMap from "@/components/AppMap.vue";
 import AppSelect from "@/components/AppSelect.vue";
+import AppTooltip from "@/components/AppTooltip.vue";
 import { appTitle } from "@/meta";
 import { useQuery } from "@/util/composables";
 import { formatValue } from "@/util/math";
@@ -260,36 +261,46 @@ const flatGroups = computed(() => {
         </template>
         <template v-else>
           <span class="text-left">{{ statisticOrGroup.label }}</span>
-          <span
+          <AppTooltip
             v-if="
               statisticOrGroup.value !== undefined &&
               statisticOrGroup.unit !== undefined
             "
-            v-tooltip="
-              formatValue(statisticOrGroup.value, statisticOrGroup.unit)
+            :content="
+              formatValue(statisticOrGroup.value!, statisticOrGroup.unit!)
             "
-            class="bg-light-gold"
           >
-            {{
-              formatValue(statisticOrGroup.value, statisticOrGroup.unit, true)
-            }}
-          </span>
+            <span class="bg-light-gold">
+              {{
+                formatValue(
+                  statisticOrGroup.value!,
+                  statisticOrGroup.unit!,
+                  true,
+                )
+              }}
+            </span>
+          </AppTooltip>
           <span v-else />
           <span>{{ statisticOrGroup.compare }}</span>
-          <span
+          <AppTooltip
             v-if="
               statisticOrGroup.state !== undefined &&
               statisticOrGroup.unit !== undefined
             "
-            v-tooltip="
-              formatValue(statisticOrGroup.state, statisticOrGroup.unit)
+            :content="
+              formatValue(statisticOrGroup.state!, statisticOrGroup.unit!)
             "
-            class="bg-dark-gray text-white"
           >
-            {{
-              formatValue(statisticOrGroup.state, statisticOrGroup.unit, true)
-            }}
-          </span>
+            <span class="bg-dark-gray text-white">
+              {{
+                formatValue(
+                  statisticOrGroup.state!,
+                  statisticOrGroup.unit!,
+                  true,
+                )
+              }}
+            </span>
+          </AppTooltip>
           <span v-else />
         </template>
       </template>

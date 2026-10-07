@@ -36,6 +36,7 @@ import AppNumber from "@/components/AppNumber.vue";
 import AppScrollable from "@/components/AppScrollable.vue";
 import AppSelect from "@/components/AppSelect.vue";
 import AppSlider from "@/components/AppSlider.vue";
+import AppTooltip from "@/components/AppTooltip.vue";
 import AppTree from "@/components/AppTree.vue";
 import { backgroundOptions, defaultBackground } from "@/components/background";
 import { defaultGradient, gradientOptions } from "@/components/gradient";
@@ -537,14 +538,14 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
       <!-- left panel -->
       <AppScrollable class="flex flex-col gap-4" role="group">
         <!-- reset map -->
-        <AppButton
+        <AppTooltip
           v-if="!isEqual(selectedMap(), defaultMap())"
-          v-tooltip="'Reset current map selections to defaults'"
-          design="accent"
-          @click="resetMap"
+          content="Reset current map selections to defaults"
         >
-          Reset<RefreshCw />
-        </AppButton>
+          <AppButton design="accent" @click="resetMap">
+            Reset<RefreshCw />
+          </AppButton>
+        </AppTooltip>
 
         <!-- geographic level -->
         <AppSelect
@@ -584,15 +585,15 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
             {{ statisticPaths[value]?.join(" > ") ?? value }}
           </template>
           <template #action="{ child }">
-            <AppButton
-              v-if="child.id"
-              v-tooltip="'Download statistic data'"
-              :to="onTreeDownload(child.id)"
-              design="none"
-              class="p-1! text-light-gray hover:text-black"
-            >
-              <Download />
-            </AppButton>
+            <AppTooltip v-if="child.id" content="Download statistic data">
+              <AppButton
+                :to="onTreeDownload(child.id)"
+                design="none"
+                class="p-1! text-light-gray hover:text-black"
+              >
+                <Download />
+              </AppButton>
+            </AppTooltip>
           </template>
         </AppTree>
 
@@ -626,7 +627,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
           v-model="selectedMap().locations"
           multi
           :options="locationOptions"
-          class="gap-2 rounded-md border border-gray bg-white p-4"
+          class="rounded-md border border-gray bg-white p-4"
           :class="[
             locationsStatus === 'loading' && 'animate-loading',
             locationsStatus === 'error' && 'animate-error',
@@ -652,33 +653,35 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
             >
               <template #item="{ index }: { index: number }">
                 <div class="relative aspect-4/3">
-                  <button
-                    v-tooltip="'Click to select, drag to reorder'"
-                    v-bind="highlightListeners(index)"
-                    class="size-full overflow-hidden border-2 bg-pale"
-                    :class="
-                      selectedIndex === index
-                        ? 'border-gold'
-                        : 'border-light-gray hover:border-gold'
-                    "
-                    @click="selectedIndex = index"
-                  >
-                    <img
-                      v-if="mapElements?.[index]?.thumbnail"
-                      :src="mapElements?.[index]?.thumbnail"
-                      alt=""
-                      class="size-full object-cover"
-                    />
-                  </button>
+                  <AppTooltip content="Click to select, drag to reorder">
+                    <button
+                      v-bind="highlightListeners(index)"
+                      class="size-full overflow-hidden border-2 bg-pale"
+                      :class="
+                        selectedIndex === index
+                          ? 'border-gold'
+                          : 'border-light-gray hover:border-gold'
+                      "
+                      @click="selectedIndex = index"
+                    >
+                      <img
+                        v-if="mapElements?.[index]?.thumbnail"
+                        :src="mapElements?.[index]?.thumbnail"
+                        alt=""
+                        class="size-full object-cover"
+                      />
+                    </button>
+                  </AppTooltip>
 
-                  <button
-                    v-tooltip="'Remove map from comparison'"
-                    v-bind="highlightListeners(index)"
-                    class="absolute top-0.5 right-0.5 z-10 size-6 bg-pale hover:text-gray"
-                    @click="deleteMap(index)"
-                  >
-                    <X />
-                  </button>
+                  <AppTooltip content="Remove map from comparison">
+                    <button
+                      v-bind="highlightListeners(index)"
+                      class="absolute top-0.5 right-0.5 z-10 size-6 bg-pale hover:text-gray"
+                      @click="deleteMap(index)"
+                    >
+                      <X />
+                    </button>
+                  </AppTooltip>
                 </div>
               </template>
             </draggable>
@@ -695,197 +698,195 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         <!-- customization -->
         <AppCollapsible id="customizations" label="Customization">
           <!-- legend -->
-          <AppCheckbox
-            v-model="showLegends"
-            v-tooltip="'Show/hide legend panels on map'"
-            label="Show legends"
-          />
+          <AppTooltip content="Show/hide legend panels on map">
+            <AppCheckbox v-model="showLegends" label="Show legends" />
+          </AppTooltip>
 
           <!-- gradient -->
           <div class="grid grid-cols-[1fr_min-content] items-end gap-2">
-            <AppSelect
-              v-model="selectedGradient"
-              v-tooltip="'Gradient to use for coloring map data'"
-              label="Gradient"
-              :options="gradientOptions"
-              :truncate="true"
-            >
-              <template #preview="{ option }">
-                <svg
-                  :viewBox="`0 0 10 1`"
-                  preserveAspectRatio="none"
-                  class="h-6 w-12"
-                  :class="flipGradient && '-scale-x-100'"
-                >
-                  <defs>
-                    <linearGradient :id="option?.id">
-                      <stop
-                        v-for="(color, index) in option?.colors"
-                        :key="index"
-                        :offset="
-                          100 * (index / ((option?.colors.length || 1) - 1)) +
-                          '%'
-                        "
-                        :stop-color="color"
-                      />
-                    </linearGradient>
-                  </defs>
-                  <rect
-                    :fill="`url('#${option?.id}')`"
-                    x="0"
-                    y="0"
-                    width="10"
-                    height="1"
-                  />
-                </svg>
-              </template>
-            </AppSelect>
-            <AppCheckbox
-              v-model="flipGradient"
-              v-tooltip="'Reverse direction of color gradient'"
-              label="Flip"
-            />
+            <AppTooltip content="Gradient to use for coloring map data">
+              <AppSelect
+                v-model="selectedGradient"
+                label="Gradient"
+                :options="gradientOptions"
+                :truncate="true"
+              >
+                <template #preview="{ option }">
+                  <svg
+                    :viewBox="`0 0 10 1`"
+                    preserveAspectRatio="none"
+                    class="h-6 w-12"
+                    :class="flipGradient && '-scale-x-100'"
+                  >
+                    <defs>
+                      <linearGradient :id="option?.id">
+                        <stop
+                          v-for="(color, index) in option?.colors"
+                          :key="index"
+                          :offset="
+                            100 * (index / ((option?.colors.length || 1) - 1)) +
+                            '%'
+                          "
+                          :stop-color="color"
+                        />
+                      </linearGradient>
+                    </defs>
+                    <rect
+                      :fill="`url('#${option?.id}')`"
+                      x="0"
+                      y="0"
+                      width="10"
+                      height="1"
+                    />
+                  </svg>
+                </template>
+              </AppSelect>
+            </AppTooltip>
+            <AppTooltip content="Reverse direction of color gradient">
+              <AppCheckbox v-model="flipGradient" label="Flip" />
+            </AppTooltip>
           </div>
 
           <!-- background layer -->
-          <AppSelect
-            v-model="selectedBackground"
-            label="Background layer"
-            :options="backgroundOptions"
-            tooltip="Provider to use for background map layer"
-          >
-            <template #preview="{ option }">
-              <div class="size-12 shrink-0 overflow-hidden bg-gray">
-                <img
-                  :src="option?.image"
-                  alt=""
-                  class="size-full translate-x-14/10 translate-y-7/10 scale-500"
-                />
-              </div>
-            </template>
-          </AppSelect>
+          <AppTooltip content="Provider to use for background map layer">
+            <AppSelect
+              v-model="selectedBackground"
+              label="Background layer"
+              :options="backgroundOptions"
+            >
+              <template #preview="{ option }">
+                <div class="size-12 shrink-0 overflow-hidden bg-gray">
+                  <img
+                    :src="option?.image"
+                    alt=""
+                    class="size-full translate-x-14/10 translate-y-7/10 scale-500"
+                  />
+                </div>
+              </template>
+            </AppSelect>
+          </AppTooltip>
 
           <!-- scale min/max -->
-          <AppCheckbox
-            v-model="manualMinMax"
-            v-tooltip="'Manually set scale min/max'"
-            label="Manual min/max"
-          />
+          <AppTooltip content="Manually set scale min/max">
+            <AppCheckbox v-model="manualMinMax" label="Manual min/max" />
+          </AppTooltip>
           <div v-if="manualMinMax" class="grid grid-cols-2 gap-2">
-            <AppNumber
-              v-model="manualMin"
-              v-tooltip="'Manual scale min'"
-              :min="-Infinity"
-              :max="Infinity"
-              :step="0.01"
-              label="Min"
-            />
-            <AppNumber
-              v-model="manualMax"
-              v-tooltip="'Manual scale max'"
-              :min="-Infinity"
-              :max="Infinity"
-              :step="0.01"
-              label="Max"
-            />
+            <AppTooltip content="Manual scale min">
+              <AppNumber
+                v-model="manualMin"
+                :min="-Infinity"
+                :max="Infinity"
+                :step="0.01"
+                label="Min"
+              />
+            </AppTooltip>
+            <AppTooltip content="Manual scale max">
+              <AppNumber
+                v-model="manualMax"
+                :min="-Infinity"
+                :max="Infinity"
+                :step="0.01"
+                label="Max"
+              />
+            </AppTooltip>
           </div>
 
           <!-- scale steps -->
           <div class="grid grid-cols-2 gap-2">
-            <AppNumber
-              v-model="scalePower"
-              v-tooltip="
-                `
-                Power to raise step ranges by. Only affects which colors are assigned to which values.
+            <AppTooltip>
+              <AppNumber
+                v-model="scalePower"
+                :min="scalePower < 1 ? 0.05 : 0"
+                :max="10"
+                :step="scalePower < 1 ? 0.05 : 0.5"
+                label="Scale power"
+              />
+              <template #content>
+                Power to raise step ranges by. Only affects which colors are
+                assigned to which values.
                 <br />
                 <br />
                 = 1 is linear
                 <br />
-                > 1 exaggerates differences at low values
+                &gt; 1 exaggerates differences at low values
                 <br />
-                < 1 exaggerates differences at high values
-              `
-              "
-              :min="scalePower < 1 ? 0.05 : 0"
-              :max="10"
-              :step="scalePower < 1 ? 0.05 : 0.5"
-              label="Scale power"
-            />
+                &lt; 1 exaggerates differences at high values
+              </template>
+            </AppTooltip>
 
-            <AppNumber
-              v-model="scaleSteps"
-              v-tooltip="
-                'Number of bins to divide data into for coloring. If &quot;nice steps&quot; on, only approximate.'
-              "
-              :min="2"
-              :max="10"
-              :step="1"
-              label="Scale steps"
-            />
-          </div>
-          <AppCheckbox
-            v-model="niceSteps"
-            v-tooltip="
-              'Adjust number of scale steps to get nice, round intervals (when power = 1)'
-            "
-            label="Nice steps"
-          />
-
-          <!-- layer opacities -->
-          <AppSlider
-            v-model="backgroundOpacity"
-            v-tooltip="'Transparency of background layer'"
-            label="Background transparency"
-          />
-          <AppSlider
-            v-model="geographyOpacity"
-            v-tooltip="'Transparency of geography layer'"
-            label="Geography transparency"
-          />
-          <AppSlider
-            v-model="locationOpacity"
-            v-tooltip="'Transparency of resources & locations layer'"
-            label="Locations transparency"
-          />
-
-          <!-- dimensions -->
-          <label
-            v-tooltip="
-              'Exact dimensions of map. Useful to set before downloading as image. Leave as 0 to fit to page.'
-            "
-            class="flex cursor-pointer flex-col items-stretch gap-1"
-          >
-            <span>Map dimensions</span>
-            <div
-              class="grid grid-cols-[1fr_min-content_1fr] items-center gap-2"
+            <AppTooltip
+              content='Number of bins to divide data into for coloring. If "nice steps" on, only approximate.'
             >
               <AppNumber
-                v-model="mapWidth"
-                label="Map width"
-                :hide-label="true"
-                :max="2000"
-                :step="100"
+                v-model="scaleSteps"
+                :min="2"
+                :max="10"
+                :step="1"
+                label="Scale steps"
               />
-              <span>&times;</span>
-              <AppNumber
-                v-model="mapHeight"
-                label="Map height"
-                :hide-label="true"
-                :max="2000"
-                :step="100"
-              />
-            </div>
-          </label>
+            </AppTooltip>
+          </div>
+          <AppTooltip
+            content="Adjust number of scale steps to get nice, round intervals (when power = 1)"
+          >
+            <AppCheckbox v-model="niceSteps" label="Nice steps" />
+          </AppTooltip>
+
+          <!-- layer opacities -->
+          <AppTooltip content="Transparency of background layer">
+            <AppSlider
+              v-model="backgroundOpacity"
+              label="Background transparency"
+            />
+          </AppTooltip>
+          <AppTooltip content="Transparency of geography layer">
+            <AppSlider
+              v-model="geographyOpacity"
+              label="Geography transparency"
+            />
+          </AppTooltip>
+          <AppTooltip content="Transparency of resources & locations layer">
+            <AppSlider
+              v-model="locationOpacity"
+              label="Locations transparency"
+            />
+          </AppTooltip>
+
+          <!-- dimensions -->
+          <AppTooltip
+            content="Exact dimensions of map. Useful to set before downloading as image. Leave as 0 to fit to page."
+          >
+            <label class="flex cursor-pointer flex-col items-stretch gap-1">
+              <span>Map dimensions</span>
+              <div
+                class="grid grid-cols-[1fr_min-content_1fr] items-center gap-2"
+              >
+                <AppNumber
+                  v-model="mapWidth"
+                  label="Map width"
+                  :hide-label="true"
+                  :max="2000"
+                  :step="100"
+                />
+                <span>&times;</span>
+                <AppNumber
+                  v-model="mapHeight"
+                  label="Map height"
+                  :hide-label="true"
+                  :max="2000"
+                  :step="100"
+                />
+              </div>
+            </label>
+          </AppTooltip>
 
           <!-- reset -->
-          <AppButton
-            v-tooltip="'Reset customizations to defaults'"
-            design="accent"
-            @click="resetCustomizations"
-          >
-            <RefreshCw />
-            Reset
-          </AppButton>
+          <AppTooltip content="Reset customizations to defaults">
+            <AppButton design="accent" @click="resetCustomizations">
+              <RefreshCw />
+              Reset
+            </AppButton>
+          </AppTooltip>
         </AppCollapsible>
       </AppScrollable>
 
@@ -983,11 +984,12 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
                   </template>
                   {{ statistic.source.date }}
                 </AppLink>
-                <AppCopyButton
-                  v-tooltip="'Copy citation text to clipboard'"
-                  :text="getSourceCitation(statistic.source)"
-                  data-save-hide
-                />
+                <AppTooltip content="Copy citation text to clipboard">
+                  <AppCopyButton
+                    :text="getSourceCitation(statistic.source)"
+                    data-save-hide
+                  />
+                </AppTooltip>
               </div>
 
               <div
@@ -1246,50 +1248,46 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
             id="map-download"
             class="flex flex-wrap items-center justify-center gap-2"
           >
-            <AppButton
-              v-tooltip="'Download map(s) as PNG'"
-              design="accent"
-              @click="downloadMapImage"
-            >
-              <Download />
-              Map
-            </AppButton>
-            <AppButton
-              v-tooltip="'Download map(s) as GeoJSON'"
-              @click="downloadMapGeo"
-            >
-              <Download />
-              Geo
-            </AppButton>
+            <AppTooltip content="Download map(s) as PNG">
+              <AppButton design="accent" @click="downloadMapImage">
+                <Download />
+                Map
+              </AppButton>
+            </AppTooltip>
+            <AppTooltip content="Download map(s) as GeoJSON">
+              <AppButton @click="downloadMapGeo">
+                <Download />
+                Geo
+              </AppButton>
+            </AppTooltip>
           </div>
 
           <div
             id="map-controls"
             class="flex flex-wrap items-center justify-center gap-2"
           >
-            <AppButton
-              v-tooltip="'Zoom out'"
-              @click="mapElements?.forEach((map) => map?.zoomOut())"
-            >
-              <Minus />
-            </AppButton>
-            <AppButton
-              v-tooltip="'Zoom in'"
-              @click="mapElements?.forEach((map) => map?.zoomIn())"
-            >
-              <Plus />
-            </AppButton>
-            <AppButton v-tooltip="'Fit view to map contents'" @click="fit">
-              <Crop />
-              Fit
-            </AppButton>
-            <AppButton
-              v-tooltip="'View map(s) in full screen'"
-              @click="fullscreen"
-            >
-              <Fullscreen />
-              Fullscreen
-            </AppButton>
+            <AppTooltip content="Zoom out">
+              <AppButton @click="mapElements?.forEach((map) => map?.zoomOut())">
+                <Minus />
+              </AppButton>
+            </AppTooltip>
+            <AppTooltip content="Zoom in">
+              <AppButton @click="mapElements?.forEach((map) => map?.zoomIn())">
+                <Plus />
+              </AppButton>
+            </AppTooltip>
+            <AppTooltip content="Fit view to map contents">
+              <AppButton @click="fit">
+                <Crop />
+                Fit
+              </AppButton>
+            </AppTooltip>
+            <AppTooltip content="View map(s) in full screen">
+              <AppButton @click="fullscreen">
+                <Fullscreen />
+                Fullscreen
+              </AppButton>
+            </AppTooltip>
           </div>
 
           <div class="grow" />

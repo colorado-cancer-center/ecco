@@ -1,19 +1,4 @@
-<script setup lang="ts" generic="O extends Option">
-import type { VNode } from "vue";
-import { computed, ref } from "vue";
-import AppButton from "@/components/AppButton.vue";
-import { frame } from "@/util/misc";
-import { Check, ChevronDown, ChevronUp, X } from "@lucide/vue";
-import {
-  ListboxContent,
-  ListboxItem,
-  ListboxRoot,
-  PopoverContent,
-  PopoverPortal,
-  PopoverRoot,
-  PopoverTrigger,
-} from "reka-ui";
-
+<script lang="ts">
 export type Option = {
   id: string;
   label: string;
@@ -26,12 +11,29 @@ export type Group = {
 };
 
 export type Entry = Option | Group;
+</script>
+
+<script setup lang="ts" generic="O extends Option">
+import type { VNode } from "vue";
+import { computed, ref } from "vue";
+import AppButton from "@/components/AppButton.vue";
+import AppTooltip from "@/components/AppTooltip.vue";
+import { frame } from "@/util/misc";
+import { Check, ChevronDown, ChevronUp, X } from "@lucide/vue";
+import {
+  ListboxContent,
+  ListboxItem,
+  ListboxRoot,
+  PopoverContent,
+  PopoverPortal,
+  PopoverRoot,
+  PopoverTrigger,
+} from "reka-ui";
 
 type Props = {
   label?: string;
   options: (O | Group)[];
   multi?: boolean;
-  tooltip?: string;
   truncate?: boolean;
 };
 
@@ -41,7 +43,6 @@ const {
   label,
   options,
   multi = false,
-  tooltip = "",
   truncate = false,
 } = defineProps<Props>();
 
@@ -146,7 +147,11 @@ const onKeypress = async ({ key }: KeyboardEvent) => {
 </script>
 
 <template>
-  <label :class="multi ? 'grid grid-cols-[1fr_min-content]' : 'grid'">
+  <label
+    v-bind="$attrs"
+    :class="multi ? 'grid grid-cols-[1fr_min-content]' : 'grid'"
+    class="gap-2"
+  >
     <div :class="['flex items-center gap-2', multi ? 'col-span-2' : '']">
       {{ label }}
       <slot />
@@ -155,11 +160,7 @@ const onKeypress = async ({ key }: KeyboardEvent) => {
     <PopoverRoot v-model:open="isOpen">
       <!-- button -->
       <PopoverTrigger as-child>
-        <AppButton
-          v-tooltip="tooltip"
-          class="overflow-auto"
-          @keydown="onKeypress"
-        >
+        <AppButton class="overflow-auto" @keydown="onKeypress">
           <span class="grow text-left" :class="truncate && 'truncate'">
             {{ selectedLabel }}
           </span>
@@ -224,8 +225,10 @@ const onKeypress = async ({ key }: KeyboardEvent) => {
       </PopoverPortal>
     </PopoverRoot>
 
-    <AppButton v-if="multi" v-tooltip="'Deselect all'" @click="modelValue = []">
-      <X />
-    </AppButton>
+    <AppTooltip v-if="multi" content="Deselect all">
+      <AppButton @click="modelValue = []">
+        <X />
+      </AppButton>
+    </AppTooltip>
   </label>
 </template>
