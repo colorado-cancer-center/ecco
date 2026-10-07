@@ -66,7 +66,7 @@ type Slots = {
 defineSlots<Slots>();
 
 /** root element */
-const rootElement = useTemplateRef("root");
+const rootElement = useTemplateRef("rootElement");
 
 /** search string */
 const search = ref("");
@@ -190,7 +190,7 @@ provide(treeKey, {
 </script>
 
 <template>
-  <div ref="root" class="flex flex-col gap-1">
+  <div ref="rootElement" class="flex flex-col gap-1">
     <label :id="id" class="flex items-center gap-2">{{ label }}<slot /></label>
 
     <div class="mb-1 flex items-center gap-2 text-sm text-gray">

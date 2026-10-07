@@ -24,27 +24,30 @@ type Slots = {
 
 defineSlots<Slots>();
 
-const root = useTemplateRef<HTMLDivElement>("root");
-const panel = useTemplateRef<HTMLDivElement>("panel");
+const rootElement = useTemplateRef<HTMLDivElement>("rootElement");
+const panelElement = useTemplateRef<HTMLDivElement>("panelElement");
 const open = ref(false);
 
-useAutoHeight(panel, open);
+useAutoHeight(panelElement, open);
 
-useEventListener(root, startEvent, () => (open.value = true));
-useEventListener(root, endEvent, () => (open.value = false));
+useEventListener(rootElement, startEvent, () => (open.value = true));
+useEventListener(rootElement, endEvent, () => (open.value = false));
 
 watchEffect(async () => {
   if (open.value === true) {
     /** wait for auto-height open animation to finish */
     await sleep(500);
-    panel.value?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    panelElement.value?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+    });
   }
 });
 </script>
 
 <template>
   <CollapsibleRoot
-    ref="root"
+    ref="rootElement"
     v-model:open="open"
     :unmount-on-hide="false"
     class="flex flex-col rounded-md border bg-white transition"
@@ -59,7 +62,7 @@ watchEffect(async () => {
     </CollapsibleTrigger>
     <CollapsibleContent force-mount>
       <div
-        ref="panel"
+        ref="panelElement"
         class="flex scroll-mt-12 flex-col gap-4 overflow-y-clip px-4 transition-all"
         :class="open ? 'py-4' : ''"
       >

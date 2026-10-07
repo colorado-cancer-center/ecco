@@ -72,10 +72,10 @@ const mapElement = useTemplateRef("mapElement");
 const geographyPopupElement = useTemplateRef("geographyPopupElement");
 const locationPopupElement = useTemplateRef("locationPopupElement");
 const geographyLabelElements = useTemplateRef("geographyLabelElements");
-const topLeftLegend = useTemplateRef("topLeftLegend");
-const topRightLegend = useTemplateRef("topRightLegend");
-const bottomRightLegend = useTemplateRef("bottomRightLegend");
-const bottomLeftLegend = useTemplateRef("bottomLeftLegend");
+const topLeftLegendElement = useTemplateRef("topLeftLegendElement");
+const topRightLegendElement = useTemplateRef("topRightLegendElement");
+const bottomRightLegendElement = useTemplateRef("bottomRightLegendElement");
+const bottomLeftLegendElement = useTemplateRef("bottomLeftLegendElement");
 
 const gold = getCssVar("--color-gold");
 
@@ -753,10 +753,10 @@ const fit = async () => {
         padding[v] = Math.max(height, padding[v]);
     };
     /** pad each corner */
-    padCorner("top", "left", topLeftLegend);
-    padCorner("top", "right", topRightLegend);
-    padCorner("bottom", "left", bottomLeftLegend);
-    padCorner("bottom", "right", bottomRightLegend);
+    padCorner("top", "left", topLeftLegendElement);
+    padCorner("top", "right", topRightLegendElement);
+    padCorner("bottom", "left", bottomLeftLegendElement);
+    padCorner("bottom", "right", bottomRightLegendElement);
   }
 
   const { top, right, bottom, left } = padding;
@@ -823,7 +823,7 @@ onUnmounted(() => {
       <!-- top left legend -->
       <div
         v-if="$slots['top-left-upper'] || $slots['top-left-lower']"
-        ref="topLeftLegend"
+        ref="topLeftLegendElement"
         class="absolute top-4 left-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md border border-gray bg-white p-4"
       >
         <slot name="top-left-upper" />
@@ -864,7 +864,7 @@ onUnmounted(() => {
       <!-- top right legend -->
       <div
         v-if="$slots['top-right']"
-        ref="topRightLegend"
+        ref="topRightLegendElement"
         class="absolute top-4 right-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md border border-gray bg-white p-4"
       >
         <slot name="top-right" />
@@ -873,7 +873,7 @@ onUnmounted(() => {
       <!-- bottom right legend -->
       <div
         v-if="$slots['bottom-right'] || !isEmpty(symbols)"
-        ref="bottomRightLegend"
+        ref="bottomRightLegendElement"
         class="absolute right-4 bottom-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md border border-gray bg-white p-4"
       >
         <slot name="bottom-right" />
@@ -895,7 +895,7 @@ onUnmounted(() => {
       <!-- bottom left legend -->
       <div
         v-if="$slots['bottom-left']"
-        ref="bottomLeftLegend"
+        ref="bottomLeftLegendElement"
         class="absolute bottom-4 left-4 z-90 flex max-h-full max-w-60 flex-col gap-2 overflow-hidden rounded-md border border-gray bg-white p-4"
       >
         <slot name="bottom-left" />

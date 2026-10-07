@@ -33,7 +33,6 @@ import AppCopyButton from "@/components/AppCopyButton.vue";
 import AppLink from "@/components/AppLink.vue";
 import AppMap from "@/components/AppMap.vue";
 import AppNumber from "@/components/AppNumber.vue";
-import AppScrollable from "@/components/AppScrollable.vue";
 import AppSelect from "@/components/AppSelect.vue";
 import AppSlider from "@/components/AppSlider.vue";
 import AppTooltip from "@/components/AppTooltip.vue";
@@ -71,17 +70,6 @@ import { isEmpty, isEqual, pick } from "lodash";
 /** element refs */
 const mapGridElement = useTemplateRef("mapGridElement");
 const mapElements = useTemplateRef("mapElements");
-
-/** section height */
-const height = ref("");
-
-/** calc section height */
-onMounted(() => {
-  const header = document.querySelector("header");
-  if (!header) return;
-  const minus = header.clientHeight;
-  height.value = `calc(100dvh - ${minus}px)`;
-});
 
 /** default selected maps */
 const defaultMap = () => ({
@@ -530,13 +518,13 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
 </script>
 
 <template>
-  <section class="p-8 md:h-(--height)" :style="{ '--height': height }">
+  <section class="p-8">
     <div
-      class="grid h-full gap-8 *:min-h-0 max-md:grid-cols-1 md:grid-cols-[--spacing(100)_1fr]"
+      class="grid gap-8 max-md:grid-cols-1 md:grid-cols-[--spacing(100)_1fr]"
       :style="{ '--cols': mapCols }"
     >
       <!-- left panel -->
-      <AppScrollable class="flex flex-col gap-4" role="group">
+      <div class="flex flex-col gap-4" role="group">
         <!-- reset map -->
         <AppTooltip
           v-if="!isEqual(selectedMap(), defaultMap())"
@@ -569,7 +557,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
           id="statistic"
           v-model="selectedMap().statistic"
           :tree="statisticOptions"
-          class="max-h-[90dvh] min-h-60 resize-y gap-2 overflow-y-hidden rounded-md border border-gray bg-white p-4 [:not([style*='height'])]:grow [[style*='height']]:shrink-0"
+          class="max-h-200 min-h-60 resize-y gap-2 overflow-y-hidden rounded-md border border-gray bg-white p-4 [:not([style*=height])]:grow [:not([style*=height])]:basis-0"
           :class="[
             statisticStatus === 'loading' && 'animate-loading',
             statisticStatus === 'error' && 'animate-error',
@@ -888,10 +876,12 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
             </AppButton>
           </AppTooltip>
         </AppCollapsible>
-      </AppScrollable>
+      </div>
 
       <!-- right panel -->
-      <div class="flex flex-col items-stretch gap-4 overflow-auto">
+      <div
+        class="flex h-[calc(100vh-(--spacing(16))-var(--header-height)-var(--footer-height))] min-h-100 flex-col items-stretch gap-4 overflow-auto md:sticky md:inset-y-8"
+      >
         <!-- maps -->
         <div
           id="map-grid"

@@ -15,7 +15,7 @@ defineProps<Props>();
 
 const modelValue = defineModel<string>({ required: true });
 
-const sideElement = useTemplateRef("side");
+const sideElement = useTemplateRef("sideElement");
 const sideSize = useElementSize(sideElement, undefined, { box: "border-box" });
 </script>
 
@@ -32,7 +32,7 @@ const sideSize = useElementSize(sideElement, undefined, { box: "border-box" });
     />
 
     <div
-      ref="side"
+      ref="sideElement"
       class="absolute inset-y-0 right-0 aspect-square *:size-full"
     >
       <button v-if="modelValue" @click="modelValue = ''">

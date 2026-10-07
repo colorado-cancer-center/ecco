@@ -26,16 +26,17 @@ type Slots = {
 defineSlots<Slots>();
 
 const slots = useSlots();
-const trigger = useTemplateRef<{ $el: HTMLElement }>("trigger");
+
+const trigger = useTemplateRef("trigger");
 
 onMounted(() => {
+  /** get trigger element */
   const element = trigger.value?.$el;
-  if (!(element instanceof HTMLElement) || (!content && !slots.content)) return;
-
-  if (window.getComputedStyle(element).cursor === "auto")
-    element.style.cursor = "help";
-
+  if (!(element instanceof HTMLElement)) return;
+  if (!content && !slots.content) return;
+  /** get tooltip content */
   const text = content ?? element.innerText;
+  /** make accessible label if trigger has no text */
   if (!element.innerText.trim() && text)
     element.setAttribute("aria-label", makeLabel(text));
 });
@@ -43,9 +44,13 @@ onMounted(() => {
 
 <template>
   <template v-if="content || $slots.content">
-    <TooltipProvider :delay-duration="100" :skip-delay-duration="0">
+    <TooltipProvider
+      v-bind="$attrs"
+      :delay-duration="100"
+      :skip-delay-duration="0"
+    >
       <TooltipRoot>
-        <TooltipTrigger ref="trigger" v-bind="$attrs" as-child>
+        <TooltipTrigger ref="trigger" as-child>
           <slot />
         </TooltipTrigger>
         <TooltipPortal>
