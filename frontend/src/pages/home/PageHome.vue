@@ -891,7 +891,7 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
       </AppScrollable>
 
       <!-- right panel -->
-      <div class="flex flex-col items-stretch gap-4">
+      <div class="flex flex-col items-stretch gap-4 overflow-auto">
         <!-- maps -->
         <div
           id="map-grid"
@@ -917,10 +917,9 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
             v-model:lat="lat"
             v-model:long="long"
             :class="[
-              'outline-8',
               index === highlightedIndex
-                ? 'z-10 outline-gold'
-                : 'outline-transparent',
+                ? 'relative z-10 after:absolute after:inset-0 after:inset-ring-6 after:inset-ring-gold after:transition-all'
+                : '',
             ]"
             :geography="geography"
             :locations="locations"

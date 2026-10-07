@@ -816,7 +816,7 @@ onUnmounted(() => {
       '--label-opacity': geographyOpacity,
     }"
   >
-    <div ref="mapElement" v-bind="$attrs" class="size-full" />
+    <div ref="mapElement" class="size-full" />
 
     <!-- legends -->
     <template v-if="showLegends">
