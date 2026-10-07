@@ -50,9 +50,9 @@ onMounted(() => {
         </TooltipTrigger>
         <TooltipPortal>
           <TooltipContent
-            :side-offset="16"
-            :collision-padding="16"
-            :arrow-padding="16"
+            :side-offset="10"
+            :collision-padding="10"
+            :arrow-padding="10"
             class="z-90 rounded-md border border-black bg-white p-2 will-change-transform trim"
           >
             <slot name="content">{{ content }}</slot>
