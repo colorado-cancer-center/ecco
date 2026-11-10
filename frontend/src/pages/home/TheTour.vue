@@ -247,3 +247,58 @@ useEventListener("keyup", (event: KeyboardEvent) => {
   </VOnboardingWrapper>
   <slot v-bind="{ start }" name="trigger" />
 </template>
+
+<style>
+@reference "tailwindcss";
+@reference "@/styles.css";
+
+[data-v-onboarding-wrapper] {
+  & > div {
+    @apply contents;
+  }
+
+  [data-popper-placement] {
+    @apply flex max-w-100 flex-col gap-4 rounded-md border bg-white p-4 trim;
+
+    [data-popper-arrow] {
+      @apply grid size-0 place-content-center;
+    }
+
+    [data-popper-arrow]::before {
+      @apply flex size-3 origin-center border-t border-l bg-white content-[''];
+    }
+
+    &[data-popper-placement^="top"] > [data-popper-arrow] {
+      @apply top-full;
+
+      &::before {
+        @apply rotate-225;
+      }
+    }
+
+    &[data-popper-placement^="bottom"] > [data-popper-arrow] {
+      @apply bottom-full;
+
+      &::before {
+        @apply rotate-45;
+      }
+    }
+
+    &[data-popper-placement^="left"] > [data-popper-arrow] {
+      @apply left-full;
+
+      &::before {
+        @apply rotate-135;
+      }
+    }
+
+    &[data-popper-placement^="right"] > [data-popper-arrow] {
+      @apply right-full;
+
+      &::before {
+        @apply rotate-315;
+      }
+    }
+  }
+}
+</style>

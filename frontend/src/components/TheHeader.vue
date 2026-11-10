@@ -1,10 +1,26 @@
 <script setup lang="ts">
+import { useTemplateRef, watchEffect } from "vue";
 import AppLink from "@/components/AppLink.vue";
 import { routes } from "@/pages";
+import { useElementBounding } from "@vueuse/core";
+import { clamp } from "lodash";
+
+const headerElement = useTemplateRef("headerElement");
+const size = useElementBounding(headerElement);
+
+/** track header size */
+watchEffect(() => {
+  const top = clamp(size.top.value, 0, window.innerHeight);
+  const bottom = clamp(size.bottom.value, 0, window.innerHeight);
+  /** amount of header height visible in viewport */
+  const height = bottom - top;
+  document.documentElement.style.setProperty("--header-height", `${height}px`);
+});
 </script>
 
 <template>
   <header
+    ref="headerElement"
     class="flex flex-wrap items-center justify-between gap-2 border-b-4 p-4 max-md:flex-col max-md:text-center"
   >
     <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">

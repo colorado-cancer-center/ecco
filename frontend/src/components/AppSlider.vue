@@ -3,25 +3,14 @@ import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from "radix-vue";
 
 type Props = {
   label: string;
-  modelValue: number;
   min?: number;
   max?: number;
   step?: number;
 };
 
-const {
-  label,
-  modelValue,
-  min = 0,
-  max = 1,
-  step = 0.05,
-} = defineProps<Props>();
+const { label, min = 0, max = 1, step = 0.05 } = defineProps<Props>();
 
-type Emits = {
-  "update:modelValue": [Props["modelValue"]];
-};
-
-const emit = defineEmits<Emits>();
+const modelValue = defineModel<number>({ required: true });
 </script>
 
 <template>
@@ -34,9 +23,7 @@ const emit = defineEmits<Emits>();
       :max="max"
       :step="step"
       :as-child="true"
-      @update:model-value="
-        (value) => emit('update:modelValue', value?.[0] || min)
-      "
+      @update:model-value="(value) => (modelValue = value?.[0] || min)"
     >
       <span
         class="relative mb-1 flex h-2 cursor-pointer items-center py-2 text-dark-gray transition hover:text-black"
