@@ -3,5 +3,6 @@
   "race": "Race",
   "sex": "Sex",
   "stage": "Stage",
-  "urbanicity": "Urbanicity"
+  "urbanicity": "Urbanicity",
+  "year": "Year"
 }

@@ -29,5 +29,10 @@
     "All": "All Urbanicities",
     "Rural": "Rural",
     "Urban": "Urban"
+  },
+  "year": {
+    "2023": "2023",
+    "2024": "2024",
+    "2025": "2025"
   }
 }
