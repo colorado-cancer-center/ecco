@@ -24,19 +24,18 @@ const link = ref("");
 /** tag of heading */
 const tag = computed(() => "h" + level);
 
-/** heading ref */
-const heading = useTemplateRef<HTMLHeadingElement>("heading");
+const headingElement = useTemplateRef<HTMLHeadingElement>("headingElement");
 
 /** determine link from text content of heading */
 const updateLink = () =>
-  (link.value = kebabCase(id ?? heading.value?.textContent ?? ""));
+  (link.value = kebabCase(id ?? headingElement.value?.textContent ?? ""));
 
 onMounted(updateLink);
 onUpdated(updateLink);
 </script>
 
 <template>
-  <component :is="tag" :id="link" ref="heading">
+  <component :is="tag" :id="link" ref="headingElement">
     <AppLink :to="`#${link}`" class="contents">
       <slot />
     </AppLink>
