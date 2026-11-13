@@ -169,6 +169,11 @@ def extract_cif_metadata(input, output):
         with open(entry, 'r') as f:
             reader = csv.DictReader(f)
 
+            # check if there's a State column, and skip the entire file if not
+            if 'State' not in reader.fieldnames:
+                print(f"{ERROR}Error:{ENDC} {BOLD}{entry}{ENDC} does not have a 'State' column, skipping")
+                continue
+
             for row in reader:
                 if row['State'] != 'Colorado':
                     continue
