@@ -25,27 +25,18 @@ TRACT_BOUNDARIES_GEOJSON_URL = 'https://opendata.arcgis.com/api/v3/datasets/a9f5
 # URLs and metadata for CO legislative district maps
 LEG_MAPS_TO_URL = {
     "2021_Approved_House_Plan_w_Final_Adjustments": {
-        # "url": "https://redistricting.colorado.gov/rails/active_storage/blobs/redirect/"
-        #        "eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBBcjhEIiwiZXhwIjpudWxsLCJwdXIiOiJibG9iX2lkIn19"
-        #        "--ce9e9fcf6b39c1f7d8ea318e727d1e0ca8f19a92/2021_Approved_House_Plan_w_Final_Adjustments.zip",
         "url": "https://redistricting.colorado.gov/rails/active_storage/blobs/redirect/"
                "eyJfcmFpbHMiOnsiZGF0YSI6OTU5LCJwdXIiOiJibG9iX2lkIn19--5a9193ab75042aa2c28791758b9d36739e90fd96/"
                "2021_Approved_House_Plan_w_Final_Adjustments.zip",
         "friendly_name": "house-map"
     },
     "2021_Approved_Senate_Plan_w_Final_Adjustments": {
-        # "url": "https://redistricting.colorado.gov/rails/active_storage/blobs/redirect/"
-        #        "eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBBc0VEIiwiZXhwIjpudWxsLCJwdXIiOiJibG9iX2lkIn19"
-        #        "--3e163d6928a7c388874e81cb0dda49ee2b644d33/2021_Approved_Senate_Plan_w_Final_Adjustments.zip",
         "url": "https://redistricting.colorado.gov/rails/active_storage/blobs/redirect/"
                "eyJfcmFpbHMiOnsiZGF0YSI6OTYxLCJwdXIiOiJibG9iX2lkIn19--c1605eb537a59d70d2cd8c30ff743e96bffd5f1f/"
                "2021_Approved_Senate_Plan_w_Final_Adjustments.zip",
         "friendly_name": "senate-map"
     },
     "2021_Approved_Congressional_Plan_with_Final_Adjustments": {
-        # "url": "https://redistricting.colorado.gov/rails/active_storage/blobs/redirect/"
-        #        "eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBBcjBEIiwiZXhwIjpudWxsLCJwdXIiOiJibG9iX2lkIn19"
-        #        "--e091bab0fdcc0944ce431ca5708665efb8263228/2021_Approved_Congressional_Plan_with_Final_Adjustments.zip",
         "url": "https://redistricting.colorado.gov/rails/active_storage/blobs/redirect/"
                "eyJfcmFpbHMiOnsiZGF0YSI6OTU3LCJwdXIiOiJibG9iX2lkIn19--608e4161479bdba8b85456560426acb03000f6a3/"
                "2021_Approved_Congressional_Plan_with_Final_Adjustments.zip",
