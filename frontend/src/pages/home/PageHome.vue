@@ -304,7 +304,7 @@ const factors = computed(() => {
     for (const [factor, { label, values }] of Object.entries(
       statistic.factors,
     )) {
-      factors[factor] ??= { label, values: {} };
+      factors[factor] ??= { label, default: undefined, values: {} };
       for (const [value, { label }] of Object.entries(values))
         if (!(value in factors[factor].values))
           factors[factor].values[value] = { label };
@@ -343,18 +343,38 @@ const factorOptions = computed(() => {
   return options;
 });
 
+/**
+ * select statistic, dropping selected factor values the new statistic doesn't
+ * have (e.g. mortality's stage "NA" when switching to incidence), so they get
+ * replaced with the new statistic's defaults below. done in the same tick as
+ * setting the statistic (rather than in a watcher), so the url param sync sees
+ * both changes at once and doesn't restore the stale factors.
+ */
+const selectStatistic = (statistic: string) => {
+  const available = statistics.value[statistic]?.factors;
+  const factors = { ...selectedMap().factors };
+  if (available)
+    for (const [factor, value] of Object.entries(factors)) {
+      const values = available[factor]?.values;
+      if (values && Object.keys(values).length && !(value in values))
+        delete factors[factor];
+    }
+  selectedMap().statistic = statistic;
+  selectedMap().factors = factors;
+};
+
 /** auto-select default factors */
 watchEffect(() => {
   /** factors available for selected statistic */
-  const available = Object.keys(
-    statistics.value[selectedMap().statistic]?.factors ?? {},
-  );
+  const available = statistics.value[selectedMap().statistic]?.factors ?? {};
 
-  for (const factor of available) {
+  for (const [factor, { default: _default }] of Object.entries(available)) {
     /** if already selected, ignore */
     if (factor in selectedMap().factors) continue;
-    /** first value is default */
-    const _default = Object.keys(factors.value[factor]?.values ?? {}).at(0);
+    /**
+     * use this statistic's own default, not the first of the values merged
+     * across all statistics, which may not exist for this statistic
+     */
     if (!_default) continue;
     /** set default */
     selectedMap().factors[factor] = _default;
@@ -555,13 +575,14 @@ const { toggle: fullscreen } = useFullscreen(mapGridElement);
         <!-- statistic -->
         <AppTree
           id="statistic"
-          v-model="selectedMap().statistic"
+          :model-value="selectedMap().statistic"
           :tree="statisticOptions"
           class="max-h-200 min-h-60 resize-y gap-2 overflow-y-hidden rounded-md border border-gray bg-white p-4 [:not([style*=height])]:grow [:not([style*=height])]:basis-0"
           :class="[
             statisticStatus === 'loading' && 'animate-loading',
             statisticStatus === 'error' && 'animate-error',
           ]"
+          @update:model-value="selectStatistic"
         >
           <template #default>
             <Ruler

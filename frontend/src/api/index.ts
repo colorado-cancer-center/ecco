@@ -131,6 +131,11 @@ export const getStatistics = async () => {
 
     factors: mapValues(value.factors, (values, factor) => ({
       label: getValue(factorLabels, factor) ?? factor,
+      /**
+       * default value (first in list). keep explicitly, since object key order
+       * below isn't reliable (e.g. numeric-like keys such as years get sorted)
+       */
+      default: values[0],
       values: Object.fromEntries(
         values.map((value) => [
           value,
