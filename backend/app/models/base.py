@@ -51,9 +51,9 @@ class CancerStatsByCounty(BaseStatsModel):
     # the type of cancer
     Site : str = Field(index=True)
     # average annual rate
-    AAR : float
+    AAR : float = Field(nullable=True)
     # average annual count (typically age-adjusted per 100k)
-    AAC : float
+    AAC : float = Field(nullable=True)
 
 class MeasuresByTract(MeasuresByCounty):
     Tract: Optional[str] = Field(index=True, nullable=True)

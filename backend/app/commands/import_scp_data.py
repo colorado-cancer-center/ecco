@@ -106,7 +106,7 @@ async def import_scp_dataset(model, csv_path:Path, aac_col: str, aar_col:str, de
 
                 # factor columns
                 "sex": row["sex"].replace("Both Sexes", "All"),
-                "stage": row["stage"],
+                "stage": row.get("stage", "NA"),
                 "race": row["race"],
                 "age": row["age"],
 

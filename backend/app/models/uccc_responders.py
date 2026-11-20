@@ -23,10 +23,12 @@ class UCCCRespondersCounty(MeasuresByCounty, table=True):
 
     # differentiates between urban vs rural responders
     urbanicity: str = Field(nullable=True, index=True)
+    # record the year of the survey for which this data was collected
+    year: str = Field(nullable=True, index=True)
 
     @classmethod
     def get_factors(cls):
-        return (cls.urbanicity,)
+        return (cls.urbanicity,cls.year,)
 
 # ===========================================================================
 # === model lists, metadata for downstream use
@@ -54,6 +56,11 @@ UCCC_RESPONDERS_FACTOR_DESCRIPTIONS = {
             "label": "Urbanicity",
             "default": "All",
             "values": {"All": "All", "Urban": "Urban", "Rural": "Rural"},
+        },
+        "year": {
+            "label": "Year",
+            "default": "2024",
+            "values": {"2023": "2023", "2024": "2024", "2025": "2025"},
         },
     },
 }

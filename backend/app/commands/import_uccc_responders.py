@@ -2,9 +2,11 @@
 
 import sys
 import asyncio
+import io
 import click
 import openpyxl
 import csv
+import anyio
 
 from itertools import groupby
 
@@ -18,6 +20,13 @@ from db import engine
 from models.uccc_responders import UCCCRespondersCounty
 from models.geom import County
 from sqlalchemy.ext.asyncio import AsyncSession
+
+
+SHEETS_TO_IMPORT = [
+    (2023, "UCCC rsch participants 2023 n=987 for upload.xlsx"),
+    (2024, "PRMS.Zipcodes.for.CO.Adult.only - 2024.xlsx"),
+    (2025, "UCCC rsch participants 2025 n=1695 for upload.xlsx")
+]
 
 
 def read_sheet(sheet_fp, sheet_name=None):
@@ -53,23 +62,10 @@ async def import_into_model(session, model, label, records):
     tqdm.write("")
 
 
-async def import_uccc_responser_data(uccc_reponders_sheet, delete_before_import=True):
+async def import_uccc_responser_data(uccc_reponders_sheet, year, async_session):
     """
     Imports health-region uccc_responser data from an Excel sheet into the database.
     """
-
-    async_session = sessionmaker(
-        engine, expire_on_commit=False, class_=AsyncSession
-    )
-
-    if delete_before_import:
-        async with async_session() as session:
-            print("* Deleting existing UCCC responser data...")
-            for model in (UCCCRespondersCounty,):
-                result = await session.execute(delete(model))
-                print(f" - Deleted {result.rowcount} from {model.__name__}")
-            print("")
-            await session.commit()
 
     # ======================================================================
     # import UCCC responders
@@ -118,6 +114,7 @@ async def import_uccc_responser_data(uccc_reponders_sheet, delete_before_import=
                 "measure": "responses",
                 "value": len(list(data)),
                 "urbanicity": urbanicity,
+                "year": year,
             }
             for (county_name, urbanicity), data in grouped_rows
         ]
@@ -140,11 +137,36 @@ async def import_uccc_responser_data(uccc_reponders_sheet, delete_before_import=
 
         await session.commit()
 
+async def import_uccc_responser_years(uccc_reponders_dir, delete_before_import=True):
+    """
+    Imports health-region uccc_responser data from a set of Excel files under
+    uccc_reponders_dir into the database. Each file corresponds to a year of
+    data.
+    """
+
+    async_session = sessionmaker(
+        engine, expire_on_commit=False, class_=AsyncSession
+    )
+
+    if delete_before_import:
+        async with async_session() as session:
+            print("* Deleting existing UCCC responser data...")
+            for model in (UCCCRespondersCounty,):
+                result = await session.execute(delete(model))
+                print(f" - Deleted {result.rowcount} from {model.__name__}")
+            print()
+            await session.commit()
+
+    for year, sheet_name in SHEETS_TO_IMPORT:
+        async with await anyio.open_file(f"{uccc_reponders_dir}/{sheet_name}", "rb") as uccc_reponders_sheet:
+            sheet_bytes = await uccc_reponders_sheet.read()
+            await import_uccc_responser_data(io.BytesIO(sheet_bytes), year, async_session)
+
 @click.command()
-@click.argument('uccc-reponders-sheet', type=click.File('rb'))
-def main(uccc_reponders_sheet):
-    asyncio.run(import_uccc_responser_data(
-        uccc_reponders_sheet
+@click.argument('uccc-reponders-dir', type=click.Path(exists=True))
+def main(uccc_reponders_dir):
+    asyncio.run(import_uccc_responser_years(
+        uccc_reponders_dir
     ))
 
 if __name__ == '__main__':
