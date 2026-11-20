@@ -17,6 +17,22 @@ from sqlalchemy import and_, or_, distinct, func
 from sqlmodel import select
 
 
+def effective_factor_default(declared_default, observed_values):
+    """
+    Returns the declared default for a factor if it occurs in the observed
+    values for a measure; otherwise returns the first observed value. If there
+    are no observed values, falls back to the declared default.
+
+    This guards against measures whose data doesn't include the hardcoded
+    default (e.g., SCP mortality, which only has stage 'NA' rather than
+    'All Stages'), which would otherwise select no data at all.
+    """
+    observed_values = list(observed_values)
+    if not observed_values or declared_default in observed_values:
+        return declared_default
+    return observed_values[0]
+
+
 async def get_category_factors_with_values(model:BaseStatsModel, type:str, session, measures:list[str]=None):
     """
     Given a model (i.e. measure category), produces factors and the set of
@@ -83,15 +99,25 @@ async def get_category_factors_with_values(model:BaseStatsModel, type:str, sessi
 
     # produce a response that looks very much like the factor response
     # for a specific measure, but over all measures
+    def observed_values(k, v):
+        # declared values first (in declared order), then any other observed
+        # values; some factors (e.g. SCP's) declare no values at all
+        declared = [value for value in factor_descs[k]["values"] if value in v]
+        extra = sorted(value for value in v if value is not None and value not in declared)
+        return declared + extra
+
     return {
         x["measure"]: {
             k: {
                 "label": str(factor_descs[k]["label"] or k),
-                "default": factor_descs[k].get("default"),
+                "default": effective_factor_default(
+                    factor_descs[k].get("default"), observed_values(k, v)
+                ),
+                # include every observed value, using the declared label when
+                # one exists
                 "values": {
-                    value: label
-                    for value, label in factor_descs[k]["values"].items() if
-                    value in v
+                    value: factor_descs[k]["values"].get(value, value) or value
+                    for value in observed_values(k, v)
                 }
             }
             for k, v in omit(x, 'measure').items()
@@ -193,19 +219,11 @@ async def get_model_factor_defaults_clause(model, type, session, measures:list[s
                 # labels)
                 measure_values = list(all_factor_values[measure][f]["values"].keys())
 
-                # this is the hardcoded default value, regardless of what's in the data
-                naive_default = fv.get("default")
-
-                if len(measure_values) > 0:
-                    # get the default if it occurs in the data
-                    # otherwise get the first value that actually occurs
-                    effective_default = naive_default if naive_default in measure_values else measure_values[0]
-                else:
-                    # we have no data for this factor, so just use the default
-                    effective_default = fv.get("default")
-
-                # populate factor_constraints with the effective default
-                factor_constraints[measure][f] = effective_default
+                # use the hardcoded default if it occurs in the data, otherwise
+                # the first value that actually occurs
+                factor_constraints[measure][f] = effective_factor_default(
+                    fv.get("default"), measure_values
+                )
 
         # create a big OR'd where here, because each measure has its own set of possible factor values
         factor_clause = factor_default_clauses(factor_constraints, model, measure_col)

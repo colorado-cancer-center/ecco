@@ -19,7 +19,7 @@ from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlmodel import paginate
 from fastapi_cache.decorator import cache
 
-from tools.queries import get_model_factor_defaults_clause, factor_default_clauses
+from tools.queries import get_model_factor_defaults_clause, factor_default_clauses, effective_factor_default
 from tools.strings import slugify, slug_modelname_sans_type, sanitize
 from tools.accessors import get_keys
 
@@ -158,13 +158,23 @@ async def get_measures(session: AsyncSession = Depends(get_session)):
 
                     factor_results[factor] = await session.execute(factor_query)
 
+                # observed factor values, minus nulls (e.g. rows with no
+                # survey year): they can't be keys in the response, and can't
+                # be selected via the 'filters' param anyway
+                observed = {
+                    f: [x for x in factor_results[f].scalars().all() if x is not None]
+                    for f in factor_descs
+                }
+
                 return {
                     f: {
                         "label": str(fv["label"] or f),
-                        "default": fv.get("default"),
+                        # report a default that actually occurs in the data,
+                        # so clients don't select a combo with no rows
+                        "default": effective_factor_default(fv.get("default"), observed[f]),
                         "values": {
                             x: fv.get("values", {}).get(x, x) or x
-                            for x in factor_results[f].scalars().all()
+                            for x in observed[f]
                         }
                     }
                     for f, fv in factor_descs.items()
@@ -453,7 +463,9 @@ async def get_county_measures(county_fips:str, session: AsyncSession = Depends(g
                     "factor_constraints": factor_constraints.get(x["measure"], {})
                 }
             }
-            for x in result.all()
+            # skip measures with no value for this county (e.g., suppressed
+            # counts), since there's nothing to report for them
+            for x in result.all() if x["value"] is not None
         }
 
         # add it to the set of all measure categories
